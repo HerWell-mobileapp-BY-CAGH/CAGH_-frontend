@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:cagh_frontend/core/services/auth_service.dart';
-import 'package:cagh_frontend/core/services/language_service.dart';
-import 'package:cagh_frontend/core/widgets/globe_language_picker.dart';
-import 'package:cagh_frontend/core/services/appointment_service.dart';
+import 'package:cagh_frontend/shared/models/appointment.dart';
+import 'package:cagh_frontend/features/appointments/data/repositories/appointment_repository_impl.dart';
+import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
+import 'package:cagh_frontend/features/auth/presentation/midwife/midwife_login_screen.dart';
+import 'package:cagh_frontend/shared/widgets/globe_language_picker.dart';
+import 'package:cagh_frontend/features/appointments/data/services/appointment_api_service.dart';
 import 'package:cagh_frontend/features/profile/presentation/midwife_profile_screen.dart';
-import 'package:cagh_frontend/features/consultations/presentation/midwife_consults_screen.dart';
-import 'package:cagh_frontend/features/consultations/presentation/midwife_schedule_screen.dart';
-import 'package:cagh_frontend/core/widgets/floating_glass_nav_bar.dart';
+import 'package:cagh_frontend/features/consultations/presentation/midwife/midwife_consults_screen.dart';
+import 'package:cagh_frontend/features/scheduling/presentation/screens/midwife_schedule_screen.dart';
+import 'package:cagh_frontend/features/scheduling/presentation/screens/midwife_manage_schedule_screen.dart';
+import 'package:cagh_frontend/shared/widgets/floating_glass_nav_bar.dart';
+import 'package:cagh_frontend/core/services/language_service.dart';
 
 class MidwifeHomeScreen extends StatefulWidget {
   const MidwifeHomeScreen({super.key});
@@ -59,9 +63,20 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
         }
       }
     } catch (_) {}
+
     if (mounted) {
       setState(() => isLoadingProfile = false);
     }
+  }
+
+  String _getFirstName(String fullName) {
+    if (fullName.isEmpty) return 'Midwife';
+    // If it happens to be an email, take the part before @
+    if (fullName.contains('@')) {
+      fullName = fullName.split('@').first;
+    }
+    // Return just the first name
+    return fullName.trim().split(' ').first;
   }
 
   @override
@@ -151,10 +166,13 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
 
   // TAB 0: HOME DASHBOARD
   Widget _buildHomeDashboardTab() {
-    return ValueListenableBuilder<List<AppointmentItem>>(
-      valueListenable: AppointmentService.appointments,
-      builder: (context, aptList, _) {
-        final upcomingApts = aptList.where((a) => a.status == 'UPCOMING').toList();
+    final appointmentRepo = AppointmentRepositoryImpl(AppointmentApiService());
+    
+    return FutureBuilder<List<Appointment>>(
+      future: appointmentRepo.getMidwifeAppointments(),
+      builder: (context, snapshot) {
+        final aptList = snapshot.data ?? [];
+        final upcomingApts = aptList.where((a) => a.status == AppointmentStatus.confirmed).toList();
 
         return SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -185,7 +203,7 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Nurse $midwifeName',
+                            'Welcome ${_getFirstName(midwifeName)}',
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 22,
@@ -228,7 +246,33 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
               ),
               const SizedBox(height: 12),
 
-              if (upcomingApts.isEmpty)
+              // Manage Schedule Button
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const MidwifeManageScheduleScreen()),
+                    );
+                  },
+                  icon: const Icon(Icons.edit_calendar, color: Color(0xFF1B5E20)),
+                  label: const Text(
+                    'Manage Availability',
+                    style: TextStyle(color: Color(0xFF1B5E20), fontWeight: FontWeight.bold),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    side: const BorderSide(color: Color(0xFF1B5E20)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              if (snapshot.connectionState == ConnectionState.waiting)
+                const Center(child: CircularProgressIndicator(color: Color(0xFF1B5E20)))
+              else if (upcomingApts.isEmpty)
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
@@ -259,9 +303,9 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 10),
                     child: _buildScheduleItem(
-                      time: apt.time,
-                      title: '${apt.userFullName} - ${apt.consultationType}',
-                      subtitle: 'Date: ${apt.date} • Phone: ${apt.userPhone}',
+                      time: apt.startTime,
+                      title: '${apt.userFullName ?? 'Patient'} - ${apt.appointmentType}',
+                      subtitle: 'Date: ${apt.date}',
                       badgeLabel: 'BOOKED',
                       badgeColor: const Color(0xFFC8E6C9),
                       badgeTextColor: const Color(0xFF2E7D32),

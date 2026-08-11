@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:cagh_frontend/core/services/auth_service.dart';
-import 'package:cagh_frontend/core/services/language_service.dart';
-import 'package:cagh_frontend/core/widgets/globe_language_picker.dart';
-import 'package:cagh_frontend/features/consultations/presentation/consult_hub_screen.dart';
-import 'package:cagh_frontend/features/consultations/presentation/find_midwife_screen.dart';
+import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
+import 'package:cagh_frontend/features/auth/presentation/user/user_login_screen.dart';
+import 'package:cagh_frontend/shared/widgets/globe_language_picker.dart';
+import 'package:cagh_frontend/features/consultations/presentation/user/consult_hub_screen.dart';
+import 'package:cagh_frontend/features/consultations/presentation/user/find_midwife_screen.dart';
+import 'package:cagh_frontend/features/chat/presentation/screens/user_chat_room_screen.dart';
+import 'package:cagh_frontend/features/nearby/presentation/screens/nearby_healthcare_screen.dart';
 import 'package:cagh_frontend/features/profile/presentation/user_profile_screen.dart';
+import 'package:cagh_frontend/shared/widgets/floating_glass_nav_bar.dart';
+import 'package:cagh_frontend/features/chat/data/services/chat_api_service.dart';
 import 'package:cagh_frontend/features/virtual_consultation/presentation/emergency_support_screen.dart';
 import 'package:cagh_frontend/features/ai_assistant/presentation/ai_assistant_screen.dart';
-import 'package:cagh_frontend/core/widgets/floating_glass_nav_bar.dart';
-import 'package:cagh_frontend/core/services/chat_service.dart';
+import 'package:cagh_frontend/core/services/language_service.dart';
 
 class UserHomeScreen extends StatefulWidget {
   const UserHomeScreen({super.key});
@@ -51,6 +54,16 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
         _userProfile = res.data;
       });
     }
+  }
+
+  String _getFirstName(String fullName) {
+    if (fullName.isEmpty) return 'User';
+    // If it happens to be an email, take the part before @
+    if (fullName.contains('@')) {
+      fullName = fullName.split('@').first;
+    }
+    // Return just the first name
+    return fullName.trim().split(' ').first;
   }
 
   void _showNotificationsModal() {
@@ -125,107 +138,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
     );
   }
 
-  void _showReviewModal() {
-    int selectedStars = 5;
-    final reviewController = TextEditingController();
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Padding(
-              padding: EdgeInsets.only(
-                top: 24,
-                left: 20,
-                right: 20,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Leave Consultation Review',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Rate your recent consultation with Sr. Martha T.',
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(5, (index) {
-                      return IconButton(
-                        icon: Icon(
-                          index < selectedStars ? Icons.star : Icons.star_border,
-                          color: Colors.amber,
-                          size: 32,
-                        ),
-                        onPressed: () {
-                          setModalState(() {
-                            selectedStars = index + 1;
-                          });
-                        },
-                      );
-                    }),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: reviewController,
-                    maxLines: 3,
-                    decoration: InputDecoration(
-                      hintText: 'Share your feedback or experience...',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Thank you! Your review has been submitted.'),
-                            backgroundColor: Colors.green,
-                          ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1B5E20),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                      ),
-                      child: const Text(
-                        'Submit Review',
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
+// Review modal has been moved to user_chat_room_screen.dart
   @override
   Widget build(BuildContext context) {
     if (_currentIndex == 4) {
@@ -255,8 +168,8 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                   children: [
                     Text(
                       _userProfile != null && (_userProfile!['full_name'] != null || _userProfile!['email'] != null)
-                          ? 'Hello, ${_userProfile!['full_name'] ?? _userProfile!['email']}'
-                          : 'Hello 👋',
+                          ? 'Welcome, ${_getFirstName(_userProfile!['full_name']?.toString() ?? _userProfile!['email']?.toString() ?? '')}'
+                          : 'Welcome 👋',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 19,
@@ -266,14 +179,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                     Row(
                       children: [
                         const GlobeLanguagePicker(iconColor: Colors.amber, iconSize: 24),
-                        IconButton(
-                          onPressed: _showReviewModal,
-                          icon: const Icon(
-                            Icons.rate_review_outlined,
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                        ),
+                        // Review icon removed
                         IconButton(
                           onPressed: _showNotificationsModal,
                           icon: const Icon(
@@ -358,11 +264,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                                     ],
                                   ),
                                 ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  'Emergency',
-                                  style: TextStyle(fontSize: 10, color: Colors.grey.shade600, fontWeight: FontWeight.w600),
-                                ),
+                                // Emergency text removed
                               ],
                             ),
                           ),
@@ -823,9 +725,10 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             child: Row(
               children: [
                 _buildCategoryChip('All Articles', true),
-                _buildCategoryChip('Antenatal Care', false),
+                _buildCategoryChip('Puberty Education', false),
                 _buildCategoryChip('Menstrual Health', false),
-                _buildCategoryChip('Nutrition', false),
+                _buildCategoryChip('Mental Wellbeing', false),
+                _buildCategoryChip('Adolescent Nutrition', false),
               ],
             ),
           ),
@@ -833,10 +736,10 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
           const SizedBox(height: 20),
 
           _buildArticleCard(
-            title: 'Essential Nutrition Guide for the 2nd Trimester',
-            topic: 'Maternal Nutrition',
+            title: 'Essential Nutrition Guide for Growing Teens',
+            topic: 'Adolescent Nutrition',
             readTime: '5 min read',
-            description: 'Learn about key vitamins, iron intake, and safe diet practices during pregnancy.',
+            description: 'Learn about key vitamins, iron intake, and safe diet practices during puberty.',
           ),
           const SizedBox(height: 14),
           _buildArticleCard(
@@ -847,10 +750,10 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
           ),
           const SizedBox(height: 14),
           _buildArticleCard(
-            title: 'Postnatal Support & Breastfeeding Tips',
-            topic: 'Postpartum Care',
+            title: 'Mental Health & Self-Care Strategies',
+            topic: 'Mental Wellbeing',
             readTime: '4 min read',
-            description: 'Practical advice from certified midwives on newborn care and mental well-being.',
+            description: 'Tips for managing stress, building self-esteem, and maintaining emotional health.',
           ),
         ],
       ),
@@ -864,126 +767,71 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1B5E20),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.smart_toy_outlined, color: Colors.amber, size: 36),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Teniva AI Health Assistant',
-                        style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700),
-                      ),
-                      Text(
-                        'Ask instant questions about health, symptoms & care',
-                        style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 12.5),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          const Text(
-            'Suggested Questions',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF1A1A1A)),
-          ),
-
-          const SizedBox(height: 10),
-
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _buildSuggestedPrompt('What foods relieve morning sickness?'),
-              _buildSuggestedPrompt('What are normal signs of early labor?'),
-              _buildSuggestedPrompt('How can I track my menstrual cycle?'),
-            ],
-          ),
-
-          const SizedBox(height: 20),
-
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _aiQuestionController,
-                  decoration: InputDecoration(
-                    hintText: 'Type your health question...',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              ElevatedButton(
-                onPressed: _isAiLoading
-                    ? null
-                    : () async {
-                        final q = _aiQuestionController.text.trim();
-                        if (q.isEmpty) return;
-                        setState(() => _isAiLoading = true);
-                        await Future.delayed(const Duration(seconds: 1));
-                        setState(() {
-                          _isAiLoading = false;
-                          _latestAiAnswer =
-                              'Based on medical guidelines: $q is common during pregnancy. Stay hydrated, eat small frequent meals, and contact your midwife if symptoms persist.';
-                          _aiQuestionController.clear();
-                        });
-                      },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF1B5E20),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                ),
-                child: _isAiLoading
-                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : const Text('Ask', style: TextStyle(color: Colors.white)),
-              ),
-            ],
-          ),
-
-          if (_latestAiAnswer != null) ...[
-            const SizedBox(height: 16),
-            Container(
+          // Nearby Healthcare Banner
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const NearbyHealthcareScreen()),
+              );
+            },
+            child: Container(
+              width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: const Color(0xFFF1F8E9),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFFA5D6A7)),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF315E26), Color(0xFF1B5E20)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF1B5E20).withOpacity(0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
-                  const Text('AI Response:', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1B5E20))),
-                  const SizedBox(height: 6),
-                  Text(_latestAiAnswer!, style: const TextStyle(fontSize: 13.5, height: 1.4)),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.map_outlined, color: Colors.white, size: 32),
+                  ),
+                  const SizedBox(width: 16),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Find Nearby Healthcare',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'Open interactive map to locate hospitals, clinics, and midwives around you.',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
                 ],
               ),
             ),
-          ],
-
-          const SizedBox(height: 30),
-
-          const Text(
-            'Nearby Hospitals & Facilities',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF1B5E20)),
           ),
-          const SizedBox(height: 12),
-
-          _buildFacilityCard('St. Paul Hospital Millennium Medical College', 'Gullele, Addis Ababa', '1.2 km away'),
-          const SizedBox(height: 10),
-          _buildFacilityCard('Gandhi Memorial Women Hospital', 'Kirkos, Addis Ababa', '3.5 km away'),
         ],
       ),
     );

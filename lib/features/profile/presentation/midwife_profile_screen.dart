@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:cagh_frontend/core/services/auth_service.dart';
-import 'package:cagh_frontend/core/services/language_service.dart';
-import 'package:cagh_frontend/core/widgets/globe_language_picker.dart';
+import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
+import 'package:cagh_frontend/shared/widgets/globe_language_picker.dart';
 import 'package:cagh_frontend/features/auth/presentation/midwife/midwife_login_screen.dart';
+import 'package:cagh_frontend/core/services/language_service.dart';
+import 'package:cagh_frontend/features/consultations/data/repositories/midwife_repository_impl.dart';
+import 'package:cagh_frontend/features/consultations/data/services/midwife_api_service.dart';
+import 'package:cagh_frontend/shared/models/midwife_profile.dart';
 
 class MidwifeProfileScreen extends StatefulWidget {
   const MidwifeProfileScreen({super.key});
@@ -12,36 +15,21 @@ class MidwifeProfileScreen extends StatefulWidget {
 }
 
 class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
+
   bool isLoading = true;
-  String name = 'Nurse Midwife';
-  String title = 'Senior Nurse Midwife (MSc, RM)';
-  String status = 'APPROVED';
-  String bio =
-      'Dedicated midwife with over 12 years of experience in facilitating natural births and providing comprehensive antenatal and postnatal care. My philosophy is rooted in empowering families through education and personalized support, ensuring a safe and positive transition into parenthood.';
-  List<String> expertises = [
-    'Antenatal Care',
-    'Breastfeeding Support',
-    'Neonatal Care',
-    'Water Birth'
-  ];
-  List<Map<String, String>> languages = [
-    {'lang': 'English', 'level': 'Native'},
-    {'lang': 'Spanish', 'level': 'Fluent'},
-  ];
-  List<Map<String, String>> qualifications = [
-    {
-      'title': 'MSc in Advanced Midwifery',
-      'institution': 'University of Health Sciences, 2018'
-    },
-    {
-      'title': 'Registered Midwife Certification',
-      'institution': 'National Board of Nursing, 2012'
-    },
-    {
-      'title': 'BSc in Nursing Science',
-      'institution': 'State Medical College, 2011'
-    },
-  ];
+  String? errorMessage;
+  MidwifeProfile? profile;
+  
+  // Editable fields bound to the UI modal
+  String name = '';
+  String title = '';
+  String status = 'PENDING';
+  String bio = '';
+  List<String> expertises = [];
+  List<Map<String, String>> languages = [];
+  List<Map<String, String>> qualifications = [];
+  
+  final _repository = MidwifeRepositoryImpl(MidwifeApiService());
 
   @override
   void initState() {
@@ -50,65 +38,46 @@ class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
   }
 
   Future<void> _loadProfile() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+    });
+
     try {
-      final localData = await AuthService.getUserData();
-      if (localData['full_name'] != null && localData['full_name'].toString().isNotEmpty && mounted) {
+      final p = await _repository.getMyProfile();
+      if (mounted) {
         setState(() {
-          name = localData['full_name'].toString();
+          profile = p;
+          name = p.fullName;
+          title = p.specialty;
+          status = p.verificationStatus.toUpperCase() == 'APPROVED' ? 'VERIFIED' : 'PENDING';
+          bio = p.bio;
+          expertises = p.offeredConsultationTypes.isNotEmpty ? p.offeredConsultationTypes : [p.specialty];
+          
+          // Converting from List<String> to UI maps (mock format for now until full UI rewrite)
+          languages = p.languages.map((l) => {'lang': l, 'level': 'Fluent'}).toList();
+          if (languages.isEmpty) languages = [{'lang': 'English', 'level': 'Fluent'}];
+          
+          qualifications = [
+            {'title': 'Certified Midwife', 'institution': 'National Board'}
+          ];
+          
+          if (qualifications.isEmpty || qualifications.first['title']!.isEmpty) {
+            qualifications = [
+              {'title': 'Certified Midwife', 'institution': 'National Board'}
+            ];
+          }
+          
+          isLoading = false;
         });
       }
-
-      final res = await AuthService.getMidwifeProfile();
-      if (res.success && res.data != null && mounted) {
-        final d = res.data!;
-        final u = d['user'] ?? {};
-
+    } catch (e) {
+      if (mounted) {
         setState(() {
-          if (u['full_name'] != null && u['full_name'].toString().isNotEmpty) {
-            name = u['full_name'].toString();
-          } else if (u['email'] != null) {
-            name = u['email'].toString();
-          }
-
-          if (d['verification_status'] != null) {
-            status = d['verification_status'].toString();
-          }
-
-          if (d['bio'] != null && d['bio'].toString().isNotEmpty) {
-            bio = d['bio'].toString();
-          }
-
-          if (d['title'] != null && d['title'].toString().isNotEmpty) {
-            title = d['title'].toString();
-          } else if (d['experience_years'] != null) {
-            title = 'Senior Nurse Midwife (${d['experience_years']} Years Exp)';
-          }
-
-          if (d['qualifications'] != null && d['qualifications'] is List) {
-            final list = d['qualifications'] as List;
-            if (list.isNotEmpty) {
-              qualifications = list.map((q) {
-                return {
-                  'title': q['title']?.toString() ?? 'Midwifery Qualification',
-                  'institution':
-                      '${q['institution'] ?? ''}, ${q['year_obtained'] ?? ''}'
-                          .trim(),
-                };
-              }).toList();
-            }
-          }
-
-          if (d['expertises'] != null && d['expertises'] is List) {
-            final exList = d['expertises'] as List;
-            if (exList.isNotEmpty) {
-              expertises = exList.map((e) => e['name'].toString()).toList();
-            }
-          }
+          isLoading = false;
+          errorMessage = 'Failed to load profile. Please check your connection and try again.\n\nDetails: $e';
         });
       }
-    } catch (_) {}
-    if (mounted) {
-      setState(() => isLoading = false);
     }
   }
 
@@ -334,7 +303,52 @@ class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
           ? const Center(
               child: CircularProgressIndicator(color: Color(0xFF274E13)),
             )
-          : SingleChildScrollView(
+          : errorMessage != null
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.error_outline, size: 64, color: Colors.redAccent),
+                        const SizedBox(height: 16),
+                        Text(
+                          errorMessage!,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            ElevatedButton(
+                              onPressed: _loadProfile,
+                              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF274E13)),
+                              child: const Text('Retry', style: TextStyle(color: Colors.white)),
+                            ),
+                            const SizedBox(width: 16),
+                            OutlinedButton(
+                              onPressed: () async {
+                                await AuthService.logout();
+                                if (mounted) {
+                                  Navigator.of(context).pushAndRemoveUntil(
+                                    MaterialPageRoute(builder: (_) => const MidwifeLoginScreen()),
+                                    (route) => false,
+                                  );
+                                }
+                              },
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: Colors.red),
+                              ),
+                              child: const Text('Log Out', style: TextStyle(color: Colors.red)),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
               child: Column(
                 children: [
@@ -383,7 +397,7 @@ class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 12, vertical: 4),
                               decoration: BoxDecoration(
-                                color: isVerified
+                                color: status == 'VERIFIED'
                                     ? const Color(0xFF5B4075) // Deep purple badge matching screenshot
                                     : Colors.orange.shade700,
                                 borderRadius: BorderRadius.circular(14),
@@ -392,7 +406,7 @@ class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Icon(
-                                    isVerified
+                                    status == 'VERIFIED'
                                         ? Icons.check_circle_rounded
                                         : Icons.hourglass_top,
                                     color: Colors.white,
@@ -400,7 +414,7 @@ class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
-                                    isVerified ? 'Verified' : 'Pending',
+                                    status == 'VERIFIED' ? 'Verified' : 'Pending',
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 11,
@@ -658,7 +672,7 @@ class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 120), // Extra padding for floating nav bar
                 ],
               ),
             ),

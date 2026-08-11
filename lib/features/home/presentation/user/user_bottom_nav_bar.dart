@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cagh_frontend/core/services/language_service.dart';
-import 'package:cagh_frontend/core/widgets/floating_glass_nav_bar.dart';
+import 'package:cagh_frontend/shared/widgets/floating_glass_nav_bar.dart';
 
 class UserBottomNavBar extends StatelessWidget {
   final int selectedIndex;

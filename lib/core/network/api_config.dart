@@ -1,3 +1,5 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 /// Production API Constants
 class ApiConstants {
   // Production REST API Base URL
@@ -34,4 +36,14 @@ class ApiConfig {
   static const String userMe = '/users/me/';
   static const String midwivesProfiles = '/midwives/profiles/';
   static const String midwifeMe = '/midwives/profiles/me/';
+  static const String midwifeDashboard = '/midwives/dashboard/';
+  static const String midwifeBlockedDates = '/midwives/blocked-dates/';
+  
+  // Appointments Endpoints
+  static const String appointments = '/appointments/appointments/';
+  static const String timeSlots = '/appointments/time-slots/';
+  static const String availabilities = '/appointments/availabilities/';
+
+  // AI Assistant Endpoints
+  static const String askAi = '/ai-assistant/questions/ask/';
 }

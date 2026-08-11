@@ -107,17 +107,12 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                         child: DropdownButton<String>(
                           value: selectedCode,
                           isExpanded: true,
-                          icon: Container(
-                            margin: const EdgeInsets.only(right: 12),
-                            padding: const EdgeInsets.all(6),
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFA5D6A7),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
+                          icon: const Padding(
+                            padding: EdgeInsets.only(right: 12),
+                            child: Icon(
                               Icons.keyboard_arrow_down,
-                              color: Colors.white,
-                              size: 20,
+                              color: Color(0xFF1B5E20),
+                              size: 24,
                             ),
                           ),
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import '../otp_verification_screen.dart';
-import 'package:cagh_frontend/core/services/auth_service.dart';
+import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
 
 class MidwifeRegistrationScreen extends StatefulWidget {
   const MidwifeRegistrationScreen({super.key});
@@ -33,11 +33,11 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
   ];
 
   final List<String> expertiseOptions = [
-    'Antenatal Care',
-    'Postnatal Support',
-    'Adolescent Health',
-    'Contraception',
-    'Breastfeeding',
+    'Puberty Education',
+    'Menstrual Health',
+    'Adolescent Psychology',
+    'Nutrition & Growth',
+    'Sexual Education',
     'Mental Wellbeing',
   ];
 
@@ -160,56 +160,11 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                                   color: Color(0xFF1A1A1A),
                                 ),
                               ),
-                              SizedBox(height: 4),
-                              Text(
-                                'Step 1 of 3: Professional Profile',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: Colors.grey,
-                                ),
-                              ),
                             ],
                           ),
                         ),
                       ],
                     ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Progress indicator
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF1B5E20),
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Container(
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade300,
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Container(
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade300,
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                      ),
-                    ],
                   ),
 
                   const SizedBox(height: 24),
@@ -616,6 +571,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                                   MaterialPageRoute(
                                     builder: (context) => OtpVerificationScreen(
                                       contact: email,
+                                      isMidwife: true,
                                     ),
                                   ),
                                 );

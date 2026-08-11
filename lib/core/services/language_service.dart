@@ -108,7 +108,7 @@ class LanguageService {
       'consult': 'Consult',
       'consults': 'Consults',
       'learn': 'Learn',
-      'ai_nearby': 'AI & Nearby',
+      'ai_nearby': 'Nearby',
       'notifications': 'Notifications',
       'reviews': 'Reviews',
       'logout': 'Logout',

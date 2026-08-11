@@ -1,0 +1,87 @@
+import 'package:cagh_frontend/features/appointments/domain/repositories/appointment_repository.dart';
+import 'package:cagh_frontend/features/appointments/data/services/appointment_api_service.dart';
+import 'package:cagh_frontend/shared/models/appointment.dart';
+import 'package:cagh_frontend/shared/models/time_slots_response.dart';
+import 'package:cagh_frontend/shared/models/working_hours.dart';
+
+class AppointmentRepositoryImpl implements AppointmentRepository {
+  final AppointmentApiService _apiService;
+
+  AppointmentRepositoryImpl(this._apiService);
+
+  @override
+  Future<TimeSlotsResponse> getTimeSlots(String midwifeId, String date) async {
+    final response = await _apiService.getTimeSlots(midwifeId, date);
+    return TimeSlotsResponse.fromJson(response);
+  }
+
+  @override
+  Future<Appointment> requestAppointment(Map<String, dynamic> body) async {
+    final response = await _apiService.requestAppointment(body);
+    return Appointment.fromJson(response);
+  }
+
+  @override
+  Future<List<Appointment>> getUserAppointments() async {
+    final response = await _apiService.getUserAppointments();
+    return response.map((json) => Appointment.fromJson(json)).toList();
+  }
+
+  @override
+  Future<List<Appointment>> getMidwifeAppointments() async {
+    final response = await _apiService.getMidwifeAppointments();
+    return response.map((json) => Appointment.fromJson(json)).toList();
+  }
+
+  @override
+  Future<Appointment> acceptAppointment(String appointmentId) async {
+    try {
+      final data = await _apiService.acceptAppointment(appointmentId);
+      return Appointment.fromJson(data);
+    } catch (e) {
+      throw Exception('Failed to accept appointment: $e');
+    }
+  }
+
+  @override
+  Future<Appointment> declineAppointment(String appointmentId) async {
+    try {
+      final data = await _apiService.declineAppointment(appointmentId);
+      return Appointment.fromJson(data);
+    } catch (e) {
+      throw Exception('Failed to decline appointment: $e');
+    }
+  }
+
+  @override
+  Future<Appointment> cancelAppointment(String appointmentId) async {
+    try {
+      final data = await _apiService.cancelAppointment(appointmentId);
+      return Appointment.fromJson(data);
+    } catch (e) {
+      throw Exception('Failed to cancel appointment: $e');
+    }
+  }
+
+  @override
+  Future<Appointment> getAppointmentDetails(String appointmentId) async {
+    try {
+      final data = await _apiService.getAppointmentDetails(appointmentId);
+      return Appointment.fromJson(data);
+    } catch (e) {
+      throw Exception('Failed to get appointment details: $e');
+    }
+  }
+
+  @override
+  Future<List<WorkingHours>> getAvailabilities() async {
+    final response = await _apiService.getAvailabilities();
+    return response.map((json) => WorkingHours.fromJson(json)).toList();
+  }
+
+  @override
+  Future<WorkingHours> setAvailability(Map<String, dynamic> data) async {
+    final response = await _apiService.setAvailability(data);
+    return WorkingHours.fromJson(response);
+  }
+}

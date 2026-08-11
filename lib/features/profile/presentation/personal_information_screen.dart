@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cagh_frontend/core/services/auth_service.dart';
+import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
 
 class PersonalInformationScreen extends StatefulWidget {
   const PersonalInformationScreen({super.key});
@@ -9,11 +9,11 @@ class PersonalInformationScreen extends StatefulWidget {
 }
 
 class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
-  String _fullName = 'Registered User';
-  String _dateOfBirth = 'Not specified';
-  String _phoneNumber = '+251911223344';
-  String _emailAddress = 'user@cagh.org';
-  final String _memberSince = 'Bloom Member since 2023';
+  String _fullName = 'Loading...';
+  String _dateOfBirth = 'Loading...';
+  String _phoneNumber = 'Loading...';
+  String _emailAddress = 'Loading...';
+  final String _memberSince = 'Bloom Member since 2026';
 
   int _selectedAvatarIndex = 0;
   final List<Map<String, dynamic>> _avatarOptions = [
@@ -244,7 +244,14 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
       setState(() {
         if (localData['full_name'] != null && localData['full_name'].toString().isNotEmpty) {
           _fullName = localData['full_name'].toString();
+        } else if (localData['first_name'] != null || localData['last_name'] != null) {
+          final first = localData['first_name']?.toString() ?? '';
+          final last = localData['last_name']?.toString() ?? '';
+          if (first.isNotEmpty || last.isNotEmpty) {
+             _fullName = '$first $last'.trim();
+          }
         }
+
         if (localData['email'] != null && localData['email'].toString().isNotEmpty) {
           _emailAddress = localData['email'].toString();
         }
@@ -260,15 +267,31 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
       setState(() {
         if (data['full_name'] != null && data['full_name'].toString().isNotEmpty) {
           _fullName = data['full_name'].toString();
+        } else if (data['first_name'] != null || data['last_name'] != null) {
+          final first = data['first_name']?.toString() ?? '';
+          final last = data['last_name']?.toString() ?? '';
+          if (first.isNotEmpty || last.isNotEmpty) {
+             _fullName = '$first $last'.trim();
+          }
+        } else if (data['name'] != null && data['name'].toString().isNotEmpty) {
+          _fullName = data['name'].toString();
         }
+
         if (data['email'] != null && data['email'].toString().isNotEmpty) {
           _emailAddress = data['email'].toString();
         }
         if (data['phone_number'] != null && data['phone_number'].toString().isNotEmpty) {
           _phoneNumber = data['phone_number'].toString();
+        } else if (data['phone'] != null && data['phone'].toString().isNotEmpty) {
+          _phoneNumber = data['phone'].toString();
         }
+        
         if (data['date_of_birth'] != null && data['date_of_birth'].toString().isNotEmpty) {
           _dateOfBirth = data['date_of_birth'].toString();
+        } else if (data['dob'] != null && data['dob'].toString().isNotEmpty) {
+          _dateOfBirth = data['dob'].toString();
+        } else {
+           _dateOfBirth = 'Not provided';
         }
       });
     }

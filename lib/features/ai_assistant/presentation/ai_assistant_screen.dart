@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:cagh_frontend/features/ai_assistant/data/services/ai_assistant_api_service.dart';
+import 'package:cagh_frontend/features/ai_assistant/data/repositories/ai_assistant_repository_impl.dart';
 
 class AiAssistantScreen extends StatefulWidget {
   const AiAssistantScreen({super.key});
@@ -11,6 +13,8 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
   final TextEditingController _questionController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   bool _isLoading = false;
+  
+  final _repository = AiAssistantRepositoryImpl(AiAssistantApiService());
 
   final List<Map<String, String>> _messages = [
     {
@@ -37,36 +41,31 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
 
     _scrollToBottom();
 
-    await Future.delayed(const Duration(seconds: 1, milliseconds: 500));
-
-    String aiReply =
-        'Based on reproductive health guidelines: $userText is an important topic. Stay hydrated, keep track of cycle dates, and consult your midwife for personalized medical support.';
-
-    final qLower = userText.toLowerCase();
-    if (qLower.contains('luteal')) {
-      aiReply =
-          'The luteal phase is the second half of your menstrual cycle. It starts after ovulation and ends when your period begins. During this time, the follicle that released the egg transforms into the corpus luteum, which produces progesterone to prepare the uterine lining for a possible pregnancy.';
-    } else if (qLower.contains('pcos')) {
-      aiReply =
-          'Polycystic Ovary Syndrome (PCOS) is a hormonal disorder common among women of reproductive age. Symptoms include irregular periods, excess androgen levels, and polycystic ovaries. Lifestyle modifications and medical guidance can help manage symptoms effectively.';
-    } else if (qLower.contains('nutrition') || qLower.contains('food')) {
-      aiReply =
-          'Essential nutrition tips: prioritize folate-rich leafy greens, iron-rich foods, omega-3 fatty acids, complex carbohydrates, and maintain proper hydration daily.';
-    } else if (qLower.contains('morning sickness')) {
-      aiReply =
-          'Morning sickness tips: Eat small, frequent meals throughout the day, sip ginger tea or lemon water, avoid strong food odors, and rest whenever possible.';
-    }
-
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-        _messages.add({
-          'sender': 'AI',
-          'text': aiReply,
-          'time': 'Just now',
+    try {
+      final aiQuestion = await _repository.askQuestion(userText);
+      if (mounted) {
+        setState(() {
+          _messages.add({
+            'sender': 'AI',
+            'text': aiQuestion.response,
+            'time': 'Just now',
+          });
+          _isLoading = false;
         });
-      });
-      _scrollToBottom();
+        _scrollToBottom();
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _messages.add({
+            'sender': 'AI',
+            'text': 'Sorry, I encountered an error and could not answer your question.',
+            'time': 'Just now',
+          });
+          _isLoading = false;
+        });
+        _scrollToBottom();
+      }
     }
   }
 

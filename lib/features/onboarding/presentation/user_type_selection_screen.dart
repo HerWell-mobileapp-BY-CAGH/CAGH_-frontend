@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cagh_frontend/features/auth/presentation/user/user_login_screen.dart';
 import 'package:cagh_frontend/features/auth/presentation/midwife/midwife_login_screen.dart';
-import 'package:cagh_frontend/core/services/auth_service.dart';
+import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
 import 'package:cagh_frontend/core/services/language_service.dart';
 
 class UserTypeSelectionScreen extends StatefulWidget {

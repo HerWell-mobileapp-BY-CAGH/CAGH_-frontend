@@ -3,9 +3,9 @@ import 'user_registration_screen.dart';
 import '../forgot_password_screen.dart';
 import 'package:cagh_frontend/features/home/presentation/user/user_home_screen.dart';
 import 'package:cagh_frontend/features/home/presentation/midwife/midwife_home_screen.dart';
-import 'package:cagh_frontend/core/services/auth_service.dart';
+import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
 import 'package:cagh_frontend/core/services/language_service.dart';
-import 'package:cagh_frontend/core/widgets/globe_language_picker.dart';
+import 'package:cagh_frontend/shared/widgets/globe_language_picker.dart';
 
 class UserLoginScreen extends StatefulWidget {
   const UserLoginScreen({super.key});
@@ -191,8 +191,7 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) =>
-                                        const ForgotPasswordScreen(),
+                                        builder: (_) => const ForgotPasswordScreen(isMidwife: false),
                                       ),
                                     );
                                   },
@@ -246,19 +245,12 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
                                               ),
                                             );
 
-                                            final profileRes = await AuthService.getProfile();
-                                            final isMidwife = profileRes.success &&
-                                                profileRes.data != null &&
-                                                profileRes.data!['role'] == 'MIDWIFE';
-
                                             if (!mounted) return;
 
                                             Navigator.pushAndRemoveUntil(
                                               context,
                                               MaterialPageRoute(
-                                                builder: (context) => isMidwife
-                                                    ? const MidwifeHomeScreen()
-                                                    : const UserHomeScreen(),
+                                                builder: (context) => const UserHomeScreen(),
                                               ),
                                               (route) => false,
                                             );

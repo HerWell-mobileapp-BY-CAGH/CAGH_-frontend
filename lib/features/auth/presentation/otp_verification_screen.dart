@@ -1,17 +1,22 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:cagh_frontend/core/services/auth_service.dart';
+import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
 import 'package:cagh_frontend/core/services/language_service.dart';
 import 'package:cagh_frontend/features/home/presentation/user/user_home_screen.dart';
 import 'package:cagh_frontend/features/home/presentation/midwife/midwife_home_screen.dart';
+import 'create_new_password_screen.dart';
 
 class OtpVerificationScreen extends StatefulWidget {
   final String contact;
+  final bool isMidwife;
+  final bool isForPasswordReset;
 
   const OtpVerificationScreen({
     super.key,
     required this.contact,
+    this.isMidwife = false,
+    this.isForPasswordReset = false,
   });
 
   @override
@@ -26,21 +31,47 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   int _secondsRemaining = 60;
   Timer? _timer;
   bool _isLoading = false;
+  bool _isSending = true;      // true while the initial OTP send is in progress
+  String? _sendError;          // non-null when OTP send failed
 
   @override
   void initState() {
     super.initState();
     _startTimer();
-    _autoSendOtp();
+    if (!widget.isForPasswordReset) {
+      _autoSendOtp();
+    } else {
+      _isSending = false;
+    }
   }
 
   Future<void> _autoSendOtp() async {
-    final res = await AuthService.sendOtp(phoneOrEmail: widget.contact);
-    if (mounted && res.message.isNotEmpty) {
+    if (mounted) setState(() { _isSending = true; _sendError = null; });
+    
+    final res = widget.isForPasswordReset
+        ? await AuthService.requestPasswordResetOtp(email: widget.contact)
+        : await AuthService.sendOtp(phoneOrEmail: widget.contact);
+        
+    if (!mounted) return;
+    setState(() {
+      _isSending = false;
+      _sendError = res.success ? null : res.message;
+    });
+    // Show a short snackbar on success too so the user knows to check email
+    if (res.success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(res.message),
-          backgroundColor: res.success ? Colors.green : Colors.orange,
+          content: Row(
+            children: const [
+              Icon(Icons.email_outlined, color: Colors.white, size: 18),
+              SizedBox(width: 10),
+              Expanded(child: Text('OTP sent! Check your email inbox.')),
+            ],
+          ),
+          backgroundColor: const Color(0xFF1B5E20),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          duration: const Duration(seconds: 4),
         ),
       );
     }
@@ -131,17 +162,74 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                       color: Color(0xFF1A1A1A),
                     ),
                   ),
-                  const SizedBox(height: 10),
-                  Text(
-                    widget.contact,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 15,
-                      height: 1.4,
-                      color: Colors.grey.shade700,
+                  const SizedBox(height: 24),
+
+                  // ── OTP Send state feedback ────────────────────────────
+                  if (_isSending)
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 18, height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Color(0xFF1B5E20),
+                            ),
+                          ),
+                          SizedBox(width: 10),
+                          Text('Sending verification code…',
+                              style: TextStyle(color: Color(0xFF1B5E20), fontSize: 13)),
+                        ],
+                      ),
+                    )
+                  else if (_sendError != null)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFF8E1),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: const Color(0xFFFFCC02)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: const [
+                              Icon(Icons.info_outline, color: Color(0xFFE65100), size: 18),
+                              SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Check your email inbox — the code was likely sent.',
+                                  style: TextStyle(
+                                    color: Color(0xFFE65100),
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          const Text(
+                            'Enter the 6-digit code from your email below. If you did not receive it, tap Resend after the timer expires.',
+                            style: TextStyle(color: Color(0xFF795548), fontSize: 12.5),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Text(
+                        'A 6-digit code was sent to:\n${widget.contact}',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 14, color: Colors.grey.shade700, height: 1.5),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 40),
+                  // ─────────────────────────────────────────────────────
 
                   // OTP Boxes
                   Row(
@@ -213,16 +301,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                   if (_secondsRemaining == 0)
                     TextButton(
                       onPressed: () async {
-                        final messenger = ScaffoldMessenger.of(context);
                         _startTimer();
-                        final result = await AuthService.sendOtp(phoneOrEmail: widget.contact);
-                        if (!mounted) return;
-                        messenger.showSnackBar(
-                          SnackBar(
-                            content: Text(result.message),
-                            backgroundColor: result.success ? Colors.green : Colors.red,
-                          ),
-                        );
+                        await _autoSendOtp();
                       },
                       child: Text(
                         LanguageService.tr('resend_code'),
@@ -253,6 +333,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                                 final result = await AuthService.verifyOtp(
                                   phoneOrEmail: widget.contact,
                                   code: code,
+                                  purpose: widget.isForPasswordReset ? 'PASSWORD_RESET' : 'REGISTRATION',
                                 );
 
                                 if (!mounted) return;
@@ -266,21 +347,28 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                                     ),
                                   );
 
-                                  final profileRes = await AuthService.getProfile();
-                                  final isMidwife = profileRes.success &&
-                                      profileRes.data != null &&
-                                      profileRes.data!['role'] == 'MIDWIFE';
-
                                   if (!mounted) return;
 
-                                  navigator.pushAndRemoveUntil(
-                                    MaterialPageRoute(
-                                      builder: (context) => isMidwife
-                                          ? const MidwifeHomeScreen()
-                                          : const UserHomeScreen(),
-                                    ),
-                                    (route) => false,
-                                  );
+                                  if (widget.isForPasswordReset) {
+                                    navigator.pushReplacement(
+                                      MaterialPageRoute(
+                                        builder: (context) => CreateNewPasswordScreen(
+                                          contact: widget.contact,
+                                          resetToken: code,
+                                          isMidwife: widget.isMidwife,
+                                        ),
+                                      ),
+                                    );
+                                  } else {
+                                    navigator.pushAndRemoveUntil(
+                                      MaterialPageRoute(
+                                        builder: (context) => widget.isMidwife
+                                            ? const MidwifeHomeScreen()
+                                            : const UserHomeScreen(),
+                                      ),
+                                      (route) => false,
+                                    );
+                                  }
                                 } else {
                                   messenger.showSnackBar(
                                     SnackBar(

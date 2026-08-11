@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../otp_verification_screen.dart';
-import 'package:cagh_frontend/core/services/auth_service.dart';
+import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
 import 'package:cagh_frontend/core/services/language_service.dart';
 
 class UserRegistrationScreen extends StatefulWidget {

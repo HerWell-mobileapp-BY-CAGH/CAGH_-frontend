@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'otp_verification_screen.dart';
-import 'package:cagh_frontend/core/services/auth_service.dart';
+import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
 import 'package:cagh_frontend/core/services/language_service.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
-  const ForgotPasswordScreen({super.key});
+  final bool isMidwife;
+  const ForgotPasswordScreen({super.key, this.isMidwife = false});
 
   @override
   State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
@@ -74,7 +75,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    LanguageService.tr('reset_sub'),
+                    widget.isMidwife
+                        ? 'Enter the email or phone number associated with your CAGH Midwife account and we\'ll send you a verification code.'
+                        : 'Enter the email or phone number associated with your CAGH account and we\'ll send you a verification code.',
                     style: TextStyle(
                       fontSize: 15,
                       height: 1.4,
@@ -159,6 +162,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                   MaterialPageRoute(
                                     builder: (_) => OtpVerificationScreen(
                                       contact: email,
+                                      isMidwife: widget.isMidwife,
+                                      isForPasswordReset: true,
                                     ),
                                   ),
                                 );

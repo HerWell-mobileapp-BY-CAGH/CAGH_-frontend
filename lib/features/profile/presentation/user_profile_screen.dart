@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cagh_frontend/core/services/auth_service.dart';
+import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
 import 'package:cagh_frontend/core/services/language_service.dart';
 import 'package:cagh_frontend/features/auth/presentation/user/user_login_screen.dart';
 import 'package:cagh_frontend/features/profile/presentation/personal_information_screen.dart';
