@@ -494,11 +494,18 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                               _dateOfBirth = selectedDob;
                             });
 
+                            final nameParts = updatedName.trim().split(' ');
+                            final firstName = nameParts.first;
+                            final lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
+
                             AuthService.updateUserProfile({
-                              'full_name': updatedName,
                               'phone_number': updatedPhone,
                               'email': updatedEmail,
-                              'date_of_birth': selectedDob,
+                              'profile': {
+                                'first_name': firstName,
+                                'last_name': lastName,
+                                'date_of_birth': selectedDob,
+                              }
                             });
 
                             Navigator.pop(context);

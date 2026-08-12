@@ -52,16 +52,17 @@ class MidwifeProfile {
 
   factory MidwifeProfile.fromJson(Map<String, dynamic> json) {
     final user = json['user'] ?? {};
+    final userProfile = user['profile'] ?? {};
     final hospital = json['hospital'] ?? {};
 
     return MidwifeProfile(
       id: json['id'] ?? '',
       userId: user['id'] ?? '',
       username: user['username'] ?? '',
-      firstName: user['first_name'] ?? '',
-      lastName: user['last_name'] ?? '',
+      firstName: userProfile['first_name'] ?? user['first_name'] ?? '',
+      lastName: userProfile['last_name'] ?? user['last_name'] ?? '',
       email: user['email'] ?? '',
-      avatarUrl: user['avatar_url'],
+      avatarUrl: userProfile['profile_image'] ?? user['avatar_url'],
       
       hospitalId: hospital['id'] ?? '',
       hospitalName: hospital['name'] ?? '',

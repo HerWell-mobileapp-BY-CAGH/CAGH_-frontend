@@ -6,12 +6,10 @@ import 'package:intl/intl.dart';
 
 class AppointmentDetailsScreen extends StatefulWidget {
   final Appointment appointment;
-  final Function(String midwifeName)? onMessageTap;
 
   const AppointmentDetailsScreen({
     super.key,
     required this.appointment,
-    this.onMessageTap,
   });
 
   @override
@@ -181,33 +179,7 @@ class _AppointmentDetailsScreenState extends State<AppointmentDetailsScreen> {
                   const SizedBox(height: 32),
 
                   // Action Buttons
-                  if (isConfirmed)
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          if (widget.onMessageTap != null && _appointment.midwifeName != null) {
-                            Navigator.pop(context); // Close details
-                            widget.onMessageTap!(_appointment.midwifeName!);
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Chat integration not provided or Midwife name missing.')),
-                            );
-                          }
-                        },
-                        icon: const Icon(Icons.chat_bubble_outline, color: Colors.white),
-                        label: const Text(
-                          'Message Midwife',
-                          style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF274E13),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-                        ),
-                      ),
-                    ),
-                  
+
                   if (isPending)
                     SizedBox(
                       width: double.infinity,

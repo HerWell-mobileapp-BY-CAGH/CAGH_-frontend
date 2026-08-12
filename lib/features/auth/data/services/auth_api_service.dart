@@ -13,7 +13,7 @@ class ApiResponse<T> {
 }
 
 class AuthService {
-  static const String _accessTokenKey = 'access_token';
+  static const String _accessTokenKey = 'auth_token';
   static const String _refreshTokenKey = 'refresh_token';
   static const String _userDataKey = 'user_data';
   static String _lastRole = 'PATIENT';

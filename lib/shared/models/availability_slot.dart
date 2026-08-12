@@ -19,9 +19,9 @@ class AvailabilitySlot {
 
   factory AvailabilitySlot.fromJson(Map<String, dynamic> json) {
     return AvailabilitySlot(
-      availabilityId: json['availability_id'] ?? json['id'] ?? '',
-      midwifeId: json['midwife_id'] ?? '',
-      dateOrDay: json['date_or_day'] ?? json['date'] ?? json['day'] ?? '',
+      availabilityId: json['availability_id']?.toString() ?? json['id']?.toString() ?? '',
+      midwifeId: json['midwife_id']?.toString() ?? '',
+      dateOrDay: json['date_or_day']?.toString() ?? json['date']?.toString() ?? json['day']?.toString() ?? json['day_of_week']?.toString() ?? '',
       startTime: json['start_time'] ?? '',
       endTime: json['end_time'] ?? '',
       durationMinutes: json['duration_minutes'] ?? json['duration'],

@@ -3,6 +3,7 @@ import 'package:cagh_frontend/features/appointments/data/services/appointment_ap
 import 'package:cagh_frontend/features/appointments/data/repositories/appointment_repository_impl.dart';
 import 'package:cagh_frontend/shared/models/midwife_profile.dart';
 import 'package:cagh_frontend/shared/models/time_slots_response.dart';
+import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 
 class BookAppointmentScreen extends StatefulWidget {
@@ -19,13 +20,15 @@ class BookAppointmentScreen extends StatefulWidget {
 
 class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
   bool _isLoading = false;
-  String _consultationType = 'Virtual';
+  String _consultationType = 'Video Call';
   
-  late List<DateTime> _nextDays;
-  int _selectedDateIndex = 0;
+  DateTime _focusedDay = DateTime.now();
+  DateTime _selectedDay = DateTime.now();
   
   String? _selectedSlotId;
   String? _selectedSlotTime;
+  
+  final TextEditingController _reasonController = TextEditingController();
 
   TimeSlotsResponse? _timeSlots;
   
@@ -34,13 +37,13 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
   @override
   void initState() {
     super.initState();
-    _generateNextDays();
     _fetchSchedule();
   }
-
-  void _generateNextDays() {
-    final now = DateTime.now();
-    _nextDays = List.generate(14, (index) => now.add(Duration(days: index)));
+  
+  @override
+  void dispose() {
+    _reasonController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchSchedule() async {
@@ -51,7 +54,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
     });
     
     final midwifeId = widget.midwife.id;
-    final dateStr = DateFormat('yyyy-MM-dd').format(_nextDays[_selectedDateIndex]);
+    final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDay);
     
     try {
       final slots = await _appointmentRepository.getTimeSlots(midwifeId, dateStr);
@@ -61,8 +64,9 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
           _isLoading = false;
         });
       }
-    } catch (e) {
+    } catch (e, st) {
       if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
         setState(() {
           _isLoading = false;
           _timeSlots = null;
@@ -86,16 +90,30 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
     );
 
     try {
+      final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDay);
+      final slot = [...?_timeSlots?.morningSlots, ...?_timeSlots?.afternoonSlots, ...?_timeSlots?.eveningSlots]
+          .firstWhere((s) => s.startTime == _selectedSlotTime, orElse: () => throw Exception('Slot not found'));
+          
+      String apptType = 'VIRTUAL_VIDEO';
+      if (_consultationType == 'Voice Call') {
+        apptType = 'VIRTUAL_VOICE';
+      } else if (_consultationType == 'In-person') {
+        apptType = 'IN_PERSON';
+      }
+
       await _appointmentRepository.requestAppointment({
-        'midwife_id': widget.midwife.id,
-        'time_slot_id': _selectedSlotId,
-        'consultation_type': _consultationType,
+        'midwife': widget.midwife.id,
+        'appointment_type': apptType,
+        'scheduled_date': dateStr,
+        'start_time': slot.startTime.length == 5 ? '${slot.startTime}:00' : slot.startTime,
+        'end_time': slot.endTime.length == 5 ? '${slot.endTime}:00' : slot.endTime,
+        'reason': _reasonController.text.isNotEmpty ? _reasonController.text : 'General Consultation',
       });
 
       if (mounted) Navigator.pop(context);
+      _showSuccessBottomSheet();
     } catch (e) {
       if (mounted) Navigator.pop(context);
-
       final isConflict = e.toString().contains('409');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -104,11 +122,10 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
         ),
       );
       _fetchSchedule();
-      return;
     }
+  }
 
-    final midwifeName = widget.midwife.fullName;
-
+  void _showSuccessBottomSheet() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -137,40 +154,13 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
               const SizedBox(height: 16),
               const Text(
                 'Appointment Request Sent',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF274E13),
-                ),
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF274E13)),
               ),
               const SizedBox(height: 8),
               Text(
-                'Your request has been sent to $midwifeName.\n\nWaiting for confirmation.',
+                'Your request has been sent to ${widget.midwife.fullName}.\n\nWaiting for confirmation.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.grey.shade700, fontSize: 14, height: 1.4),
-              ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.orange.shade100,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.pending_actions, size: 16, color: Colors.orange.shade800),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Pending',
-                      style: TextStyle(
-                        color: Colors.orange.shade800,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
               ),
               const SizedBox(height: 24),
               SizedBox(
@@ -179,18 +169,13 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.pop(context);
-                    Navigator.pop(context);
+                    Navigator.pop(context); // Go back to profile
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF274E13),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(26),
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
                   ),
-                  child: const Text(
-                    'Return to Dashboard',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
-                  ),
+                  child: const Text('Return to Dashboard', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
@@ -202,11 +187,14 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final name = widget.midwife.fullName;
-    final specialty = widget.midwife.specialty;
+    
+    final morningSlots = _timeSlots?.morningSlots.where((s) => s.isAvailable).toList() ?? [];
+    final afternoonSlots = _timeSlots?.afternoonSlots.where((s) => s.isAvailable).toList() ?? [];
+    final eveningSlots = _timeSlots?.eveningSlots.where((s) => s.isAvailable).toList() ?? [];
+    final hasSlots = morningSlots.isNotEmpty || afternoonSlots.isNotEmpty || eveningSlots.isNotEmpty;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF9F9F9),
       appBar: AppBar(
         backgroundColor: const Color(0xFF274E13),
         elevation: 0,
@@ -216,483 +204,376 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
         ),
         title: const Text(
           'Book Appointment',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
         ),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: CircleAvatar(
-              radius: 16,
+              radius: 14,
               backgroundColor: const Color(0xFFE8F5E9),
               backgroundImage: widget.midwife.avatarUrl != null ? NetworkImage(widget.midwife.avatarUrl!) : null,
-              child: widget.midwife.avatarUrl == null ? const Icon(Icons.person, color: Color(0xFF274E13), size: 18) : null,
+              child: widget.midwife.avatarUrl == null ? const Icon(Icons.person, color: Color(0xFF274E13), size: 16) : null,
             ),
           ),
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // CONSULTATION TYPE Section
             Text(
               'CONSULTATION TYPE',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.8,
-                color: Colors.grey.shade600,
-              ),
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: Colors.grey.shade600),
             ),
             const SizedBox(height: 12),
-
             Row(
               children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => setState(() => _consultationType = 'Virtual'),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: _consultationType == 'Virtual' ? Colors.amber : Colors.grey.shade200,
-                          width: _consultationType == 'Virtual' ? 2 : 1,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.03),
-                            blurRadius: 6,
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.videocam,
-                            color: _consultationType == 'Virtual' ? const Color(0xFF274E13) : Colors.grey.shade600,
-                            size: 26,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Virtual',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: _consultationType == 'Virtual' ? const Color(0xFF274E13) : Colors.grey.shade600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => setState(() => _consultationType = 'In-person'),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: _consultationType == 'In-person' ? Colors.amber : Colors.grey.shade200,
-                          width: _consultationType == 'In-person' ? 2 : 1,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.03),
-                            blurRadius: 6,
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.home_outlined,
-                            color: _consultationType == 'In-person' ? const Color(0xFF274E13) : Colors.grey.shade600,
-                            size: 26,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'In-person',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: _consultationType == 'In-person' ? const Color(0xFF274E13) : Colors.grey.shade600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
+                _buildConsultationTypeCard('Video Call', Icons.videocam),
+                const SizedBox(width: 8),
+                _buildConsultationTypeCard('Voice Call', Icons.call),
+                const SizedBox(width: 8),
+                _buildConsultationTypeCard('In-person', Icons.home_outlined),
               ],
             ),
-
             const SizedBox(height: 24),
 
-            // Date Picker
-            Text(
-              'SELECT DATE',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.8,
-                color: Colors.grey.shade600,
+            // Calendar Section
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
+                ],
               ),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 75,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: _nextDays.length,
-                itemBuilder: (context, index) {
-                  final date = _nextDays[index];
-                  final isSelected = index == _selectedDateIndex;
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() => _selectedDateIndex = index);
-                      _fetchSchedule();
-                    },
-                    child: Container(
-                      width: 60,
-                      margin: const EdgeInsets.only(right: 12),
-                      decoration: BoxDecoration(
-                        color: isSelected ? const Color(0xFF274E13) : Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: isSelected ? const Color(0xFF274E13) : Colors.grey.shade300,
-                        ),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            DateFormat('EEE').format(date).toUpperCase(),
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: isSelected ? Colors.white70 : Colors.grey.shade600,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            DateFormat('d').format(date),
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: isSelected ? Colors.white : Colors.black87,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
+              child: TableCalendar(
+                firstDay: DateTime.now(),
+                lastDay: DateTime.now().add(const Duration(days: 90)),
+                focusedDay: _focusedDay,
+                selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                onDaySelected: (selectedDay, focusedDay) {
+                  setState(() {
+                    _selectedDay = selectedDay;
+                    _focusedDay = focusedDay;
+                  });
+                  _fetchSchedule();
                 },
+                headerStyle: const HeaderStyle(
+                  formatButtonVisible: false,
+                  titleCentered: true,
+                  leftChevronIcon: Icon(Icons.chevron_left, color: Colors.grey),
+                  rightChevronIcon: Icon(Icons.chevron_right, color: Colors.grey),
+                  titleTextStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                calendarStyle: CalendarStyle(
+                  selectedDecoration: const BoxDecoration(
+                    color: Color(0xFF1B5E20),
+                    shape: BoxShape.rectangle,
+                    borderRadius: BorderRadius.all(Radius.circular(8)),
+                  ),
+                  todayDecoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    shape: BoxShape.rectangle,
+                    borderRadius: const BorderRadius.all(Radius.circular(8)),
+                  ),
+                  defaultDecoration: const BoxDecoration(
+                    shape: BoxShape.rectangle,
+                  ),
+                  weekendDecoration: const BoxDecoration(
+                    shape: BoxShape.rectangle,
+                  ),
+                ),
               ),
             ),
-
             const SizedBox(height: 24),
 
             // AVAILABLE TIMES Section
+            Text(
+              'AVAILABLE TIMES',
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: Colors.grey.shade600),
+            ),
+            const SizedBox(height: 16),
+
             if (_isLoading)
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 40.0),
-                  child: CircularProgressIndicator(color: Color(0xFF1B5E20)),
-                ),
-              )
-            else if (_timeSlots == null || (_timeSlots!.morningSlots.isEmpty && _timeSlots!.afternoonSlots.isEmpty))
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 40.0),
-                  child: Text('No available slots for this date.', style: TextStyle(color: Colors.red)),
-                ),
-              )
+              const Center(child: Padding(padding: EdgeInsets.all(20.0), child: CircularProgressIndicator(color: Color(0xFF1B5E20))))
+            else if (!hasSlots)
+              Center(child: Padding(padding: const EdgeInsets.all(20.0), child: Text('No slots available for this day.', style: TextStyle(color: Colors.grey.shade600))))
             else ...[
-              Text(
-                'AVAILABLE TIMES',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.8,
-                  color: Colors.grey.shade600,
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // Morning
-              if (_timeSlots!.morningSlots.isNotEmpty) ...[
+              if (morningSlots.isNotEmpty) ...[
                 const Row(
                   children: [
-                    Icon(Icons.wb_sunny_outlined, color: Color(0xFF274E13), size: 18),
+                    Icon(Icons.wb_sunny_outlined, color: Color(0xFF274E13), size: 16),
                     SizedBox(width: 6),
-                    Text(
-                      'Morning',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF274E13),
-                      ),
-                    ),
+                    Text('Morning', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF274E13))),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: _timeSlots!.morningSlots.map((slot) => _buildSlotChip(slot.id, slot.startTime, slot.isAvailable)).toList(),
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: morningSlots.map((slot) => _buildSlotChip(slot.id, slot.startTime, slot.displayTime, slot.isAvailable)).toList(),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
               ],
-
-              // Afternoon
-              if (_timeSlots!.afternoonSlots.isNotEmpty) ...[
+              if (afternoonSlots.isNotEmpty) ...[
                 const Row(
                   children: [
-                    Icon(Icons.wb_sunny_outlined, color: Color(0xFF274E13), size: 18),
+                    Icon(Icons.wb_sunny_outlined, color: Color(0xFF274E13), size: 16),
                     SizedBox(width: 6),
-                    Text(
-                      'Afternoon',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF274E13),
-                      ),
-                    ),
+                    Text('Afternoon', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF274E13))),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: _timeSlots!.afternoonSlots.map((slot) => _buildSlotChip(slot.id, slot.startTime, slot.isAvailable)).toList(),
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: afternoonSlots.map((slot) => _buildSlotChip(slot.id, slot.startTime, slot.displayTime, slot.isAvailable)).toList(),
                 ),
+                const SizedBox(height: 20),
+              ],
+              if (eveningSlots.isNotEmpty) ...[
+                const Row(
+                  children: [
+                    Icon(Icons.nights_stay_outlined, color: Color(0xFF274E13), size: 16),
+                    SizedBox(width: 6),
+                    Text('Evening', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF274E13))),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: eveningSlots.map((slot) => _buildSlotChip(slot.id, slot.startTime, slot.displayTime, slot.isAvailable)).toList(),
+                ),
+                const SizedBox(height: 20),
               ],
             ],
 
-            const SizedBox(height: 24),
-
-            // Divider line
-            Container(
-              height: 4,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: const Color(0xFF274E13),
-                borderRadius: BorderRadius.circular(2),
+            // Patient Notes Section
+            const SizedBox(height: 16),
+            Text(
+              'REASON FOR VISIT',
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: Colors.grey.shade600),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _reasonController,
+              maxLines: 3,
+              decoration: InputDecoration(
+                hintText: 'Describe your symptoms or reason for the consultation...',
+                hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
+                filled: true,
+                fillColor: Colors.white,
+                contentPadding: const EdgeInsets.all(16),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(color: Colors.grey.shade200),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: const BorderSide(color: Color(0xFF1B5E20), width: 1.5),
+                ),
               ),
             ),
-
             const SizedBox(height: 24),
 
             // Booking Summary
-            const Text(
-              'Booking Summary',
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1A1A1A),
-              ),
-            ),
-            const SizedBox(height: 12),
-
             Container(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: const Color(0xFFF9F9F9),
-                borderRadius: BorderRadius.circular(16),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
+                ],
               ),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CircleAvatar(
-                    radius: 24,
-                    backgroundColor: const Color(0xFFE8F5E9),
-                    backgroundImage: widget.midwife.avatarUrl != null ? NetworkImage(widget.midwife.avatarUrl!) : null,
-                    child: widget.midwife.avatarUrl == null ? const Icon(Icons.person, color: Color(0xFF274E13), size: 26) : null,
+                  const Text(
+                    'Booking Summary',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A)),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF9F9F9),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
                       children: [
-                        Text(
-                          'Your Midwife',
-                          style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                        CircleAvatar(
+                          radius: 20,
+                          backgroundColor: const Color(0xFFE8F5E9),
+                          backgroundImage: widget.midwife.avatarUrl != null ? NetworkImage(widget.midwife.avatarUrl!) : null,
                         ),
-                        Text(
-                          name,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF1A1A1A),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Your Midwife', style: TextStyle(fontSize: 10, color: Colors.grey.shade600, fontWeight: FontWeight.bold)),
+                              Text(widget.midwife.fullName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                              Text(widget.midwife.specialty, style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+                            ],
                           ),
-                        ),
-                        Text(
-                          specialty,
-                          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                         ),
                       ],
                     ),
                   ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Consultation Fee', style: TextStyle(color: Colors.grey.shade700, fontSize: 13.5)),
-                Text(widget.midwife.consultationFee, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF274E13))),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Service Type', style: TextStyle(color: Colors.grey.shade700, fontSize: 13.5)),
-                Text('$_consultationType Chat', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-              ],
-            ),
-            if (_selectedSlotTime != null) ...[
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Date & Time', style: TextStyle(color: Colors.grey.shade700, fontSize: 13.5)),
-                  Text('${DateFormat('MMM d').format(_nextDays[_selectedDateIndex])}, $_selectedSlotTime', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                ],
-              ),
-            ],
-
-            const SizedBox(height: 14),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Total Amount',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1A1A1A),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Consultation Fee', style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+                      Text(widget.midwife.consultationFee, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    ],
                   ),
-                ),
-                Text(
-                  widget.midwife.consultationFee,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF274E13),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Service Type', style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+                      Text(_consultationType, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    ],
                   ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 24),
-
-            // Confirm Booking Button
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: ElevatedButton.icon(
-                onPressed: _confirmBooking,
-                icon: const Icon(Icons.calendar_month, color: Colors.white),
-                label: const Text(
-                  'Confirm Booking',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12.0),
+                    child: Divider(),
                   ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF274E13),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(28),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Total Amount', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                      Text(
+                        widget.midwife.consultationFee,
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF274E13)),
+                      ),
+                    ],
                   ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
-            Center(
-              child: Text(
-                'Free cancellation up to 24 hours before your appointment.',
-                style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // Privacy Card
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF1F8E9),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.shield_outlined, color: Color(0xFF274E13), size: 20),
-                  const SizedBox(width: 10),
-                  Expanded(
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton.icon(
+                      onPressed: _confirmBooking,
+                      icon: const Icon(Icons.calendar_today, color: Colors.white, size: 18),
+                      label: const Text('Confirm Booking', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1B5E20),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Center(
                     child: Text(
-                      "Your health data is encrypted and handled according to HerWell's strict privacy standards.",
-                      style: TextStyle(fontSize: 11.5, color: Colors.grey.shade800, height: 1.3),
+                      'Free cancellation up to 24 hours before\nyour appointment.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.grey.shade400, fontSize: 10),
                     ),
                   ),
                 ],
               ),
             ),
-
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
+            // Privacy Note
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F8E9),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.shield_outlined, color: Color(0xFF274E13), size: 16),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      "Your health data is encrypted and handled according to HerWell's strict privacy standards.",
+                      style: TextStyle(fontSize: 10, color: Colors.grey.shade700, height: 1.3),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 40),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSlotChip(String id, String startTime, bool isAvailable) {
-    final isSelected = id == _selectedSlotId;
-    return ChoiceChip(
-      label: Text(startTime),
-      selected: isSelected,
-      onSelected: isAvailable ? (val) {
-        if (val) {
-          setState(() {
-            _selectedSlotId = id;
-            _selectedSlotTime = startTime;
-          });
-        }
+  Widget _buildConsultationTypeCard(String title, IconData icon) {
+    final isSelected = _consultationType == title;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _consultationType = title),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isSelected ? Colors.amber : Colors.grey.shade200,
+              width: isSelected ? 2 : 1,
+            ),
+          ),
+          child: Column(
+            children: [
+              Icon(icon, color: isSelected ? const Color(0xFF274E13) : Colors.grey.shade500, size: 28),
+              const SizedBox(height: 8),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: isSelected ? const Color(0xFF274E13) : Colors.grey.shade500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSlotChip(String id, String startTime, String displayTime, bool isAvailable) {
+    final isSelected = startTime == _selectedSlotTime;
+    return GestureDetector(
+      onTap: isAvailable ? () {
+        setState(() {
+          _selectedSlotId = id;
+          _selectedSlotTime = startTime;
+        });
       } : null,
-      selectedColor: const Color(0xFFDCEDC8),
-      backgroundColor: Colors.white,
-      disabledColor: Colors.grey.shade200,
-      side: BorderSide(
-        color: isSelected ? const Color(0xFF274E13) : const Color(0xFFE0E0E0),
-      ),
-      labelStyle: TextStyle(
-        fontSize: 12,
-        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-        color: isAvailable ? (isSelected ? const Color(0xFF274E13) : Colors.black87) : Colors.grey,
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF274E13) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF274E13) : const Color(0xFFE0E0E0),
+          ),
+        ),
+        child: Text(
+          displayTime.isNotEmpty ? displayTime : startTime,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+            color: isAvailable ? (isSelected ? Colors.white : Colors.black87) : Colors.grey.shade400,
+          ),
+        ),
       ),
     );
   }
 }
-

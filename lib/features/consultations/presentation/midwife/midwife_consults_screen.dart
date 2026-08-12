@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cagh_frontend/features/appointments/data/services/appointment_api_service.dart';
 import 'package:cagh_frontend/features/appointments/data/repositories/appointment_repository_impl.dart';
 import 'package:cagh_frontend/shared/models/appointment.dart';
-import 'package:cagh_frontend/features/chat/presentation/screens/user_chat_room_screen.dart';
+import 'package:cagh_frontend/features/consultations/data/services/consultation_api_service.dart';
+import 'package:cagh_frontend/features/consultations/presentation/midwife/consultation_session_screen.dart';
 
 class MidwifeConsultsScreen extends StatefulWidget {
   const MidwifeConsultsScreen({super.key});
@@ -12,9 +13,6 @@ class MidwifeConsultsScreen extends StatefulWidget {
 }
 
 class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
-  // Starts empty by default for fresh registrations
-  final List<Map<String, dynamic>> _activeChats = [];
-  final List<Map<String, dynamic>> _historyLogs = [];
   
   final _appointmentRepository = AppointmentRepositoryImpl(AppointmentApiService());
   List<Appointment> _appointments = [];
@@ -56,81 +54,41 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
     }
   }
 
-  void _openCallModal(BuildContext context, String patientName, String callType) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return Container(
-          height: MediaQuery.of(context).size.height * 0.75,
-          decoration: const BoxDecoration(
-            color: Color(0xFF1B5E20),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-          child: Column(
-            children: [
-              Container(
-                width: 48,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: Colors.white30,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              const SizedBox(height: 32),
-              const CircleAvatar(
-                radius: 46,
-                backgroundColor: Color(0xFF2E7D32),
-                child: Icon(Icons.person, color: Colors.white, size: 54),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                patientName,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                '$callType In Progress • 02:45',
-                style: TextStyle(
-                  color: Colors.amber.shade300,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildCallActionBtn(Icons.mic_off_outlined, 'Mute', () {}),
-                    _buildCallActionBtn(Icons.volume_up_outlined, 'Speaker', () {}),
-                    _buildCallActionBtn(Icons.videocam_outlined, 'Video', () {}),
-                    _buildCallActionBtn(
-                      Icons.call_end,
-                      'End',
-                      () => Navigator.pop(context),
-                      bgColor: Colors.redAccent,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-            ],
+  Future<void> _startConsultation(BuildContext context, Appointment apt) async {
+    try {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(child: CircularProgressIndicator(color: Color(0xFF1B5E20))),
+      );
+
+      final consultationApiService = ConsultationApiService();
+      final sessionData = await consultationApiService.createConsultation(apt.appointmentId);
+      
+      if (context.mounted) Navigator.pop(context); // Close dialog
+
+      if (context.mounted) {
+        final result = await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ConsultationSessionScreen(
+              sessionData: sessionData,
+              appointment: apt,
+            ),
           ),
         );
-      },
-    );
+        if (result == true) {
+          _fetchAppointments();
+        }
+      }
+    } catch (e) {
+      if (context.mounted) Navigator.pop(context); // Close dialog
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to start consultation: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
   }
 
   Widget _buildCallActionBtn(IconData icon, String label, VoidCallback onTap, {Color? bgColor}) {
@@ -211,7 +169,7 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
               const SizedBox(height: 12),
               _detailRow(Icons.medical_services_outlined, 'Consultation', apt.appointmentType),
               _detailRow(Icons.calendar_month_outlined, 'Date & Time', '${apt.date} • ${apt.startTime}'),
-              _detailRow(Icons.phone_outlined, 'Patient Contact', 'N/A'), // Appointment doesn't have phone
+              _detailRow(Icons.phone_outlined, 'Patient Contact', apt.patientPhone ?? 'N/A'),
               _detailRow(Icons.person_outline, 'Assigned Midwife', apt.midwifeName ?? 'N/A'),
               if (apt.reason != null && apt.reason!.isNotEmpty)
                 _detailRow(Icons.notes_outlined, 'Patient Notes', apt.reason!),
@@ -431,60 +389,6 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
     );
   }
 
-  void _showHistoryModal(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Consultation History', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 4),
-              Text('Past completed and closed patient chats.', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
-              const SizedBox(height: 16),
-              if (_historyLogs.isEmpty)
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 24),
-                  alignment: Alignment.center,
-                  child: Column(
-                    children: [
-                      Icon(Icons.history_outlined, size: 36, color: Colors.grey.shade400),
-                      const SizedBox(height: 8),
-                      Text('No past consultation history yet.', style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
-                    ],
-                  ),
-                )
-              else
-                ..._historyLogs.map((log) {
-                  return ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: const CircleAvatar(backgroundColor: Color(0xFFE8F5E9), child: Icon(Icons.person, color: Color(0xFF1B5E20))),
-                    title: Text(log['name'], style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text(log['topic']),
-                    trailing: const Text('COMPLETED', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 11)),
-                  );
-                }),
-              FloatingActionButton.extended(
-                onPressed: () {
-                  // Stub for demo data load
-                },
-                backgroundColor: const Color(0xFF1B5E20),
-                icon: const Icon(Icons.refresh, color: Colors.white),
-                label: const Text('Refresh', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -497,7 +401,6 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
 
     final upcomingApts = _appointments.where((a) => a.status == AppointmentStatus.confirmed).toList();
     final pendingApts = _appointments.where((a) => a.status == AppointmentStatus.pending).toList();
-    final totalActiveChats = _activeChats.length + upcomingApts.length;
 
     return Scaffold(
           backgroundColor: const Color(0xFFF9FAF8),
@@ -553,63 +456,7 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
                 // Stat Cards Grid
                 Row(
                   children: [
-                    // Card 1: Active Chats (Dark Green)
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.all(18),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF234E21),
-                          borderRadius: BorderRadius.circular(18),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF1B5E20).withValues(alpha: 0.15),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Align(
-                              alignment: Alignment.topRight,
-                              child: Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: const Icon(
-                                  Icons.chat_bubble_outline_rounded,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '$totalActiveChats',
-                              style: const TextStyle(
-                                fontSize: 32,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            const Text(
-                              'Active Chats',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Color(0xFFA5D6A7),
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
 
-                    const SizedBox(width: 14),
 
                     // Card 2: Next Appt (Warm Light Yellow)
                     Expanded(
@@ -820,22 +667,11 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      'Active Conversations',
+                      'Upcoming Consultations',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF1A1A1A),
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () => _showHistoryModal(context),
-                      child: const Text(
-                        'View History',
-                        style: TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1B5E20),
-                        ),
                       ),
                     ),
                   ],
@@ -843,160 +679,9 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
 
                 const SizedBox(height: 14),
 
-                // Dynamic Empty State vs Active Conversations Cards
-                if (_activeChats.isEmpty && upcomingApts.isEmpty)
+                if (upcomingApts.isEmpty)
                   _buildEmptyConsultationsState()
                 else ...[
-                  // Conversation Cards (Active Chats)
-                  ..._activeChats.map((chat) {
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 14),
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.04),
-                            blurRadius: 10,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Stack(
-                                children: [
-                                  CircleAvatar(
-                                    radius: 24,
-                                    backgroundColor: const Color(0xFFC8E6C9),
-                                    backgroundImage: chat['avatarUrl'] != null ? NetworkImage(chat['avatarUrl']) : null,
-                                    child: chat['avatarUrl'] == null ? const Icon(Icons.person, color: Color(0xFF1B5E20)) : null,
-                                  ),
-                                  if (chat['isOnline'] == true)
-                                    Positioned(
-                                      right: 0,
-                                      bottom: 0,
-                                      child: Container(
-                                        width: 12,
-                                        height: 12,
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFF4CAF50),
-                                          shape: BoxShape.circle,
-                                          border: Border.all(color: Colors.white, width: 2),
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          chat['name'],
-                                          style: const TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                            color: Color(0xFF1A1A1A),
-                                          ),
-                                        ),
-                                        Text(
-                                          chat['timeAgo'] ?? 'Just now',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey.shade500,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      chat['topic'] ?? 'General Consultation',
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                        color: Color(0xFF2E7D32),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      chat['snippet'] ?? '',
-                                      style: TextStyle(
-                                        fontSize: 12.5,
-                                        color: Colors.grey.shade600,
-                                        fontStyle: FontStyle.italic,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 14),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: SizedBox(
-                                  height: 42,
-                                  child: ElevatedButton.icon(
-                                    onPressed: () => _openCallModal(context, chat['name'], 'Voice Call'),
-                                    icon: const Icon(Icons.call_outlined, color: Colors.white, size: 18),
-                                    label: const Text(
-                                      'Join Voice Call',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 13.5,
-                                      ),
-                                    ),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFF1B5E20),
-                                      elevation: 0,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(24),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Container(
-                                height: 42,
-                                width: 42,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFFF0F2EE),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: IconButton(
-                                  icon: const Icon(Icons.assignment_outlined, color: Color(0xFF1B5E20), size: 20),
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => UserChatRoomScreen(
-                                          midwifeName: chat['name'],
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    );
-                  }),
 
                   // Scheduled Conversations (User Bookings)
                   ...upcomingApts.map((apt) {
@@ -1040,14 +725,18 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
                                     Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Text(
-                                          apt.userFullName ?? 'Unknown Patient',
-                                          style: const TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                            color: Color(0xFF1A1A1A),
+                                        Expanded(
+                                          child: Text(
+                                            apt.userFullName ?? 'Unknown Patient',
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              color: Color(0xFF1A1A1A),
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
+                                        const SizedBox(width: 8),
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                           decoration: BoxDecoration(
@@ -1111,7 +800,7 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
                                 child: SizedBox(
                                   height: 42,
                                   child: ElevatedButton.icon(
-                                    onPressed: () => _openCallModal(context, apt.userFullName ?? 'Patient', apt.appointmentType),
+                                    onPressed: () => _startConsultation(context, apt),
                                     icon: const Icon(Icons.call_outlined, color: Colors.white, size: 18),
                                     label: const Text(
                                       'Join Voice Call',
@@ -1367,29 +1056,7 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          OutlinedButton.icon(
-            onPressed: () {
-              setState(() {
-                // AppointmentService.loadDemoData(); // Removed because demo data isn't available
-                _activeChats.add({
-                  'id': 'chat_elena',
-                  'name': 'Elena Rodriguez',
-                  'avatarUrl': 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80',
-                  'timeAgo': '2m ago',
-                  'topic': 'Voice Follow-up',
-                  'snippet': '"Thank you for the meal plan! I\'m feeling much better today..."',
-                  'isOnline': true,
-                  'unread': 1,
-                });
-              });
-            },
-            icon: const Icon(Icons.playlist_add, size: 18, color: Color(0xFF1B5E20)),
-            label: const Text('Load Demo Data for Testing', style: TextStyle(color: Color(0xFF1B5E20), fontWeight: FontWeight.bold, fontSize: 12)),
-            style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: Color(0xFF1B5E20)),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            ),
-          ),
+
         ],
       ),
     );

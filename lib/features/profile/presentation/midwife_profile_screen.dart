@@ -82,7 +82,8 @@ class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
   }
 
   void _showEditModal() {
-    final nameController = TextEditingController(text: name);
+    final firstNameController = TextEditingController(text: profile?.firstName ?? name.split(' ').first);
+    final lastNameController = TextEditingController(text: profile?.lastName ?? (name.split(' ').length > 1 ? name.split(' ').sublist(1).join(' ') : ''));
     final titleController = TextEditingController(text: title);
     final bioController = TextEditingController(text: bio);
     final newTagController = TextEditingController();
@@ -130,15 +131,43 @@ class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Full Name
-                    const Text('Full Name', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
-                    const SizedBox(height: 6),
-                    TextField(
-                      controller: nameController,
-                      decoration: InputDecoration(
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                      ),
+                    // First Name & Last Name Row
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('First Name', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
+                              const SizedBox(height: 6),
+                              TextField(
+                                controller: firstNameController,
+                                decoration: InputDecoration(
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('Last Name', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
+                              const SizedBox(height: 6),
+                              TextField(
+                                controller: lastNameController,
+                                decoration: InputDecoration(
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 16),
 
@@ -223,22 +252,42 @@ class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
                       height: 50,
                       child: ElevatedButton(
                         onPressed: () async {
-                          final newName = nameController.text.trim();
+                          final newFirstName = firstNameController.text.trim();
+                          final newLastName = lastNameController.text.trim();
                           final newTitle = titleController.text.trim();
                           final newBio = bioController.text.trim();
 
                           setState(() {
-                            if (newName.isNotEmpty) name = newName;
+                            if (newFirstName.isNotEmpty) name = '$newFirstName $newLastName'.trim();
                             if (newTitle.isNotEmpty) title = newTitle;
                             if (newBio.isNotEmpty) bio = newBio;
                             expertises = tempExpertises;
                           });
 
-                          await AuthService.updateMidwifeProfile({
-                            'full_name': newName,
-                            'title': newTitle,
-                            'bio': newBio,
-                          });
+                          await Future.wait([
+                            AuthService.updateUserProfile({
+                              'first_name': newFirstName,
+                              'last_name': newLastName,
+                              'profile': {
+                                'first_name': newFirstName,
+                                'last_name': newLastName,
+                              },
+                              'user': {
+                                'first_name': newFirstName,
+                                'last_name': newLastName,
+                              }
+                            }),
+                            AuthService.updateMidwifeProfile({
+                              'title': newTitle,
+                              'bio': newBio,
+                              'first_name': newFirstName,
+                              'last_name': newLastName,
+                              'user': {
+                                'first_name': newFirstName,
+                                'last_name': newLastName,
+                              }
+                            }),
+                          ]);
 
                           if (mounted) Navigator.pop(context);
                           ScaffoldMessenger.of(context).showSnackBar(

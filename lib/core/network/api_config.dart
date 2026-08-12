@@ -40,10 +40,10 @@ class ApiConfig {
   static const String midwifeBlockedDates = '/midwives/blocked-dates/';
   
   // Appointments Endpoints
-  static const String appointments = '/appointments/appointments/';
+  static const String appointments = '/appointments/';
   static const String timeSlots = '/appointments/time-slots/';
-  static const String availabilities = '/appointments/availabilities/';
+  static const String availabilities = '/appointments/availability/';
 
-  // AI Assistant Endpoints
-  static const String askAi = '/ai-assistant/questions/ask/';
+  // Consultations Endpoints
+  static const String consultations = '/consultations/';
 }

@@ -8,6 +8,8 @@ class TimeSlotsResponse {
   final int availableSlotsCount;
   final List<TimeSlot> morningSlots;
   final List<TimeSlot> afternoonSlots;
+  final List<TimeSlot> eveningSlots;
+  final String rawJsonDump;
 
   TimeSlotsResponse({
     required this.midwifeId,
@@ -17,6 +19,8 @@ class TimeSlotsResponse {
     required this.availableSlotsCount,
     required this.morningSlots,
     required this.afternoonSlots,
+    required this.eveningSlots,
+    this.rawJsonDump = '',
   });
 
   factory TimeSlotsResponse.fromJson(Map<String, dynamic> json) {
@@ -34,6 +38,10 @@ class TimeSlotsResponse {
       afternoonSlots: (json['afternoon_slots'] as List<dynamic>?)
           ?.map((e) => TimeSlot.fromJson(e as Map<String, dynamic>))
           .toList() ?? [],
+      eveningSlots: (json['evening_slots'] as List<dynamic>?)
+          ?.map((e) => TimeSlot.fromJson(e as Map<String, dynamic>))
+          .toList() ?? [],
+      rawJsonDump: json.keys.join(', '),
     );
   }
 

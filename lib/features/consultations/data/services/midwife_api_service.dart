@@ -123,7 +123,13 @@ class MidwifeApiService {
     ).timeout(const Duration(seconds: 15));
 
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      final decoded = jsonDecode(response.body);
+      if (decoded is Map<String, dynamic> && decoded.containsKey('results')) {
+        return decoded['results'] as List<dynamic>;
+      } else if (decoded is List) {
+        return decoded;
+      }
+      return [];
     } else {
       throw Exception('Failed to load blocked dates. Status: ${response.statusCode}');
     }

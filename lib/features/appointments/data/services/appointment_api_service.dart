@@ -22,7 +22,15 @@ class AppointmentApiService {
     ).timeout(const Duration(seconds: 15));
 
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      try {
+        final decoded = jsonDecode(response.body);
+        if (decoded is List) {
+          throw Exception('API returned a List. Body: ${response.body}');
+        }
+        return decoded as Map<String, dynamic>;
+      } catch (e) {
+        throw Exception('Decode Error: $e. Body: ${response.body}');
+      }
     } else {
       throw Exception('Failed to load time slots. Status: ${response.statusCode}');
     }
@@ -48,8 +56,6 @@ class AppointmentApiService {
   }
 
   Future<List<dynamic>> getUserAppointments() async {
-    // Assuming backend uses the same endpoint but infers role from token, or query param. 
-    // Usually it's GET /appointments/appointments/ for both, and views filter by user.
     final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.appointments}');
     
     final response = await http.get(
@@ -58,7 +64,13 @@ class AppointmentApiService {
     ).timeout(const Duration(seconds: 15));
 
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      final decoded = jsonDecode(response.body);
+      if (decoded is Map<String, dynamic> && decoded.containsKey('results')) {
+        return decoded['results'] as List<dynamic>;
+      } else if (decoded is List) {
+        return decoded;
+      }
+      return [];
     } else {
       throw Exception('Failed to fetch user appointments.');
     }
@@ -73,14 +85,20 @@ class AppointmentApiService {
     ).timeout(const Duration(seconds: 15));
 
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      final decoded = jsonDecode(response.body);
+      if (decoded is Map<String, dynamic> && decoded.containsKey('results')) {
+        return decoded['results'] as List<dynamic>;
+      } else if (decoded is List) {
+        return decoded;
+      }
+      return [];
     } else {
       throw Exception('Failed to fetch midwife appointments.');
     }
   }
 
   Future<Map<String, dynamic>> acceptAppointment(String appointmentId) async {
-    final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.appointments}$appointmentId/accept/');
+    final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.appointments}$appointmentId/confirm/');
     
     final response = await http.post(
       url,
@@ -148,7 +166,13 @@ class AppointmentApiService {
     ).timeout(const Duration(seconds: 15));
 
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      final decoded = jsonDecode(response.body);
+      if (decoded is Map<String, dynamic> && decoded.containsKey('results')) {
+        return decoded['results'] as List<dynamic>;
+      } else if (decoded is List) {
+        return decoded;
+      }
+      return [];
     } else {
       throw Exception('Failed to fetch availabilities. Status: ${response.statusCode}');
     }

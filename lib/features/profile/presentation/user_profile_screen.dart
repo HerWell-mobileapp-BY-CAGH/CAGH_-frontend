@@ -120,14 +120,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                                   shape: BoxShape.circle,
                                   color: Colors.amber,
                                 ),
-                                child: CircleAvatar(
+                                child: const CircleAvatar(
                                   radius: 42,
-                                  backgroundColor: const Color(0xFFE8F5E9),
-                                  child: Icon(
-                                    Icons.person,
-                                    size: 50,
-                                    color: Colors.green.shade800,
-                                  ),
+                                  backgroundColor: Color(0xFFE8F5E9),
+                                  backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=47'),
                                 ),
                               ),
                               Container(
@@ -346,7 +342,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         ),
                       ),
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Colors.redAccent),
+                        side: const BorderSide(color: Color(0xFFF4C7C7), width: 1.5),
+                        backgroundColor: const Color(0xFFFFF7F7),
+                        elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30),
                         ),
@@ -378,7 +376,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           width: 3.5,
           height: 16,
           decoration: BoxDecoration(
-            color: const Color(0xFF1B5E20),
+            color: Colors.amber,
             borderRadius: BorderRadius.circular(2),
           ),
         ),
@@ -400,11 +398,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200, width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),

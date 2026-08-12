@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:cagh_frontend/features/consultations/data/services/midwife_api_service.dart';
+import 'package:cagh_frontend/features/consultations/data/repositories/midwife_repository_impl.dart';
 import 'package:cagh_frontend/features/appointments/data/services/appointment_api_service.dart';
-import 'package:cagh_frontend/features/appointments/data/repositories/appointment_repository_impl.dart';
-import 'package:cagh_frontend/shared/models/appointment.dart';
+import 'package:cagh_frontend/shared/models/midwife_profile.dart';
+import 'package:cagh_frontend/shared/models/blocked_date.dart';
+import 'package:cagh_frontend/shared/models/availability_slot.dart';
+import 'package:cagh_frontend/features/scheduling/presentation/screens/midwife_manage_schedule_screen.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 class MidwifeScheduleScreen extends StatefulWidget {
   const MidwifeScheduleScreen({super.key});
@@ -11,1008 +16,708 @@ class MidwifeScheduleScreen extends StatefulWidget {
 }
 
 class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
-  int _selectedTab = 0; // 0=Schedule, 1=Requests
+  final _repository = MidwifeRepositoryImpl(MidwifeApiService());
+  final _appointmentsApi = AppointmentApiService();
   
-  final _appointmentRepository = AppointmentRepositoryImpl(AppointmentApiService());
-  List<Appointment> _appointments = [];
   bool _isLoading = true;
+  MidwifeProfile? _profile;
+  List<BlockedDate> _blockedDates = [];
+  List<AvailabilitySlot> _availabilities = [];
+
+  bool _isAvailable = false;
+  bool _voiceCall = false;
+  bool _inPerson = false;
+
+  DateTime _focusedDay = DateTime.now();
+  DateTime? _selectedDay;
 
   @override
   void initState() {
     super.initState();
-    _fetchAppointments();
+    _selectedDay = _focusedDay;
+    _fetchData();
   }
 
-  Future<void> _fetchAppointments() async {
+  Future<void> _fetchData() async {
     setState(() => _isLoading = true);
     try {
-      // Assuming 'current-midwife-id' for now, should come from auth
-      _appointments = await _appointmentRepository.getMidwifeAppointments();
+      final profile = await _repository.getMyProfile();
+      final blocked = await _repository.getBlockedDates();
+      final availData = await _appointmentsApi.getAvailabilities();
+      
+      final availList = availData.map((e) => AvailabilitySlot.fromJson(e)).toList();
+
+      if (mounted) {
+        setState(() {
+          _profile = profile;
+          _blockedDates = blocked;
+          _availabilities = availList;
+          _isAvailable = profile.isAcceptingBookings;
+          _voiceCall = profile.offeredConsultationTypes.contains('Voice Call') || profile.offeredConsultationTypes.contains('VOICE_CALL');
+          _inPerson = profile.offeredConsultationTypes.contains('In-person') || profile.offeredConsultationTypes.contains('IN_PERSON');
+        });
+      }
     } catch (e) {
-      print('Error loading appointments: $e');
+      debugPrint('Error fetching schedule data: $e');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  Future<void> _updateStatus(String id, AppointmentStatus newStatus) async {
+  Future<void> _toggleAvailability(bool value) async {
+    setState(() => _isAvailable = value);
     try {
-      if (newStatus == AppointmentStatus.confirmed) {
-        await _appointmentRepository.acceptAppointment(id);
-      } else if (newStatus == AppointmentStatus.declined || newStatus == AppointmentStatus.cancelled) {
-        if (newStatus == AppointmentStatus.cancelled) {
-          await _appointmentRepository.cancelAppointment(id);
-        } else {
-          await _appointmentRepository.declineAppointment(id);
-        }
-      }
-      _fetchAppointments(); // Refresh the list
+      await _repository.updateMyProfile({'is_accepting_bookings': value});
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to update status'), backgroundColor: Colors.red),
-      );
+      if (mounted) {
+        setState(() => _isAvailable = !value);
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to update status')));
+      }
     }
   }
 
-  void _openStartSessionModal(BuildContext context, String patientName, String consultType) {
+  Future<void> _updatePrefs() async {
+    final types = <String>[];
+    if (_voiceCall) types.add('VOICE_CALL');
+    if (_inPerson) types.add('IN_PERSON');
+    try {
+      await _repository.updateMyProfile({'offered_consultation_types': types});
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Preferences updated'), backgroundColor: Colors.green));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to update preferences'), backgroundColor: Colors.red));
+      }
+    }
+  }
+
+  Future<void> _deleteBlockedDate(String id) async {
+    try {
+      await _repository.deleteBlockedDate(id);
+      setState(() {
+        _blockedDates.removeWhere((b) => b.id == id);
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to delete blocked date')));
+      }
+    }
+  }
+
+  void _showAddLeaveModal() {
+    String? reason;
+    DateTime? selectedDate = _selectedDay;
+    
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Add Leave'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              decoration: const InputDecoration(labelText: 'Reason (e.g. Personal Leave)'),
+              onChanged: (val) => reason = val,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () async {
+                final date = await showDatePicker(
+                  context: context,
+                  initialDate: selectedDate ?? DateTime.now(),
+                  firstDate: DateTime.now(),
+                  lastDate: DateTime.now().add(const Duration(days: 365)),
+                );
+                if (date != null) {
+                  selectedDate = date;
+                }
+              },
+              child: const Text('Change Date'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () async {
+              if (selectedDate != null && reason != null && reason!.isNotEmpty) {
+                final dateStr = '${selectedDate!.year}-${selectedDate!.month.toString().padLeft(2, '0')}-${selectedDate!.day.toString().padLeft(2, '0')}';
+                Navigator.pop(ctx);
+                setState(() => _isLoading = true);
+                try {
+                  await _repository.addBlockedDate(dateStr, reason!);
+                  await _fetchData();
+                } catch (e) {
+                  setState(() => _isLoading = false);
+                  if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to add leave')));
+                }
+              }
+            },
+            child: const Text('Add'),
+          )
+        ],
+      ),
+    );
+  }
+
+  void _showScheduleTimeBottomSheet(DateTime date) {
+    final dayOfWeek = date.weekday - 1; // 0=Monday to 6=Sunday
+    final dateStr = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    
+    Set<int> _selectedSlots = {}; // Store in minutes from midnight
+
+    // Pre-populate with existing availabilities
+    for (var a in _availabilities) {
+      if (a.dateOrDay == dateStr || a.dateOrDay == dayOfWeek.toString()) {
+        final startParts = a.startTime.split(':');
+        final endParts = a.endTime.split(':');
+        if (startParts.length >= 2 && endParts.length >= 2) {
+          final startMin = int.parse(startParts[0]) * 60 + int.parse(startParts[1]);
+          final endMin = int.parse(endParts[0]) * 60 + int.parse(endParts[1]);
+          for (int m = startMin; m < endMin; m += 30) {
+            _selectedSlots.add(m);
+          }
+        }
+      }
+    }
+
+    final List<int> morningSlots = [
+      for (int h = 8; h <= 11; h++) ...[h * 60, h * 60 + 30],
+    ];
+    final List<int> afternoonSlots = [
+      for (int h = 12; h <= 16; h++) ...[h * 60, h * 60 + 30],
+    ];
+    final List<int> eveningSlots = [
+      for (int h = 17; h <= 21; h++) ...[h * 60, h * 60 + 30],
+    ];
+
+    String formatTime(int minutes) {
+      final hour = minutes ~/ 60;
+      final minute = minutes % 60;
+      final h = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
+      final p = hour >= 12 ? 'PM' : 'AM';
+      return '${h.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')} $p';
+    }
+
+    Widget buildSlotSection(String title, List<int> slots, StateSetter setSheetState) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey.shade600, letterSpacing: 1.0)),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: slots.map((minutes) {
+              final isSelected = _selectedSlots.contains(minutes);
+              return ChoiceChip(
+                label: Text(formatTime(minutes)),
+                selected: isSelected,
+                onSelected: (val) {
+                  setSheetState(() {
+                    if (val) {
+                      _selectedSlots.add(minutes);
+                    } else {
+                      _selectedSlots.remove(minutes);
+                    }
+                  });
+                },
+                selectedColor: const Color(0xFFE8F5E9),
+                backgroundColor: Colors.white,
+                showCheckmark: false,
+                side: BorderSide(color: isSelected ? const Color(0xFF2E5B2E) : Colors.grey.shade300),
+                labelStyle: TextStyle(
+                  fontSize: 13,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: isSelected ? const Color(0xFF2E5B2E) : Colors.black87,
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 16),
+        ],
+      );
+    }
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) {
-        return Container(
-          height: MediaQuery.of(context).size.height * 0.8,
-          decoration: const BoxDecoration(
-            color: Color(0xFF1B5E20),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-          child: Column(
-            children: [
-              Container(
-                width: 48,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: Colors.white30,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              const SizedBox(height: 28),
-              const CircleAvatar(
-                radius: 48,
-                backgroundColor: Color(0xFF2E7D32),
-                child: Icon(Icons.person, color: Colors.white, size: 54),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                patientName,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                '$consultType • Live Video Stream',
-                style: TextStyle(
-                  color: Colors.amber.shade300,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.fiber_manual_record, color: Colors.redAccent, size: 12),
-                    SizedBox(width: 6),
-                    Text(
-                      '00:04:12 • HD Encrypted',
-                      style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
-              ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildCallActionBtn(Icons.mic_off_outlined, 'Mute', () {}),
-                    _buildCallActionBtn(Icons.volume_up_outlined, 'Speaker', () {}),
-                    _buildCallActionBtn(Icons.switch_camera_outlined, 'Flip', () {}),
-                    _buildCallActionBtn(
-                      Icons.call_end,
-                      'End Session',
-                      () => Navigator.pop(context),
-                      bgColor: Colors.redAccent,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildCallActionBtn(IconData icon, String label, VoidCallback onTap, {Color? bgColor}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          CircleAvatar(
-            radius: 26,
-            backgroundColor: bgColor ?? Colors.white24,
-            child: Icon(icon, color: Colors.white, size: 24),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            label,
-            style: const TextStyle(color: Colors.white, fontSize: 12),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showHealthRecordsModal(BuildContext context, String patientName) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      builder: (context) {
-        return DraggableScrollableSheet(
-          expand: false,
-          initialChildSize: 0.75,
-          maxChildSize: 0.95,
-          builder: (context, scrollController) {
-            return Padding(
-              padding: const EdgeInsets.all(24),
-              child: ListView(
-                controller: scrollController,
+      builder: (ctx) {
+        return StatefulBuilder(builder: (context, setSheetState) {
+          return Container(
+            padding: const EdgeInsets.all(24),
+            constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            child: SafeArea(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Center(
-                    child: Container(
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade300,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  ),
+                  const Text('Set Working Hours', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF2E5B2E))),
+                  const SizedBox(height: 4),
+                  Text('For ${_formatMonthYearDay(date)}', style: TextStyle(color: Colors.grey.shade600)),
                   const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      const Icon(Icons.assignment_outlined, color: Color(0xFF1B5E20), size: 28),
-                      const SizedBox(width: 12),
-                      Column(
+                  
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            '$patientName\'s Health Records',
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                          Text(
-                            'Verified EHR & Vitals Sync',
-                            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                          ),
+                          buildSlotSection('MORNING', morningSlots, setSheetState),
+                          buildSlotSection('AFTERNOON', afternoonSlots, setSheetState),
+                          buildSlotSection('EVENING', eveningSlots, setSheetState),
                         ],
                       ),
-                    ],
-                  ),
-                  const Divider(height: 24),
-
-                  _recordTile('Blood Pressure History', '118/76 mmHg (Today, 09:15 AM) • Normal Range', Icons.favorite_outline),
-                  _recordTile('Weight Tracker', '62.4 kg (+4.2 kg overall since Week 12)', Icons.monitor_weight_outlined),
-                  _recordTile('Fetal Heart Rate Log', '144 bpm • Regular Rhythm (Ultrasonic Doppler)', Icons.healing_outlined),
-                  _recordTile('Glucose Screening Prep', 'Scheduled for Next Week (Week 25 Routine)', Icons.bloodtype_outlined),
-                  _recordTile('Past Ultrasound Scans', '20-Week Anomaly Scan • Normal Fetal Growth & Placenta', Icons.image_outlined),
-
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1B5E20),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                      ),
-                      child: const Text('Close Records', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                     ),
                   ),
+
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1B5E20),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      onPressed: _selectedSlots.isEmpty ? null : () async {
+                        Navigator.pop(context);
+                        setState(() => _isLoading = true);
+                        try {
+                          final dayOfWeek = date.weekday - 1; // 0=Monday to 6=Sunday
+                          
+                          // Group into blocks
+                          final sortedSlots = _selectedSlots.toList()..sort();
+                          List<List<int>> blocks = [];
+                          
+                          for (int slot in sortedSlots) {
+                            if (blocks.isEmpty) {
+                              blocks.add([slot]);
+                            } else {
+                              final lastBlock = blocks.last;
+                              if (lastBlock.last + 30 == slot) {
+                                lastBlock.add(slot);
+                              } else {
+                                blocks.add([slot]);
+                              }
+                            }
+                          }
+
+                          // Make API calls for each block
+                          for (var block in blocks) {
+                            final startMin = block.first;
+                            final endMin = block.last + 30; // block ends 30 mins after its last slot starts
+                            
+                            final startStr = '${(startMin ~/ 60).toString().padLeft(2, '0')}:${(startMin % 60).toString().padLeft(2, '0')}:00';
+                            final endStr = '${(endMin ~/ 60).toString().padLeft(2, '0')}:${(endMin % 60).toString().padLeft(2, '0')}:00';
+                            
+                            await _appointmentsApi.setAvailability({
+                              'day_of_week': dayOfWeek,
+                              'start_time': startStr,
+                              'end_time': endStr,
+                              'is_active': true,
+                            });
+                          }
+                          
+                          await _fetchData();
+                          if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Availability scheduled successfully!'), backgroundColor: Colors.green));
+                        } catch (e) {
+                          setState(() => _isLoading = false);
+                          if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to schedule: $e'), backgroundColor: Colors.red));
+                        }
+                      },
+                      child: Text('Save Selected Slots (${_selectedSlots.length})', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    ),
+                  )
                 ],
               ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _recordTile(String title, String desc, IconData icon) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF9FAF8),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: const Color(0xFF1B5E20), size: 22),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF1A1A1A))),
-                const SizedBox(height: 2),
-                Text(desc, style: TextStyle(color: Colors.grey.shade700, fontSize: 12.5)),
-              ],
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showRescheduleModal(BuildContext context, Appointment apt) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Reschedule Appointment', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 6),
-              Text('Select a new date and time for ${apt.userFullName}\'s consultation.', style: TextStyle(color: Colors.grey.shade600, fontSize: 12.5)),
-              const SizedBox(height: 16),
-              ListTile(
-                leading: const Icon(Icons.calendar_month, color: Color(0xFF1B5E20)),
-                title: const Text('Tomorrow, 10:30 AM'),
-                onTap: () {
-                  // Stub out for now since reschedule needs a new slot selection flow
-                  // AppointmentService.rescheduleBooking(apt.id, 'Tomorrow', '10:30 AM');
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Appointment rescheduled to Tomorrow, 10:30 AM'), backgroundColor: Colors.green),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.calendar_month, color: Color(0xFF1B5E20)),
-                title: const Text('Friday, 02:00 PM'),
-                onTap: () {
-                  // Stub out for now
-                  // AppointmentService.rescheduleBooking(apt.id, 'Friday', '02:00 PM');
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Appointment rescheduled to Friday, 02:00 PM'), backgroundColor: Colors.green),
-                  );
-                },
-              ),
-            ],
-          ),
-        );
+          );
+        });
       },
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
+    if (_isLoading && _profile == null) {
       return const Scaffold(
-        backgroundColor: Color(0xFFF9FAF8),
+        backgroundColor: Color(0xFFFCF9F6),
         body: Center(child: CircularProgressIndicator(color: Color(0xFF1B5E20))),
       );
     }
 
-    final upcomingApts = _appointments.where((a) => a.status == AppointmentStatus.confirmed).toList();
-
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAF8),
-          appBar: AppBar(
-            backgroundColor: const Color(0xFF1B5E20),
-            elevation: 0,
-            automaticallyImplyLeading: false,
-            title: const Text(
-              'My Schedule',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.notifications_outlined, color: Color(0xFFFFC107), size: 26),
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('No new notifications')),
-                  );
-                },
-              ),
-              const SizedBox(width: 8),
-            ],
-          ),
-          body: Column(
+      backgroundColor: const Color(0xFFFCF9F6),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.only(bottom: 100),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Tabs
+              // Header Block
               Container(
-                color: const Color(0xFF1B5E20),
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(child: _buildTabItem(0, 'Schedule')),
-                      Expanded(child: _buildTabItem(1, 'Requests')),
-                    ],
-                  ),
-                ),
-              ),
-          Expanded(
-            child: _selectedTab == 0
-                ? (upcomingApts.isEmpty
-                    ? _buildEmptyScheduleState()
-                    : _buildAppointmentDetailView(upcomingApts.first)) // or list
-                : _buildRequestsView(_appointments.where((a) => a.status == AppointmentStatus.pending).toList()),
-          ),
-        ],
-      ),
-          floatingActionButton: (_selectedTab == 0 && upcomingApts.isNotEmpty)
-              ? Padding(
-                  padding: const EdgeInsets.only(bottom: 70),
-                  child: FloatingActionButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Opening Clinical AI Prep Assistant...')),
-                      );
-                    },
-                    backgroundColor: const Color(0xFF5B3E7A),
-                    elevation: 4,
-                    child: const Icon(Icons.psychology_outlined, color: Colors.white, size: 24),
-                  ),
-                )
-      : null,
-    );
-  }
-
-  Widget _buildTabItem(int index, String label) {
-    final isSelected = _selectedTab == index;
-    return GestureDetector(
-      onTap: () => setState(() => _selectedTab = index),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        alignment: Alignment.center,
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.white : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.bold,
-            color: isSelected ? const Color(0xFF1B5E20) : Colors.white,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRequestsView(List<Appointment> requests) {
-    if (requests.isEmpty) {
-      return Center(
-        child: Text(
-          'No pending requests.',
-          style: TextStyle(color: Colors.grey.shade600),
-        ),
-      );
-    }
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: requests.length,
-      itemBuilder: (context, index) {
-        final req = requests[index];
-        return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+                color: const Color(0xFF2E5B2E),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                child: const Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      req.userFullName ?? req.userId,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      'Digital Midwife',
+                      style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
                     ),
-                    Text(
-                      'Slot: ${req.availabilityId}',
-                      style: TextStyle(color: Colors.grey.shade700, fontSize: 13),
-                    ),
+                    Icon(Icons.notifications_outlined, color: Colors.amber, size: 24),
                   ],
                 ),
-                const SizedBox(height: 8),
-                Text(req.appointmentType, style: TextStyle(color: Colors.green.shade800, fontWeight: FontWeight.w600)),
-                if (req.reason != null && req.reason!.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: Text('Note: "${req.reason}"', style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 13)),
-                  ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => _updateStatus(req.appointmentId, AppointmentStatus.declined),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.red, side: const BorderSide(color: Colors.red),
-                        ),
-                        child: const Text('Decline'),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () => _updateStatus(req.appointmentId, AppointmentStatus.confirmed),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green.shade800,
-                          foregroundColor: Colors.white,
-                        ),
-                        child: const Text('Accept'),
-                      ),
-                    ),
-                  ],
-                )
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
+              ),
 
-  Widget _buildEmptyScheduleState() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-      child: Column(
-        children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.grey.shade200),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 10,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFF4F6F3),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.calendar_month_outlined,
-                    size: 40,
-                    color: Color(0xFF1B5E20),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'No Scheduled Appointments Today',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1A1A1A),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'When patients book consultations, their pre-consultation notes, gestation details, and session actions will appear here.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    color: Colors.grey.shade600,
-                    height: 1.4,
-                  ),
-                ),
-                const SizedBox(height: 18),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    // Demo load removed, as we fetch from repo
-                  },
-                  icon: const Icon(Icons.play_arrow_rounded, color: Colors.white),
-                  label: const Text('Load Demo Appointment (Maya Chen)', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1B5E20),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAppointmentDetailView(Appointment apt) {
-    final patientName = apt.userFullName ?? apt.userId;
-    final patientNote = apt.reason ??
-        "I've been experiencing some mild cramping in the evenings and wanted to discuss if this is normal for 24 weeks. Also, I'm feeling a bit anxious about the upcoming glucose test next week.";
-    final consultType = apt.appointmentType;
-    final timeStr = '${apt.date} ${apt.startTime}'; // Would use DateFormat
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Top Patient Summary Card
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(22),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                Row(
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Avatar Box
+                    const Text(
+                      'AVAILABILITY MANAGEMENT',
+                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1.2),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Your Schedule',
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF2E5B2E)),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Manage your consulting hours, block out dates for rest, and set your preferred session types.',
+                      style: TextStyle(fontSize: 13, color: Colors.grey.shade600, height: 1.4),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Live Status Card
                     Container(
-                      width: 52,
-                      height: 52,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFFEF3C7),
-                        shape: BoxShape.circle,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF4F6ED),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.grey.shade300, width: 0.5),
                       ),
-                      child: const Icon(
-                        Icons.person_outline_rounded,
-                        color: Color(0xFF1A1A1A),
-                        size: 28,
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFE5E9DF),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.event_available, color: Color(0xFF2E5B2E), size: 24),
+                          ),
+                          const SizedBox(width: 16),
+                          const Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Live Status', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                                SizedBox(height: 2),
+                                Text('Available for new bookings', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                              ],
+                            ),
+                          ),
+                          Switch(
+                            value: _isAvailable,
+                            onChanged: _toggleAvailability,
+                            activeColor: Colors.white,
+                            activeTrackColor: const Color(0xFF2E5B2E),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 14),
-                    Expanded(
+                    const SizedBox(height: 24),
+
+                    // Functional Calendar
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))
+                        ]
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Select a day to set working hours', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                          const SizedBox(height: 12),
+                          TableCalendar(
+                            firstDay: DateTime.utc(2023, 1, 1),
+                            lastDay: DateTime.utc(2030, 12, 31),
+                            focusedDay: _focusedDay,
+                            selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                            onDaySelected: (selectedDay, focusedDay) {
+                              setState(() {
+                                _selectedDay = selectedDay;
+                                _focusedDay = focusedDay;
+                              });
+                              _showScheduleTimeBottomSheet(selectedDay);
+                            },
+                            calendarFormat: CalendarFormat.month,
+                            headerStyle: const HeaderStyle(
+                              formatButtonVisible: false,
+                              titleCentered: true,
+                              titleTextStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF2E5B2E)),
+                            ),
+                            calendarStyle: const CalendarStyle(
+                              selectedDecoration: BoxDecoration(
+                                color: Color(0xFF2E5B2E),
+                                shape: BoxShape.circle,
+                              ),
+                              todayDecoration: BoxDecoration(
+                                color: Color(0xFFE5E9DF),
+                                shape: BoxShape.circle,
+                              ),
+                              todayTextStyle: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                            ),
+                            calendarBuilders: CalendarBuilders(
+                              markerBuilder: (context, date, events) {
+                                final dateStr = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+                                
+                                bool isBlocked = _blockedDates.any((b) => b.date == dateStr);
+                                bool hasAvailability = _availabilities.any((a) {
+                                  if (a.dateOrDay == dateStr) return true;
+                                  if (a.dateOrDay == (date.weekday - 1).toString()) return true;
+                                  return false;
+                                });
+
+                                if (isBlocked) {
+                                  return Positioned(
+                                    bottom: 1,
+                                    child: Container(width: 6, height: 6, decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle)),
+                                  );
+                                }
+                                if (hasAvailability) {
+                                  return Positioned(
+                                    bottom: 1,
+                                    child: Container(width: 6, height: 6, decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle)),
+                                  );
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Consultation Types Card
+                    Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFDF7E7),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Padding(
+                            padding: EdgeInsets.all(20),
+                            child: Text('Consultation Types', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF6B4B9A))),
+                          ),
+                          Material(
+                            color: Colors.white.withOpacity(0.5),
+                            child: Column(
+                              children: [
+                                CheckboxListTile(
+                                  value: _voiceCall,
+                                  onChanged: (v) => setState(() => _voiceCall = v ?? false),
+                                  title: const Text('Voice Call', style: TextStyle(fontSize: 14)),
+                                  secondary: const Icon(Icons.phone_outlined, color: Color(0xFF6B4B9A), size: 20),
+                                  activeColor: const Color(0xFF6B4B9A),
+                                  controlAffinity: ListTileControlAffinity.trailing,
+                                ),
+                                CheckboxListTile(
+                                  value: _inPerson,
+                                  onChanged: (v) => setState(() => _inPerson = v ?? false),
+                                  title: const Text('In-person', style: TextStyle(fontSize: 14)),
+                                  secondary: const Icon(Icons.person_outline, color: Color(0xFF6B4B9A), size: 20),
+                                  activeColor: const Color(0xFF6B4B9A),
+                                  controlAffinity: ListTileControlAffinity.trailing,
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: _updatePrefs,
+                                icon: const Icon(Icons.save_outlined, color: Colors.white, size: 18),
+                                label: const Text('Update Prefs', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF2E5B2E),
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                ),
+                              ),
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Blocked Dates
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))
+                        ]
+                      ),
+                      child: Column(
                         children: [
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                patientName,
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF1A1A1A),
+                              const Text('Blocked Dates', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF2E5B2E))),
+                              GestureDetector(
+                                onTap: _showAddLeaveModal,
+                                child: const Row(
+                                  children: [
+                                    Icon(Icons.add_circle_outline, color: Color(0xFF6B4B9A), size: 16),
+                                    SizedBox(width: 4),
+                                    Text('Add Leave', style: TextStyle(color: Color(0xFF6B4B9A), fontSize: 12, fontWeight: FontWeight.bold))
+                                  ],
                                 ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFE8F5E9),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: const Color(0xFFC8E6C9)),
-                                ),
-                                child: const Text(
-                                  'Confirmed',
-                                  style: TextStyle(
-                                    color: Color(0xFF2E7D32),
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 11,
-                                  ),
-                                ),
-                              ),
+                              )
                             ],
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            '19 years old • 24 Weeks Gestation',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.grey.shade600,
+                          const SizedBox(height: 16),
+                          ..._blockedDates.map((b) => _buildBlockedDateItem(b)).toList(),
+                          if (_blockedDates.isEmpty)
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 16),
+                              child: Text('No blocked dates.', style: TextStyle(color: Colors.grey)),
                             ),
-                          ),
                         ],
                       ),
                     ),
+                    const SizedBox(height: 24),
+
+                    // Working Hours
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF4F6ED),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: const Color(0xFFD6E3D6), width: 1),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Recurring Schedule', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF2E5B2E))),
+                          const SizedBox(height: 4),
+                          Text('Set your default weekly working schedule for all days.', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const MidwifeManageScheduleScreen()),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF1B5E20),
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                              child: const Text('Manage Default Schedule', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+
                   ],
                 ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
-                const SizedBox(height: 18),
-                Divider(color: Colors.grey.shade200, height: 1),
-                const SizedBox(height: 18),
-
-                // Details Row: TIME & TYPE
-                Row(
-                  children: [
-                    // TIME Column
-                    Expanded(
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF4F6F3),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: const Icon(
-                              Icons.access_time_rounded,
-                              color: Color(0xFF1B5E20),
-                              size: 20,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'TIME',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 0.5,
-                                  color: Colors.grey.shade500,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                timeStr,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF1A1A1A),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // TYPE Column
-                    Expanded(
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF4F6F3),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: const Icon(
-                              Icons.videocam_outlined,
-                              color: Color(0xFF1B5E20),
-                              size: 20,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'TYPE',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 0.5,
-                                  color: Colors.grey.shade500,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                consultType,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF1A1A1A),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 18),
-
-                // Link: View User Health Records
-                GestureDetector(
-                  onTap: () => _showHealthRecordsModal(context, patientName),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.assignment_outlined,
-                        color: Color(0xFF1B5E20),
-                        size: 18,
-                      ),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'View User Health Records',
-                        style: TextStyle(
-                          color: Color(0xFF1B5E20),
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+  Widget _buildBlockedDateItem(BlockedDate b) {
+    DateTime? d = DateTime.tryParse(b.date);
+    String month = d != null ? _formatShortMonth(d).toUpperCase() : '';
+    String day = d != null ? d.day.toString().padLeft(2, '0') : '';
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF4F4),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFFFEAEA)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFEAEA),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              children: [
+                Text(month, style: const TextStyle(fontSize: 10, color: Colors.red, fontWeight: FontWeight.bold)),
+                Text(day, style: const TextStyle(fontSize: 14, color: Colors.red, fontWeight: FontWeight.bold)),
               ],
             ),
           ),
-
-          const SizedBox(height: 24),
-
-          // Pre-Consultation Prep Title
-          const Text(
-            'Pre-Consultation Prep',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1A1A1A),
-            ),
-          ),
-
-          const SizedBox(height: 12),
-
-          // Patient-Provided Notes Card
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: Colors.grey.shade200),
-            ),
+          const SizedBox(width: 16),
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Row(
-                  children: [
-                    Icon(
-                      Icons.description_outlined,
-                      color: Color(0xFF5B3E7A),
-                      size: 20,
-                    ),
-                    SizedBox(width: 8),
-                    Text(
-                      'Patient-Provided Notes',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF5B3E7A),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  '"$patientNote"',
-                  style: TextStyle(
-                    fontSize: 13.5,
-                    color: Colors.grey.shade800,
-                    height: 1.4,
-                  ),
-                ),
+                Text(b.reason ?? 'Blocked', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFFA12C2C))),
+                const Text('Full Day', style: TextStyle(fontSize: 11, color: Colors.grey)),
               ],
             ),
           ),
-
-          const SizedBox(height: 14),
-
-          // Status Badges / Pills
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              // Low Risk Pregnancy
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFDCFCE7),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Text(
-                  'Low Risk Pregnancy',
-                  style: TextStyle(
-                    color: Color(0xFF166534),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-
-              // Vitals Logged (Today)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF3E8FF),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Text(
-                  'Vitals Logged (Today)',
-                  style: TextStyle(
-                    color: Color(0xFF6B21A8),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-
-              // Mental Health: Good
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFEF3C7),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Text(
-                  'Mental Health: Good',
-                  style: TextStyle(
-                    color: Color(0xFF92400E),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 28),
-
-          // Action 1: Start Session Button
-          SizedBox(
-            width: double.infinity,
-            height: 52,
-            child: ElevatedButton.icon(
-              onPressed: () {
-                _openStartSessionModal(context, patientName, consultType);
-              },
-              icon: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 24),
-              label: const Text(
-                'Start Session',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF1B5E20),
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 12),
-
-          // Action 2: Reschedule & Cancel Row
-          Row(
-            children: [
-              // Reschedule Button
-              Expanded(
-                child: SizedBox(
-                  height: 46,
-                  child: OutlinedButton.icon(
-                    onPressed: () => _showRescheduleModal(context, apt),
-                    icon: const Icon(Icons.calendar_month_outlined, color: Color(0xFF1A1A1A), size: 18),
-                    label: const Text(
-                      'Reschedule',
-                      style: TextStyle(
-                        color: Color(0xFF1A1A1A),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                      ),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: Colors.grey.shade400),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(width: 12),
-
-              // Cancel Button
-              Expanded(
-                child: SizedBox(
-                  height: 46,
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      _updateStatus(apt.appointmentId, AppointmentStatus.completed);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Appointment cancelled')),
-                      );
-                    },
-                    icon: const Icon(Icons.cancel_outlined, color: Color(0xFFDC2626), size: 18),
-                    label: const Text(
-                      'Cancel',
-                      style: TextStyle(
-                        color: Color(0xFFDC2626),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                      ),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFEF2F2),
-                      side: const BorderSide(color: Color(0xFFFECDD3)),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 90), // Bottom bar padding
+          IconButton(
+            icon: const Icon(Icons.cancel_outlined, color: Colors.redAccent, size: 20),
+            onPressed: () => _deleteBlockedDate(b.id),
+          )
         ],
       ),
     );
+  }
+
+  String _formatMonthYearDay(DateTime date) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    if (date.month >= 1 && date.month <= 12) {
+      return '${months[date.month - 1]} ${date.day}, ${date.year}';
+    }
+    return '';
+  }
+
+  String _formatShortMonth(DateTime date) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    if (date.month >= 1 && date.month <= 12) {
+      return months[date.month - 1];
+    }
+    return '';
   }
 }

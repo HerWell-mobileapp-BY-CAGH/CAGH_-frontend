@@ -23,13 +23,14 @@ class _MidwifeManageScheduleScreenState extends State<MidwifeManageScheduleScree
   List<WorkingHours> _availabilities = [];
   List<BlockedDate> _blockedDates = [];
 
-  final List<String> _daysOfWeek = [
-    'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
-  ];
+  int _selectedDayOfWeek = 0; // 0 = Monday, 6 = Sunday
+  final List<String> _daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-  int _selectedDay = 0; // 0 = Monday
   TimeOfDay _startTime = const TimeOfDay(hour: 8, minute: 0);
   TimeOfDay _endTime = const TimeOfDay(hour: 17, minute: 0);
+
+  final TextEditingController _blockReasonController = TextEditingController();
+  DateTime? _blockedDate;
 
   @override
   void initState() {
@@ -62,7 +63,7 @@ class _MidwifeManageScheduleScreenState extends State<MidwifeManageScheduleScree
       final endStr = '${_endTime.hour.toString().padLeft(2, '0')}:${_endTime.minute.toString().padLeft(2, '0')}:00';
 
       await _appointmentRepository.setAvailability({
-        'day_of_week': _selectedDay,
+        'day_of_week': _selectedDayOfWeek,
         'start_time': startStr,
         'end_time': endStr,
         'is_active': true,
@@ -79,6 +80,40 @@ class _MidwifeManageScheduleScreenState extends State<MidwifeManageScheduleScree
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
+  }
+
+  Future<void> _addBlockedDateAction() async {
+    if (_blockedDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a date to block.'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+    
+    setState(() => _isSaving = true);
+    try {
+      final dateStr = "${_blockedDate!.year}-${_blockedDate!.month.toString().padLeft(2, '0')}-${_blockedDate!.day.toString().padLeft(2, '0')}";
+      await _midwifeRepository.addBlockedDate(dateStr, _blockReasonController.text);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Blocked date added successfully!'), backgroundColor: Colors.green),
+      );
+      _blockedDate = null;
+      _blockReasonController.clear();
+      _fetchData();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to add blocked date: $e'), backgroundColor: Colors.red),
+      );
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _blockReasonController.dispose();
+    super.dispose();
   }
 
   @override
@@ -126,20 +161,20 @@ class _MidwifeManageScheduleScreenState extends State<MidwifeManageScheduleScree
                       const Text('Add Availability', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                       const SizedBox(height: 16),
                       DropdownButtonFormField<int>(
-                        value: _selectedDay,
+                        value: _selectedDayOfWeek,
                         decoration: const InputDecoration(
                           labelText: 'Day of Week',
                           border: OutlineInputBorder(),
                           contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         ),
-                        items: List.generate(_daysOfWeek.length, (index) {
+                        items: List.generate(7, (index) {
                           return DropdownMenuItem(
                             value: index,
                             child: Text(_daysOfWeek[index]),
                           );
                         }),
                         onChanged: (val) {
-                          if (val != null) setState(() => _selectedDay = val);
+                          if (val != null) setState(() => _selectedDayOfWeek = val);
                         },
                       ),
                       const SizedBox(height: 16),
@@ -204,7 +239,7 @@ class _MidwifeManageScheduleScreenState extends State<MidwifeManageScheduleScree
                   const Text('No working hours configured yet.', style: TextStyle(color: Colors.grey))
                 else
                   ..._availabilities.map((avail) {
-                    final dayName = _daysOfWeek[avail.dayOfWeek.clamp(0, 6)];
+                    final dayName = avail.date ?? (avail.dayOfWeek != null ? ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][avail.dayOfWeek!.clamp(0, 6)] : 'Unknown');
                     return Card(
                       margin: const EdgeInsets.only(bottom: 8),
                       child: ListTile(
@@ -221,10 +256,82 @@ class _MidwifeManageScheduleScreenState extends State<MidwifeManageScheduleScree
 
                 const SizedBox(height: 32),
                 const Text(
-                  'Blocked Dates',
+                  'Manage Blocked Dates',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A)),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
+                Text(
+                  'Block out specific dates (e.g. holidays, conferences, or leave) so patients cannot book them.',
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade700, height: 1.4),
+                ),
+                const SizedBox(height: 16),
+
+                // Add Blocked Date Form
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.grey.shade200),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Add Blocked Date', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: InkWell(
+                              onTap: () async {
+                                final date = await showDatePicker(
+                                  context: context,
+                                  initialDate: DateTime.now(),
+                                  firstDate: DateTime.now(),
+                                  lastDate: DateTime.now().add(const Duration(days: 365)),
+                                );
+                                if (date != null) setState(() => _blockedDate = date);
+                              },
+                              child: InputDecorator(
+                                decoration: const InputDecoration(
+                                  labelText: 'Select Date',
+                                  border: OutlineInputBorder(),
+                                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                ),
+                                child: Text(_blockedDate == null ? 'Not selected' : '${_blockedDate!.year}-${_blockedDate!.month}-${_blockedDate!.day}'),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: _blockReasonController,
+                        decoration: const InputDecoration(
+                          labelText: 'Reason (Optional)',
+                          hintText: 'e.g. Annual Leave, Holiday',
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: _isSaving ? null : _addBlockedDateAction,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red.shade700,
+                            foregroundColor: Colors.white,
+                          ),
+                          child: const Text('Block Date'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+                
                 if (_blockedDates.isEmpty)
                   const Text('No blocked dates.', style: TextStyle(color: Colors.grey))
                 else

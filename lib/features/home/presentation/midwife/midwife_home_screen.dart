@@ -29,8 +29,6 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
   String _selectedLearnCategory = 'All';
   final Set<String> _bookmarkedArticles = {};
 
-  final List<Map<String, dynamic>> _chatRequests = [];
-
   @override
   void initState() {
     super.initState();
@@ -313,93 +311,6 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
                   );
                 }),
 
-              const SizedBox(height: 24),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    LanguageService.tr('pending_chat_requests'),
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-                  ),
-                  if (_chatRequests.isNotEmpty)
-                    Text(
-                      '${_chatRequests.length} Pending',
-                      style: TextStyle(color: Colors.grey.shade600, fontSize: 12.5),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              if (_chatRequests.isEmpty)
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.grey.shade200),
-                  ),
-                  child: Column(
-                    children: [
-                      Icon(Icons.chat_bubble_outline_rounded, size: 42, color: Colors.grey.shade400),
-                      const SizedBox(height: 10),
-                      Text(
-                        LanguageService.tr('no_chat_requests'),
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF333333)),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        LanguageService.tr('no_chat_requests_sub'),
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.grey.shade600, fontSize: 12.5),
-                      ),
-                    ],
-                  ),
-                )
-              else
-                ..._chatRequests.map((req) {
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 10),
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: Colors.grey.shade200),
-                    ),
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          backgroundColor: req['color'],
-                          child: Text(req['initials'], style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(req['name'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                              Text(req['category'], style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
-                            ],
-                          ),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              req['status'] = 'ACCEPTED';
-                            });
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Accepted chat request from ${req['name']}')),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1B5E20)),
-                          child: Text(req['status'] == 'ACCEPTED' ? 'Accepted' : 'Accept', style: const TextStyle(color: Colors.white)),
-                        ),
-                      ],
-                    ),
-                  );
-                }),
-
               const SizedBox(height: 90),
             ],
           ),
@@ -470,19 +381,22 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    LanguageService.tr('learn'),
-                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A)),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Clinical Reference Guidelines & Evidence-Based Protocols',
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12.5),
-                  ),
-                ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      LanguageService.tr('learn'),
+                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A)),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Clinical Reference Guidelines & Evidence-Based Protocols',
+                      style: TextStyle(color: Colors.grey.shade600, fontSize: 12.5),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
               const CircleAvatar(
                 radius: 20,

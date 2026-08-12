@@ -4,13 +4,10 @@ import 'package:cagh_frontend/features/auth/presentation/user/user_login_screen.
 import 'package:cagh_frontend/shared/widgets/globe_language_picker.dart';
 import 'package:cagh_frontend/features/consultations/presentation/user/consult_hub_screen.dart';
 import 'package:cagh_frontend/features/consultations/presentation/user/find_midwife_screen.dart';
-import 'package:cagh_frontend/features/chat/presentation/screens/user_chat_room_screen.dart';
 import 'package:cagh_frontend/features/nearby/presentation/screens/nearby_healthcare_screen.dart';
 import 'package:cagh_frontend/features/profile/presentation/user_profile_screen.dart';
 import 'package:cagh_frontend/shared/widgets/floating_glass_nav_bar.dart';
-import 'package:cagh_frontend/features/chat/data/services/chat_api_service.dart';
 import 'package:cagh_frontend/features/virtual_consultation/presentation/emergency_support_screen.dart';
-import 'package:cagh_frontend/features/ai_assistant/presentation/ai_assistant_screen.dart';
 import 'package:cagh_frontend/core/services/language_service.dart';
 
 class UserHomeScreen extends StatefulWidget {
@@ -23,17 +20,8 @@ class UserHomeScreen extends StatefulWidget {
 class _UserHomeScreenState extends State<UserHomeScreen> {
   int _currentIndex = 0;
   Map<String, dynamic>? _userProfile;
-  final TextEditingController _aiQuestionController = TextEditingController();
-  String? _latestAiAnswer;
-  bool _isAiLoading = false;
-
-  String? _activeChatMidwifeName;
-  bool _showFindMidwifePage = false;
   bool _hasUpcomingAppointment = false;
-  final TextEditingController _chatInputController = TextEditingController();
-
-  final List<Map<String, String>> _messages = [];
-
+  
   @override
   void initState() {
     super.initState();
@@ -202,9 +190,9 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                     index: _currentIndex,
                     children: [
                       _buildHomeTab(),
-                      _buildConsultChatTab(),
+                      _buildConsultTab(),
                       _buildLearnTab(),
-                      _buildAiAssistantTab(),
+                      _buildNearbyTab(),
                     ],
                   ),
                   if (_currentIndex == 0)
@@ -266,36 +254,6 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                                 ),
                                 // Emergency text removed
                               ],
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          _HoverScaleWidget(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const AiAssistantScreen(),
-                                ),
-                              );
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.all(14),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF6750A4),
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFF6750A4).withValues(alpha: 0.35),
-                                    blurRadius: 12,
-                                    offset: const Offset(0, 5),
-                                  ),
-                                ],
-                              ),
-                              child: const Icon(
-                                Icons.psychology_outlined,
-                                color: Colors.white,
-                                size: 28,
-                              ),
                             ),
                           ),
                         ],
@@ -465,242 +423,20 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
     );
   }
 
-  // TAB 1: CONSULT HUB / CHAT / FIND MIDWIFE SCREEN
-  Widget _buildConsultChatTab() {
-    if (_activeChatMidwifeName != null) {
-      return _buildChatRoomView(_activeChatMidwifeName!);
-    }
-
-    if (_showFindMidwifePage) {
-      return FindMidwifeScreen(
-        onBack: () {
-          setState(() {
-            _showFindMidwifePage = false;
-          });
-        },
-        onMessageTap: (midwifeName) {
-          setState(() {
-            _showFindMidwifePage = false;
-            _activeChatMidwifeName = midwifeName;
-            _messages.clear();
-          });
-        },
-      );
-    }
-
+  // TAB 1: CONSULT HUB
+  Widget _buildConsultTab() {
     return ConsultHubScreen(
       onFindMidwifeTap: () {
-        setState(() {
-          _showFindMidwifePage = true;
-        });
-      },
-      onChatSelected: (midwifeName) {
-        setState(() {
-          _activeChatMidwifeName = midwifeName;
-          _messages.clear();
-        });
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const FindMidwifeScreen(),
+          ),
+        );
       },
     );
   }
 
-  // CHAT ROOM VIEW FOR A SELECTED MIDWIFE
-  Widget _buildChatRoomView(String midwifeName) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(16),
-          color: const Color(0xFF274E13),
-          child: Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.white),
-                onPressed: () {
-                  setState(() {
-                    _activeChatMidwifeName = null;
-                    _showFindMidwifePage = true;
-                  });
-                },
-              ),
-              const CircleAvatar(
-                radius: 18,
-                backgroundColor: Color(0xFFE8F5E9),
-                child: Icon(Icons.person, color: Color(0xFF1B5E20), size: 20),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      midwifeName,
-                      style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    ValueListenableBuilder<bool>(
-                      valueListenable: ChatService.isMidwifeTyping,
-                      builder: (context, isTyping, _) {
-                        if (isTyping) {
-                          return Text(
-                            '$midwifeName is typing...',
-                            style: const TextStyle(fontSize: 11, color: Colors.amberAccent, fontStyle: FontStyle.italic),
-                          );
-                        }
-                        return const Text(
-                          'Online • Verified Midwife',
-                          style: TextStyle(fontSize: 11, color: Colors.amber),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: ValueListenableBuilder<List<ChatMessage>>(
-            valueListenable: ChatService.getMessagesNotifier(midwifeName),
-            builder: (context, messages, _) {
-              if (messages.isEmpty) {
-                return Center(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(32.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(22),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFE8F5E9),
-                            shape: BoxShape.circle,
-                            border: Border.all(color: const Color(0xFFA5D6A7), width: 1.5),
-                          ),
-                          child: const Icon(
-                            Icons.chat_bubble_outline_rounded,
-                            size: 44,
-                            color: Color(0xFF274E13),
-                          ),
-                        ),
-                        const SizedBox(height: 18),
-                        Text(
-                          'Consultation with $midwifeName',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF274E13),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Direct consultation messages between you and $midwifeName.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 13.5,
-                            color: Colors.grey.shade600,
-                            height: 1.4,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }
-
-              return ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: messages.length,
-                itemBuilder: (context, index) {
-                  final msg = messages[index];
-                  final isMe = msg.isMe;
-                  return Align(
-                    alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-                    child: Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: isMe ? const Color(0xFF274E13) : Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.04),
-                            blurRadius: 4,
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            msg.text,
-                            style: TextStyle(
-                              color: isMe ? Colors.white : Colors.black87,
-                              fontSize: 14,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            msg.time,
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: isMe ? Colors.white70 : Colors.grey,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              );
-            },
-          ),
-        ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          color: Colors.white,
-          child: Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.attach_file, color: Color(0xFF274E13)),
-                onPressed: () {},
-              ),
-              Expanded(
-                child: TextField(
-                  controller: _chatInputController,
-                  onSubmitted: (_) => _sendUserMessage(midwifeName),
-                  decoration: InputDecoration(
-                    hintText: 'Type your message...',
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    filled: true,
-                    fillColor: const Color(0xFFF5F5F5),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(24),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              CircleAvatar(
-                backgroundColor: const Color(0xFF274E13),
-                child: IconButton(
-                  icon: const Icon(Icons.send, color: Colors.white, size: 18),
-                  onPressed: () => _sendUserMessage(midwifeName),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  void _sendUserMessage(String midwifeName) {
-    final text = _chatInputController.text.trim();
-    if (text.isEmpty) return;
-
-    ChatService.sendMessage(midwifeName: midwifeName, text: text);
-    _chatInputController.clear();
-  }
 
   // TAB 2: LEARNING CENTER
   Widget _buildLearnTab() {
@@ -760,8 +496,8 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
     );
   }
 
-  // TAB 3: AI ASSISTANT & NEARBY FACILITY
-  Widget _buildAiAssistantTab() {
+  // TAB 3: NEARBY FACILITY
+  Widget _buildNearbyTab() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -909,16 +645,6 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
     );
   }
 
-  Widget _buildSuggestedPrompt(String text) {
-    return ActionChip(
-      label: Text(text, style: const TextStyle(fontSize: 12)),
-      onPressed: () {
-        _aiQuestionController.text = text;
-      },
-      backgroundColor: Colors.grey.shade100,
-    );
-  }
-
   Widget _buildFacilityCard(String name, String address, String distance) {
     return Container(
       padding: const EdgeInsets.all(14),
@@ -967,7 +693,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
       FloatingNavBarItem(
         icon: Icons.location_on_outlined,
         activeIcon: Icons.location_on_rounded,
-        label: LanguageService.tr('ai_nearby'),
+        label: LanguageService.tr('nearby'),
       ),
       FloatingNavBarItem(
         icon: Icons.person_outline_rounded,
@@ -982,9 +708,6 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
       onTabSelected: (index) {
         setState(() {
           _currentIndex = index;
-          if (index != 1) {
-            _activeChatMidwifeName = null;
-          }
         });
       },
     );

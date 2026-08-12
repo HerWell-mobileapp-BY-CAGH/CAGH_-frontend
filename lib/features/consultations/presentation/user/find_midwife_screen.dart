@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:cagh_frontend/features/virtual_consultation/presentation/emergency_support_screen.dart';
-import 'package:cagh_frontend/features/ai_assistant/presentation/ai_assistant_screen.dart';
 import 'package:cagh_frontend/features/consultations/presentation/user/midwife_profile_detail_screen.dart';
 import 'package:cagh_frontend/shared/widgets/globe_language_picker.dart';
 import 'package:cagh_frontend/features/consultations/data/services/midwife_api_service.dart';
@@ -9,10 +8,9 @@ import 'package:cagh_frontend/features/consultations/data/repositories/midwife_r
 import 'package:cagh_frontend/shared/models/midwife_profile.dart';
 
 class FindMidwifeScreen extends StatefulWidget {
-  final Function(String midwifeName)? onMessageTap;
   final VoidCallback? onBack;
 
-  const FindMidwifeScreen({super.key, this.onMessageTap, this.onBack});
+  const FindMidwifeScreen({super.key, this.onBack});
 
   @override
   State<FindMidwifeScreen> createState() => _FindMidwifeScreenState();
@@ -50,8 +48,11 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
       final data = await _repository.getMidwives(search: _searchQuery);
       if (mounted) {
         setState(() {
-          // Rule modified for testing: Show ALL midwives returned by backend
-          _midwives = data;
+          // Enforce Display Rule: Verified Midwives
+          _midwives = data.where((m) => 
+            m.verificationStatus.toUpperCase() == 'APPROVED' || 
+            m.verificationStatus.toUpperCase() == 'VERIFIED'
+          ).toList();
           _isLoading = false;
         });
       }
@@ -295,36 +296,9 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
 
                         const SizedBox(height: 16),
 
-                        // Action Buttons Row (Message & View Profile)
+                        // Action Buttons Row (View Profile)
                         Row(
                           children: [
-                            Expanded(
-                              child: SizedBox(
-                                height: 42,
-                                child: OutlinedButton(
-                                  onPressed: () {
-                                    if (widget.onMessageTap != null) {
-                                      widget.onMessageTap!(mw.fullName);
-                                    }
-                                  },
-                                  style: OutlinedButton.styleFrom(
-                                    side: const BorderSide(color: Color(0xFF274E13), width: 1.5),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(14),
-                                    ),
-                                  ),
-                                  child: const Text(
-                                    'Message',
-                                    style: TextStyle(
-                                      color: Color(0xFF274E13),
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
                             Expanded(
                               child: SizedBox(
                                 height: 42,
@@ -335,7 +309,6 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                                       MaterialPageRoute(
                                         builder: (context) => MidwifeProfileDetailScreen(
                                           midwife: mw,
-                                          onMessageTap: widget.onMessageTap,
                                         ),
                                       ),
                                     );
@@ -433,38 +406,6 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                   ),
                 ),
 
-                const SizedBox(height: 12),
-
-                // Purple FAB with Hover Effect
-                _HoverScaleWidget(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const AiAssistantScreen(),
-                      ),
-                    );
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF6750A4),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF6750A4).withValues(alpha: 0.35),
-                          blurRadius: 12,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.psychology_outlined,
-                      color: Colors.white,
-                      size: 28,
-                    ),
-                  ),
-                ),
               ],
             ),
           ),
