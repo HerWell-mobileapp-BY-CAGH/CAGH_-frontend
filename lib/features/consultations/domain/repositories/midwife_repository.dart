@@ -11,7 +11,10 @@ abstract class MidwifeRepository {
   Future<MidwifeProfile> getMidwifeProfile(String midwifeId);
 
   /// Fetch the logged-in midwife's profile
-  Future<MidwifeProfile> getMyProfile();
+  Future<MidwifeProfile?> getMyProfile();
+
+  /// Create the logged-in midwife's profile
+  Future<MidwifeProfile> createMyProfile(Map<String, dynamic> data);
 
   /// Update the logged-in midwife's profile
   Future<MidwifeProfile> updateMyProfile(Map<String, dynamic> data);

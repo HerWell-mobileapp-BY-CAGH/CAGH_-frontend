@@ -20,7 +20,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
     {
       'label': 'Original Photo',
       'bgColor': const Color(0xFFE8F5E9),
-      'iconColor': const Color(0xFF274E13),
+      'iconColor': const Color(0xFF315E26),
       'icon': Icons.person,
       'isAsset': true,
       'assetPath': 'assets/images/home_illustration.png',
@@ -28,7 +28,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
     {
       'label': 'Warm Amber',
       'bgColor': const Color(0xFFFFF8E1),
-      'iconColor': const Color(0xFFF57F17),
+      'iconColor': const Color(0xFFFFD22B),
       'icon': Icons.face_rounded,
       'isAsset': false,
     },
@@ -79,7 +79,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF274E13),
+                          color: Color(0xFF315E26),
                         ),
                       ),
                       IconButton(
@@ -104,15 +104,15 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text('Camera photo captured and profile updated!'),
-                                backgroundColor: Color(0xFF274E13),
+                                backgroundColor: Color(0xFF315E26),
                               ),
                             );
                           },
-                          icon: const Icon(Icons.camera_alt_outlined, color: Color(0xFF274E13)),
-                          label: const Text('Take Photo', style: TextStyle(color: Color(0xFF274E13), fontWeight: FontWeight.bold)),
+                          icon: const Icon(Icons.camera_alt_outlined, color: Color(0xFF315E26)),
+                          label: const Text('Take Photo', style: TextStyle(color: Color(0xFF315E26), fontWeight: FontWeight.bold)),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),
-                            side: const BorderSide(color: Color(0xFF274E13)),
+                            side: const BorderSide(color: Color(0xFF315E26)),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                           ),
                         ),
@@ -129,15 +129,15 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text('Gallery photo uploaded successfully!'),
-                                backgroundColor: Color(0xFF274E13),
+                                backgroundColor: Color(0xFF315E26),
                               ),
                             );
                           },
-                          icon: const Icon(Icons.photo_library_outlined, color: Color(0xFF274E13)),
-                          label: const Text('From Gallery', style: TextStyle(color: Color(0xFF274E13), fontWeight: FontWeight.bold)),
+                          icon: const Icon(Icons.photo_library_outlined, color: Color(0xFF315E26)),
+                          label: const Text('From Gallery', style: TextStyle(color: Color(0xFF315E26), fontWeight: FontWeight.bold)),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),
-                            side: const BorderSide(color: Color(0xFF274E13)),
+                            side: const BorderSide(color: Color(0xFF315E26)),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                           ),
                         ),
@@ -179,7 +179,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text('Profile photo updated to ${item['label']}!'),
-                                backgroundColor: const Color(0xFF274E13),
+                                backgroundColor: const Color(0xFF315E26),
                               ),
                             );
                           },
@@ -192,7 +192,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     border: Border.all(
-                                      color: isSelected ? const Color(0xFF274E13) : Colors.transparent,
+                                      color: isSelected ? const Color(0xFF315E26) : Colors.transparent,
                                       width: 2.5,
                                     ),
                                   ),
@@ -212,7 +212,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                    color: isSelected ? const Color(0xFF274E13) : Colors.black87,
+                                    color: isSelected ? const Color(0xFF315E26) : Colors.black87,
                                   ),
                                 ),
                               ],
@@ -242,21 +242,35 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
     final localData = await AuthService.getUserData();
     if (mounted) {
       setState(() {
-        if (localData['full_name'] != null && localData['full_name'].toString().isNotEmpty) {
-          _fullName = localData['full_name'].toString();
-        } else if (localData['first_name'] != null || localData['last_name'] != null) {
-          final first = localData['first_name']?.toString() ?? '';
-          final last = localData['last_name']?.toString() ?? '';
-          if (first.isNotEmpty || last.isNotEmpty) {
-             _fullName = '$first $last'.trim();
-          }
+        final u = localData['user'] is Map ? localData['user'] : localData;
+        final profile = u['profile'] is Map ? u['profile'] : (localData['profile'] is Map ? localData['profile'] : {});
+        
+        final fName = profile['first_name']?.toString() ?? u['first_name']?.toString() ?? localData['first_name']?.toString() ?? '';
+        final lName = profile['last_name']?.toString() ?? u['last_name']?.toString() ?? localData['last_name']?.toString() ?? '';
+        final cFullName = profile['full_name']?.toString() ?? u['full_name']?.toString() ?? localData['full_name']?.toString() ?? '';
+        final name = profile['name']?.toString() ?? u['name']?.toString() ?? localData['name']?.toString() ?? '';
+
+        if (cFullName.isNotEmpty) {
+          _fullName = cFullName;
+        } else if (name.isNotEmpty) {
+          _fullName = name;
+        } else if (fName.isNotEmpty || lName.isNotEmpty) {
+          _fullName = '$fName $lName'.trim();
         }
 
-        if (localData['email'] != null && localData['email'].toString().isNotEmpty) {
-          _emailAddress = localData['email'].toString();
+        final email = profile['email']?.toString() ?? u['email']?.toString() ?? localData['email']?.toString() ?? '';
+        if (email.isNotEmpty) {
+          _emailAddress = email;
         }
-        if (localData['phone_number'] != null && localData['phone_number'].toString().isNotEmpty) {
-          _phoneNumber = localData['phone_number'].toString();
+        
+        final phone = profile['phone_number']?.toString() ?? u['phone_number']?.toString() ?? localData['phone_number']?.toString() ?? profile['phone']?.toString() ?? u['phone']?.toString() ?? localData['phone']?.toString() ?? '';
+        if (phone.isNotEmpty) {
+          _phoneNumber = phone;
+        }
+        
+        final dob = profile['date_of_birth']?.toString() ?? u['date_of_birth']?.toString() ?? localData['date_of_birth']?.toString() ?? profile['dob']?.toString() ?? u['dob']?.toString() ?? localData['dob']?.toString() ?? '';
+        if (dob.isNotEmpty) {
+          _dateOfBirth = dob;
         }
       });
     }
@@ -265,33 +279,37 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
     if (res.success && res.data != null && mounted) {
       final data = res.data!;
       setState(() {
-        if (data['full_name'] != null && data['full_name'].toString().isNotEmpty) {
-          _fullName = data['full_name'].toString();
-        } else if (data['first_name'] != null || data['last_name'] != null) {
-          final first = data['first_name']?.toString() ?? '';
-          final last = data['last_name']?.toString() ?? '';
-          if (first.isNotEmpty || last.isNotEmpty) {
-             _fullName = '$first $last'.trim();
-          }
-        } else if (data['name'] != null && data['name'].toString().isNotEmpty) {
-          _fullName = data['name'].toString();
+        final u = data['user'] is Map ? data['user'] : data;
+        final profile = u['profile'] is Map ? u['profile'] : (data['profile'] is Map ? data['profile'] : {});
+
+        final fName = profile['first_name']?.toString() ?? u['first_name']?.toString() ?? data['first_name']?.toString() ?? '';
+        final lName = profile['last_name']?.toString() ?? u['last_name']?.toString() ?? data['last_name']?.toString() ?? '';
+        final cFullName = profile['full_name']?.toString() ?? u['full_name']?.toString() ?? data['full_name']?.toString() ?? '';
+        final name = profile['name']?.toString() ?? u['name']?.toString() ?? data['name']?.toString() ?? '';
+
+        if (cFullName.isNotEmpty) {
+          _fullName = cFullName;
+        } else if (name.isNotEmpty) {
+          _fullName = name;
+        } else if (fName.isNotEmpty || lName.isNotEmpty) {
+          _fullName = '$fName $lName'.trim();
         }
 
-        if (data['email'] != null && data['email'].toString().isNotEmpty) {
-          _emailAddress = data['email'].toString();
+        final email = profile['email']?.toString() ?? u['email']?.toString() ?? data['email']?.toString() ?? '';
+        if (email.isNotEmpty) {
+          _emailAddress = email;
         }
-        if (data['phone_number'] != null && data['phone_number'].toString().isNotEmpty) {
-          _phoneNumber = data['phone_number'].toString();
-        } else if (data['phone'] != null && data['phone'].toString().isNotEmpty) {
-          _phoneNumber = data['phone'].toString();
+
+        final phone = profile['phone_number']?.toString() ?? u['phone_number']?.toString() ?? data['phone_number']?.toString() ?? profile['phone']?.toString() ?? u['phone']?.toString() ?? data['phone']?.toString() ?? '';
+        if (phone.isNotEmpty) {
+          _phoneNumber = phone;
         }
         
-        if (data['date_of_birth'] != null && data['date_of_birth'].toString().isNotEmpty) {
-          _dateOfBirth = data['date_of_birth'].toString();
-        } else if (data['dob'] != null && data['dob'].toString().isNotEmpty) {
-          _dateOfBirth = data['dob'].toString();
-        } else {
-           _dateOfBirth = 'Not provided';
+        final dob = profile['date_of_birth']?.toString() ?? u['date_of_birth']?.toString() ?? data['date_of_birth']?.toString() ?? profile['dob']?.toString() ?? u['dob']?.toString() ?? data['dob']?.toString() ?? '';
+        if (dob.isNotEmpty) {
+          _dateOfBirth = dob;
+        } else if (_dateOfBirth == 'Loading...') {
+          _dateOfBirth = 'Not provided';
         }
       });
     }
@@ -333,7 +351,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                           style: TextStyle(
                             fontSize: 19,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF274E13),
+                            color: Color(0xFF315E26),
                           ),
                         ),
                         IconButton(
@@ -347,18 +365,20 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                     // Full Name Field
                     TextField(
                       controller: nameController,
+                      readOnly: true,
                       decoration: InputDecoration(
                         labelText: 'Full Name',
-                        prefixIcon: const Icon(Icons.badge_outlined, color: Color(0xFF274E13)),
+                        prefixIcon: const Icon(Icons.badge_outlined, color: Color(0xFF315E26)),
+                        suffixIcon: const Icon(Icons.lock_outline, size: 18, color: Colors.grey),
                         filled: true,
-                        fillColor: const Color(0xFFF9FBF7),
+                        fillColor: Colors.grey.shade100,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
                           borderSide: const BorderSide(color: Color(0xFFC8E6C9)),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
-                          borderSide: const BorderSide(color: Color(0xFF274E13), width: 1.5),
+                          borderSide: const BorderSide(color: Color(0xFFC8E6C9)),
                         ),
                       ),
                     ),
@@ -377,7 +397,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                             return Theme(
                               data: Theme.of(context).copyWith(
                                 colorScheme: const ColorScheme.light(
-                                  primary: Color(0xFF274E13),
+                                  primary: Color(0xFF315E26),
                                   onPrimary: Colors.white,
                                   onSurface: Colors.black,
                                 ),
@@ -405,7 +425,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.calendar_today_outlined, color: Color(0xFF274E13), size: 20),
+                            const Icon(Icons.calendar_today_outlined, color: Color(0xFF315E26), size: 20),
                             const SizedBox(width: 12),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -436,18 +456,20 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                     TextField(
                       controller: phoneController,
                       keyboardType: TextInputType.phone,
+                      readOnly: true,
                       decoration: InputDecoration(
                         labelText: 'Phone Number',
-                        prefixIcon: const Icon(Icons.phone_outlined, color: Color(0xFF274E13)),
+                        prefixIcon: const Icon(Icons.phone_outlined, color: Color(0xFF315E26)),
+                        suffixIcon: const Icon(Icons.lock_outline, size: 18, color: Colors.grey),
                         filled: true,
-                        fillColor: const Color(0xFFF9FBF7),
+                        fillColor: Colors.grey.shade100,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
                           borderSide: const BorderSide(color: Color(0xFFC8E6C9)),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
-                          borderSide: const BorderSide(color: Color(0xFF274E13), width: 1.5),
+                          borderSide: const BorderSide(color: Color(0xFFC8E6C9)),
                         ),
                       ),
                     ),
@@ -458,18 +480,20 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                     TextField(
                       controller: emailController,
                       keyboardType: TextInputType.emailAddress,
+                      readOnly: true,
                       decoration: InputDecoration(
                         labelText: 'Email Address',
-                        prefixIcon: const Icon(Icons.mail_outline, color: Color(0xFF274E13)),
+                        prefixIcon: const Icon(Icons.email_outlined, color: Color(0xFF315E26)),
+                        suffixIcon: const Icon(Icons.lock_outline, size: 18, color: Colors.grey),
                         filled: true,
-                        fillColor: const Color(0xFFF9FBF7),
+                        fillColor: Colors.grey.shade100,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
                           borderSide: const BorderSide(color: Color(0xFFC8E6C9)),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
-                          borderSide: const BorderSide(color: Color(0xFF274E13), width: 1.5),
+                          borderSide: const BorderSide(color: Color(0xFFC8E6C9)),
                         ),
                       ),
                     ),
@@ -513,13 +537,13 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text('Personal profile updated successfully!'),
-                                backgroundColor: Color(0xFF274E13),
+                                backgroundColor: Color(0xFF315E26),
                               ),
                             );
                           }
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF274E13),
+                          backgroundColor: const Color(0xFF315E26),
                           elevation: 0,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(28),
@@ -550,7 +574,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF274E13),
+        backgroundColor: const Color(0xFF315E26),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -607,7 +631,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFFC107), // Yellow camera icon container
+                            color: const Color(0xFFFFD22B), // Yellow camera icon container
                             shape: BoxShape.circle,
                             border: Border.all(color: Colors.white, width: 2),
                             boxShadow: [
@@ -635,7 +659,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF274E13),
+                      color: Color(0xFF315E26),
                     ),
                   ),
 
@@ -712,7 +736,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                     ),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF274E13),
+                    backgroundColor: const Color(0xFF315E26),
                     elevation: 2,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
@@ -761,7 +785,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
               ),
               child: Icon(
                 icon,
-                color: const Color(0xFF274E13),
+                color: const Color(0xFF315E26),
                 size: 22,
               ),
             ),

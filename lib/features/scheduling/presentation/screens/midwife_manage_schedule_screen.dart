@@ -121,7 +121,7 @@ class _MidwifeManageScheduleScreenState extends State<MidwifeManageScheduleScree
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAF8),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1B5E20),
+        backgroundColor: const Color(0xFF315E26),
         elevation: 0,
         title: const Text('Manage Schedule', style: TextStyle(color: Colors.white, fontSize: 18)),
         leading: IconButton(
@@ -130,7 +130,7 @@ class _MidwifeManageScheduleScreenState extends State<MidwifeManageScheduleScree
         ),
       ),
       body: _isLoading 
-        ? const Center(child: CircularProgressIndicator(color: Color(0xFF1B5E20)))
+        ? const Center(child: CircularProgressIndicator(color: Color(0xFF315E26)))
         : SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -220,7 +220,7 @@ class _MidwifeManageScheduleScreenState extends State<MidwifeManageScheduleScree
                         width: double.infinity,
                         child: ElevatedButton(
                           onPressed: _isSaving ? null : _addWorkingHours,
-                          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1B5E20)),
+                          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF315E26)),
                           child: const Text('Add Time Range', style: TextStyle(color: Colors.white)),
                         ),
                       ),
@@ -243,7 +243,7 @@ class _MidwifeManageScheduleScreenState extends State<MidwifeManageScheduleScree
                     return Card(
                       margin: const EdgeInsets.only(bottom: 8),
                       child: ListTile(
-                        leading: const Icon(Icons.access_time, color: Color(0xFF1B5E20)),
+                        leading: const Icon(Icons.access_time, color: Color(0xFF315E26)),
                         title: Text(dayName, style: const TextStyle(fontWeight: FontWeight.bold)),
                         subtitle: Text('${avail.startTime} - ${avail.endTime}'),
                         trailing: Icon(

@@ -166,7 +166,7 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 CircleAvatar(
-                  backgroundColor: const Color(0xFF274E13),
+                  backgroundColor: const Color(0xFF315E26),
                   radius: 20,
                   child: IconButton(
                     icon: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
@@ -179,7 +179,7 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
                   child: IconButton(
                     icon: Icon(
                       _isFavorite ? Icons.favorite : Icons.favorite_border,
-                      color: _isFavorite ? Colors.red : const Color(0xFF274E13),
+                      color: _isFavorite ? Colors.red : const Color(0xFF315E26),
                       size: 20,
                     ),
                     onPressed: _toggleFavorite,
@@ -213,11 +213,11 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.check_circle, color: Color(0xFF274E13), size: 14),
+                        Icon(Icons.check_circle, color: Color(0xFF315E26), size: 14),
                         SizedBox(width: 4),
                         Text(
                           'Verified Midwife',
-                          style: TextStyle(color: Color(0xFF274E13), fontSize: 11, fontWeight: FontWeight.bold),
+                          style: TextStyle(color: Color(0xFF315E26), fontSize: 11, fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
@@ -249,7 +249,7 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.local_hospital_outlined, color: Color(0xFF274E13), size: 24),
+                const Icon(Icons.local_hospital_outlined, color: Color(0xFF315E26), size: 24),
                 const SizedBox(height: 8),
                 Text(
                   'HOSPITAL',
@@ -258,7 +258,7 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
                 const SizedBox(height: 4),
                 Text(
                   widget.midwife.hospitalName.isNotEmpty ? widget.midwife.hospitalName : 'Independent',
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF1B5E20)),
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF315E26)),
                 ),
               ],
             ),
@@ -275,7 +275,7 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.verified_user_outlined, color: Color(0xFF274E13), size: 24),
+                const Icon(Icons.verified_user_outlined, color: Color(0xFF315E26), size: 24),
                 const SizedBox(height: 8),
                 Text(
                   'EXPERIENCE',
@@ -284,7 +284,7 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
                 const SizedBox(height: 4),
                 Text(
                   '${widget.midwife.experienceYears}+ Years',
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF1B5E20)),
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF315E26)),
                 ),
               ],
             ),
@@ -317,7 +317,7 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
               ),
               child: Text(
                 lang,
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF274E13)),
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF315E26)),
               ),
             );
           }).toList(),
@@ -332,7 +332,7 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
       children: [
         Text(
           'About ${widget.midwife.fullName.split(' ').first}',
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF274E13)),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF315E26)),
         ),
         const SizedBox(height: 12),
         Text(
@@ -352,11 +352,11 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
           children: [
             const Text(
               'Availability',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF274E13)),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF315E26)),
             ),
             Text(
               'View All',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF274E13)),
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF315E26)),
             ),
           ],
         ),
@@ -389,7 +389,7 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? const Color(0xFF274E13)
+                        ? const Color(0xFF315E26)
                         : isPast
                             ? const Color(0xFFEEEEEE)
                             : const Color(0xFFF5F5F5),
@@ -433,7 +433,7 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
         const SizedBox(height: 24),
         
         if (_isLoadingSlots)
-          const Center(child: Padding(padding: EdgeInsets.symmetric(vertical: 30), child: CircularProgressIndicator(color: Color(0xFF1B5E20))))
+          const Center(child: Padding(padding: EdgeInsets.symmetric(vertical: 30), child: CircularProgressIndicator(color: Color(0xFF315E26))))
         else if (_timeSlots == null || (_timeSlots!.morningSlots.isEmpty && _timeSlots!.afternoonSlots.isEmpty && _timeSlots!.eveningSlots.isEmpty))
           const Center(
             child: Padding(
@@ -484,7 +484,7 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
                 style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF274E13),
+                  color: Color(0xFF315E26),
                 ),
               ),
             );
@@ -519,10 +519,10 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
                   onPressed: () {
                     Navigator.push(context, MaterialPageRoute(builder: (_) => ChatScreen(midwife: widget.midwife)));
                   },
-                  icon: const Icon(Icons.chat_bubble_outline, color: Color(0xFF274E13), size: 20),
-                  label: const Text('Message', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF274E13))),
+                  icon: const Icon(Icons.chat_bubble_outline, color: Color(0xFF315E26), size: 20),
+                  label: const Text('Message', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF315E26))),
                   style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Color(0xFF274E13), width: 1.5),
+                    side: const BorderSide(color: Color(0xFF315E26), width: 1.5),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   ),
                 ),
@@ -546,7 +546,7 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
                   icon: const Icon(Icons.calendar_month, color: Colors.white, size: 20),
                   label: const Text('Book', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF274E13),
+                    backgroundColor: const Color(0xFF315E26),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     elevation: 0,

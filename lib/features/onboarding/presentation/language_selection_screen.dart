@@ -30,12 +30,12 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              color: const Color(0xFF1B5E20),
+              color: const Color(0xFF315E26),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    LanguageService.tr('app_title'),
+                    LanguageService.tr(context, 'app_title'),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 20,
@@ -61,7 +61,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                     const SizedBox(height: 40),
 
                     Text(
-                      LanguageService.tr('choose_language'),
+                      LanguageService.tr(context, 'choose_language'),
                       style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w600,
@@ -72,7 +72,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                     const SizedBox(height: 10),
 
                     Text(
-                      LanguageService.tr('sub_choose_language'),
+                      LanguageService.tr(context, 'sub_choose_language'),
                       style: TextStyle(
                         fontSize: 15,
                         height: 1.4,
@@ -83,7 +83,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                     const SizedBox(height: 40),
 
                     Text(
-                      LanguageService.tr('select_language'),
+                      LanguageService.tr(context, 'select_language'),
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
@@ -99,7 +99,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: const Color(0xFF1B5E20),
+                          color: const Color(0xFF315E26),
                           width: 1.5,
                         ),
                       ),
@@ -111,7 +111,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                             padding: EdgeInsets.only(right: 12),
                             child: Icon(
                               Icons.keyboard_arrow_down,
-                              color: Color(0xFF1B5E20),
+                              color: Color(0xFF315E26),
                               size: 24,
                             ),
                           ),
@@ -164,7 +164,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                           );
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF1B5E20),
+                          backgroundColor: const Color(0xFF315E26),
                           foregroundColor: Colors.white,
                           elevation: 0,
                           shape: RoundedRectangleBorder(
@@ -175,7 +175,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              LanguageService.tr('continue'),
+                              LanguageService.tr(context, 'continue'),
                               style: const TextStyle(
                                 fontSize: 17,
                                 fontWeight: FontWeight.w600,
@@ -192,7 +192,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
 
                     Center(
                       child: Text(
-                        LanguageService.tr('change_later'),
+                        LanguageService.tr(context, 'change_later'),
                         style: TextStyle(
                           fontSize: 13,
                           color: Colors.grey.shade600,

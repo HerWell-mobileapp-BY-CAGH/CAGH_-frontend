@@ -103,7 +103,7 @@ class _AppointmentDetailsScreenState extends State<AppointmentDetailsScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAF7),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF274E13),
+        backgroundColor: const Color(0xFF315E26),
         title: const Text('Appointment Details', style: TextStyle(color: Colors.white)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -111,7 +111,7 @@ class _AppointmentDetailsScreenState extends State<AppointmentDetailsScreen> {
         ),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF274E13)))
+          ? const Center(child: CircularProgressIndicator(color: Color(0xFF315E26)))
           : SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Column(

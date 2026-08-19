@@ -26,6 +26,7 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
 
   bool _isAvailable = false;
   bool _voiceCall = false;
+  bool _videoCall = false;
   bool _inPerson = false;
 
   DateTime _focusedDay = DateTime.now();
@@ -52,9 +53,12 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
           _profile = profile;
           _blockedDates = blocked;
           _availabilities = availList;
-          _isAvailable = profile.isAcceptingBookings;
-          _voiceCall = profile.offeredConsultationTypes.contains('Voice Call') || profile.offeredConsultationTypes.contains('VOICE_CALL');
-          _inPerson = profile.offeredConsultationTypes.contains('In-person') || profile.offeredConsultationTypes.contains('IN_PERSON');
+          if (profile != null) {
+            _isAvailable = profile.isAcceptingBookings;
+            _voiceCall = profile.offeredConsultationTypes.contains('Voice Call') || profile.offeredConsultationTypes.contains('VOICE_CALL');
+            _videoCall = profile.offeredConsultationTypes.contains('Video Call') || profile.offeredConsultationTypes.contains('VIDEO_CALL');
+            _inPerson = profile.offeredConsultationTypes.contains('In-person') || profile.offeredConsultationTypes.contains('IN_PERSON');
+          }
         });
       }
     } catch (e) {
@@ -79,6 +83,7 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
   Future<void> _updatePrefs() async {
     final types = <String>[];
     if (_voiceCall) types.add('VOICE_CALL');
+    if (_videoCall) types.add('VIDEO_CALL');
     if (_inPerson) types.add('IN_PERSON');
     try {
       await _repository.updateMyProfile({'offered_consultation_types': types});
@@ -107,69 +112,144 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
 
   void _showAddLeaveModal() {
     String? reason;
-    DateTime? selectedDate = _selectedDay;
+    DateTime selectedDate = DateTime.now();
+    bool showError = false;
     
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Add Leave'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              decoration: const InputDecoration(labelText: 'Reason (e.g. Personal Leave)'),
-              onChanged: (val) => reason = val,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          final isDark = Theme.of(context).brightness == Brightness.dark;
+          
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            backgroundColor: isDark ? const Color(0xFF2C2C2C) : Colors.white,
+            title: Text('Block a Date', style: TextStyle(fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF2E5B2E))),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Select the date you want to take off or block from bookings.', style: TextStyle(fontSize: 13, color: isDark ? Colors.grey.shade400 : Colors.grey.shade600)),
+                const SizedBox(height: 20),
+                
+                // Date Picker Button
+                InkWell(
+                  onTap: () async {
+                    final date = await showDatePicker(
+                      context: context,
+                      initialDate: selectedDate,
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                      builder: (context, child) {
+                        return Theme(
+                          data: Theme.of(context).copyWith(
+                            colorScheme: isDark 
+                              ? const ColorScheme.dark(primary: Color(0xFFB39DDB), surface: Color(0xFF2C2C2C))
+                              : const ColorScheme.light(primary: Color(0xFF315E26), surface: Colors.white),
+                          ),
+                          child: child!,
+                        );
+                      },
+                    );
+                    if (date != null) {
+                      setDialogState(() {
+                        selectedDate = date;
+                      });
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: isDark ? Colors.grey.shade700 : Colors.grey.shade300),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.calendar_today, size: 18, color: isDark ? const Color(0xFFB39DDB) : const Color(0xFF6B4B9A)),
+                            const SizedBox(width: 12),
+                            Text(
+                              '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
+                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: isDark ? Colors.white : Colors.black87),
+                            ),
+                          ],
+                        ),
+                        Icon(Icons.edit, size: 16, color: isDark ? Colors.grey.shade400 : Colors.grey),
+                      ],
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // Reason TextField
+                TextField(
+                  decoration: InputDecoration(
+                    labelText: 'Reason (e.g., Sick leave, Vacation)',
+                    labelStyle: TextStyle(color: isDark ? Colors.grey.shade400 : Colors.grey.shade600, fontSize: 14),
+                    enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: isDark ? Colors.grey.shade700 : Colors.grey.shade300)),
+                    focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFF6B4B9A))),
+                    errorText: showError ? 'Please provide a reason' : null,
+                  ),
+                  style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+                  onChanged: (val) {
+                    reason = val;
+                    if (showError && val.trim().isNotEmpty) {
+                      setDialogState(() => showError = false);
+                    }
+                  },
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () async {
-                final date = await showDatePicker(
-                  context: context,
-                  initialDate: selectedDate ?? DateTime.now(),
-                  firstDate: DateTime.now(),
-                  lastDate: DateTime.now().add(const Duration(days: 365)),
-                );
-                if (date != null) {
-                  selectedDate = date;
-                }
-              },
-              child: const Text('Change Date'),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () async {
-              if (selectedDate != null && reason != null && reason!.isNotEmpty) {
-                final dateStr = '${selectedDate!.year}-${selectedDate!.month.toString().padLeft(2, '0')}-${selectedDate!.day.toString().padLeft(2, '0')}';
-                Navigator.pop(ctx);
-                setState(() => _isLoading = true);
-                try {
-                  await _repository.addBlockedDate(dateStr, reason!);
-                  await _fetchData();
-                } catch (e) {
-                  setState(() => _isLoading = false);
-                  if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to add leave')));
-                }
-              }
-            },
-            child: const Text('Add'),
-          )
-        ],
+            actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx), 
+                child: Text('Cancel', style: TextStyle(color: isDark ? Colors.grey.shade400 : Colors.grey.shade600))
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF6B4B9A),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                ),
+                onPressed: () async {
+                  if (reason == null || reason!.trim().isEmpty) {
+                    setDialogState(() => showError = true);
+                    return;
+                  }
+                  
+                  final dateStr = '${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}';
+                  Navigator.pop(ctx);
+                  setState(() => _isLoading = true);
+                  try {
+                    await _repository.addBlockedDate(dateStr, reason!.trim());
+                    await _fetchData();
+                  } catch (e) {
+                    setState(() => _isLoading = false);
+                    if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to add leave')));
+                  }
+                },
+                child: const Text('Block Date', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              )
+            ],
+          );
+        }
       ),
     );
   }
 
-  void _showScheduleTimeBottomSheet(DateTime date) {
-    final dayOfWeek = date.weekday - 1; // 0=Monday to 6=Sunday
-    final dateStr = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  void _showScheduleTimeBottomSheet(int dayOfWeek) {
+    final List<String> days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    final dayName = days[dayOfWeek];
     
     Set<int> _selectedSlots = {}; // Store in minutes from midnight
 
     // Pre-populate with existing availabilities
     for (var a in _availabilities) {
-      if (a.dateOrDay == dateStr || a.dateOrDay == dayOfWeek.toString()) {
+      if (a.dateOrDay == dayOfWeek.toString()) {
         final startParts = a.startTime.split(':');
         final endParts = a.endTime.split(':');
         if (startParts.length >= 2 && endParts.length >= 2) {
@@ -211,6 +291,7 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
             runSpacing: 8,
             children: slots.map((minutes) {
               final isSelected = _selectedSlots.contains(minutes);
+              final isDark = Theme.of(context).brightness == Brightness.dark;
               return ChoiceChip(
                 label: Text(formatTime(minutes)),
                 selected: isSelected,
@@ -223,14 +304,16 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                     }
                   });
                 },
-                selectedColor: const Color(0xFFE8F5E9),
-                backgroundColor: Colors.white,
+                selectedColor: isDark ? const Color(0xFF315E26) : const Color(0xFFE8F5E9),
+                backgroundColor: isDark ? const Color(0xFF2C2C2C) : Colors.white,
                 showCheckmark: false,
-                side: BorderSide(color: isSelected ? const Color(0xFF2E5B2E) : Colors.grey.shade300),
+                side: BorderSide(color: isSelected ? const Color(0xFF2E5B2E) : (isDark ? Colors.grey.shade800 : Colors.grey.shade300)),
                 labelStyle: TextStyle(
                   fontSize: 13,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  color: isSelected ? const Color(0xFF2E5B2E) : Colors.black87,
+                  color: isSelected 
+                      ? (isDark ? Colors.white : const Color(0xFF2E5B2E)) 
+                      : (isDark ? Colors.grey.shade300 : Colors.black87),
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -248,21 +331,22 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
       backgroundColor: Colors.transparent,
       builder: (ctx) {
         return StatefulBuilder(builder: (context, setSheetState) {
+          final isDark = Theme.of(context).brightness == Brightness.dark;
           return Container(
             padding: const EdgeInsets.all(24),
             constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             ),
             child: SafeArea(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Set Working Hours', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF2E5B2E))),
+                  Text('Set Working Hours', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF2E5B2E))),
                   const SizedBox(height: 4),
-                  Text('For ${_formatMonthYearDay(date)}', style: TextStyle(color: Colors.grey.shade600)),
+                  Text('Every $dayName', style: TextStyle(color: isDark ? Colors.grey.shade400 : Colors.grey.shade600)),
                   const SizedBox(height: 16),
                   
                   Expanded(
@@ -283,7 +367,7 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                     width: double.infinity,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1B5E20),
+                        backgroundColor: const Color(0xFF315E26),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
@@ -291,8 +375,6 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                         Navigator.pop(context);
                         setState(() => _isLoading = true);
                         try {
-                          final dayOfWeek = date.weekday - 1; // 0=Monday to 6=Sunday
-                          
                           // Group into blocks
                           final sortedSlots = _selectedSlots.toList()..sort();
                           List<List<int>> blocks = [];
@@ -347,15 +429,17 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     if (_isLoading && _profile == null) {
-      return const Scaffold(
-        backgroundColor: Color(0xFFFCF9F6),
-        body: Center(child: CircularProgressIndicator(color: Color(0xFF1B5E20))),
+      return Scaffold(
+        backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFFCF9F6),
+        body: const Center(child: CircularProgressIndicator(color: Color(0xFF315E26))),
       );
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFCF9F6),
+      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFFCF9F6),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.only(bottom: 100),
@@ -373,7 +457,7 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                       'Digital Midwife',
                       style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
                     ),
-                    Icon(Icons.notifications_outlined, color: Colors.amber, size: 24),
+                    Icon(Icons.notifications_outlined, color: Color(0xFFFFD22B), size: 24),
                   ],
                 ),
               ),
@@ -388,14 +472,14 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                       style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1.2),
                     ),
                     const SizedBox(height: 4),
-                    const Text(
+                    Text(
                       'Your Schedule',
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF2E5B2E)),
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF2E5B2E)),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'Manage your consulting hours, block out dates for rest, and set your preferred session types.',
-                      style: TextStyle(fontSize: 13, color: Colors.grey.shade600, height: 1.4),
+                      style: TextStyle(fontSize: 13, color: isDark ? Colors.grey.shade400 : Colors.grey.shade600, height: 1.4),
                     ),
                     const SizedBox(height: 24),
 
@@ -403,28 +487,28 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF4F6ED),
+                        color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF4F6ED),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.grey.shade300, width: 0.5),
+                        border: Border.all(color: isDark ? Colors.grey.shade800 : Colors.grey.shade300, width: 0.5),
                       ),
                       child: Row(
                         children: [
                           Container(
                             padding: const EdgeInsets.all(10),
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFE5E9DF),
+                            decoration: BoxDecoration(
+                              color: isDark ? const Color(0xFF2C2C2C) : const Color(0xFFE5E9DF),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(Icons.event_available, color: Color(0xFF2E5B2E), size: 24),
                           ),
                           const SizedBox(width: 16),
-                          const Expanded(
+                          Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('Live Status', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                                SizedBox(height: 2),
-                                Text('Available for new bookings', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                                Text('Live Status', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: isDark ? Colors.white : Colors.black)),
+                                const SizedBox(height: 2),
+                                Text('Available for new bookings', style: TextStyle(fontSize: 12, color: isDark ? Colors.grey.shade400 : Colors.grey)),
                               ],
                             ),
                           ),
@@ -439,11 +523,11 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                     ),
                     const SizedBox(height: 24),
 
-                    // Functional Calendar
+                    // Weekly Schedule Picker
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))
@@ -452,63 +536,43 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Select a day to set working hours', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                          const SizedBox(height: 12),
-                          TableCalendar(
-                            firstDay: DateTime.utc(2023, 1, 1),
-                            lastDay: DateTime.utc(2030, 12, 31),
-                            focusedDay: _focusedDay,
-                            selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                            onDaySelected: (selectedDay, focusedDay) {
-                              setState(() {
-                                _selectedDay = selectedDay;
-                                _focusedDay = focusedDay;
-                              });
-                              _showScheduleTimeBottomSheet(selectedDay);
-                            },
-                            calendarFormat: CalendarFormat.month,
-                            headerStyle: const HeaderStyle(
-                              formatButtonVisible: false,
-                              titleCentered: true,
-                              titleTextStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF2E5B2E)),
-                            ),
-                            calendarStyle: const CalendarStyle(
-                              selectedDecoration: BoxDecoration(
-                                color: Color(0xFF2E5B2E),
-                                shape: BoxShape.circle,
-                              ),
-                              todayDecoration: BoxDecoration(
-                                color: Color(0xFFE5E9DF),
-                                shape: BoxShape.circle,
-                              ),
-                              todayTextStyle: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-                            ),
-                            calendarBuilders: CalendarBuilders(
-                              markerBuilder: (context, date, events) {
-                                final dateStr = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-                                
-                                bool isBlocked = _blockedDates.any((b) => b.date == dateStr);
-                                bool hasAvailability = _availabilities.any((a) {
-                                  if (a.dateOrDay == dateStr) return true;
-                                  if (a.dateOrDay == (date.weekday - 1).toString()) return true;
-                                  return false;
-                                });
-
-                                if (isBlocked) {
-                                  return Positioned(
-                                    bottom: 1,
-                                    child: Container(width: 6, height: 6, decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle)),
-                                  );
-                                }
-                                if (hasAvailability) {
-                                  return Positioned(
-                                    bottom: 1,
-                                    child: Container(width: 6, height: 6, decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle)),
-                                  );
-                                }
-                                return null;
-                              },
-                            ),
+                          const Text('Select a day of the week to set recurring hours', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                          const SizedBox(height: 16),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].asMap().entries.map((entry) {
+                              final int index = entry.key; // 0 = Monday
+                              final String label = entry.value;
+                              
+                              bool hasAvailability = _availabilities.any((a) => a.dateOrDay == index.toString());
+                              
+                              return GestureDetector(
+                                onTap: () => _showScheduleTimeBottomSheet(index),
+                                child: Column(
+                                  children: [
+                                    Container(
+                                      width: 40,
+                                      height: 40,
+                                      alignment: Alignment.center,
+                                      decoration: BoxDecoration(
+                                        color: isDark ? const Color(0xFF2C2C2C) : const Color(0xFFF4F6ED),
+                                        shape: BoxShape.circle,
+                                        border: Border.all(color: isDark ? Colors.grey.shade800 : Colors.grey.shade300),
+                                      ),
+                                      child: Text(
+                                        label,
+                                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF2E5B2E)),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    if (hasAvailability)
+                                      Container(width: 6, height: 6, decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle))
+                                    else
+                                      const SizedBox(height: 6),
+                                  ],
+                                ),
+                              );
+                            }).toList(),
                           ),
                         ],
                       ),
@@ -518,35 +582,42 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                     // Consultation Types Card
                     Container(
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFDF7E7),
+                        color: isDark ? const Color(0xFF2C2533) : const Color(0xFFFDF7E7),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Padding(
-                            padding: EdgeInsets.all(20),
-                            child: Text('Consultation Types', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF6B4B9A))),
+                          Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: Text('Consultation Types', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? const Color(0xFFB39DDB) : const Color(0xFF6B4B9A))),
                           ),
-                          Material(
-                            color: Colors.white.withOpacity(0.5),
-                            child: Column(
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: Wrap(
+                              spacing: 12,
+                              runSpacing: 12,
                               children: [
-                                CheckboxListTile(
-                                  value: _voiceCall,
-                                  onChanged: (v) => setState(() => _voiceCall = v ?? false),
-                                  title: const Text('Voice Call', style: TextStyle(fontSize: 14)),
-                                  secondary: const Icon(Icons.phone_outlined, color: Color(0xFF6B4B9A), size: 20),
-                                  activeColor: const Color(0xFF6B4B9A),
-                                  controlAffinity: ListTileControlAffinity.trailing,
+                                _buildConsultationChip(
+                                  title: 'Voice Call',
+                                  icon: Icons.phone_outlined,
+                                  isSelected: _voiceCall,
+                                  onSelected: (v) => setState(() => _voiceCall = v),
+                                  isDark: isDark,
                                 ),
-                                CheckboxListTile(
-                                  value: _inPerson,
-                                  onChanged: (v) => setState(() => _inPerson = v ?? false),
-                                  title: const Text('In-person', style: TextStyle(fontSize: 14)),
-                                  secondary: const Icon(Icons.person_outline, color: Color(0xFF6B4B9A), size: 20),
-                                  activeColor: const Color(0xFF6B4B9A),
-                                  controlAffinity: ListTileControlAffinity.trailing,
+                                _buildConsultationChip(
+                                  title: 'Video Call',
+                                  icon: Icons.videocam_outlined,
+                                  isSelected: _videoCall,
+                                  onSelected: (v) => setState(() => _videoCall = v),
+                                  isDark: isDark,
+                                ),
+                                _buildConsultationChip(
+                                  title: 'In-person',
+                                  icon: Icons.person_outline,
+                                  isSelected: _inPerson,
+                                  onSelected: (v) => setState(() => _inPerson = v),
+                                  isDark: isDark,
                                 ),
                               ],
                             ),
@@ -576,7 +647,7 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))
@@ -587,21 +658,21 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text('Blocked Dates', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF2E5B2E))),
+                              Text('Blocked Dates', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: isDark ? Colors.white : const Color(0xFF2E5B2E))),
                               GestureDetector(
                                 onTap: _showAddLeaveModal,
-                                child: const Row(
+                                child: Row(
                                   children: [
-                                    Icon(Icons.add_circle_outline, color: Color(0xFF6B4B9A), size: 16),
-                                    SizedBox(width: 4),
-                                    Text('Add Leave', style: TextStyle(color: Color(0xFF6B4B9A), fontSize: 12, fontWeight: FontWeight.bold))
+                                    Icon(Icons.add_circle_outline, color: isDark ? const Color(0xFFB39DDB) : const Color(0xFF6B4B9A), size: 16),
+                                    const SizedBox(width: 4),
+                                    Text('Add Leave', style: TextStyle(color: isDark ? const Color(0xFFB39DDB) : const Color(0xFF6B4B9A), fontSize: 12, fontWeight: FontWeight.bold))
                                   ],
                                 ),
                               )
                             ],
                           ),
                           const SizedBox(height: 16),
-                          ..._blockedDates.map((b) => _buildBlockedDateItem(b)).toList(),
+                          ..._blockedDates.map((b) => _buildBlockedDateItem(b, isDark)).toList(),
                           if (_blockedDates.isEmpty)
                             const Padding(
                               padding: EdgeInsets.symmetric(vertical: 16),
@@ -611,42 +682,6 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
-
-                    // Working Hours
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF4F6ED),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: const Color(0xFFD6E3D6), width: 1),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Recurring Schedule', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF2E5B2E))),
-                          const SizedBox(height: 4),
-                          Text('Set your default weekly working schedule for all days.', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
-                          const SizedBox(height: 16),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (_) => const MidwifeManageScheduleScreen()),
-                                );
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF1B5E20),
-                                padding: const EdgeInsets.symmetric(vertical: 14),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              ),
-                              child: const Text('Manage Default Schedule', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                            ),
-                          )
-                        ],
-                      ),
-                    ),
 
                   ],
                 ),
@@ -658,7 +693,42 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
     );
   }
 
-  Widget _buildBlockedDateItem(BlockedDate b) {
+  Widget _buildConsultationChip({
+    required String title,
+    required IconData icon,
+    required bool isSelected,
+    required Function(bool) onSelected,
+    required bool isDark,
+  }) {
+    return ChoiceChip(
+      label: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: isSelected ? Colors.white : (isDark ? Colors.white70 : const Color(0xFF6B4B9A))),
+          const SizedBox(width: 6),
+          Text(title),
+        ],
+      ),
+      selected: isSelected,
+      onSelected: onSelected,
+      selectedColor: const Color(0xFF6B4B9A),
+      backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+      showCheckmark: false,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(
+          color: isSelected ? const Color(0xFF6B4B9A) : (isDark ? Colors.grey.shade800 : Colors.grey.shade300),
+        ),
+      ),
+      labelStyle: TextStyle(
+        fontSize: 13,
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+      ),
+    );
+  }
+
+  Widget _buildBlockedDateItem(BlockedDate b, bool isDark) {
     DateTime? d = DateTime.tryParse(b.date);
     String month = d != null ? _formatShortMonth(d).toUpperCase() : '';
     String day = d != null ? d.day.toString().padLeft(2, '0') : '';
@@ -667,16 +737,16 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF4F4),
+        color: isDark ? const Color(0xFF331E1E) : const Color(0xFFFFF4F4),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFFFEAEA)),
+        border: Border.all(color: isDark ? const Color(0xFF4A2A2A) : const Color(0xFFFFEAEA)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFEAEA),
+              color: isDark ? const Color(0xFF4A2A2A) : const Color(0xFFFFEAEA),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Column(
@@ -691,8 +761,8 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(b.reason ?? 'Blocked', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFFA12C2C))),
-                const Text('Full Day', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                Text(b.reason ?? 'Blocked', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: isDark ? const Color(0xFFE57373) : const Color(0xFFA12C2C))),
+                Text('Full Day', style: TextStyle(fontSize: 11, color: isDark ? Colors.grey.shade400 : Colors.grey)),
               ],
             ),
           ),

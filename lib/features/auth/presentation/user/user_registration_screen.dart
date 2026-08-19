@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import '../otp_verification_screen.dart';
 import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
 import 'package:cagh_frontend/core/services/language_service.dart';
+import 'package:cagh_frontend/shared/widgets/custom_snackbar.dart';
 
 class UserRegistrationScreen extends StatefulWidget {
   const UserRegistrationScreen({super.key});
@@ -24,6 +26,13 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
   bool _agreeTerms = false;
   bool _isLoading = false;
 
+  String? _firstNameError;
+  String? _lastNameError;
+  String? _phoneError;
+  String? _emailError;
+  String? _passwordError;
+  String? _confirmPasswordError;
+
   @override
   void dispose() {
     _firstNameController.dispose();
@@ -36,16 +45,92 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
     super.dispose();
   }
 
+  void _validateFirstName(String value) {
+    final nameRegExp = RegExp(r'^[a-zA-Z\s]+$');
+    setState(() {
+      if (value.trim().isEmpty) {
+        _firstNameError = LanguageService.tr(context, 'val_name_req');
+      } else if (!nameRegExp.hasMatch(value.trim())) {
+        _firstNameError = 'Cannot contain numbers or special characters';
+      } else {
+        _firstNameError = null;
+      }
+    });
+  }
+
+  void _validateLastName(String value) {
+    final nameRegExp = RegExp(r'^[a-zA-Z\s]+$');
+    setState(() {
+      if (value.trim().isEmpty) {
+        _lastNameError = LanguageService.tr(context, 'val_name_req');
+      } else if (!nameRegExp.hasMatch(value.trim())) {
+        _lastNameError = 'Cannot contain numbers or special characters';
+      } else {
+        _lastNameError = null;
+      }
+    });
+  }
+
+  void _validateEmail(String value) {
+    final emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    setState(() {
+      if (value.trim().isEmpty) {
+        _emailError = LanguageService.tr(context, 'val_email_req');
+      } else if (!emailRegExp.hasMatch(value.trim())) {
+        _emailError = LanguageService.tr(context, 'val_invalid_email');
+      } else {
+        _emailError = null;
+      }
+    });
+  }
+
+  void _validatePhone(String value) {
+    setState(() {
+      if (value.trim().isEmpty) {
+        _phoneError = null; // Optional initially
+      } else {
+        final cleanPhone = value.trim().replaceAll(RegExp(r'\s+'), '');
+        final ethPhoneRegExp = RegExp(r'^(?:\+251|0)?[97]\d{8}$');
+        if (!ethPhoneRegExp.hasMatch(cleanPhone)) {
+          _phoneError = LanguageService.tr(context, 'val_invalid_phone');
+        } else {
+          _phoneError = null;
+        }
+      }
+    });
+  }
+
+  void _validatePassword(String value) {
+    setState(() {
+      if (value.isEmpty) {
+        _passwordError = LanguageService.tr(context, 'val_password_req');
+      } else {
+        _passwordError = null;
+      }
+    });
+  }
+
+  void _validateConfirmPassword(String value) {
+    setState(() {
+      if (value.isEmpty) {
+        _confirmPasswordError = LanguageService.tr(context, 'val_password_confirm_req');
+      } else if (value != _passwordController.text) {
+        _confirmPasswordError = LanguageService.tr(context, 'val_password_mismatch');
+      } else {
+        _confirmPasswordError = null;
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7FBF5),
       body: Column(
         children: [
           // Green Header Bar
           Container(
             width: double.infinity,
-            color: const Color(0xFF1B5E20),
+            color: const Color(0xFF315E26),
             child: SafeArea(
               bottom: false,
               child: Padding(
@@ -54,11 +139,11 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                   children: [
                     IconButton(
                       onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.arrow_back, color: Colors.amber),
+                      icon: const Icon(Icons.arrow_back, color: Color(0xFFFFD22B)),
                     ),
                     Expanded(
                       child: Text(
-                        LanguageService.tr('app_title'),
+                        LanguageService.tr(context, 'app_title'),
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           color: Colors.white,
@@ -80,19 +165,40 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Center(
+                    child: Container(
+                      width: 80,
+                      height: 80,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).cardColor,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: ClipOval(
+                          child: Image.asset(
+                            'assets/images/logo.png',
+                            width: 60,
+                            height: 60,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                   Text(
-                    LanguageService.tr('create_account'),
+                    LanguageService.tr(context, 'create_account'),
                     style: const TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF1B5E20),
+                      color: Color(0xFF315E26),
                     ),
                   ),
 
                   const SizedBox(height: 8),
 
                   Text(
-                    LanguageService.tr('create_account_subtitle'),
+                    LanguageService.tr(context, 'create_account_subtitle'),
                     style: TextStyle(
                       fontSize: 14.5,
                       height: 1.4,
@@ -112,8 +218,10 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                             _buildLabel('First Name'),
                             _buildTextField(
                               controller: _firstNameController,
-                              hint: 'e.g. Sarah',
+                              hint: LanguageService.tr(context, 'first_name'),
                               prefixIcon: Icons.person_outline,
+                              errorText: _firstNameError,
+                              onChanged: _validateFirstName,
                             ),
                           ],
                         ),
@@ -126,8 +234,10 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                             _buildLabel('Last Name'),
                             _buildTextField(
                               controller: _lastNameController,
-                              hint: 'e.g. Tesfaye',
+                              hint: LanguageService.tr(context, 'last_name'),
                               prefixIcon: Icons.person_outline,
+                              errorText: _lastNameError,
+                              onChanged: _validateLastName,
                             ),
                           ],
                         ),
@@ -145,9 +255,8 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                         height: 54,
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: Theme.of(context).cardColor,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey.shade300),
                         ),
                         child: const Row(
                           children: [
@@ -156,7 +265,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                                color: Color(0xFF1B5E20),
+                                color: Color(0xFF315E26),
                               ),
                             ),
                           ],
@@ -169,6 +278,8 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                           hint: '911 234 567',
                           prefixIcon: Icons.phone_outlined,
                           keyboardType: TextInputType.phone,
+                          errorText: _phoneError,
+                          onChanged: _validatePhone,
                         ),
                       ),
                     ],
@@ -180,9 +291,11 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                   _buildLabel('Email Address'),
                   _buildTextField(
                     controller: _emailController,
-                    hint: 'name@domain.com',
+                    hint: LanguageService.tr(context, 'email'),
                     prefixIcon: Icons.email_outlined,
                     keyboardType: TextInputType.emailAddress,
+                    errorText: _emailError,
+                    onChanged: _validateEmail,
                   ),
 
                   const SizedBox(height: 18),
@@ -211,12 +324,14 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                   const SizedBox(height: 18),
 
                   // Password
-                  _buildLabel(LanguageService.tr('password')),
+                  _buildLabel(LanguageService.tr(context, 'password')),
                   _buildTextField(
                     controller: _passwordController,
-                    hint: 'Create a password',
+                    hint: LanguageService.tr(context, 'password'),
                     prefixIcon: Icons.lock_outline,
                     obscureText: _obscurePassword,
+                    errorText: _passwordError,
+                    onChanged: _validatePassword,
                     suffixIcon: IconButton(
                       icon: Icon(
                         _obscurePassword
@@ -225,7 +340,9 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                         color: Colors.grey.shade600,
                       ),
                       onPressed: () {
-                        setState(() => _obscurePassword = !_obscurePassword);
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
                       },
                     ),
                   ),
@@ -233,12 +350,14 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                   const SizedBox(height: 18),
 
                   // Confirm Password
-                  _buildLabel(LanguageService.tr('confirm_password')),
+                  _buildLabel(LanguageService.tr(context, 'confirm_password')),
                   _buildTextField(
                     controller: _confirmPasswordController,
                     hint: 'Confirm your password',
                     prefixIcon: Icons.lock_outline,
                     obscureText: _obscureConfirm,
+                    errorText: _confirmPasswordError,
+                    onChanged: _validateConfirmPassword,
                     suffixIcon: IconButton(
                       icon: Icon(
                         _obscureConfirm
@@ -263,7 +382,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                         height: 24,
                         child: Checkbox(
                           value: _agreeTerms,
-                          activeColor: const Color(0xFF1B5E20),
+                          activeColor: const Color(0xFF315E26),
                           onChanged: (value) {
                             setState(() => _agreeTerms = value ?? false);
                           },
@@ -272,7 +391,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          LanguageService.tr('agree_terms'),
+                          LanguageService.tr(context, 'agree_terms'),
                           style: TextStyle(
                             fontSize: 13.5,
                             color: Colors.grey.shade700,
@@ -298,74 +417,46 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                               final password = _passwordController.text;
                               final confirmPassword = _confirmPasswordController.text;
 
-                              // 1. Required fields check
-                              if (firstName.isEmpty || lastName.isEmpty || email.isEmpty || password.isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Please fill in all required fields'),
-                                    backgroundColor: Colors.red,
-                                  ),
-                                );
+                              setState(() {
+                                _firstNameError = firstName.isEmpty ? LanguageService.tr(context, 'val_name_req') : null;
+                                _lastNameError = lastName.isEmpty ? LanguageService.tr(context, 'val_name_req') : null;
+                                _emailError = email.isEmpty ? LanguageService.tr(context, 'val_email_req') : null;
+                                _passwordError = password.isEmpty ? LanguageService.tr(context, 'val_password_req') : null;
+                                _confirmPasswordError = confirmPassword.isEmpty ? LanguageService.tr(context, 'val_password_confirm_req') : null;
+                                _phoneError = null;
+                              });
+
+                              if (_firstNameError != null || _lastNameError != null || _emailError != null || _passwordError != null || _confirmPasswordError != null) {
                                 return;
                               }
 
-                              // 2. Name validation: No numbers allowed
                               final nameRegExp = RegExp(r'^[a-zA-Z\s]+$');
                               if (!nameRegExp.hasMatch(firstName)) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('First Name cannot contain numbers or special characters'),
-                                    backgroundColor: Colors.red,
-                                  ),
-                                );
+                                setState(() => _firstNameError = 'Cannot contain numbers or special characters');
                                 return;
                               }
-
                               if (!nameRegExp.hasMatch(lastName)) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Last Name cannot contain numbers or special characters'),
-                                    backgroundColor: Colors.red,
-                                  ),
-                                );
+                                setState(() => _lastNameError = 'Cannot contain numbers or special characters');
                                 return;
                               }
 
-                              // 3. Email validation
                               final emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
                               if (!emailRegExp.hasMatch(email)) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Please enter a valid email address (e.g. name@domain.com)'),
-                                    backgroundColor: Colors.red,
-                                  ),
-                                );
+                                setState(() => _emailError = LanguageService.tr(context, 'val_invalid_email'));
                                 return;
                               }
 
-                              // 4. Ethiopian Phone validation (Optional if empty, but if provided must follow format)
                               if (phone.isNotEmpty) {
                                 final cleanPhone = phone.replaceAll(RegExp(r'\s+'), '');
                                 final ethPhoneRegExp = RegExp(r'^(?:\+251|0)?[97]\d{8}$');
                                 if (!ethPhoneRegExp.hasMatch(cleanPhone)) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Please enter a valid Ethiopian phone number (e.g. 0911234567 or +251911234567)'),
-                                      backgroundColor: Colors.red,
-                                    ),
-                                  );
+                                  setState(() => _phoneError = LanguageService.tr(context, 'val_invalid_phone'));
                                   return;
                                 }
                               }
 
-                              // 5. Password match check
                               if (password != confirmPassword) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Passwords do not match'),
-                                    backgroundColor: Colors.red,
-                                  ),
-                                );
+                                setState(() => _confirmPasswordError = LanguageService.tr(context, 'val_password_mismatch'));
                                 return;
                               }
 
@@ -374,7 +465,6 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
 
                               setState(() => _isLoading = true);
 
-                              final fullName = "$firstName $lastName";
                               final fullPhone = phone.startsWith('+251')
                                   ? phone
                                   : (phone.startsWith('0') ? '+251${phone.substring(1)}' : '+251$phone');
@@ -383,7 +473,8 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                                 email: email,
                                 password: password,
                                 passwordConfirm: confirmPassword,
-                                fullName: fullName,
+                                firstName: firstName,
+                                lastName: lastName,
                                 role: 'PATIENT',
                                 phone: phone.isNotEmpty ? fullPhone : null,
                               );
@@ -392,11 +483,10 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                               setState(() => _isLoading = false);
 
                               if (result.success) {
-                                messenger.showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Registration successful! Please verify OTP.'),
-                                    backgroundColor: Colors.green,
-                                  ),
+                                CustomSnackBar.show(
+                                  context,
+                                  message: 'Registration successful! Please verify OTP.',
+                                  type: SnackBarType.success,
                                 );
                                 navigator.push(
                                   MaterialPageRoute(
@@ -406,17 +496,16 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                                   ),
                                 );
                               } else {
-                                messenger.showSnackBar(
-                                  SnackBar(
-                                    content: Text(result.message),
-                                    backgroundColor: Colors.red,
-                                  ),
+                                CustomSnackBar.show(
+                                  context,
+                                  message: result.message,
+                                  type: SnackBarType.error,
                                 );
                               }
                             }
                           : null,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1B5E20),
+                        backgroundColor: const Color(0xFF315E26),
                         disabledBackgroundColor: Colors.grey.shade400,
                         foregroundColor: Colors.white,
                         elevation: 0,
@@ -451,16 +540,16 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          LanguageService.tr('already_have_account'),
+                          LanguageService.tr(context, 'already_have_account'),
                           style: TextStyle(color: Colors.grey.shade700),
                         ),
                         const SizedBox(width: 4),
                         GestureDetector(
                           onTap: () => Navigator.pop(context),
                           child: Text(
-                            LanguageService.tr('login'),
+                            LanguageService.tr(context, 'login'),
                             style: const TextStyle(
-                              color: Color(0xFF1B5E20),
+                              color: Color(0xFF315E26),
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -502,6 +591,8 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
     TextInputType? keyboardType,
     Widget? suffixIcon,
     VoidCallback? onTap,
+    String? errorText,
+    ValueChanged<String>? onChanged,
   }) {
     return TextField(
       controller: controller,
@@ -509,13 +600,13 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
       readOnly: readOnly,
       keyboardType: keyboardType,
       onTap: onTap,
+      onChanged: onChanged,
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: TextStyle(color: Colors.grey.shade500),
         prefixIcon: Icon(prefixIcon, color: Colors.grey.shade600, size: 22),
         suffixIcon: suffixIcon,
         filled: true,
-        fillColor: Colors.white,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -527,8 +618,9 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF1B5E20), width: 1.5),
+          borderSide: const BorderSide(color: Color(0xFF315E26), width: 1.5),
         ),
+        errorText: errorText,
       ),
     );
   }

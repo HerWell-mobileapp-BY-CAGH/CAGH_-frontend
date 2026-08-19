@@ -28,7 +28,7 @@ class PasswordResetSuccessScreen extends StatelessWidget {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF1B5E20).withOpacity(0.1),
+                      color: const Color(0xFF315E26).withOpacity(0.1),
                       blurRadius: 20,
                       spreadRadius: 5,
                     ),
@@ -36,7 +36,7 @@ class PasswordResetSuccessScreen extends StatelessWidget {
                 ),
                 child: const Icon(
                   Icons.check_circle,
-                  color: Color(0xFF1B5E20),
+                  color: Color(0xFF315E26),
                   size: 80,
                 ),
               ),
@@ -47,7 +47,7 @@ class PasswordResetSuccessScreen extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF1B5E20),
+                  color: Color(0xFF315E26),
                 ),
               ),
               const SizedBox(height: 16),
@@ -87,7 +87,7 @@ class PasswordResetSuccessScreen extends StatelessWidget {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1B5E20),
+                    backgroundColor: const Color(0xFF315E26),
                     foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(

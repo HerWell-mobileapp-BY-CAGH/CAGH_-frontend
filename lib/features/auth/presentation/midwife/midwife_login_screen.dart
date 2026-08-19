@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
-import 'midwife_registration_screen.dart';
-import '../forgot_password_screen.dart';
+import 'package:cagh_frontend/features/auth/presentation/midwife/midwife_registration_screen.dart';
+import 'package:cagh_frontend/features/auth/presentation/forgot_password_screen.dart';
 import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
 import 'package:cagh_frontend/core/services/language_service.dart';
 import 'package:cagh_frontend/features/home/presentation/midwife/midwife_home_screen.dart';
-import 'package:cagh_frontend/features/home/presentation/user/user_home_screen.dart';
+import 'package:cagh_frontend/features/home/presentation/user/user_bottom_nav_bar.dart';
+import 'package:cagh_frontend/features/consultations/data/repositories/midwife_repository_impl.dart';
+import 'package:cagh_frontend/features/consultations/data/services/midwife_api_service.dart';
+import 'package:cagh_frontend/features/profile/presentation/midwife_setup_profile_screen.dart';
+import 'package:cagh_frontend/shared/widgets/custom_snackbar.dart';
+import 'package:cagh_frontend/shared/widgets/app_text_field.dart';
+import 'package:cagh_frontend/shared/widgets/primary_button.dart';
+import 'package:cagh_frontend/shared/widgets/standard_app_bar.dart';
 
 class MidwifeLoginScreen extends StatefulWidget {
   const MidwifeLoginScreen({super.key});
@@ -16,8 +23,10 @@ class MidwifeLoginScreen extends StatefulWidget {
 class _MidwifeLoginScreenState extends State<MidwifeLoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _obscurePassword = true;
   bool _isLoading = false;
+  String? _emailError;
+  String? _passwordError;
+  String? _apiError;
 
   @override
   void dispose() {
@@ -26,275 +35,254 @@ class _MidwifeLoginScreenState extends State<MidwifeLoginScreen> {
     super.dispose();
   }
 
+  void _handleLogin() async {
+    final identifier = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    setState(() {
+      _apiError = null;
+      _emailError = identifier.isEmpty ? LanguageService.tr(context, 'val_email_phone_req') ?? 'Please enter your email or phone' : null;
+      _passwordError = password.isEmpty ? LanguageService.tr(context, 'val_password_req') ?? 'Please enter your password' : null;
+    });
+
+    if (_emailError != null || _passwordError != null) return;
+
+    setState(() => _isLoading = true);
+
+    final result = await AuthService.login(
+      identifier: identifier,
+      password: password,
+    );
+
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
+    if (result.success) {
+      CustomSnackBar.show(
+        context,
+        message: LanguageService.tr(context, 'login_successful') ?? 'Welcome back!',
+        type: SnackBarType.success,
+      );
+
+      if (!mounted) return;
+      
+      final userRole = result.data?['user']?['role']?.toString().toUpperCase();
+      
+      if (userRole == 'PATIENT') {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const UserBottomNavBar()),
+          (route) => false,
+        );
+      } else {
+        setState(() => _isLoading = true);
+        try {
+          final repo = MidwifeRepositoryImpl(MidwifeApiService());
+          final profile = await repo.getMyProfile();
+          
+          if (profile == null) {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const MidwifeSetupProfileScreen()),
+              (route) => false,
+            );
+          } else {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const MidwifeHomeScreen()),
+              (route) => false,
+            );
+          }
+        } catch (e) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const MidwifeHomeScreen()),
+            (route) => false,
+          );
+        }
+        if (mounted) setState(() => _isLoading = false);
+      }
+    } else {
+      setState(() {
+        _apiError = result.message;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? Theme.of(context).scaffoldBackgroundColor : Colors.white;
+    final cardColor = isDark ? Theme.of(context).cardColor : Colors.white;
+    final textColor = isDark ? Colors.white : const Color(0xFF1A1A1A);
+
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF8F5),
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: Container(color: const Color(0xFFFFF0E8)),
-          ),
-          SafeArea(
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        onPressed: () => Navigator.pop(context),
-                        icon: const Icon(Icons.arrow_back, color: Colors.black87),
+      backgroundColor: bgColor,
+      appBar: StandardAppBar(
+        title: LanguageService.tr(context, 'midwife_login') ?? 'Midwife Login',
+        showLanguagePicker: true,
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: cardColor,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    if (!isDark)
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 20,
+                        offset: const Offset(0, 8),
                       ),
-                      const Spacer(),
-                      Text(
-                        LanguageService.tr('midwife_login'),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                    ],
-                  ),
+                  ],
                 ),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 30),
-                        Container(
-                          padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(24),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.08),
-                                blurRadius: 20,
-                                offset: const Offset(0, 8),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                LanguageService.tr('welcome_back'),
-                                style: const TextStyle(
-                                  fontSize: 26,
-                                  fontWeight: FontWeight.w700,
-                                  color: Color(0xFF1A1A1A),
-                                ),
-                              ),
-                              const SizedBox(height: 28),
-                              Text(
-                                LanguageService.tr('email_phone'),
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: Color(0xFF333333),
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              TextField(
-                                controller: _emailController,
-                                keyboardType: TextInputType.emailAddress,
-                                decoration: InputDecoration(
-                                  hintText: LanguageService.tr('enter_contact_details'),
-                                  hintStyle: TextStyle(color: Colors.grey.shade500),
-                                  filled: true,
-                                  fillColor: const Color(0xFFF8F8F8),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 16, vertical: 16),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 20),
-                              Text(
-                                LanguageService.tr('password'),
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: Color(0xFF333333),
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              TextField(
-                                controller: _passwordController,
-                                obscureText: _obscurePassword,
-                                decoration: InputDecoration(
-                                  hintText: LanguageService.tr('enter_password'),
-                                  hintStyle: TextStyle(color: Colors.grey.shade500),
-                                  filled: true,
-                                  fillColor: const Color(0xFFF8F8F8),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 16, vertical: 16),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                  suffixIcon: IconButton(
-                                    icon: Icon(
-                                      _obscurePassword
-                                          ? Icons.visibility_outlined
-                                          : Icons.visibility_off_outlined,
-                                      color: Colors.grey.shade600,
-                                    ),
-                                    onPressed: () {
-                                      setState(() =>
-                                      _obscurePassword = !_obscurePassword);
-                                    },
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Align(
-                                alignment: Alignment.centerRight,
-                                child: TextButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => const ForgotPasswordScreen(isMidwife: true),
-                                      ),
-                                    );
-                                  },
-                                  child: Text(
-                                    LanguageService.tr('forgot_password'),
-                                    style: const TextStyle(
-                                      color: Color(0xFF6A1B9A),
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              SizedBox(
-                                width: double.infinity,
-                                height: 52,
-                                child: ElevatedButton(
-                                  onPressed: _isLoading
-                                      ? null
-                                      : () async {
-                                          final identifier = _emailController.text.trim();
-                                          final password = _passwordController.text;
-
-                                          if (identifier.isEmpty || password.isEmpty) {
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              const SnackBar(
-                                                content: Text('Please enter email/phone and password'),
-                                              ),
-                                            );
-                                            return;
-                                          }
-
-                                          setState(() => _isLoading = true);
-
-                                          final result = await AuthService.login(
-                                            identifier: identifier,
-                                            password: password,
-                                          );
-
-                                          if (!mounted) return;
-                                          setState(() => _isLoading = false);
-
-                                          if (result.success) {
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              const SnackBar(
-                                                content: Text('Login successful!'),
-                                                backgroundColor: Colors.green,
-                                              ),
-                                            );
-
-                                            if (!mounted) return;
-
-                                            Navigator.pushAndRemoveUntil(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) => const MidwifeHomeScreen(),
-                                              ),
-                                              (route) => false,
-                                            );
-                                          } else {
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              SnackBar(
-                                                content: Text(result.message),
-                                                backgroundColor: Colors.red,
-                                              ),
-                                            );
-                                          }
-                                        },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF1B5E20),
-                                    foregroundColor: Colors.white,
-                                    elevation: 0,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(30),
-                                    ),
-                                  ),
-                                  child: _isLoading
-                                      ? const SizedBox(
-                                          width: 24,
-                                          height: 24,
-                                          child: CircularProgressIndicator(
-                                            color: Colors.white,
-                                            strokeWidth: 2.5,
-                                          ),
-                                        )
-                                      : Text(
-                                          LanguageService.tr('login'),
-                                          style: const TextStyle(
-                                            fontSize: 17,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                ),
-                              ),
-                            ],
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 80,
+                        height: 80,
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFF5E6),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: ClipOval(
+                            child: Image.asset(
+                              'assets/images/logo.png',
+                              width: 60,
+                              height: 60,
+                              fit: BoxFit.cover,
+                            ),
                           ),
                         ),
-                        const SizedBox(height: 24),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              LanguageService.tr('dont_have_account'),
-                              style: TextStyle(color: Colors.grey.shade800),
+                      ),
+                    ),
+                    Text(
+                      LanguageService.tr(context, 'welcome_back') ?? 'Welcome Back',
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w700,
+                        color: textColor,
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+
+                    AppTextField(
+                      controller: _emailController,
+                      labelText: LanguageService.tr(context, 'email_phone'),
+                      hintText: LanguageService.tr(context, 'enter_contact_details'),
+                      keyboardType: TextInputType.emailAddress,
+                      errorText: _emailError,
+                    ),
+                    const SizedBox(height: 20),
+
+                    AppTextField(
+                      controller: _passwordController,
+                      labelText: LanguageService.tr(context, 'password'),
+                      hintText: LanguageService.tr(context, 'enter_password'),
+                      isPassword: true,
+                      errorText: _passwordError,
+                    ),
+                    const SizedBox(height: 8),
+
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const ForgotPasswordScreen(isMidwife: true),
                             ),
-                            GestureDetector(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) =>
-                                    const MidwifeRegistrationScreen(),
-                                  ),
-                                );
-                              },
+                          );
+                        },
+                        child: Text(
+                          LanguageService.tr(context, 'forgot_password') ?? 'Forgot Password?',
+                          style: TextStyle(
+                            color: Theme.of(context).primaryColor,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (_apiError != null)
+                      Container(
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(top: 4, bottom: 16),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.red.shade200),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.error_outline, color: Colors.red.shade700, size: 20),
+                            const SizedBox(width: 8),
+                            Expanded(
                               child: Text(
-                                LanguageService.tr('register'),
-                                style: const TextStyle(
-                                  color: Color(0xFF1B5E20),
-                                  fontWeight: FontWeight.w700,
+                                _apiError!,
+                                style: TextStyle(
+                                  color: Colors.red.shade700,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 30),
-                      ],
+                      )
+                    else
+                      const SizedBox(height: 16),
+
+                    PrimaryButton(
+                      text: LanguageService.tr(context, 'login') ?? 'Sign In',
+                      isLoading: _isLoading,
+                      onPressed: _handleLogin,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    LanguageService.tr(context, 'dont_have_account') ?? "Don't have an account?",
+                    style: TextStyle(color: isDark ? Colors.grey.shade400 : Colors.grey.shade800),
+                  ),
+                  const SizedBox(width: 4),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const MidwifeRegistrationScreen(),
+                        ),
+                      );
+                    },
+                    child: Text(
+                      LanguageService.tr(context, 'register') ?? 'Register',
+                      style: TextStyle(
+                        color: Theme.of(context).primaryColor,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
+              const SizedBox(height: 30),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cagh_frontend/core/services/language_service.dart';
 import 'language_selection_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -25,7 +26,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF8F5), // soft peach background
+      backgroundColor: Colors.white, // white background
       body: SafeArea(
         child: Column(
           children: [
@@ -71,13 +72,13 @@ class _SplashScreenState extends State<SplashScreen> {
             const Spacer(flex: 2),
 
             // App name
-            const Text(
-              'DIGITAL MIDWIFE',
-              style: TextStyle(
+            Text(
+              LanguageService.tr(context, 'app_title').toUpperCase(),
+              style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 1.5,
-                color: Color(0xFF1B5E20),
+                color: Color(0xFF315E26),
               ),
             ),
 
@@ -94,7 +95,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  'Secure & Private Connection',
+                  LanguageService.tr(context, 'secure_connection'),
                   style: TextStyle(
                     fontSize: 13,
                     color: Colors.green.shade700,

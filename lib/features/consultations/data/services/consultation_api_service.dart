@@ -13,6 +13,26 @@ class ConsultationApiService {
     };
   }
 
+  Future<List<dynamic>> getConsultationsForAppointment(String appointmentId) async {
+    final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}?appointment=$appointmentId');
+    final response = await http.get(
+      url,
+      headers: await _getHeaders(),
+    ).timeout(const Duration(seconds: 15));
+
+    if (response.statusCode == 200) {
+      final decoded = jsonDecode(response.body);
+      if (decoded is List) {
+        return decoded;
+      } else if (decoded is Map<String, dynamic> && decoded.containsKey('results')) {
+        return decoded['results'] as List<dynamic>;
+      }
+      return [];
+    } else {
+      throw Exception('Failed to fetch consultations. Status: ${response.statusCode}');
+    }
+  }
+
   Future<Map<String, dynamic>> createConsultation(String appointmentId) async {
     final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}');
     final response = await http.post(
@@ -24,7 +44,7 @@ class ConsultationApiService {
     if (response.statusCode == 200 || response.statusCode == 201) {
       return jsonDecode(response.body);
     } else {
-      throw Exception('Failed to create consultation. Status: ${response.statusCode}');
+      throw Exception('Failed to create consultation. Status: ${response.statusCode}, Body: ${response.body}');
     }
   }
 
@@ -35,10 +55,10 @@ class ConsultationApiService {
       headers: await _getHeaders(),
     ).timeout(const Duration(seconds: 15));
 
-    if (response.statusCode == 200) {
+    if (response.statusCode == 200 || response.statusCode == 201) {
       return jsonDecode(response.body);
     } else {
-      throw Exception('Failed to start consultation. Status: ${response.statusCode}');
+      throw Exception('Failed to start consultation. Status: ${response.statusCode}, Body: ${response.body}');
     }
   }
 
@@ -69,6 +89,21 @@ class ConsultationApiService {
       return jsonDecode(response.body);
     } else {
       throw Exception('Failed to start voice session. Status: ${response.statusCode}');
+    }
+  }
+
+  Future<bool> endVoiceSession(String consultationId) async {
+    final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}$consultationId/voice-session/');
+    try {
+      final response = await http.post(
+        url,
+        headers: await _getHeaders(),
+        body: jsonEncode({'action': 'END'}),
+      ).timeout(const Duration(seconds: 15));
+
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
     }
   }
 

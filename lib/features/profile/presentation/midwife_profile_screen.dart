@@ -6,6 +6,7 @@ import 'package:cagh_frontend/core/services/language_service.dart';
 import 'package:cagh_frontend/features/consultations/data/repositories/midwife_repository_impl.dart';
 import 'package:cagh_frontend/features/consultations/data/services/midwife_api_service.dart';
 import 'package:cagh_frontend/shared/models/midwife_profile.dart';
+import 'package:cagh_frontend/features/scheduling/presentation/screens/midwife_manage_schedule_screen.dart';
 
 class MidwifeProfileScreen extends StatefulWidget {
   const MidwifeProfileScreen({super.key});
@@ -25,7 +26,7 @@ class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
   String title = '';
   String status = 'PENDING';
   String bio = '';
-  List<String> expertises = [];
+  int experienceYears = 0;
   List<Map<String, String>> languages = [];
   List<Map<String, String>> qualifications = [];
   
@@ -48,24 +49,26 @@ class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
       if (mounted) {
         setState(() {
           profile = p;
-          name = p.fullName;
-          title = p.specialty;
-          status = p.verificationStatus.toUpperCase() == 'APPROVED' ? 'VERIFIED' : 'PENDING';
-          bio = p.bio;
-          expertises = p.offeredConsultationTypes.isNotEmpty ? p.offeredConsultationTypes : [p.specialty];
-          
-          // Converting from List<String> to UI maps (mock format for now until full UI rewrite)
-          languages = p.languages.map((l) => {'lang': l, 'level': 'Fluent'}).toList();
-          if (languages.isEmpty) languages = [{'lang': 'English', 'level': 'Fluent'}];
-          
-          qualifications = [
-            {'title': 'Certified Midwife', 'institution': 'National Board'}
-          ];
-          
-          if (qualifications.isEmpty || qualifications.first['title']!.isEmpty) {
+          if (p != null) {
+            name = p.fullName;
+            title = p.specialty;
+            status = p.verificationStatus.toUpperCase() == 'APPROVED' ? 'VERIFIED' : 'PENDING';
+            bio = p.bio;
+            experienceYears = p.experienceYears;
+            
+            // Converting from List<String> to UI maps (mock format for now until full UI rewrite)
+            languages = p.languages.map((l) => {'lang': l, 'level': 'Fluent'}).toList();
+            if (languages.isEmpty) languages = [{'lang': 'English', 'level': 'Fluent'}];
+            
             qualifications = [
               {'title': 'Certified Midwife', 'institution': 'National Board'}
             ];
+            
+            if (qualifications.isEmpty || qualifications.first['title']!.isEmpty) {
+              qualifications = [
+                {'title': 'Certified Midwife', 'institution': 'National Board'}
+              ];
+            }
           }
           
           isLoading = false;
@@ -86,9 +89,7 @@ class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
     final lastNameController = TextEditingController(text: profile?.lastName ?? (name.split(' ').length > 1 ? name.split(' ').sublist(1).join(' ') : ''));
     final titleController = TextEditingController(text: title);
     final bioController = TextEditingController(text: bio);
-    final newTagController = TextEditingController();
-
-    final tempExpertises = List<String>.from(expertises);
+    final experienceController = TextEditingController(text: experienceYears.toString());
 
     showModalBottomSheet(
       context: context,
@@ -120,7 +121,7 @@ class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF274E13),
+                            color: Color(0xFF315E26),
                           ),
                         ),
                         IconButton(
@@ -142,9 +143,13 @@ class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
                               const SizedBox(height: 6),
                               TextField(
                                 controller: firstNameController,
+                                readOnly: true,
                                 decoration: InputDecoration(
                                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                                   contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                  suffixIcon: const Icon(Icons.lock_outline, size: 16, color: Colors.grey),
+                                  filled: true,
+                                  fillColor: Colors.grey.shade100,
                                 ),
                               ),
                             ],
@@ -159,9 +164,13 @@ class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
                               const SizedBox(height: 6),
                               TextField(
                                 controller: lastNameController,
+                                readOnly: true,
                                 decoration: InputDecoration(
                                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                                   contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                  suffixIcon: const Icon(Icons.lock_outline, size: 16, color: Colors.grey),
+                                  filled: true,
+                                  fillColor: Colors.grey.shade100,
                                 ),
                               ),
                             ],
@@ -176,9 +185,13 @@ class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
                     const SizedBox(height: 6),
                     TextField(
                       controller: titleController,
+                      readOnly: true,
                       decoration: InputDecoration(
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        suffixIcon: const Icon(Icons.lock_outline, size: 16, color: Colors.grey),
+                        filled: true,
+                        fillColor: Colors.grey.shade100,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -196,53 +209,19 @@ class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Expertise Tags
-                    const Text('Expertise Tags', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
+                    // Years of Experience
+                    const Text('Years of Experience', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
                     const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: tempExpertises.map((exp) {
-                        return Chip(
-                          label: Text(exp, style: const TextStyle(fontSize: 12, color: Color(0xFF274E13))),
-                          backgroundColor: const Color(0xFFE8F5E9),
-                          deleteIcon: const Icon(Icons.cancel, size: 16, color: Colors.grey),
-                          onDeleted: () {
-                            setModalState(() {
-                              tempExpertises.remove(exp);
-                            });
-                          },
-                        );
-                      }).toList(),
+                    TextField(
+                      controller: experienceController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        hintText: 'e.g., 5',
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      ),
                     ),
                     const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: newTagController,
-                            decoration: InputDecoration(
-                              hintText: 'Add expertise (e.g. Postnatal Care)',
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        IconButton(
-                          icon: const Icon(Icons.add_circle, color: Color(0xFF274E13), size: 32),
-                          onPressed: () {
-                            final tag = newTagController.text.trim();
-                            if (tag.isNotEmpty) {
-                              setModalState(() {
-                                tempExpertises.add(tag);
-                                newTagController.clear();
-                              });
-                            }
-                          },
-                        ),
-                      ],
-                    ),
 
                     const SizedBox(height: 24),
 
@@ -261,7 +240,9 @@ class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
                             if (newFirstName.isNotEmpty) name = '$newFirstName $newLastName'.trim();
                             if (newTitle.isNotEmpty) title = newTitle;
                             if (newBio.isNotEmpty) bio = newBio;
-                            expertises = tempExpertises;
+                            if (experienceController.text.isNotEmpty) {
+                              experienceYears = int.tryParse(experienceController.text) ?? experienceYears;
+                            }
                           });
 
                           await Future.wait([
@@ -280,6 +261,7 @@ class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
                             AuthService.updateMidwifeProfile({
                               'title': newTitle,
                               'bio': newBio,
+                              'experience_years': experienceYears,
                               'first_name': newFirstName,
                               'last_name': newLastName,
                               'user': {
@@ -293,12 +275,12 @@ class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text('Profile updated successfully!'),
-                              backgroundColor: Color(0xFF274E13),
+                              backgroundColor: Color(0xFF315E26),
                             ),
                           );
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF274E13),
+                          backgroundColor: const Color(0xFF315E26),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
                         ),
                         child: const Text(
@@ -324,11 +306,11 @@ class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FBF7),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF274E13),
+        backgroundColor: const Color(0xFF315E26),
         elevation: 0,
         automaticallyImplyLeading: false,
         title: Text(
-          LanguageService.tr('profile'),
+          name.isNotEmpty ? name : LanguageService.tr(context, 'profile'),
           style: const TextStyle(
             color: Colors.white,
             fontSize: 20,
@@ -336,7 +318,7 @@ class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
           ),
         ),
         actions: [
-          const GlobeLanguagePicker(iconColor: Colors.amber),
+          const GlobeLanguagePicker(iconColor: Color(0xFFFFD22B)),
           IconButton(
             icon: const Icon(Icons.notifications_outlined, color: Colors.white),
             onPressed: () {
@@ -350,7 +332,7 @@ class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
       ),
       body: isLoading
           ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFF274E13)),
+              child: CircularProgressIndicator(color: Color(0xFF315E26)),
             )
           : errorMessage != null
               ? Center(
@@ -372,7 +354,7 @@ class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
                           children: [
                             ElevatedButton(
                               onPressed: _loadProfile,
-                              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF274E13)),
+                              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF315E26)),
                               child: const Text('Retry', style: TextStyle(color: Colors.white)),
                             ),
                             const SizedBox(width: 16),
@@ -437,7 +419,7 @@ class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
                                   errorBuilder: (_, __, ___) => const Icon(
                                     Icons.person,
                                     size: 64,
-                                    color: Color(0xFF274E13),
+                                    color: Color(0xFF315E26),
                                   ),
                                 ),
                               ),
@@ -516,7 +498,7 @@ class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
                               ),
                             ),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF274E13),
+                              backgroundColor: const Color(0xFF315E26),
                               elevation: 0,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(22),
@@ -546,43 +528,17 @@ class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
 
                   const SizedBox(height: 16),
 
-                  // Expertise Section (Purple Title & Tags matching screenshot)
+                  // Experience Section
                   _buildCardSection(
-                    icon: Icons.medical_services_outlined,
-                    title: 'Expertise',
-                    trailingIcon: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF5B4075), // Purple floating icon badge matching screenshot
-                        shape: BoxShape.circle,
+                    icon: Icons.work_history_outlined,
+                    title: 'Experience',
+                    child: Text(
+                      '$experienceYears+ Years of Midwifery Experience',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF315E26),
                       ),
-                      child: const Icon(
-                        Icons.psychology_outlined,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                    child: Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: expertises.map((exp) {
-                        return Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 7),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFEEF5ED),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Text(
-                            exp,
-                            style: const TextStyle(
-                              fontSize: 12.5,
-                              color: Color(0xFF274E13),
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        );
-                      }).toList(),
                     ),
                   ),
 
@@ -679,6 +635,45 @@ class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
                           ),
                         );
                       }).toList(),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Recurring Schedule Container
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF4F6ED),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: const Color(0xFFD6E3D6), width: 1),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Recurring Schedule', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF2E5B2E))),
+                        const SizedBox(height: 4),
+                        Text('Set your default weekly working schedule for all days.', style: TextStyle(fontSize: 13, color: Colors.grey.shade700)),
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const MidwifeManageScheduleScreen()),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF315E26),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            child: const Text('Manage Default Schedule', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                          ),
+                        )
+                      ],
                     ),
                   ),
 

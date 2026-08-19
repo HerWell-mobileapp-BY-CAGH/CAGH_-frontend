@@ -123,7 +123,8 @@ class AuthService {
   static Future<ApiResponse<Map<String, dynamic>>> register({
     required String email,
     required String password,
-    required String fullName,
+    required String firstName,
+    required String lastName,
     required String role,
     String? passwordConfirm,
     String? phone,
@@ -132,13 +133,18 @@ class AuthService {
 
     final registeredUser = {
       'id': '102',
-      'full_name': fullName,
+      'first_name': firstName,
+      'last_name': lastName,
       'email': email,
       'phone_number': phone ?? '',
       'role': _lastRole,
     };
 
     final prefs = await SharedPreferences.getInstance();
+    // Clear any existing session to ensure a clean slate for the new registration
+    await prefs.remove(_accessTokenKey);
+    await prefs.remove(_refreshTokenKey);
+    await prefs.remove(_userDataKey);
 
     final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.register}');
     try {
@@ -146,7 +152,8 @@ class AuthService {
         'email': email,
         'password': password,
         'password_confirm': passwordConfirm ?? password,
-        'full_name': fullName,
+        'first_name': firstName,
+        'last_name': lastName,
         'role': role.toUpperCase(),
         if (phone != null && phone.isNotEmpty) 'phone_number': phone,
       };
@@ -222,6 +229,15 @@ class AuthService {
       final body = jsonDecode(response.body);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
+        if (body is Map<String, dynamic>) {
+          final prefs = await SharedPreferences.getInstance();
+          if (body['access'] != null) {
+            await prefs.setString(_accessTokenKey, body['access']);
+          }
+          if (body['refresh'] != null) {
+            await prefs.setString(_refreshTokenKey, body['refresh']);
+          }
+        }
         return ApiResponse(
           success: true,
           message: body['message'] ?? 'OTP verified successfully',
@@ -708,12 +724,7 @@ class AuthService {
         }
       } catch (_) {}
     }
-    return {
-      'full_name': _lastRole == 'MIDWIFE' ? 'Nurse Midwife' : 'Registered User',
-      'email': _lastRole == 'MIDWIFE' ? 'midwife@cagh.org' : 'user@cagh.org',
-      'role': _lastRole,
-      'phone_number': '',
-    };
+    return {};
   }
 
   static Future<void> logout() async {
@@ -729,35 +740,49 @@ class AuthService {
   static String _cleanException(Object e) {
     final str = e.toString();
     if (str.contains('XMLHttpRequest')) {
-      // CORS error on Flutter Web — browser blocked the request
       return 'The server blocked this request (CORS). This is a backend configuration issue, not your internet.';
     }
     if (str.contains('ClientException') || str.contains('SocketException')) {
-      return 'Could not reach the server. Check your connection or try again later.';
+      return 'Unable to connect. Please check your internet connection and try again.';
     }
     if (str.contains('TimeoutException')) {
-      return 'The server took too long to respond. It may be waking up — please try again in 30 seconds.';
+      return 'The connection is taking too long. Please try again.';
     }
-    return str.replaceAll('Exception:', '').trim();
+    if (str.contains('FormatException')) {
+      return 'We couldn\'t process that information. Please check your details and try again.';
+    }
+    return 'Something went wrong. Please try again.';
   }
 
   static String _extractErrorMessage(dynamic body) {
     if (body is Map) {
-      if (body.containsKey('detail')) return body['detail'].toString();
-      if (body.containsKey('message')) return body['message'].toString();
-      if (body.containsKey('error')) return body['error'].toString();
-      if (body.containsKey('non_field_errors')) {
+      String msg = '';
+      if (body.containsKey('detail')) msg = body['detail'].toString();
+      else if (body.containsKey('message')) msg = body['message'].toString();
+      else if (body.containsKey('error')) msg = body['error'].toString();
+      else if (body.containsKey('non_field_errors')) {
         final nfe = body['non_field_errors'];
-        return nfe is List ? nfe.join(', ') : nfe.toString();
+        msg = nfe is List ? nfe.join(', ') : nfe.toString();
+      } else {
+        final firstKey = body.keys.firstWhere((k) => k != null, orElse: () => '');
+        if (firstKey.isNotEmpty) {
+          final val = body[firstKey];
+          msg = '$firstKey: ${val is List ? val.join(', ') : val.toString()}';
+        }
       }
-      final firstKey = body.keys.firstWhere((k) => k != null, orElse: () => '');
-      if (firstKey.isNotEmpty) {
-        final val = body[firstKey];
-        return '$firstKey: ${val is List ? val.join(', ') : val.toString()}';
+      
+      final lowerMsg = msg.toLowerCase();
+      if (lowerMsg.contains('unauthorized') || lowerMsg.contains('invalid credentials') || lowerMsg.contains('no active account')) {
+        return 'Your email or password is incorrect. Please try again.';
       }
+      if (msg.isNotEmpty) return msg;
     } else if (body is String && body.isNotEmpty) {
+      final lowerBody = body.toLowerCase();
+      if (lowerBody.contains('unauthorized') || lowerBody.contains('invalid credentials')) {
+        return 'Your email or password is incorrect. Please try again.';
+      }
       return body;
     }
-    return 'An unexpected server error occurred';
+    return 'Something went wrong on our side. Please try again in a moment.';
   }
 }

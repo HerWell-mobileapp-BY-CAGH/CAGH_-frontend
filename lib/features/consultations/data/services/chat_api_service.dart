@@ -1,0 +1,108 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:cagh_frontend/core/network/api_config.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:mime/mime.dart';
+import 'package:http_parser/http_parser.dart';
+
+class ChatApiService {
+  static Future<Map<String, String>> _getHeaders() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+    return {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+    };
+  }
+
+  static Future<List<dynamic>> getChatRooms() async {
+    final url = Uri.parse('${ApiConstants.baseUrl}/chat/rooms/');
+    final headers = await _getHeaders();
+
+    final response = await http.get(url, headers: headers);
+    
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load chat rooms: ${response.statusCode}');
+    }
+  }
+
+  static Future<Map<String, dynamic>> initiateChat({
+    required String midwifeId,
+    required String initialMessage,
+  }) async {
+    final url = Uri.parse('${ApiConstants.baseUrl}/chat/rooms/');
+    final headers = await _getHeaders();
+
+    final response = await http.post(
+      url,
+      headers: headers,
+      body: jsonEncode({
+        'midwife': midwifeId,
+        'initial_message': initialMessage,
+      }),
+    );
+
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to initiate chat: ${response.statusCode}');
+    }
+  }
+
+  static Future<List<dynamic>> getMessageHistory(String roomId) async {
+    final url = Uri.parse('${ApiConstants.baseUrl}/chat/rooms/$roomId/messages/');
+    final headers = await _getHeaders();
+
+    final response = await http.get(url, headers: headers);
+    
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load messages: ${response.statusCode}');
+    }
+  }
+
+  static Future<void> markMessagesAsRead(String roomId) async {
+    final url = Uri.parse('${ApiConstants.baseUrl}/chat/rooms/$roomId/read/');
+    final headers = await _getHeaders();
+
+    await http.post(url, headers: headers);
+  }
+
+  static Future<Map<String, dynamic>> uploadAttachment(String roomId, PlatformFile file) async {
+    final url = Uri.parse('${ApiConstants.baseUrl}/chat/rooms/$roomId/attachments/');
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+
+    var request = http.MultipartRequest('POST', url);
+    if (token != null && token.isNotEmpty) {
+      request.headers['Authorization'] = 'Bearer $token';
+    }
+
+    final mimeTypeData = lookupMimeType(file.name, headerBytes: file.bytes)?.split('/');
+    
+    if (file.bytes != null) {
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'file',
+          file.bytes!,
+          filename: file.name,
+          contentType: mimeTypeData != null ? MediaType(mimeTypeData[0], mimeTypeData[1]) : null,
+        ),
+      );
+    }
+
+    final response = await request.send();
+    final responseBody = await response.stream.bytesToString();
+
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      return jsonDecode(responseBody);
+    } else {
+      throw Exception('Failed to upload attachment: ${response.statusCode}');
+    }
+  }
+}

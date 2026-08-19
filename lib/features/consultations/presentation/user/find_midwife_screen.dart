@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:cagh_frontend/features/virtual_consultation/presentation/emergency_support_screen.dart';
 import 'package:cagh_frontend/features/consultations/presentation/user/midwife_profile_detail_screen.dart';
+import 'package:cagh_frontend/features/consultations/presentation/user/chat_screen.dart';
 import 'package:cagh_frontend/shared/widgets/globe_language_picker.dart';
 import 'package:cagh_frontend/features/consultations/data/services/midwife_api_service.dart';
 import 'package:cagh_frontend/features/consultations/data/repositories/midwife_repository_impl.dart';
 import 'package:cagh_frontend/shared/models/midwife_profile.dart';
+import 'package:cagh_frontend/shared/widgets/hotline_fab.dart';
 
 class FindMidwifeScreen extends StatefulWidget {
   final VoidCallback? onBack;
@@ -71,7 +73,7 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF9FBF6),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF274E13),
+        backgroundColor: const Color(0xFF315E26),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -92,7 +94,7 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
           ),
         ),
         actions: [
-          const GlobeLanguagePicker(iconColor: Colors.amber),
+          const GlobeLanguagePicker(iconColor: Color(0xFFFFD22B)),
           IconButton(
             icon: const Icon(Icons.more_vert, color: Colors.white),
             onPressed: () {},
@@ -137,7 +139,7 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                   const Center(
                     child: Padding(
                       padding: EdgeInsets.only(top: 40.0),
-                      child: CircularProgressIndicator(color: Color(0xFF1B5E20)),
+                      child: CircularProgressIndicator(color: Color(0xFF315E26)),
                     ),
                   )
                 else if (_errorMessage != null)
@@ -218,7 +220,7 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                                         ),
                                         child: Row(
                                           children: [
-                                            const Icon(Icons.star, color: Colors.amber, size: 14),
+                                            const Icon(Icons.star, color: Color(0xFFFFD22B), size: 14),
                                             const SizedBox(width: 3),
                                             Text(
                                               mw.ratingAverage.toStringAsFixed(1),
@@ -238,7 +240,7 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                                     mw.specialty,
                                     style: const TextStyle(
                                       fontSize: 13,
-                                      color: Color(0xFF274E13),
+                                      color: Color(0xFF315E26),
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
@@ -296,9 +298,39 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
 
                         const SizedBox(height: 16),
 
-                        // Action Buttons Row (View Profile)
+                        // Action Buttons Row (Message & View Profile)
                         Row(
                           children: [
+                            Expanded(
+                              child: SizedBox(
+                                height: 42,
+                                child: OutlinedButton(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => ChatScreen(midwife: mw),
+                                      ),
+                                    );
+                                  },
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: const Color(0xFF315E26),
+                                    side: const BorderSide(color: Color(0xFF315E26), width: 1.5),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                  ),
+                                  child: const Text(
+                                    'Message',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
                             Expanded(
                               child: SizedBox(
                                 height: 42,
@@ -314,7 +346,7 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                                     );
                                   },
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF274E13),
+                                    backgroundColor: const Color(0xFF315E26),
                                     elevation: 0,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(14),
@@ -350,103 +382,12 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // 24/7 Telehealth Call Badge with Hover Effect
-                _HoverScaleWidget(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const EmergencySupportScreen(),
-                      ),
-                    );
-                  },
-                  child: Column(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.15),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Stack(
-                          alignment: Alignment.topRight,
-                          children: [
-                            const Icon(
-                              Icons.phone_in_talk_rounded,
-                              color: Colors.redAccent,
-                              size: 26,
-                            ),
-                            Container(
-                              padding: const EdgeInsets.all(2),
-                              decoration: const BoxDecoration(
-                                color: Colors.red,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Text(
-                                '24',
-                                style: TextStyle(
-                                  fontSize: 8,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      // Emergency text removed
-                    ],
-                  ),
-                ),
-
+                // 24/7 Telehealth Call Badge with Shared Hover Effect
+                const HotlineFab(),
               ],
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _HoverScaleWidget extends StatefulWidget {
-  final Widget child;
-  final VoidCallback onTap;
-
-  const _HoverScaleWidget({required this.child, required this.onTap});
-
-  @override
-  State<_HoverScaleWidget> createState() => _HoverScaleWidgetState();
-}
-
-class _HoverScaleWidgetState extends State<_HoverScaleWidget> {
-  bool _isHovered = false;
-  bool _isPressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final scale = _isPressed ? 0.92 : (_isHovered ? 1.12 : 1.0);
-
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: GestureDetector(
-        onTapDown: (_) => setState(() => _isPressed = true),
-        onTapUp: (_) => setState(() => _isPressed = false),
-        onTapCancel: () => setState(() => _isPressed = false),
-        onTap: widget.onTap,
-        child: AnimatedScale(
-          scale: scale,
-          duration: const Duration(milliseconds: 150),
-          curve: Curves.easeInOut,
-          child: widget.child,
-        ),
       ),
     );
   }

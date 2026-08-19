@@ -124,7 +124,7 @@ class _ConsultationSessionScreenState extends State<ConsultationSessionScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAF8),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1B5E20),
+        backgroundColor: const Color(0xFF315E26),
         title: Row(
           children: [
             const Text('Consultation Session', style: TextStyle(color: Colors.white, fontSize: 18)),
@@ -162,7 +162,7 @@ class _ConsultationSessionScreenState extends State<ConsultationSessionScreen> {
                   const CircleAvatar(
                     radius: 30,
                     backgroundColor: Color(0xFFE8F5E9),
-                    child: Icon(Icons.person, color: Color(0xFF2E7D32), size: 34),
+                    child: Icon(Icons.person, color: Color(0xFF315E26), size: 34),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -171,7 +171,7 @@ class _ConsultationSessionScreenState extends State<ConsultationSessionScreen> {
                       children: [
                         Text(
                           widget.appointment.userFullName ?? 'Patient',
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1B5E20)),
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF315E26)),
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -186,27 +186,7 @@ class _ConsultationSessionScreenState extends State<ConsultationSessionScreen> {
             ),
             const SizedBox(height: 24),
 
-            // Video/Voice Controls Mock
-            if (widget.appointment.appointmentType != 'IN_PERSON')
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1B5E20),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildCallActionBtn(Icons.mic_off_outlined, 'Mute'),
-                    _buildCallActionBtn(Icons.videocam_outlined, 'Video'),
-                    _buildCallActionBtn(Icons.volume_up_outlined, 'Speaker'),
-                    _buildCallActionBtn(Icons.call_end, 'End Call', bgColor: Colors.redAccent),
-                  ],
-                ),
-              ),
 
-            if (widget.appointment.appointmentType != 'IN_PERSON')
-              const SizedBox(height: 24),
 
             // Completion Form
             const Text(
@@ -240,7 +220,7 @@ class _ConsultationSessionScreenState extends State<ConsultationSessionScreen> {
                     children: [
                       Checkbox(
                         value: _followUpRequired,
-                        activeColor: const Color(0xFF1B5E20),
+                        activeColor: const Color(0xFF315E26),
                         onChanged: (val) {
                           setState(() {
                             _followUpRequired = val ?? false;
@@ -275,7 +255,7 @@ class _ConsultationSessionScreenState extends State<ConsultationSessionScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(_followUpDate == null ? 'Select Follow-up Date' : '${_followUpDate!.year}-${_followUpDate!.month}-${_followUpDate!.day}'),
-                            const Icon(Icons.calendar_month, color: Color(0xFF1B5E20)),
+                            const Icon(Icons.calendar_month, color: Color(0xFF315E26)),
                           ],
                         ),
                       ),
@@ -294,7 +274,7 @@ class _ConsultationSessionScreenState extends State<ConsultationSessionScreen> {
               child: ElevatedButton(
                 onPressed: _isLoading ? null : _completeSession,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF1B5E20),
+                  backgroundColor: const Color(0xFF315E26),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                 ),
                 child: _isLoading
@@ -330,27 +310,9 @@ class _ConsultationSessionScreenState extends State<ConsultationSessionScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF1B5E20), width: 2),
+          borderSide: const BorderSide(color: Color(0xFF315E26), width: 2),
         ),
       ),
-    );
-  }
-
-  Widget _buildCallActionBtn(IconData icon, String label, {Color? bgColor}) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        CircleAvatar(
-          radius: 26,
-          backgroundColor: bgColor ?? Colors.white24,
-          child: Icon(icon, color: Colors.white, size: 24),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          label,
-          style: const TextStyle(color: Colors.white, fontSize: 12),
-        ),
-      ],
     );
   }
 }

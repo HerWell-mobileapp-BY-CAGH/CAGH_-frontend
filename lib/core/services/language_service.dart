@@ -19,11 +19,8 @@ class LanguageService {
   static const String _languageKey = 'app_language_code';
 
   static const List<SupportedLanguage> supportedLanguages = [
-    SupportedLanguage(code: 'en', name: 'English', nativeName: 'English', flag: '🇬🇧'),
-    SupportedLanguage(code: 'am', name: 'Amharic', nativeName: 'አማርኛ', flag: '🇪🇹'),
-    SupportedLanguage(code: 'om', name: 'Afaan Oromo', nativeName: 'Afaan Oromoo', flag: '🇪🇹'),
-    SupportedLanguage(code: 'so', name: 'Somali', nativeName: 'Soomaali', flag: '🇸🇴'),
-    SupportedLanguage(code: 'ti', name: 'Tigrinya', nativeName: 'ትግርኛ', flag: '🇪🇹'),
+    SupportedLanguage(code: 'en', name: 'English', nativeName: 'English', flag: ''),
+    SupportedLanguage(code: 'am', name: 'Amharic', nativeName: 'አማርኛ', flag: ''),
   ];
 
   /// ValueNotifier holding current language code ('en', 'am', 'om', 'so', 'ti').
@@ -43,8 +40,20 @@ class LanguageService {
     await prefs.setString(_languageKey, code);
   }
 
-  /// Helper to translate key string based on current selected language
-  static String tr(String key) {
+  /// Helper to translate key string based on current selected language.
+  /// Passing BuildContext ensures the widget rebuilds when language changes.
+  static String tr(BuildContext context, String key) {
+    try {
+      // This tells Flutter to rebuild this widget whenever the Locale changes
+      Localizations.localeOf(context);
+    } catch (_) {}
+    final lang = currentLanguage.value;
+    return _translations[lang]?[key] ?? _translations['en']?[key] ?? key;
+  }
+
+  /// Helper to translate backend API errors or keys outside of the widget tree.
+  /// Does not cause a widget rebuild.
+  static String trStatic(String key) {
     final lang = currentLanguage.value;
     return _translations[lang]?[key] ?? _translations['en']?[key] ?? key;
   }
@@ -138,6 +147,19 @@ class LanguageService {
       'cancel': 'Cancel',
       'search_conversations': 'Search conversations...',
       'online_verified_midwife': 'Online • Verified Midwife',
+      'val_email_phone_req': 'Email or phone number is required.',
+      'val_email_req': 'Email address is required.',
+      'val_phone_req': 'Phone number is required.',
+      'val_invalid_email': 'Please enter a valid email address.',
+      'val_invalid_phone': 'Please enter a valid phone number.',
+      'val_password_req': 'Password is required.',
+      'val_password_format': 'Password must meet the required format.',
+      'val_password_confirm_req': 'Please confirm your password.',
+      'val_password_mismatch': 'Passwords do not match.',
+      'val_name_req': 'Full name is required.',
+      'val_code_req': 'Verification code is required.',
+      'val_file_req': 'File selection is required.',
+      'secure_connection': 'Secure & Private Connection',
     },
     'am': {
       'app_title': 'ዲጂታል አዋላጅ',
@@ -226,6 +248,7 @@ class LanguageService {
       'cancel': 'ሰርዝ',
       'search_conversations': 'ውይይቶችን ፈልግ...',
       'online_verified_midwife': 'ኦንላይን • የተረጋገጠ አዋላጅ',
+      'secure_connection': 'ደህንነቱ የተጠበቀ እና የግል ግንኙነት',
     },
     'om': {
       'app_title': 'Deessisuu Diijitaalaa',
@@ -314,6 +337,7 @@ class LanguageService {
       'cancel': 'Dhiisi',
       'search_conversations': 'Maree barbaadaa...',
       'online_verified_midwife': 'Inthaneteera • Deessistuu Mirkanaa\'e',
+      'secure_connection': 'Qunnamtii Nagaa fi Dhuunfaa',
     },
     'so': {
       'app_title': 'Umulisada Dijitaalka',
@@ -402,6 +426,7 @@ class LanguageService {
       'cancel': 'Baji',
       'search_conversations': 'Raadi wada-hadallada...',
       'online_verified_midwife': 'Khadka • Umuliso La Hubiyay',
+      'secure_connection': 'Xiriir Sugan oo Gaar ah',
     },
     'ti': {
       'app_title': 'ዲጂታል መሕረሲት',
@@ -490,6 +515,7 @@ class LanguageService {
       'cancel': 'ሰርዝ',
       'search_conversations': 'ምይይጣት ደልይ...',
       'online_verified_midwife': 'ኦንላይን • ዝተረጋገጸ መሕረሲት',
+      'secure_connection': 'ውሑስን ብሕታውን ርክብ',
     },
   };
 }

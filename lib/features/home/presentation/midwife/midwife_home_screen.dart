@@ -107,7 +107,7 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
       extendBody: true,
       backgroundColor: const Color(0xFFF9FAF8),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1B5E20),
+        backgroundColor: const Color(0xFF315E26),
         elevation: 0,
         automaticallyImplyLeading: false,
         title: Text(
@@ -119,7 +119,7 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
           ),
         ),
         actions: [
-          const GlobeLanguagePicker(iconColor: Colors.amber, iconSize: 24),
+          const GlobeLanguagePicker(iconColor: Color(0xFFFFD22B), iconSize: 24),
           IconButton(
             icon: const Icon(Icons.notifications_outlined, color: Colors.white, size: 26),
             onPressed: () {
@@ -148,17 +148,17 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
   String _getAppBarTitle(int index) {
     switch (index) {
       case 0:
-        return LanguageService.tr('home');
+        return LanguageService.tr(context, 'home');
       case 1:
-        return LanguageService.tr('schedule');
+        return LanguageService.tr(context, 'schedule');
       case 2:
-        return LanguageService.tr('consult');
+        return LanguageService.tr(context, 'consult');
       case 3:
-        return LanguageService.tr('learn');
+        return LanguageService.tr(context, 'learn');
       case 4:
-        return LanguageService.tr('profile');
+        return LanguageService.tr(context, 'profile');
       default:
-        return LanguageService.tr('home');
+        return LanguageService.tr(context, 'home');
     }
   }
 
@@ -182,7 +182,7 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1B5E20),
+                  color: const Color(0xFF315E26),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
@@ -192,7 +192,7 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            LanguageService.tr('welcome_back').toUpperCase(),
+                            LanguageService.tr(context, 'welcome_back').toUpperCase(),
                             style: const TextStyle(
                               color: Colors.white70,
                               fontSize: 12,
@@ -232,7 +232,7 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    LanguageService.tr('todays_appointments'),
+                    LanguageService.tr(context, 'todays_appointments'),
                     style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
                   ),
                   if (upcomingApts.isNotEmpty)
@@ -254,14 +254,14 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
                       MaterialPageRoute(builder: (_) => const MidwifeManageScheduleScreen()),
                     );
                   },
-                  icon: const Icon(Icons.edit_calendar, color: Color(0xFF1B5E20)),
+                  icon: const Icon(Icons.edit_calendar, color: Color(0xFF315E26)),
                   label: const Text(
                     'Manage Availability',
-                    style: TextStyle(color: Color(0xFF1B5E20), fontWeight: FontWeight.bold),
+                    style: TextStyle(color: Color(0xFF315E26), fontWeight: FontWeight.bold),
                   ),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 12),
-                    side: const BorderSide(color: Color(0xFF1B5E20)),
+                    side: const BorderSide(color: Color(0xFF315E26)),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
@@ -269,7 +269,7 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
               const SizedBox(height: 16),
 
               if (snapshot.connectionState == ConnectionState.waiting)
-                const Center(child: CircularProgressIndicator(color: Color(0xFF1B5E20)))
+                const Center(child: CircularProgressIndicator(color: Color(0xFF315E26)))
               else if (upcomingApts.isEmpty)
                 Container(
                   width: double.infinity,
@@ -284,12 +284,12 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
                       Icon(Icons.calendar_month_outlined, size: 42, color: Colors.grey.shade400),
                       const SizedBox(height: 10),
                       Text(
-                        LanguageService.tr('no_appointments'),
+                        LanguageService.tr(context, 'no_appointments'),
                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF333333)),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        LanguageService.tr('no_appointments_sub'),
+                        LanguageService.tr(context, 'no_appointments_sub'),
                         textAlign: TextAlign.center,
                         style: TextStyle(color: Colors.grey.shade600, fontSize: 12.5),
                       ),
@@ -306,7 +306,7 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
                       subtitle: 'Date: ${apt.date}',
                       badgeLabel: 'BOOKED',
                       badgeColor: const Color(0xFFC8E6C9),
-                      badgeTextColor: const Color(0xFF2E7D32),
+                      badgeTextColor: const Color(0xFF315E26),
                     ),
                   );
                 }),
@@ -386,7 +386,7 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      LanguageService.tr('learn'),
+                      LanguageService.tr(context, 'learn'),
                       style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A)),
                     ),
                     const SizedBox(height: 2),
@@ -401,7 +401,7 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
               const CircleAvatar(
                 radius: 20,
                 backgroundColor: Color(0xFFE8F5E9),
-                child: Icon(Icons.school_outlined, color: Color(0xFF1B5E20), size: 22),
+                child: Icon(Icons.school_outlined, color: Color(0xFF315E26), size: 22),
               ),
             ],
           ),
@@ -415,7 +415,7 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
             decoration: InputDecoration(
               hintText: 'Search protocols, drugs, or WHO guidelines...',
               hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13.5),
-              prefixIcon: const Icon(Icons.search, color: Color(0xFF1B5E20)),
+              prefixIcon: const Icon(Icons.search, color: Color(0xFF315E26)),
               filled: true,
               fillColor: Colors.white,
               contentPadding: const EdgeInsets.symmetric(vertical: 12),
@@ -446,10 +446,10 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
                     onSelected: (val) {
                       if (val) setState(() => _selectedLearnCategory = cat);
                     },
-                    selectedColor: const Color(0xFF1B5E20),
+                    selectedColor: const Color(0xFF315E26),
                     backgroundColor: Colors.white,
                     side: BorderSide(
-                      color: isSelected ? const Color(0xFF1B5E20) : Colors.grey.shade300,
+                      color: isSelected ? const Color(0xFF315E26) : Colors.grey.shade300,
                     ),
                     labelStyle: TextStyle(
                       color: isSelected ? Colors.white : Colors.black87,
@@ -471,7 +471,7 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFF1B5E20), Color(0xFF2E7D32)],
+                colors: [Color(0xFF315E26), Color(0xFF315E26)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -486,7 +486,7 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: Colors.amber,
+                          color: Color(0xFFFFD22B),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Text(
@@ -570,13 +570,13 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
                           ),
                           child: Text(
                             art['category'],
-                            style: const TextStyle(color: Color(0xFF1B5E20), fontWeight: FontWeight.bold, fontSize: 11),
+                            style: const TextStyle(color: Color(0xFF315E26), fontWeight: FontWeight.bold, fontSize: 11),
                           ),
                         ),
                         IconButton(
                           icon: Icon(
                             isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                            color: isBookmarked ? const Color(0xFF1B5E20) : Colors.grey,
+                            color: isBookmarked ? const Color(0xFF315E26) : Colors.grey,
                             size: 20,
                           ),
                           onPressed: () {
@@ -615,8 +615,8 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
                           },
                           child: const Row(
                             children: [
-                              Text('Read Protocol', style: TextStyle(color: Color(0xFF1B5E20), fontWeight: FontWeight.bold, fontSize: 12.5)),
-                              Icon(Icons.chevron_right_rounded, size: 18, color: Color(0xFF1B5E20)),
+                              Text('Read Protocol', style: TextStyle(color: Color(0xFF315E26), fontWeight: FontWeight.bold, fontSize: 12.5)),
+                              Icon(Icons.chevron_right_rounded, size: 18, color: Color(0xFF315E26)),
                             ],
                           ),
                         ),
@@ -659,7 +659,7 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Text(art['category'].toString().toUpperCase(), style: const TextStyle(color: Color(0xFF1B5E20), fontWeight: FontWeight.bold, fontSize: 12)),
+                  Text(art['category'].toString().toUpperCase(), style: const TextStyle(color: Color(0xFF315E26), fontWeight: FontWeight.bold, fontSize: 12)),
                   const SizedBox(height: 6),
                   Text(art['title'], style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
@@ -682,7 +682,7 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
                     height: 48,
                     child: ElevatedButton(
                       onPressed: () => Navigator.pop(context),
-                      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1B5E20)),
+                      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF315E26)),
                       child: const Text('Close Protocol', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                     ),
                   ),
@@ -701,7 +701,7 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: const Border(left: BorderSide(color: Color(0xFF1B5E20), width: 4)),
+        border: const Border(left: BorderSide(color: Color(0xFF315E26), width: 4)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -729,27 +729,27 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
       FloatingNavBarItem(
         icon: Icons.home_outlined,
         activeIcon: Icons.home_rounded,
-        label: LanguageService.tr('home'),
+        label: LanguageService.tr(context, 'home'),
       ),
       FloatingNavBarItem(
         icon: Icons.calendar_month_outlined,
         activeIcon: Icons.calendar_month_rounded,
-        label: LanguageService.tr('schedule'),
+        label: LanguageService.tr(context, 'schedule'),
       ),
       FloatingNavBarItem(
         icon: Icons.chat_bubble_outline_rounded,
         activeIcon: Icons.chat_bubble_rounded,
-        label: LanguageService.tr('consult'),
+        label: LanguageService.tr(context, 'consult'),
       ),
       FloatingNavBarItem(
         icon: Icons.menu_book_outlined,
         activeIcon: Icons.menu_book_rounded,
-        label: LanguageService.tr('learn'),
+        label: LanguageService.tr(context, 'learn'),
       ),
       FloatingNavBarItem(
         icon: Icons.person_outline_rounded,
         activeIcon: Icons.person_rounded,
-        label: LanguageService.tr('profile'),
+        label: LanguageService.tr(context, 'profile'),
       ),
     ];
 

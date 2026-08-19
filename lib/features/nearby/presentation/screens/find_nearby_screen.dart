@@ -3,8 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/nearby_provider.dart';
 import '../widgets/nearby_search_bar.dart';
 import '../widgets/nearby_filter_chips.dart';
-import '../widgets/nearby_map.dart';
-import '../widgets/facility_bottom_sheet.dart';
+import '../widgets/facility_card.dart';
 import '../widgets/location_permission_view.dart';
 import '../widgets/nearby_empty_state.dart';
 
@@ -20,7 +19,7 @@ class FindNearbyScreen extends ConsumerStatefulWidget {
 class _FindNearbyScreenState extends ConsumerState<FindNearbyScreen> {
   final TextEditingController _searchController = TextEditingController();
   final List<String> _categories = [
-    'All', 'Hospitals', 'Health Centers', 'Clinics', 'Midwives', 'Pharmacies', 'Emergency'
+    'All', 'Hospitals', 'Clinics', 'Pharmacies'
   ];
   late String _currentUiCategory;
 
@@ -79,7 +78,7 @@ class _FindNearbyScreenState extends ConsumerState<FindNearbyScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F8F4),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1B5E20),
+        backgroundColor: const Color(0xFF315E26),
         elevation: 0,
         title: const Text('Find Nearby', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         leading: IconButton(
@@ -97,7 +96,7 @@ class _FindNearbyScreenState extends ConsumerState<FindNearbyScreen> {
         children: [
           // Search and Filters
           Container(
-            color: const Color(0xFF1B5E20),
+            color: const Color(0xFF315E26),
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             child: NearbySearchBar(
               controller: _searchController,
@@ -121,7 +120,7 @@ class _FindNearbyScreenState extends ConsumerState<FindNearbyScreen> {
   Widget _buildBody(NearbyState state) {
     if (state is NearbyInitial || state is NearbyLoading) {
       return const Center(
-        child: CircularProgressIndicator(color: Color(0xFF1B5E20)),
+        child: CircularProgressIndicator(color: Color(0xFF315E26)),
       );
     }
     
@@ -173,49 +172,33 @@ class _FindNearbyScreenState extends ConsumerState<FindNearbyScreen> {
     else if (type == 'Pharmacy') uiCategory = 'Pharmacies';
     else if (type == 'Emergency') uiCategory = 'Emergency';
 
-    return Stack(
+    return Column(
       children: [
-        Column(
-          children: [
-            NearbyFilterChips(
-              categories: _categories,
-              selectedCategory: uiCategory,
-              onSelected: _onCategorySelected,
-            ),
-            Expanded(
-              child: Stack(
-                children: [
-                  NearbyMap(
-                    userLocation: position,
-                    facilities: facilities.cast(),
-                    onFacilitySelected: (facility) {
-                      // Handled by marker tap
-                    },
-                    onMyLocationTapped: () {
-                      ref.read(nearbyStateProvider.notifier).fetchNearbyFacilities(forceRefreshLocation: true);
-                    },
-                  ),
-                  if (isEmpty)
-                    Container(
-                      color: Colors.white.withOpacity(0.9),
-                      child: NearbyEmptyState(
-                        onExpandRadius: () {
-                          ref.read(nearbyStateProvider.notifier).updateFilters(radius: radius + 5.0);
-                        },
-                        onClearFilters: () {
-                          ref.read(nearbyStateProvider.notifier).updateFilters(type: 'All', service: 'All');
-                        },
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ],
+        NearbyFilterChips(
+          categories: _categories,
+          selectedCategory: uiCategory,
+          onSelected: _onCategorySelected,
         ),
-        if (!isEmpty)
-          FacilityBottomSheet(
-            facilities: facilities.cast(),
-            radius: radius,
+        if (isEmpty)
+          Expanded(
+            child: NearbyEmptyState(
+              onExpandRadius: () {
+                ref.read(nearbyStateProvider.notifier).updateFilters(radius: radius + 50.0);
+              },
+              onClearFilters: () {
+                ref.read(nearbyStateProvider.notifier).updateFilters(type: 'All', service: 'All');
+              },
+            ),
+          )
+        else
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.only(top: 8, bottom: 80),
+              itemCount: facilities.length,
+              itemBuilder: (context, index) {
+                return FacilityCard(facility: facilities[index]);
+              },
+            ),
           ),
       ],
     );

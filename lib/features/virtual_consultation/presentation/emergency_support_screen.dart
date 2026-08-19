@@ -1,429 +1,206 @@
 import 'package:flutter/material.dart';
 
-class EmergencySupportScreen extends StatefulWidget {
+class EmergencySupportScreen extends StatelessWidget {
   const EmergencySupportScreen({super.key});
-
-  @override
-  State<EmergencySupportScreen> createState() => _EmergencySupportScreenState();
-}
-
-class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
-  bool _isCallActive = false;
-  int _callSeconds = 0;
-  bool _isMuted = false;
-  bool _isSpeaker = false;
-
-  void _toggleCall() {
-    setState(() {
-      _isCallActive = !_isCallActive;
-      _callSeconds = 0;
-    });
-
-    if (_isCallActive) {
-      _startCallTimer();
-    }
-  }
-
-  void _startCallTimer() async {
-    while (_isCallActive && mounted) {
-      await Future.delayed(const Duration(seconds: 1));
-      if (mounted && _isCallActive) {
-        setState(() {
-          _callSeconds++;
-        });
-      }
-    }
-  }
-
-  String _formatCallTime(int seconds) {
-    final m = (seconds ~/ 60).toString().padLeft(2, '0');
-    final s = (seconds % 60).toString().padLeft(2, '0');
-    return '$m:$s';
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF8F7),
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFD32F2F),
+        backgroundColor: const Color(0xFFFFE5E5),
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+        centerTitle: true,
+        leadingWidth: 80,
+        leading: TextButton(
           onPressed: () => Navigator.pop(context),
+          child: const Text(
+            'close',
+            style: TextStyle(
+              color: Color(0xFF900000),
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
         ),
         title: const Text(
-          '24/7 Emergency Support',
+          'Emergency',
           style: TextStyle(
-            color: Colors.white,
-            fontSize: 19,
+            color: Color(0xFF900000),
             fontWeight: FontWeight.bold,
+            fontSize: 16,
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Hotline Action Card
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFD32F2F), Color(0xFFB71C1C)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const SizedBox(height: 40),
+              const Text(
+                'Are you okay?',
+                style: TextStyle(
+                  color: Color(0xFFB71C1C),
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
                 ),
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.red.withValues(alpha: 0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
               ),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.phone_in_talk_rounded,
-                          color: Colors.white,
-                          size: 28,
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      const Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Emergency Midwife Line',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            SizedBox(height: 2),
-                            Text(
-                              'Toll-Free Hotline: 907',
-                              style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+              const SizedBox(height: 12),
+              const Text(
+                'If this is a life-threatening medical\nemergency, tap SOS immediately.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Color(0xFFC62828),
+                  fontSize: 15,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 50),
+              
+              // SOS Button
+              GestureDetector(
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('SOS Alert Triggered!')),
+                  );
+                },
+                child: Container(
+                  width: 220,
+                  height: 220,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color(0xFFE53935).withOpacity(0.5), // Outer ring
                   ),
-                  const SizedBox(height: 20),
-
-                  if (_isCallActive) ...[
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(20),
+                  child: Center(
+                    child: Container(
+                      width: 170,
+                      height: 170,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Color(0xFFB71C1C), // Inner circle
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
+                      child: const Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Container(
-                            width: 10,
-                            height: 10,
-                            decoration: const BoxDecoration(
-                              color: Colors.greenAccent,
-                              shape: BoxShape.circle,
-                            ),
+                          Icon(
+                            Icons.warning_amber_rounded,
+                            color: Colors.white,
+                            size: 48,
                           ),
-                          const SizedBox(width: 8),
+                          SizedBox(height: 8),
                           Text(
-                            'Connected • ${_formatCallTime(_callSeconds)}',
-                            style: const TextStyle(
+                            'SOS',
+                            style: TextStyle(
                               color: Colors.white,
+                              fontSize: 28,
                               fontWeight: FontWeight.bold,
-                              fontSize: 14,
+                              letterSpacing: 2,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        IconButton(
-                          icon: Icon(
-                            _isMuted ? Icons.mic_off : Icons.mic,
-                            color: Colors.white,
-                            size: 28,
-                          ),
-                          onPressed: () => setState(() => _isMuted = !_isMuted),
-                        ),
-                        const SizedBox(width: 24),
-                        ElevatedButton.icon(
-                          onPressed: _toggleCall,
-                          icon: const Icon(Icons.call_end, color: Colors.white),
-                          label: const Text('End Call', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.black54,
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                          ),
-                        ),
-                        const SizedBox(width: 24),
-                        IconButton(
-                          icon: Icon(
-                            _isSpeaker ? Icons.volume_up : Icons.volume_down,
-                            color: Colors.white,
-                            size: 28,
-                          ),
-                          onPressed: () => setState(() => _isSpeaker = !_isSpeaker),
-                        ),
-                      ],
+                  ),
+                ),
+              ),
+              
+              const SizedBox(height: 50),
+              
+              // Call Emergency Services Card
+              _buildActionCard(
+                icon: Icons.phone,
+                iconBgColor: const Color(0xFFFFEBEE),
+                iconColor: const Color(0xFFC62828),
+                title: 'Call Emergency\nServices',
+                subtitle: 'Dial 911 immediately',
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Dialing 911...')),
+                  );
+                },
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Notify Contacts Card
+              _buildActionCard(
+                icon: Icons.group,
+                iconBgColor: const Color(0xFFE8F5E9),
+                iconColor: const Color(0xFF2E7D32),
+                title: 'Notify Contacts',
+                subtitle: 'Send alert to 3 contacts',
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Alert sent to emergency contacts!')),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionCard({
+    required IconData icon,
+    required Color iconBgColor,
+    required Color iconColor,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFF315E26), width: 1.0), // Dark green border
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: iconBgColor,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: iconColor, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                      height: 1.2,
                     ),
-                  ] else ...[
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton.icon(
-                        onPressed: _toggleCall,
-                        icon: const Icon(Icons.call, color: Color(0xFFD32F2F)),
-                        label: const Text(
-                          'Call Emergency Hotline Now',
-                          style: TextStyle(
-                            color: Color(0xFFD32F2F),
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                        ),
-                      ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade700,
                     ),
-                  ],
+                  ),
                 ],
               ),
             ),
-
-            const SizedBox(height: 24),
-
-            // Send SOS Alert Button
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('SOS Alert sent with current GPS location to nearest dispatch!'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.location_on, color: Color(0xFFD32F2F)),
-                label: const Text(
-                  'Send GPS Location SOS Alert',
-                  style: TextStyle(
-                    color: Color(0xFFD32F2F),
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Color(0xFFD32F2F), width: 1.5),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(26),
-                  ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 28),
-
-            const Text(
-              'Emergency Symptoms Guide',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1A1A1A),
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'Seek immediate emergency care if you experience any of the following:',
-              style: TextStyle(color: Colors.grey.shade700, fontSize: 13),
-            ),
-
-            const SizedBox(height: 14),
-
-            _buildSymptomCard(
-              title: 'Severe Abdominal Pain or Cramping',
-              description: 'Persistent sharp pain in lower abdomen or pelvic area.',
-              severity: 'CRITICAL',
-            ),
-            const SizedBox(height: 10),
-            _buildSymptomCard(
-              title: 'Heavy Vaginal Bleeding',
-              description: 'Bright red fluid loss requiring immediate medical evaluation.',
-              severity: 'CRITICAL',
-            ),
-            const SizedBox(height: 10),
-            _buildSymptomCard(
-              title: 'Significant Reduction in Fetal Movement',
-              description: 'Fewer than 10 kick counts over 2 hours during trimester 3.',
-              severity: 'URGENT',
-            ),
-            const SizedBox(height: 10),
-            _buildSymptomCard(
-              title: 'Severe Sudden Swelling or Blurred Vision',
-              description: 'Swelling in hands/face accompanied by severe headache.',
-              severity: 'URGENT',
-            ),
-
-            const SizedBox(height: 28),
-
-            const Text(
-              'Nearest Emergency Centers',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1A1A1A),
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            _buildHospitalTile(
-              name: 'St. Paul Hospital Millennium Medical College',
-              address: 'Gullele, Addis Ababa',
-              distance: '1.2 km away',
-              phone: '+251 112 757 676',
-            ),
-            const SizedBox(height: 10),
-            _buildHospitalTile(
-              name: 'Gandhi Memorial Women Hospital',
-              address: 'Kirkos, Addis Ababa',
-              distance: '3.5 km away',
-              phone: '+251 115 518 085',
-            ),
+            const Icon(Icons.chevron_right, color: Colors.grey),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildSymptomCard({
-    required String title,
-    required String description,
-    required String severity,
-  }) {
-    final isCritical = severity == 'CRITICAL';
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isCritical ? Colors.red.shade200 : Colors.orange.shade200,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 6,
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            isCritical ? Icons.warning_amber_rounded : Icons.info_outline,
-            color: isCritical ? Colors.red : Colors.orange.shade800,
-            size: 24,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1A1A1A),
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  description,
-                  style: TextStyle(fontSize: 12.5, color: Colors.grey.shade700),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHospitalTile({
-    required String name,
-    required String address,
-    required String distance,
-    required String phone,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.local_hospital_rounded, color: Colors.redAccent, size: 28),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5),
-                ),
-                Text(
-                  address,
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                ),
-              ],
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.call, color: Color(0xFF1B5E20)),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Dialing $phone...')),
-              );
-            },
-          ),
-        ],
       ),
     );
   }

@@ -3,6 +3,7 @@ import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart'
 import 'package:cagh_frontend/core/services/language_service.dart';
 import 'package:cagh_frontend/features/auth/presentation/user/user_login_screen.dart';
 import 'package:cagh_frontend/features/profile/presentation/personal_information_screen.dart';
+import 'package:cagh_frontend/features/profile/presentation/appearance_accessibility_screen.dart';
 
 class UserProfileScreen extends StatefulWidget {
   final VoidCallback? onBackTap;
@@ -15,8 +16,8 @@ class UserProfileScreen extends StatefulWidget {
 class _UserProfileScreenState extends State<UserProfileScreen> {
   bool isLoading = true;
   bool notificationsEnabled = true;
-  String fullName = 'User Profile';
-  String email = 'user@cagh.org';
+  String fullName = '';
+  String email = '';
 
   @override
   void initState() {
@@ -29,8 +30,17 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       final localData = await AuthService.getUserData();
       if (mounted) {
         setState(() {
-          if (localData['full_name'] != null && localData['full_name'].toString().isNotEmpty) {
-            fullName = localData['full_name'].toString();
+          final u = localData['user'] is Map ? localData['user'] : localData;
+          final p = u['profile'] is Map ? u['profile'] : (localData['profile'] is Map ? localData['profile'] : {});
+          
+          final fName = p['first_name']?.toString() ?? u['first_name']?.toString() ?? localData['first_name']?.toString() ?? '';
+          final lName = p['last_name']?.toString() ?? u['last_name']?.toString() ?? localData['last_name']?.toString() ?? '';
+          final cFullName = p['full_name']?.toString() ?? u['full_name']?.toString() ?? localData['full_name']?.toString() ?? '';
+          
+          if (cFullName.isNotEmpty) {
+            fullName = cFullName;
+          } else if (fName.isNotEmpty || lName.isNotEmpty) {
+            fullName = '$fName $lName'.trim();
           }
           if (localData['email'] != null && localData['email'].toString().isNotEmpty) {
             email = localData['email'].toString();
@@ -44,8 +54,17 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       if (res.success && res.data != null && mounted) {
         final d = res.data!;
         setState(() {
-          if (d['full_name'] != null && d['full_name'].toString().isNotEmpty) {
-            fullName = d['full_name'].toString();
+          final u = d['user'] is Map ? d['user'] : d;
+          final p = u['profile'] is Map ? u['profile'] : (d['profile'] is Map ? d['profile'] : {});
+          
+          final fName = p['first_name']?.toString() ?? u['first_name']?.toString() ?? d['first_name']?.toString() ?? '';
+          final lName = p['last_name']?.toString() ?? u['last_name']?.toString() ?? d['last_name']?.toString() ?? '';
+          final cFullName = p['full_name']?.toString() ?? u['full_name']?.toString() ?? d['full_name']?.toString() ?? '';
+          
+          if (cFullName.isNotEmpty) {
+            fullName = cFullName;
+          } else if (fName.isNotEmpty || lName.isNotEmpty) {
+            fullName = '$fName $lName'.trim();
           }
           if (d['email'] != null && d['email'].toString().isNotEmpty) {
             email = d['email'].toString();
@@ -56,7 +75,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       }
     } catch (_) {}
     if (mounted) {
-      setState(() => isLoading = false);
+      setState(() {
+         isLoading = false;
+      });
     }
   }
 
@@ -69,10 +90,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFFAF9F6),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1B5E20),
+        backgroundColor: const Color(0xFF315E26),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.amber),
+          icon: const Icon(Icons.arrow_back, color: Color(0xFFFFD22B)),
           onPressed: () {
             if (widget.onBackTap != null) {
               widget.onBackTap!();
@@ -81,9 +102,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             }
           },
         ),
-        title: const Text(
-          'User Profile',
-          style: TextStyle(
+        title: Text(
+          fullName.isNotEmpty ? fullName : LanguageService.tr(context, 'profile'),
+          style: const TextStyle(
             color: Colors.white,
             fontSize: 19,
             fontWeight: FontWeight.w700,
@@ -92,7 +113,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       ),
       body: isLoading
           ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFF1B5E20)),
+              child: CircularProgressIndicator(color: Color(0xFF315E26)),
             )
           : SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
@@ -118,7 +139,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                                 padding: const EdgeInsets.all(3),
                                 decoration: const BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: Colors.amber,
+                                  color: Color(0xFFFFD22B),
                                 ),
                                 child: const CircleAvatar(
                                   radius: 42,
@@ -129,7 +150,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                               Container(
                                 padding: const EdgeInsets.all(5),
                                 decoration: const BoxDecoration(
-                                  color: Color(0xFF1B5E20),
+                                  color: Color(0xFF315E26),
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Icon(
@@ -198,7 +219,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: Colors.amber,
+                          color: Color(0xFFFFD22B),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Text(
@@ -206,7 +227,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF1B5E20),
+                            color: Color(0xFF315E26),
                           ),
                         ),
                       ),
@@ -233,6 +254,23 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   const SizedBox(height: 10),
                   _buildGroupedCard([
                     _buildListTile(
+                      icon: Icons.palette_outlined,
+                      title: 'Appearance & Accessibility',
+                      subtitle: 'Theme and text size',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const AppearanceAccessibilityScreen(),
+                          ),
+                        ).then((_) {
+                          // In case we want to fetch profile or update UI on return
+                          if (mounted) setState(() {});
+                        });
+                      },
+                    ),
+                    _buildDivider(),
+                    _buildListTile(
                       icon: Icons.language_rounded,
                       title: 'Language',
                       subtitle: activeLang,
@@ -247,14 +285,14 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           child: DropdownButton<String>(
                             value: LanguageService.currentLanguage.value,
                             isDense: true,
-                            icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF1B5E20), size: 20),
+                            icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF315E26), size: 20),
                             borderRadius: BorderRadius.circular(12),
                             items: LanguageService.supportedLanguages.map((lang) {
                               return DropdownMenuItem<String>(
                                 value: lang.code,
                                 child: Text(
                                   '${lang.flag} ${lang.nativeName}',
-                                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF1B5E20)),
+                                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF315E26)),
                                 ),
                               );
                             }).toList(),
@@ -274,7 +312,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       title: 'Notifications',
                       trailing: Switch(
                         value: notificationsEnabled,
-                        activeColor: const Color(0xFF1B5E20),
+                        activeColor: const Color(0xFF315E26),
                         onChanged: (val) {
                           setState(() => notificationsEnabled = val);
                         },
@@ -303,12 +341,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     _buildListTile(
                       icon: Icons.help_outline_rounded,
                       title: 'Help & Support',
-                      onTap: () {},
-                    ),
-                    _buildDivider(),
-                    _buildListTile(
-                      icon: Icons.info_outline_rounded,
-                      title: 'About Bloom',
                       onTap: () {},
                     ),
                   ]),
@@ -376,7 +408,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           width: 3.5,
           height: 16,
           decoration: BoxDecoration(
-            color: Colors.amber,
+            color: Color(0xFFFFD22B),
             borderRadius: BorderRadius.circular(2),
           ),
         ),
@@ -386,7 +418,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w700,
-            color: Color(0xFF1B5E20),
+            color: Color(0xFF315E26),
           ),
         ),
       ],
@@ -422,7 +454,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     return ListTile(
       onTap: onTap,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-      leading: Icon(icon, color: const Color(0xFF1B5E20), size: 22),
+      leading: Icon(icon, color: const Color(0xFF315E26), size: 22),
       title: Text(
         title,
         style: const TextStyle(

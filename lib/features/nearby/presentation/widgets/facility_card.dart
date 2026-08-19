@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 import '../../domain/entities/healthcare_facility.dart';
 import '../screens/facility_details_screen.dart';
 
@@ -51,16 +53,34 @@ class FacilityCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(10),
+                    width: 56,
+                    height: 56,
                     decoration: BoxDecoration(
                       color: facility.emergencyAvailable ? Colors.red.shade50 : const Color(0xFFE8F5E9),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(
-                      _getIconForType(),
-                      color: facility.emergencyAvailable ? Colors.red : const Color(0xFF315E26),
-                      size: 28,
-                    ),
+                    clipBehavior: Clip.hardEdge,
+                    child: facility.image != null
+                        ? Image.network(
+                            facility.image!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => Padding(
+                              padding: const EdgeInsets.all(10),
+                              child: Icon(
+                                _getIconForType(),
+                                color: facility.emergencyAvailable ? Colors.red : const Color(0xFF315E26),
+                                size: 28,
+                              ),
+                            ),
+                          )
+                        : Padding(
+                            padding: const EdgeInsets.all(10),
+                            child: Icon(
+                              _getIconForType(),
+                              color: facility.emergencyAvailable ? Colors.red : const Color(0xFF315E26),
+                              size: 28,
+                            ),
+                          ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -86,6 +106,19 @@ class FacilityCard extends StatelessWidget {
                             ]
                           ],
                         ),
+                        if (facility.rating != null) ...[
+                          const SizedBox(height: 2),
+                          Row(
+                            children: [
+                              const Text('⭐️', style: TextStyle(fontSize: 12)),
+                              const SizedBox(width: 4),
+                              Text(
+                                facility.rating!.toStringAsFixed(1),
+                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        ],
                         const SizedBox(height: 4),
                         Text(
                           facility.type,
@@ -180,10 +213,17 @@ class FacilityCard extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Directions will be integrated here.')),
-                        );
+                      onPressed: () async {
+                        final fallbackUrl = 'https://www.google.com/maps/search/?api=1&query=${facility.latitude},${facility.longitude}';
+                        final navUrls = facility.navigationUrls;
+                        
+                        String urlToLaunch = fallbackUrl;
+                        if (navUrls != null && navUrls['google_maps'] != null) {
+                          urlToLaunch = navUrls['google_maps'];
+                        }
+                        
+                        final uri = Uri.parse(urlToLaunch);
+                        launchUrl(uri, mode: LaunchMode.externalApplication);
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF315E26),

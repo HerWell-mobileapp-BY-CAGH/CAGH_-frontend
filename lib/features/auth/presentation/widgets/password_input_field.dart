@@ -41,6 +41,7 @@ class _PasswordInputFieldState extends State<PasswordInputField> {
           controller: widget.controller,
           obscureText: _obscureText,
           onChanged: widget.onChanged,
+          style: const TextStyle(color: Colors.black),
           decoration: InputDecoration(
             hintText: widget.hint,
             hintStyle: TextStyle(color: Colors.grey.shade500),
@@ -58,7 +59,7 @@ class _PasswordInputFieldState extends State<PasswordInputField> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF1B5E20), width: 1.5),
+              borderSide: const BorderSide(color: Color(0xFF315E26), width: 1.5),
             ),
             suffixIcon: IconButton(
               icon: Icon(

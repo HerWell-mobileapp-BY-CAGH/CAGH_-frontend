@@ -18,13 +18,13 @@ class _UserTypeSelectionScreenState extends State<UserTypeSelectionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF8F5),
+      backgroundColor: Colors.white,
       body: Column(
         children: [
           // Green App Bar
           Container(
             width: double.infinity,
-            color: const Color(0xFF1B5E20),
+            color: const Color(0xFF315E26),
             child: SafeArea(
               bottom: false,
               child: Padding(
@@ -33,11 +33,11 @@ class _UserTypeSelectionScreenState extends State<UserTypeSelectionScreen> {
                   children: [
                     IconButton(
                       onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.arrow_back, color: Colors.amber),
+                      icon: const Icon(Icons.arrow_back, color: Color(0xFFFFD22B)),
                     ),
                     Expanded(
                       child: Text(
-                        LanguageService.tr('app_title'),
+                        LanguageService.tr(context, 'app_title'),
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           color: Colors.white,
@@ -76,7 +76,7 @@ class _UserTypeSelectionScreenState extends State<UserTypeSelectionScreen> {
                           return const Icon(
                             Icons.person,
                             size: 90,
-                            color: Color(0xFF1B5E20),
+                            color: Color(0xFF315E26),
                           );
                         },
                       ),
@@ -86,18 +86,18 @@ class _UserTypeSelectionScreenState extends State<UserTypeSelectionScreen> {
                   const SizedBox(height: 28),
 
                   Text(
-                    LanguageService.tr('choose_journey'),
+                    LanguageService.tr(context, 'choose_journey'),
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF1B5E20),
+                      color: Color(0xFF315E26),
                     ),
                   ),
 
                   const SizedBox(height: 10),
 
                   Text(
-                    LanguageService.tr('sub_user_type'),
+                    LanguageService.tr(context, 'sub_user_type'),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 15,
@@ -111,9 +111,9 @@ class _UserTypeSelectionScreenState extends State<UserTypeSelectionScreen> {
                   // User Card
                   _RoleCard(
                     icon: Icons.person,
-                    iconBgColor: const Color(0xFFFFC107),
-                    title: LanguageService.tr('user_title'),
-                    subtitle: LanguageService.tr('user_subtitle'),
+                    iconBgColor: const Color(0xFFFFD22B),
+                    title: LanguageService.tr(context, 'user_title'),
+                    subtitle: LanguageService.tr(context, 'user_subtitle'),
                     isSelected: selectedRole == 'user',
                     onTap: () {
                       setState(() => selectedRole = 'user');
@@ -126,9 +126,9 @@ class _UserTypeSelectionScreenState extends State<UserTypeSelectionScreen> {
                   // Midwife Card
                   _RoleCard(
                     icon: Icons.medical_services,
-                    iconBgColor: const Color(0xFF4CAF50),
-                    title: LanguageService.tr('midwife_title'),
-                    subtitle: LanguageService.tr('midwife_subtitle'),
+                    iconBgColor: const Color(0xFF315E26),
+                    title: LanguageService.tr(context, 'midwife_title'),
+                    subtitle: LanguageService.tr(context, 'midwife_subtitle'),
                     isSelected: selectedRole == 'midwife',
                     onTap: () {
                       setState(() => selectedRole = 'midwife');
@@ -167,7 +167,7 @@ class _UserTypeSelectionScreenState extends State<UserTypeSelectionScreen> {
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1B5E20),
+                        backgroundColor: const Color(0xFF315E26),
                         disabledBackgroundColor: Colors.grey.shade400,
                         foregroundColor: Colors.white,
                         elevation: 0,
@@ -179,7 +179,7 @@ class _UserTypeSelectionScreenState extends State<UserTypeSelectionScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            LanguageService.tr('continue'),
+                            LanguageService.tr(context, 'continue'),
                             style: const TextStyle(
                               fontSize: 17,
                               fontWeight: FontWeight.w600,
@@ -232,7 +232,7 @@ class _RoleCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected
-                ? const Color(0xFF1B5E20)
+                ? const Color(0xFF315E26)
                 : Colors.grey.shade300,
             width: isSelected ? 2 : 1,
           ),

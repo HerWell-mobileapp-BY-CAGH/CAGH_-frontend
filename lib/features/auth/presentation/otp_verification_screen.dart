@@ -1,10 +1,14 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import 'package:flutter/services.dart';
 import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
 import 'package:cagh_frontend/core/services/language_service.dart';
 import 'package:cagh_frontend/features/home/presentation/user/user_home_screen.dart';
 import 'package:cagh_frontend/features/home/presentation/midwife/midwife_home_screen.dart';
+import 'package:cagh_frontend/features/auth/presentation/midwife/midwife_login_screen.dart';
+import 'package:cagh_frontend/features/auth/presentation/user/user_login_screen.dart';
+import 'package:cagh_frontend/shared/widgets/custom_snackbar.dart';
 import 'create_new_password_screen.dart';
 
 class OtpVerificationScreen extends StatefulWidget {
@@ -59,20 +63,10 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     });
     // Show a short snackbar on success too so the user knows to check email
     if (res.success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: const [
-              Icon(Icons.email_outlined, color: Colors.white, size: 18),
-              SizedBox(width: 10),
-              Expanded(child: Text('OTP sent! Check your email inbox.')),
-            ],
-          ),
-          backgroundColor: const Color(0xFF1B5E20),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          duration: const Duration(seconds: 4),
-        ),
+      CustomSnackBar.show(
+        context,
+        message: 'OTP sent! Check your email inbox.',
+        type: SnackBarType.success,
       );
     }
   }
@@ -113,7 +107,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
           // Green App Bar
           Container(
             width: double.infinity,
-            color: const Color(0xFF1B5E20),
+            color: const Color(0xFF315E26),
             child: SafeArea(
               bottom: false,
               child: Padding(
@@ -122,11 +116,11 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                   children: [
                     IconButton(
                       onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.arrow_back, color: Colors.amber),
+                      icon: const Icon(Icons.arrow_back, color: Color(0xFFFFD22B)),
                     ),
                     Expanded(
                       child: Text(
-                        LanguageService.tr('verify_code'),
+                        LanguageService.tr(context, 'verify_code'),
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           color: Colors.white,
@@ -151,11 +145,11 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                   const Icon(
                     Icons.sms_outlined,
                     size: 64,
-                    color: Color(0xFF1B5E20),
+                    color: Color(0xFF315E26),
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    LanguageService.tr('enter_code'),
+                    LanguageService.tr(context, 'enter_code'),
                     style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w700,
@@ -175,12 +169,12 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                             width: 18, height: 18,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: Color(0xFF1B5E20),
+                              color: Color(0xFF315E26),
                             ),
                           ),
                           SizedBox(width: 10),
                           Text('Sending verification code…',
-                              style: TextStyle(color: Color(0xFF1B5E20), fontSize: 13)),
+                              style: TextStyle(color: Color(0xFF315E26), fontSize: 13)),
                         ],
                       ),
                     )
@@ -264,7 +258,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: const BorderSide(
-                                color: Color(0xFF1B5E20),
+                                color: Color(0xFF315E26),
                                 width: 2,
                               ),
                             ),
@@ -305,9 +299,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                         await _autoSendOtp();
                       },
                       child: Text(
-                        LanguageService.tr('resend_code'),
+                        LanguageService.tr(context, 'resend_code'),
                         style: const TextStyle(
-                          color: Color(0xFF1B5E20),
+                          color: Color(0xFF315E26),
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -323,7 +317,6 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                       onPressed: _isLoading
                           ? null
                           : () async {
-                              final messenger = ScaffoldMessenger.of(context);
                               final navigator = Navigator.of(context);
 
                               final code = _otpCode;
@@ -340,11 +333,10 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                                 setState(() => _isLoading = false);
 
                                 if (result.success) {
-                                  messenger.showSnackBar(
-                                    const SnackBar(
-                                      content: Text('OTP Verified Successfully!'),
-                                      backgroundColor: Colors.green,
-                                    ),
+                                  CustomSnackBar.show(
+                                    context,
+                                    message: 'OTP Verified Successfully!',
+                                    type: SnackBarType.success,
                                   );
 
                                   if (!mounted) return;
@@ -360,34 +352,39 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                                       ),
                                     );
                                   } else {
+                                    // Registration complete! Must log in to get tokens.
+                                    CustomSnackBar.show(
+                                      context,
+                                      message: 'Registration complete! Please log in.',
+                                      type: SnackBarType.success,
+                                    );
+                                    
                                     navigator.pushAndRemoveUntil(
                                       MaterialPageRoute(
                                         builder: (context) => widget.isMidwife
-                                            ? const MidwifeHomeScreen()
-                                            : const UserHomeScreen(),
+                                            ? const MidwifeLoginScreen()
+                                            : const UserLoginScreen(),
                                       ),
                                       (route) => false,
                                     );
                                   }
                                 } else {
-                                  messenger.showSnackBar(
-                                    SnackBar(
-                                      content: Text(result.message),
-                                      backgroundColor: Colors.red,
-                                    ),
+                                  CustomSnackBar.show(
+                                    context,
+                                    message: result.message,
+                                    type: SnackBarType.error,
                                   );
                                 }
                               } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Please enter the full 6-digit code'),
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
+                                CustomSnackBar.show(
+                                  context,
+                                  message: 'Please enter the full 6-digit code',
+                                  type: SnackBarType.warning,
                                 );
                               }
                             },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1B5E20),
+                        backgroundColor: const Color(0xFF315E26),
                         foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
@@ -404,7 +401,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                               ),
                             )
                           : Text(
-                              '${LanguageService.tr('verify')}  →',
+                              '${LanguageService.tr(context, 'verify')}  →',
                               style: const TextStyle(
                                 fontSize: 17,
                                 fontWeight: FontWeight.w600,

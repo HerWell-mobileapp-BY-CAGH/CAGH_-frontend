@@ -18,28 +18,27 @@ class UserBottomNavBar extends StatelessWidget {
       FloatingNavBarItem(
         icon: Icons.home_outlined,
         activeIcon: Icons.home_rounded,
-        label: LanguageService.tr('home'),
+        label: LanguageService.tr(context, 'home'),
       ),
       FloatingNavBarItem(
         icon: Icons.medical_services_outlined,
         activeIcon: Icons.medical_services_rounded,
-        label: LanguageService.tr('consult'),
-        showBadge: true, // Red badge indicator dot like in screenshot
+        label: LanguageService.tr(context, 'consult'),
       ),
       FloatingNavBarItem(
         icon: Icons.menu_book_outlined,
         activeIcon: Icons.menu_book_rounded,
-        label: LanguageService.tr('learn'),
+        label: LanguageService.tr(context, 'learn'),
       ),
       FloatingNavBarItem(
         icon: Icons.location_on_outlined,
         activeIcon: Icons.location_on_rounded,
-        label: LanguageService.tr('ai_nearby'),
+        label: LanguageService.tr(context, 'ai_nearby'),
       ),
       FloatingNavBarItem(
         icon: Icons.person_outline_rounded,
         activeIcon: Icons.person_rounded,
-        label: LanguageService.tr('profile'),
+        label: LanguageService.tr(context, 'profile'),
       ),
     ];
 

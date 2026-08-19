@@ -68,7 +68,7 @@ class MidwifeApiService {
     }
   }
 
-  Future<Map<String, dynamic>> getMyProfile() async {
+  Future<Map<String, dynamic>?> getMyProfile() async {
     final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.midwifeMe}');
     
     final response = await http.get(
@@ -78,8 +78,26 @@ class MidwifeApiService {
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
+    } else if (response.statusCode == 404) {
+      return null;
     } else {
       throw Exception('Failed to load my profile. Status: ${response.statusCode}');
+    }
+  }
+
+  Future<Map<String, dynamic>> createMyProfile(Map<String, dynamic> data) async {
+    final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.midwivesProfiles}');
+    
+    final response = await http.post(
+      url,
+      headers: await _getHeaders(),
+      body: jsonEncode(data),
+    ).timeout(const Duration(seconds: 15));
+
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to create profile. Status: ${response.statusCode}');
     }
   }
 

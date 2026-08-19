@@ -64,7 +64,7 @@ class NearbyStateNotifier extends StateNotifier<NearbyState> {
   Position? _lastKnownPosition;
   String _currentType = 'All';
   String _currentService = 'All';
-  double _currentRadius = 5.0; // 5 km default
+  double _currentRadius = 10.0; // 10 km default
 
   NearbyStateNotifier(this._repository) : super(NearbyInitial());
 

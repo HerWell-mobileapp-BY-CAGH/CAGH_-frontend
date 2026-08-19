@@ -46,4 +46,7 @@ class ApiConfig {
 
   // Consultations Endpoints
   static const String consultations = '/consultations/';
+
+  // Nearby Facilities Endpoints
+  static const String facilities = '/common/facilities/';
 }

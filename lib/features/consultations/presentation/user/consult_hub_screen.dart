@@ -4,9 +4,12 @@ import 'package:cagh_frontend/features/appointments/data/repositories/appointmen
 import 'package:cagh_frontend/shared/models/appointment.dart';
 import 'package:cagh_frontend/shared/widgets/globe_language_picker.dart';
 import 'package:cagh_frontend/features/consultations/presentation/user/find_midwife_screen.dart';
-import 'package:cagh_frontend/features/virtual_consultation/presentation/emergency_support_screen.dart';
+import 'package:cagh_frontend/features/consultations/presentation/user/voice_consultation_screen.dart';
 import 'package:cagh_frontend/features/appointments/presentation/screens/appointment_details_screen.dart';
 import 'package:cagh_frontend/features/consultations/data/services/midwife_api_service.dart';
+import 'package:cagh_frontend/shared/models/midwife_profile.dart';
+import 'package:cagh_frontend/features/consultations/data/services/consultation_api_service.dart';
+import 'chat_screen.dart';
 
 class ConsultHubScreen extends StatefulWidget {
   final VoidCallback? onFindMidwifeTap;
@@ -104,7 +107,7 @@ class _ConsultHubScreenState extends State<ConsultHubScreen> {
                         style: TextStyle(
                           fontSize: 19,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF274E13),
+                          color: Color(0xFF315E26),
                         ),
                       ),
                       IconButton(
@@ -150,7 +153,7 @@ class _ConsultHubScreenState extends State<ConsultHubScreen> {
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.calendar_today_outlined, color: Color(0xFF274E13), size: 20),
+                          const Icon(Icons.calendar_today_outlined, color: Color(0xFF315E26), size: 20),
                           const SizedBox(width: 12),
                           Text(selectedDate, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                         ],
@@ -171,9 +174,9 @@ class _ConsultHubScreenState extends State<ConsultHubScreen> {
                       return ChoiceChip(
                         label: Text(slot),
                         selected: isSel,
-                        selectedColor: const Color(0xFF274E13),
+                        selectedColor: const Color(0xFF315E26),
                         labelStyle: TextStyle(
-                          color: isSel ? Colors.white : const Color(0xFF274E13),
+                          color: isSel ? Colors.white : const Color(0xFF315E26),
                           fontWeight: FontWeight.bold,
                         ),
                         onSelected: (sel) {
@@ -206,7 +209,7 @@ class _ConsultHubScreenState extends State<ConsultHubScreen> {
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF274E13),
+                        backgroundColor: const Color(0xFF315E26),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
                       ),
                       child: const Text('Confirm Reschedule', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
@@ -225,7 +228,7 @@ class _ConsultHubScreenState extends State<ConsultHubScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator(color: Color(0xFF274E13))),
+      builder: (context) => const Center(child: CircularProgressIndicator(color: Color(0xFF315E26))),
     );
     try {
       final detailedApt = await _appointmentRepository.getAppointmentDetails(apt.appointmentId);
@@ -260,7 +263,7 @@ class _ConsultHubScreenState extends State<ConsultHubScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Consultation Details', style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: Color(0xFF274E13))),
+                  const Text('Consultation Details', style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: Color(0xFF315E26))),
                   IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
                 ],
               ),
@@ -295,7 +298,7 @@ class _ConsultHubScreenState extends State<ConsultHubScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Keep Appointment', style: TextStyle(color: Color(0xFF274E13))),
+              child: const Text('Keep Appointment', style: TextStyle(color: Color(0xFF315E26))),
             ),
             ElevatedButton(
               onPressed: () {
@@ -338,7 +341,7 @@ class _ConsultHubScreenState extends State<ConsultHubScreen> {
           label,
           style: TextStyle(
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            color: isSelected ? const Color(0xFF274E13) : Colors.grey,
+            color: isSelected ? const Color(0xFF315E26) : Colors.grey,
           ),
         ),
       ),
@@ -364,7 +367,7 @@ class _ConsultHubScreenState extends State<ConsultHubScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAF7),
       appBar: AppBar(
-      backgroundColor: const Color(0xFF274E13),
+      backgroundColor: const Color(0xFF315E26),
         title: const Text('Consult', style: TextStyle(color: Colors.white)),
       ),
       body: _isLoading 
@@ -468,7 +471,7 @@ class _ConsultHubScreenState extends State<ConsultHubScreen> {
                             width: 14,
                             height: 14,
                             decoration: const BoxDecoration(
-                              color: Color(0xFFFFC107),
+                              color: Color(0xFFFFD22B),
                               shape: BoxShape.circle,
                             ),
                           ),
@@ -595,10 +598,53 @@ class _ConsultHubScreenState extends State<ConsultHubScreen> {
                               ),
                             ),
                           ),
-                          Icon(
-                            Icons.phone_outlined,
-                            size: 20,
-                            color: Colors.grey.shade700,
+                          Row(
+                            children: [
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => ChatScreen(
+                                        midwife: MidwifeProfile(
+                                          id: apt.midwifeId,
+                                          userId: apt.midwifeId,
+                                          username: apt.midwifeName ?? 'Midwife',
+                                          firstName: apt.midwifeName ?? 'Midwife',
+                                          lastName: '',
+                                          email: '',
+                                          hospitalId: '',
+                                          hospitalName: '',
+                                          hospitalAddress: '',
+                                          specialty: '',
+                                          experienceYears: 0,
+                                          languages: [],
+                                          bio: '',
+                                          offeredConsultationTypes: [],
+                                          ratingAverage: 0,
+                                          ratingCount: 0,
+                                          isFavorite: false,
+                                          isAcceptingBookings: false,
+                                          consultationFee: '',
+                                          verificationStatus: '',
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: Icon(
+                                  Icons.chat_bubble_outline_rounded,
+                                  size: 20,
+                                  color: Colors.grey.shade700,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Icon(
+                                Icons.phone_outlined,
+                                size: 20,
+                                color: Colors.grey.shade700,
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -611,7 +657,7 @@ class _ConsultHubScreenState extends State<ConsultHubScreen> {
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF274E13),
+                          color: Color(0xFF315E26),
                         ),
                       ),
 
@@ -624,7 +670,7 @@ class _ConsultHubScreenState extends State<ConsultHubScreen> {
                             radius: 20,
                             backgroundColor: Color(0xFFE8F5E9),
                             backgroundImage: AssetImage('assets/images/home_illustration.png'),
-                            child: Icon(Icons.person, color: Color(0xFF274E13), size: 24),
+                            child: Icon(Icons.person, color: Color(0xFF315E26), size: 24),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -632,9 +678,9 @@ class _ConsultHubScreenState extends State<ConsultHubScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Midwife ID: ${apt.midwifeId}',
+                                  apt.midwifeName ?? 'Midwife',
                                   style: const TextStyle(
-                                    fontSize: 15,
+                                    fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                     color: Color(0xFF1A1A1A),
                                   ),
@@ -665,25 +711,25 @@ class _ConsultHubScreenState extends State<ConsultHubScreen> {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.calendar_today_outlined, size: 16, color: Color(0xFF274E13)),
+                            const Icon(Icons.calendar_today_outlined, size: 16, color: Color(0xFF315E26)),
                             const SizedBox(width: 6),
                             Text(
                               apt.date,
                               style: const TextStyle(
                                 fontSize: 13.5,
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF274E13),
+                                color: Color(0xFF315E26),
                               ),
                             ),
                             const SizedBox(width: 16),
-                            const Icon(Icons.access_time_rounded, size: 16, color: Color(0xFF274E13)),
+                            const Icon(Icons.access_time_rounded, size: 16, color: Color(0xFF315E26)),
                             const SizedBox(width: 6),
                             Text(
                               apt.startTime,
                               style: const TextStyle(
                                 fontSize: 13.5,
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF274E13),
+                                color: Color(0xFF315E26),
                               ),
                             ),
                           ],
@@ -706,7 +752,12 @@ class _ConsultHubScreenState extends State<ConsultHubScreen> {
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (context) => EmergencySupportScreen(),
+                                            builder: (context) => VoiceConsultationScreen(
+                                              consultationId: apt.appointmentId,
+                                              midwifeName: apt.midwifeName ?? 'Midwife',
+                                              phoneNumber: apt.midwifePhone ?? '', 
+                                              isCaller: true,
+                                            ),
                                           ),
                                         );
                                       },
@@ -720,7 +771,7 @@ class _ConsultHubScreenState extends State<ConsultHubScreen> {
                                         ),
                                       ),
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: const Color(0xFF274E13),
+                                        backgroundColor: const Color(0xFF315E26),
                                         elevation: 0,
                                         shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.circular(22),

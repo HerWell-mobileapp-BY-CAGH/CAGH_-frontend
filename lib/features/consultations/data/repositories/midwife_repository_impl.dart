@@ -23,8 +23,15 @@ class MidwifeRepositoryImpl implements MidwifeRepository {
   }
 
   @override
-  Future<MidwifeProfile> getMyProfile() async {
+  Future<MidwifeProfile?> getMyProfile() async {
     final response = await _apiService.getMyProfile();
+    if (response == null) return null;
+    return MidwifeProfile.fromJson(response);
+  }
+
+  @override
+  Future<MidwifeProfile> createMyProfile(Map<String, dynamic> data) async {
+    final response = await _apiService.createMyProfile(data);
     return MidwifeProfile.fromJson(response);
   }
 

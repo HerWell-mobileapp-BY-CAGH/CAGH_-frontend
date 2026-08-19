@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
 import 'package:cagh_frontend/features/auth/presentation/user/user_login_screen.dart';
-import 'package:cagh_frontend/shared/widgets/globe_language_picker.dart';
-import 'package:cagh_frontend/features/consultations/presentation/user/consult_hub_screen.dart';
 import 'package:cagh_frontend/features/consultations/presentation/user/find_midwife_screen.dart';
 import 'package:cagh_frontend/features/nearby/presentation/screens/nearby_healthcare_screen.dart';
+import 'package:cagh_frontend/features/consultations/presentation/user/consult_hub_screen.dart';
 import 'package:cagh_frontend/features/profile/presentation/user_profile_screen.dart';
-import 'package:cagh_frontend/shared/widgets/floating_glass_nav_bar.dart';
 import 'package:cagh_frontend/features/virtual_consultation/presentation/emergency_support_screen.dart';
+import 'package:cagh_frontend/shared/widgets/floating_glass_nav_bar.dart';
 import 'package:cagh_frontend/core/services/language_service.dart';
+import 'package:cagh_frontend/shared/widgets/hotline_fab.dart';
+import 'package:cagh_frontend/shared/widgets/ai_assistant_fab.dart';
 
 class UserHomeScreen extends StatefulWidget {
   const UserHomeScreen({super.key});
@@ -19,8 +19,7 @@ class UserHomeScreen extends StatefulWidget {
 
 class _UserHomeScreenState extends State<UserHomeScreen> {
   int _currentIndex = 0;
-  Map<String, dynamic>? _userProfile;
-  bool _hasUpcomingAppointment = false;
+  final bool _hasUpcomingAppointment = false;
   
   @override
   void initState() {
@@ -29,29 +28,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
   }
 
   Future<void> _loadProfile() async {
-    final localData = await AuthService.getUserData();
-    if (mounted) {
-      setState(() {
-        _userProfile = localData;
-      });
-    }
-
-    final res = await AuthService.getProfile();
-    if (res.success && res.data != null && mounted) {
-      setState(() {
-        _userProfile = res.data;
-      });
-    }
-  }
-
-  String _getFirstName(String fullName) {
-    if (fullName.isEmpty) return 'User';
-    // If it happens to be an email, take the part before @
-    if (fullName.contains('@')) {
-      fullName = fullName.split('@').first;
-    }
-    // Return just the first name
-    return fullName.trim().split(' ').first;
+    // Left empty since _userProfile is no longer used, but kept for future use.
   }
 
   void _showNotificationsModal() {
@@ -74,7 +51,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                 children: [
                   const Row(
                     children: [
-                      Icon(Icons.notifications_active, color: Color(0xFF1B5E20)),
+                      Icon(Icons.notifications_active, color: Color(0xFF315E26)),
                       SizedBox(width: 8),
                       Text(
                         'Notifications',
@@ -141,48 +118,96 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
 
     return Scaffold(
       extendBody: true,
-      backgroundColor: const Color(0xFFFFF8F5),
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           children: [
             // ===== GREEN APP BAR (only on Home tab) =====
-            if (_currentIndex != 1)
+            if (_currentIndex == 0)
               Container(
                 width: double.infinity,
-                color: const Color(0xFF1B5E20),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                color: const Color(0xFF315E26),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      _userProfile != null && (_userProfile!['full_name'] != null || _userProfile!['email'] != null)
-                          ? 'Welcome, ${_getFirstName(_userProfile!['full_name']?.toString() ?? _userProfile!['email']?.toString() ?? '')}'
-                          : 'Welcome 👋',
-                      style: const TextStyle(
+                    const Text(
+                      'Home',
+                      style: TextStyle(
                         color: Colors.white,
-                        fontSize: 19,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                     Row(
                       children: [
-                        const GlobeLanguagePicker(iconColor: Colors.amber, iconSize: 24),
-                        // Review icon removed
                         IconButton(
                           onPressed: _showNotificationsModal,
-                          icon: const Icon(
-                            Icons.notifications_none_rounded,
-                            color: Colors.white,
-                            size: 26,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          icon: Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              const Icon(
+                                Icons.notifications_none_rounded,
+                                color: Color(0xFFFFD22B),
+                                size: 26,
+                              ),
+                              Positioned(
+                                right: -2,
+                                top: -2,
+                                child: Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.red,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
                   ],
                 ),
-              ),
+              )
 
+            else if (_currentIndex == 2)
+              Container(
+                width: double.infinity,
+                color: const Color(0xFF315E26),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.arrow_back, color: Color(0xFFFFD22B)),
+                          onPressed: () => setState(() => _currentIndex = 0),
+                        ),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Learning module',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 19,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.more_vert, color: Color(0xFFFFD22B)),
+                      onPressed: () {},
+                    ),
+                  ],
+                ),
+              ),
             // ===== MAIN BODY BASED ON SELECTED TAB =====
+
             Expanded(
               child: Stack(
                 children: [
@@ -195,66 +220,23 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                       _buildNearbyTab(),
                     ],
                   ),
-                  if (_currentIndex == 0)
+                  if (_currentIndex != 4)
+                  // Floating Action Buttons Overlay (Bottom Right)
+                  if (_currentIndex == 0) // Only show on Home Dashboard
                     Positioned(
                       right: 20,
-                      bottom: 20,
+                      bottom: 20, 
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          _HoverScaleWidget(
+                          // 24/7 Telehealth Call Badge
+                          const HotlineFab(),
+                          const SizedBox(height: 16),
+                          // Ask Midwife AI button
+                          AiAssistantFab(
                             onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const EmergencySupportScreen(),
-                                ),
-                              );
+                              // Action for AI
                             },
-                            child: Column(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.15),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Stack(
-                                    alignment: Alignment.topRight,
-                                    children: [
-                                      const Icon(
-                                        Icons.phone_in_talk_rounded,
-                                        color: Colors.redAccent,
-                                        size: 26,
-                                      ),
-                                      Container(
-                                        padding: const EdgeInsets.all(2),
-                                        decoration: const BoxDecoration(
-                                          color: Colors.red,
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: const Text(
-                                          '24',
-                                          style: TextStyle(
-                                            fontSize: 8,
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                // Emergency text removed
-                              ],
-                            ),
                           ),
                         ],
                       ),
@@ -293,7 +275,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: const BoxDecoration(
-                      color: Color(0xFF1B5E20),
+                      color: Color(0xFF315E26),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(Icons.phone_in_talk, color: Colors.white, size: 20),
@@ -308,7 +290,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                           style: TextStyle(
                             fontSize: 14.5,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF1B5E20),
+                            color: Color(0xFF315E26),
                           ),
                         ),
                         SizedBox(height: 2),
@@ -321,7 +303,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                   ),
                   TextButton(
                     onPressed: () {},
-                    child: const Text('Join', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1B5E20))),
+                    child: const Text('Join', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF315E26))),
                   ),
                 ],
               ),
@@ -333,47 +315,38 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             'ABOUT US',
             style: TextStyle(
               fontSize: 13,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.bold,
               letterSpacing: 1.1,
-              color: Color(0xFF1B5E20),
+              color: Color(0xFF315E26),
             ),
           ),
-          const SizedBox(height: 8),
+          Container(
+            height: 2,
+            width: 50,
+            margin: const EdgeInsets.only(top: 4, bottom: 16),
+            color: const Color(0xFFFFD22B),
+          ),
           Text(
             'We provide confidential consultation, education and care to help women and adolescent girls make informed choices and live healthier lives.',
             style: TextStyle(
-              fontSize: 14.5,
-              height: 1.45,
+              fontSize: 14,
+              height: 1.5,
               color: Colors.grey.shade700,
             ),
           ),
 
           const SizedBox(height: 20),
 
-          // Focus Areas Card
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
+          Center(
             child: Image.asset(
               'assets/images/home_illustration.png',
               fit: BoxFit.contain,
-              height: 160,
+              height: 220,
               errorBuilder: (_, __, ___) {
                 return const Icon(
                   Icons.health_and_safety,
                   size: 70,
-                  color: Color(0xFF1B5E20),
+                  color: Color(0xFF315E26),
                 );
               },
             ),
@@ -385,37 +358,37 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             child: Text(
               'Our Focus Areas',
               style: TextStyle(
-                fontSize: 19,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF1B5E20),
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF315E26),
               ),
             ),
           ),
+          Center(
+            child: Container(
+              height: 2,
+              width: 50,
+              margin: const EdgeInsets.only(top: 4, bottom: 20),
+              color: const Color(0xFFFFD22B),
+            ),
+          ),
 
-          const SizedBox(height: 16),
-
-          _buildFocusCard(
+          _buildLearningModuleCard(
             icon: Icons.menu_book_rounded,
-            color: const Color(0xFFE8F5E9),
-            iconColor: const Color(0xFF1B5E20),
+            iconBgColor: const Color(0xFFE8F5E9),
+            iconColor: const Color(0xFF315E26),
             title: 'Adolescent Girls Health & Nutrition',
-            subtitle: 'Puberty, menstrual health, nutrition & life skills.',
+            subtitle: 'Puberty, menstrual health, nutrition & healthy lifestyle, life skills & well-being.',
+            arrowBgColor: const Color(0xFFA5D6A7),
           ),
-          const SizedBox(height: 12),
-          _buildFocusCard(
+          const SizedBox(height: 16),
+          _buildLearningModuleCard(
             icon: Icons.shield_outlined,
-            color: const Color(0xFFFFF3E0),
-            iconColor: Colors.orange.shade700,
-            title: 'Prevention & Awareness',
-            subtitle: 'STI/HIV prevention, HPV & cervical cancer awareness.',
-          ),
-          const SizedBox(height: 12),
-          _buildFocusCard(
-            icon: Icons.favorite_border_rounded,
-            color: const Color(0xFFE3F2FD),
-            iconColor: Colors.blue.shade700,
-            title: 'Reproductive Health & Care',
-            subtitle: 'Pregnancy prevention, ANC, newborn care, checkups.',
+            iconBgColor: const Color(0xFFFFF8E1),
+            iconColor: const Color(0xFFFFD22B),
+            title: 'Prevention and Awareness',
+            subtitle: 'STI/HIV prevention, HPV & cervical cancer awareness, healthy relationships.',
+            arrowBgColor: const Color(0xFFFFD22B),
           ),
           const SizedBox(height: 30),
         ],
@@ -443,53 +416,115 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text(
-            'Learning Center',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: Color(0xFF1B5E20)),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Expert health articles, guides, and reproductive education',
-            style: TextStyle(color: Colors.grey.shade600, fontSize: 13.5),
+          _buildLearningModuleCard(
+            icon: Icons.menu_book_rounded,
+            iconBgColor: const Color(0xFFE8F5E9),
+            iconColor: const Color(0xFF315E26),
+            title: 'Adolescent Girls Health & Nutrition',
+            subtitle: 'Puberty, menstrual health, nutrition & healthy lifestyle, life skills & well-being.',
+            arrowBgColor: const Color(0xFFA5D6A7),
           ),
           const SizedBox(height: 16),
+          _buildLearningModuleCard(
+            icon: Icons.shield_outlined,
+            iconBgColor: const Color(0xFFFFF8E1),
+            iconColor: const Color(0xFFFFD22B),
+            title: 'Prevention and Awareness',
+            subtitle: 'STI/HIV prevention, HPV & cervical cancer awareness, healthy relationships.',
+            arrowBgColor: const Color(0xFFFFD22B),
+          ),
+          const SizedBox(height: 16),
+          _buildLearningModuleCard(
+            icon: Icons.favorite_border_rounded,
+            iconBgColor: const Color(0xFFFFF8E1),
+            iconColor: const Color(0xFFFFD22B),
+            title: 'Psychosocial Support & Protection',
+            subtitle: 'Mental health, GBV support, counseling services, and emergency help.',
+            arrowBgColor: const Color(0xFFFFD22B),
+          ),
+          const SizedBox(height: 16),
+          _buildLearningModuleCard(
+            icon: Icons.female,
+            iconBgColor: const Color(0xFFE8F5E9),
+            iconColor: const Color(0xFF315E26),
+            title: 'Reproductive Health & Care',
+            subtitle: 'Pregnancy prevention, maternal care, ANC, newborn care, and checkups.',
+            arrowBgColor: const Color(0xFFA5D6A7),
+          ),
+          const SizedBox(height: 80),
+        ],
+      ),
+    );
+  }
 
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _buildCategoryChip('All Articles', true),
-                _buildCategoryChip('Puberty Education', false),
-                _buildCategoryChip('Menstrual Health', false),
-                _buildCategoryChip('Mental Wellbeing', false),
-                _buildCategoryChip('Adolescent Nutrition', false),
-              ],
+  Widget _buildLearningModuleCard({
+    required IconData icon,
+    required Color iconBgColor,
+    required Color iconColor,
+    required String title,
+    required String subtitle,
+    required Color arrowBgColor,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: iconBgColor,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: iconColor, size: 24),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF315E26),
+                      height: 1.3,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            subtitle,
+            style: TextStyle(
+              fontSize: 12.5,
+              color: Colors.grey.shade600,
+              height: 1.4,
             ),
           ),
-
-          const SizedBox(height: 20),
-
-          _buildArticleCard(
-            title: 'Essential Nutrition Guide for Growing Teens',
-            topic: 'Adolescent Nutrition',
-            readTime: '5 min read',
-            description: 'Learn about key vitamins, iron intake, and safe diet practices during puberty.',
-          ),
-          const SizedBox(height: 14),
-          _buildArticleCard(
-            title: 'Understanding Puberty & Reproductive Health',
-            topic: 'Adolescent Health',
-            readTime: '7 min read',
-            description: 'A practical, confidential guide to body changes, menstrual hygiene, and self-care.',
-          ),
-          const SizedBox(height: 14),
-          _buildArticleCard(
-            title: 'Mental Health & Self-Care Strategies',
-            topic: 'Mental Wellbeing',
-            readTime: '4 min read',
-            description: 'Tips for managing stress, building self-esteem, and maintaining emotional health.',
+          const SizedBox(height: 16),
+          Align(
+            alignment: Alignment.bottomRight,
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: arrowBgColor,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.arrow_forward, color: Colors.black87, size: 20),
+            ),
           ),
         ],
       ),
@@ -498,178 +533,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
 
   // TAB 3: NEARBY FACILITY
   Widget _buildNearbyTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Nearby Healthcare Banner
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const NearbyHealthcareScreen()),
-              );
-            },
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF315E26), Color(0xFF1B5E20)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF1B5E20).withOpacity(0.3),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.map_outlined, color: Colors.white, size: 32),
-                  ),
-                  const SizedBox(width: 16),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Find Nearby Healthcare',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          'Open interactive map to locate hospitals, clinics, and midwives around you.',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFocusCard({required IconData icon, required Color color, required Color iconColor, required String title, required String subtitle}) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 6)],
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(backgroundColor: color, radius: 20, child: Icon(icon, color: iconColor, size: 20)),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                Text(subtitle, style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCategoryChip(String label, bool isSelected) {
-    return Container(
-      margin: const EdgeInsets.only(right: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      decoration: BoxDecoration(
-        color: isSelected ? const Color(0xFF1B5E20) : Colors.grey.shade200,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: isSelected ? Colors.white : Colors.black87,
-          fontSize: 12.5,
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildArticleCard({required String title, required String topic, required String readTime, required String description}) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8)],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(topic, style: const TextStyle(color: Color(0xFF1B5E20), fontWeight: FontWeight.bold, fontSize: 12)),
-              Text(readTime, style: TextStyle(color: Colors.grey.shade500, fontSize: 11)),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
-          const SizedBox(height: 4),
-          Text(description, style: TextStyle(color: Colors.grey.shade700, fontSize: 13)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFacilityCard(String name, String address, String distance) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.local_hospital, color: Colors.redAccent),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
-                Text(address, style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
-              ],
-            ),
-          ),
-          Text(distance, style: const TextStyle(color: Color(0xFF1B5E20), fontWeight: FontWeight.bold, fontSize: 12)),
-        ],
-      ),
-    );
+    return const NearbyHealthcareScreen(showBackButton: false);
   }
 
   Widget _buildBottomNav() {
@@ -677,28 +541,27 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
       FloatingNavBarItem(
         icon: Icons.home_outlined,
         activeIcon: Icons.home_rounded,
-        label: LanguageService.tr('home'),
+        label: LanguageService.tr(context, 'home'),
       ),
       FloatingNavBarItem(
         icon: Icons.medical_services_outlined,
         activeIcon: Icons.medical_services_rounded,
-        label: LanguageService.tr('consult'),
-        showBadge: true, // Red notification badge dot like in screenshot
+        label: LanguageService.tr(context, 'consult'),
       ),
       FloatingNavBarItem(
         icon: Icons.menu_book_outlined,
         activeIcon: Icons.menu_book_rounded,
-        label: LanguageService.tr('learn'),
+        label: LanguageService.tr(context, 'learn'),
       ),
       FloatingNavBarItem(
         icon: Icons.location_on_outlined,
         activeIcon: Icons.location_on_rounded,
-        label: LanguageService.tr('nearby'),
+        label: LanguageService.tr(context, 'nearby'),
       ),
       FloatingNavBarItem(
         icon: Icons.person_outline_rounded,
         activeIcon: Icons.person_rounded,
-        label: LanguageService.tr('profile'),
+        label: LanguageService.tr(context, 'profile'),
       ),
     ];
 
@@ -744,7 +607,7 @@ class _NotificationTile extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 16,
-            backgroundColor: const Color(0xFF1B5E20),
+            backgroundColor: const Color(0xFF315E26),
             child: Icon(
               type == 'APPOINTMENT' ? Icons.calendar_today : Icons.chat,
               size: 16,
@@ -765,43 +628,6 @@ class _NotificationTile extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _HoverScaleWidget extends StatefulWidget {
-  final Widget child;
-  final VoidCallback onTap;
-
-  const _HoverScaleWidget({required this.child, required this.onTap});
-
-  @override
-  State<_HoverScaleWidget> createState() => _HoverScaleWidgetState();
-}
-
-class _HoverScaleWidgetState extends State<_HoverScaleWidget> {
-  bool _isHovered = false;
-  bool _isPressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final scale = _isPressed ? 0.92 : (_isHovered ? 1.12 : 1.0);
-
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: GestureDetector(
-        onTapDown: (_) => setState(() => _isPressed = true),
-        onTapUp: (_) => setState(() => _isPressed = false),
-        onTapCancel: () => setState(() => _isPressed = false),
-        onTap: widget.onTap,
-        child: AnimatedScale(
-          scale: scale,
-          duration: const Duration(milliseconds: 150),
-          curve: Curves.easeInOut,
-          child: widget.child,
-        ),
       ),
     );
   }

@@ -23,12 +23,22 @@ dependencies:
   intl: ^0.20.2
   flutter_dotenv: ^5.1.0
   table_calendar: ^3.2.1
+  url_launcher: ^6.3.2
+  flutter_webrtc: ^1.6.0
+  flutter_callkit_incoming: ^3.1.5
+  web_socket_channel: ^3.0.3
+  audioplayers: ^6.1.1
+  http_parser: ^4.1.2
+  mime: ^2.0.0
+  firebase_core: ^4.13.0
+  firebase_messaging: ^16.5.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.13.1
 
 flutter:
   uses-material-design: true
@@ -36,3 +46,20 @@ flutter:
   assets:
     - assets/images/
     - .env
+
+dependency_overrides:
+  flutter_plugin_android_lifecycle: 2.0.23
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/logo.png"
+  min_sdk_android: 24
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/images/logo.png"
+  background_color: "#FFFFFF"
+  web:
+    generate: true
+    image_path: "assets/images/logo.png"
+    background_color: "#FFFFFF"
+    theme_color: "#FFFFFF"

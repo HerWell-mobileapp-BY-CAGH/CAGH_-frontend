@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import 'package:file_picker/file_picker.dart';
 import '../otp_verification_screen.dart';
 import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
+import 'package:cagh_frontend/core/services/language_service.dart';
+import 'package:cagh_frontend/shared/widgets/custom_snackbar.dart';
 
 class MidwifeRegistrationScreen extends StatefulWidget {
   const MidwifeRegistrationScreen({super.key});
@@ -23,6 +26,14 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
   bool _isLoading = false;
+
+  String? _firstNameError;
+  String? _lastNameError;
+  String? _emailError;
+  String? _phoneError;
+  String? _licenseError;
+  String? _passwordError;
+  String? _confirmPasswordError;
 
   String? selectedQualification;
   final List<String> qualifications = [
@@ -56,6 +67,83 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
     super.dispose();
   }
 
+  void _validateFirstName(String value) {
+    final nameRegExp = RegExp(r'^[a-zA-Z\s]+$');
+    setState(() {
+      if (value.trim().isEmpty) {
+        _firstNameError = LanguageService.tr(context, 'val_name_req');
+      } else if (!nameRegExp.hasMatch(value.trim())) {
+        _firstNameError = 'Cannot contain numbers or special characters';
+      } else {
+        _firstNameError = null;
+      }
+    });
+  }
+
+  void _validateLastName(String value) {
+    final nameRegExp = RegExp(r'^[a-zA-Z\s]+$');
+    setState(() {
+      if (value.trim().isEmpty) {
+        _lastNameError = LanguageService.tr(context, 'val_name_req');
+      } else if (!nameRegExp.hasMatch(value.trim())) {
+        _lastNameError = 'Cannot contain numbers or special characters';
+      } else {
+        _lastNameError = null;
+      }
+    });
+  }
+
+  void _validateEmail(String value) {
+    final emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    setState(() {
+      if (value.trim().isEmpty) {
+        _emailError = LanguageService.tr(context, 'val_email_req');
+      } else if (!emailRegExp.hasMatch(value.trim())) {
+        _emailError = LanguageService.tr(context, 'val_invalid_email');
+      } else {
+        _emailError = null;
+      }
+    });
+  }
+
+  void _validatePhone(String value) {
+    setState(() {
+      if (value.trim().isEmpty) {
+        _phoneError = null; // Optional initially
+      } else {
+        final cleanPhone = value.trim().replaceAll(RegExp(r'\s+'), '');
+        final ethPhoneRegExp = RegExp(r'^(?:\+251|0)?[97]\d{8}$');
+        if (!ethPhoneRegExp.hasMatch(cleanPhone)) {
+          _phoneError = LanguageService.tr(context, 'val_invalid_phone');
+        } else {
+          _phoneError = null;
+        }
+      }
+    });
+  }
+
+  void _validatePassword(String value) {
+    setState(() {
+      if (value.isEmpty) {
+        _passwordError = LanguageService.tr(context, 'val_password_req');
+      } else {
+        _passwordError = null;
+      }
+    });
+  }
+
+  void _validateConfirmPassword(String value) {
+    setState(() {
+      if (value.isEmpty) {
+        _confirmPasswordError = LanguageService.tr(context, 'val_password_confirm_req');
+      } else if (value != _passwordController.text) {
+        _confirmPasswordError = LanguageService.tr(context, 'val_password_mismatch');
+      } else {
+        _confirmPasswordError = null;
+      }
+    });
+  }
+
   Future<void> _pickCV() async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -80,13 +168,12 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF8F5),
       body: Column(
         children: [
           // Green App Bar
           Container(
             width: double.infinity,
-            color: const Color(0xFF1B5E20),
+            color: const Color(0xFF315E26),
             child: SafeArea(
               bottom: false,
               child: Padding(
@@ -95,7 +182,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                   children: [
                     IconButton(
                       onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.arrow_back, color: Colors.amber),
+                      icon: const Icon(Icons.arrow_back, color: Color(0xFFFFD22B)),
                     ),
                     const Expanded(
                       child: Text(
@@ -121,6 +208,27 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Center(
+                    child: Container(
+                      width: 80,
+                      height: 80,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFFFF5E6),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: ClipOval(
+                          child: Image.asset(
+                            'assets/images/logo.png',
+                            width: 60,
+                            height: 60,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                   // Header Card
                   Container(
                     padding: const EdgeInsets.all(16),
@@ -141,7 +249,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                           width: 48,
                           height: 48,
                           decoration: BoxDecoration(
-                            color: const Color(0xFF1B5E20),
+                            color: const Color(0xFF315E26),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Icon(Icons.medical_services,
@@ -184,6 +292,8 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                                 _buildTextField(
                                   controller: _firstNameController,
                                   hint: 'e.g. Sarah',
+                                  errorText: _firstNameError,
+                                  onChanged: _validateFirstName,
                                 ),
                               ],
                             ),
@@ -197,6 +307,8 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                                 _buildTextField(
                                   controller: _lastNameController,
                                   hint: 'e.g. Mitchell',
+                                  errorText: _lastNameError,
+                                  onChanged: _validateLastName,
                                 ),
                               ],
                             ),
@@ -209,6 +321,8 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                         controller: _emailController,
                         hint: 'sarah.m@example.com',
                         keyboardType: TextInputType.emailAddress,
+                        errorText: _emailError,
+                        onChanged: _validateEmail,
                       ),
                       const SizedBox(height: 16),
                       _buildLabel('Phone Number (Ethiopia)'),
@@ -222,7 +336,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(color: Colors.grey.shade300),
                             ),
-                            child: const Text('🇪🇹 +251', style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF1B5E20))),
+                            child: const Text('🇪🇹 +251', style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF315E26))),
                           ),
                           const SizedBox(width: 10),
                           Expanded(
@@ -230,6 +344,8 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                               controller: _phoneController,
                               hint: '911 234 567',
                               keyboardType: TextInputType.phone,
+                              errorText: _phoneError,
+                              onChanged: _validatePhone,
                             ),
                           ),
                         ],
@@ -240,6 +356,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                         controller: _passwordController,
                         hint: 'Create a password',
                         obscureText: _obscurePassword,
+                        onChanged: _validatePassword,
                         suffixIcon: IconButton(
                           icon: Icon(
                             _obscurePassword
@@ -251,6 +368,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                             setState(() => _obscurePassword = !_obscurePassword);
                           },
                         ),
+                        errorText: _passwordError,
                       ),
                       const SizedBox(height: 16),
                       _buildLabel('Confirm Password'),
@@ -258,6 +376,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                         controller: _confirmPasswordController,
                         hint: 'Confirm your password',
                         obscureText: _obscureConfirm,
+                        onChanged: _validateConfirmPassword,
                         suffixIcon: IconButton(
                           icon: Icon(
                             _obscureConfirm
@@ -269,6 +388,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                             setState(() => _obscureConfirm = !_obscureConfirm);
                           },
                         ),
+                        errorText: _confirmPasswordError,
                       ),
                     ],
                   ),
@@ -284,13 +404,13 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                       _buildTextField(
                         controller: _licenseController,
                         hint: 'State/National License ID',
+                        errorText: _licenseError,
                       ),
                       const SizedBox(height: 16),
                       _buildLabel('Primary Qualification'),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         decoration: BoxDecoration(
-                          color: Colors.white,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(color: Colors.grey.shade300),
                         ),
@@ -313,51 +433,16 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
 
                   const SizedBox(height: 20),
 
-                  // Areas of Expertise
+                  // Years of Experience
                   _buildSection(
-                    icon: Icons.health_and_safety_outlined,
-                    title: 'Areas of Expertise',
+                    icon: Icons.work_history_outlined,
+                    title: 'Experience',
                     children: [
-                      const Text(
-                        'Select all that apply to your practice.',
-                        style: TextStyle(fontSize: 13, color: Colors.grey),
-                      ),
-                      const SizedBox(height: 12),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: expertiseOptions.map((item) {
-                          final isSelected = selectedExpertise.contains(item);
-                          return FilterChip(
-                            label: Text(item),
-                            selected: isSelected,
-                            onSelected: (selected) {
-                              setState(() {
-                                if (selected) {
-                                  selectedExpertise.add(item);
-                                } else {
-                                  selectedExpertise.remove(item);
-                                }
-                              });
-                            },
-                            selectedColor: const Color(0xFFC8E6C9),
-                            checkmarkColor: const Color(0xFF1B5E20),
-                            labelStyle: TextStyle(
-                              color: isSelected
-                                  ? const Color(0xFF1B5E20)
-                                  : Colors.grey.shade700,
-                              fontWeight: isSelected
-                                  ? FontWeight.w600
-                                  : FontWeight.normal,
-                            ),
-                            backgroundColor: Colors.white,
-                            side: BorderSide(
-                              color: isSelected
-                                  ? const Color(0xFF1B5E20)
-                                  : Colors.grey.shade300,
-                            ),
-                          );
-                        }).toList(),
+                      _buildLabel('Years of Experience'),
+                      _buildTextField(
+                        controller: TextEditingController(), // Just a dummy for now since this screen drops data anyway
+                        hint: 'e.g., 5',
+                        keyboardType: TextInputType.number,
                       ),
                     ],
                   ),
@@ -383,7 +468,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                             border: Border.all(
                               color: selectedFile == null
                                   ? Colors.grey.shade300
-                                  : const Color(0xFF1B5E20),
+                                  : const Color(0xFF315E26),
                               width: selectedFile == null ? 1 : 1.5,
                             ),
                           ),
@@ -411,7 +496,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                               : Row(
                             children: [
                               const Icon(Icons.insert_drive_file,
-                                  color: Color(0xFF1B5E20), size: 32),
+                                  color: Color(0xFF315E26), size: 32),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
@@ -469,72 +554,46 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                               final password = _passwordController.text;
                               final confirmPassword = _confirmPasswordController.text;
 
-                              if (firstName.isEmpty || lastName.isEmpty || email.isEmpty || password.isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Please fill in First Name, Last Name, Email, and Password'),
-                                    backgroundColor: Colors.red,
-                                  ),
-                                );
+                              setState(() {
+                                _firstNameError = firstName.isEmpty ? LanguageService.tr(context, 'val_name_req') : null;
+                                _lastNameError = lastName.isEmpty ? LanguageService.tr(context, 'val_name_req') : null;
+                                _emailError = email.isEmpty ? LanguageService.tr(context, 'val_email_req') : null;
+                                _passwordError = password.isEmpty ? LanguageService.tr(context, 'val_password_req') : null;
+                                _confirmPasswordError = confirmPassword.isEmpty ? LanguageService.tr(context, 'val_password_confirm_req') : null;
+                                _phoneError = null;
+                              });
+
+                              if (_firstNameError != null || _lastNameError != null || _emailError != null || _passwordError != null || _confirmPasswordError != null) {
                                 return;
                               }
 
-                              // Name Validation: Letters & spaces only
                               final nameRegExp = RegExp(r'^[a-zA-Z\s]+$');
                               if (!nameRegExp.hasMatch(firstName)) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('First Name cannot contain numbers or special characters'),
-                                    backgroundColor: Colors.red,
-                                  ),
-                                );
+                                setState(() => _firstNameError = 'Cannot contain numbers or special characters');
                                 return;
                               }
-
                               if (!nameRegExp.hasMatch(lastName)) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Last Name cannot contain numbers or special characters'),
-                                    backgroundColor: Colors.red,
-                                  ),
-                                );
+                                setState(() => _lastNameError = 'Cannot contain numbers or special characters');
                                 return;
                               }
 
-                              // Email validation
                               final emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
                               if (!emailRegExp.hasMatch(email)) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Please enter a valid email address (e.g. name@domain.com)'),
-                                    backgroundColor: Colors.red,
-                                  ),
-                                );
+                                setState(() => _emailError = LanguageService.tr(context, 'val_invalid_email'));
                                 return;
                               }
 
-                              // Ethiopian Phone validation
                               if (phone.isNotEmpty) {
                                 final cleanPhone = phone.replaceAll(RegExp(r'\s+'), '');
                                 final ethPhoneRegExp = RegExp(r'^(?:\+251|0)?[97]\d{8}$');
                                 if (!ethPhoneRegExp.hasMatch(cleanPhone)) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Please enter a valid Ethiopian phone number (e.g. 0911234567 or +251911234567)'),
-                                      backgroundColor: Colors.red,
-                                    ),
-                                  );
+                                  setState(() => _phoneError = LanguageService.tr(context, 'val_invalid_phone'));
                                   return;
                                 }
                               }
 
                               if (password != confirmPassword) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Passwords do not match'),
-                                    backgroundColor: Colors.red,
-                                  ),
-                                );
+                                setState(() => _confirmPasswordError = LanguageService.tr(context, 'val_password_mismatch'));
                                 return;
                               }
 
@@ -543,7 +602,6 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
 
                               setState(() => _isLoading = true);
 
-                              final fullName = "$firstName $lastName";
                               final fullPhone = phone.startsWith('+251')
                                   ? phone
                                   : (phone.startsWith('0') ? '+251${phone.substring(1)}' : '+251$phone');
@@ -552,7 +610,8 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                                 email: email,
                                 password: password,
                                 passwordConfirm: confirmPassword,
-                                fullName: fullName,
+                                firstName: firstName,
+                                lastName: lastName,
                                 role: 'MIDWIFE',
                                 phone: phone.isNotEmpty ? fullPhone : null,
                               );
@@ -561,11 +620,10 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                               setState(() => _isLoading = false);
 
                               if (result.success) {
-                                messenger.showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Midwife registration successful! Verify OTP.'),
-                                    backgroundColor: Colors.green,
-                                  ),
+                                CustomSnackBar.show(
+                                  context,
+                                  message: 'Midwife registration successful! Verify OTP.',
+                                  type: SnackBarType.success,
                                 );
                                 navigator.push(
                                   MaterialPageRoute(
@@ -576,16 +634,15 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                                   ),
                                 );
                               } else {
-                                messenger.showSnackBar(
-                                  SnackBar(
-                                    content: Text(result.message),
-                                    backgroundColor: Colors.red,
-                                  ),
+                                CustomSnackBar.show(
+                                  context,
+                                  message: result.message,
+                                  type: SnackBarType.error,
                                 );
                               }
                             },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1B5E20),
+                        backgroundColor: const Color(0xFF315E26),
                         foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
@@ -644,7 +701,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -659,7 +716,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
         children: [
           Row(
             children: [
-              Icon(icon, size: 20, color: const Color(0xFF1B5E20)),
+              Icon(icon, size: 20, color: const Color(0xFF315E26)),
               const SizedBox(width: 8),
               Text(
                 title,
@@ -698,16 +755,18 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
     TextInputType? keyboardType,
     bool obscureText = false,
     Widget? suffixIcon,
+    String? errorText,
+    ValueChanged<String>? onChanged,
   }) {
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
       obscureText: obscureText,
+      onChanged: onChanged,
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 14),
         filled: true,
-        fillColor: Colors.white,
         contentPadding:
         const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         suffixIcon: suffixIcon,
@@ -721,8 +780,9 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF1B5E20), width: 1.5),
+          borderSide: const BorderSide(color: Color(0xFF315E26), width: 1.5),
         ),
+        errorText: errorText,
       ),
     );
   }

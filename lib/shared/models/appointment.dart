@@ -46,6 +46,7 @@ class Appointment {
   final String? userFullName;
   final String? patientPhone;
   String? midwifeName;
+  final String? midwifePhone;
 
   Appointment({
     required this.appointmentId,
@@ -65,38 +66,103 @@ class Appointment {
     this.userFullName,
     this.patientPhone,
     this.midwifeName,
+    this.midwifePhone,
   });
 
+  static String? _extractName(Map<String, dynamic>? map) {
+    if (map == null) return null;
+    String? name = map['full_name'] ?? map['name'];
+    if (name != null && name.trim().isNotEmpty) return name.trim();
+    String first = (map['first_name'] ?? '').toString().trim();
+    String last = (map['last_name'] ?? '').toString().trim();
+    String built = '$first $last'.trim();
+    return built.isNotEmpty ? built : null;
+  }
+
+  static String? _extractPhone(Map<String, dynamic>? map) {
+    if (map == null) return null;
+    String? phone = map['phone'] ?? map['phone_number'];
+    return phone?.trim().isNotEmpty == true ? phone!.trim() : null;
+  }
+
   factory Appointment.fromJson(Map<String, dynamic> json) {
+    print('Appointment JSON: $json');
     String? parsedPatientName = json['user_full_name'] ?? json['patient_name'];
     String? parsedPatientPhone = json['patient_phone'] ?? json['user_phone'];
     String? parsedMidwifeName = json['midwife_name'] ?? json['midwife_full_name'];
+    String? parsedMidwifePhone = json['midwife_phone'];
 
-    // Try parsing nested user/patient object
     if (json['patient'] is Map) {
       final p = json['patient'];
-      parsedPatientName ??= p['full_name'] ?? p['name'] ?? '${p['first_name'] ?? ''} ${p['last_name'] ?? ''}'.trim();
-      parsedPatientPhone ??= p['phone'] ?? p['phone_number'];
+      parsedPatientName ??= _extractName(p);
+      parsedPatientPhone ??= _extractPhone(p);
     }
     if (json['user'] is Map) {
       final u = json['user'];
-      parsedPatientName ??= u['full_name'] ?? u['name'] ?? '${u['first_name'] ?? ''} ${u['last_name'] ?? ''}'.trim();
-      parsedPatientPhone ??= u['phone'] ?? u['phone_number'];
+      parsedPatientName ??= _extractName(u);
+      parsedPatientPhone ??= _extractPhone(u);
+    }
+    if (json['patient_detail'] is Map) {
+      final pd = json['patient_detail'];
+      parsedPatientName ??= _extractName(pd);
+      parsedPatientPhone ??= _extractPhone(pd);
+      if (pd['user'] is Map) {
+        parsedPatientName ??= _extractName(pd['user']);
+        parsedPatientPhone ??= _extractPhone(pd['user']);
+      }
+    }
+    if (json['user_detail'] is Map) {
+      final ud = json['user_detail'];
+      parsedPatientName ??= _extractName(ud);
+      parsedPatientPhone ??= _extractPhone(ud);
+      if (ud['user'] is Map) {
+        parsedPatientName ??= _extractName(ud['user']);
+        parsedPatientPhone ??= _extractPhone(ud['user']);
+      }
+      if (ud['profile'] is Map) {
+        parsedPatientName ??= _extractName(ud['profile']);
+        parsedPatientPhone ??= _extractPhone(ud['profile']);
+      }
+      if (parsedPatientName == null || parsedPatientName!.isEmpty) {
+        parsedPatientName = ud['username'];
+      }
+    }
+    if (json['patient_profile'] is Map) {
+      final pp = json['patient_profile'];
+      parsedPatientName ??= _extractName(pp);
+      parsedPatientPhone ??= _extractPhone(pp);
+      if (pp['user'] is Map) {
+        parsedPatientName ??= _extractName(pp['user']);
+        parsedPatientPhone ??= _extractPhone(pp['user']);
+      }
+    }
+    if (json['profile'] is Map) {
+      final p2 = json['profile'];
+      parsedPatientName ??= _extractName(p2);
+      parsedPatientPhone ??= _extractPhone(p2);
+      if (p2['user'] is Map) {
+        parsedPatientName ??= _extractName(p2['user']);
+        parsedPatientPhone ??= _extractPhone(p2['user']);
+      }
     }
 
     // Try parsing nested midwife object
     if (json['midwife'] is Map) {
       final m = json['midwife'];
       parsedMidwifeName ??= m['full_name'] ?? m['name'] ?? m['midwife_name'] ?? '${m['first_name'] ?? ''} ${m['last_name'] ?? ''}'.trim();
+      parsedMidwifePhone ??= m['phone'] ?? m['phone_number'];
       if (m['user'] is Map) {
         parsedMidwifeName ??= m['user']['full_name'] ?? m['user']['name'] ?? '${m['user']['first_name'] ?? ''} ${m['user']['last_name'] ?? ''}'.trim();
+        parsedMidwifePhone ??= m['user']['phone'] ?? m['user']['phone_number'];
       }
     }
     if (json['midwife_detail'] is Map) {
       final md = json['midwife_detail'];
       parsedMidwifeName ??= md['full_name'] ?? md['name'] ?? md['midwife_name'] ?? '${md['first_name'] ?? ''} ${md['last_name'] ?? ''}'.trim();
+      parsedMidwifePhone ??= md['phone'] ?? md['phone_number'];
       if (md['user'] is Map) {
         parsedMidwifeName ??= md['user']['full_name'] ?? md['user']['name'] ?? '${md['user']['first_name'] ?? ''} ${md['user']['last_name'] ?? ''}'.trim();
+        parsedMidwifePhone ??= md['user']['phone'] ?? md['user']['phone_number'];
       }
     }
     if (json['midwife_id'] is Map) {
@@ -113,6 +179,11 @@ class Appointment {
         parsedMidwifeName ??= mp['user']['full_name'] ?? mp['user']['name'] ?? '${mp['user']['first_name'] ?? ''} ${mp['user']['last_name'] ?? ''}'.trim();
       }
     }
+
+    if (parsedPatientName?.isEmpty == true) parsedPatientName = null;
+    if (parsedPatientPhone?.isEmpty == true) parsedPatientPhone = null;
+    if (parsedMidwifeName?.isEmpty == true) parsedMidwifeName = null;
+    if (parsedMidwifePhone?.isEmpty == true) parsedMidwifePhone = null;
 
     // Safely extract IDs if they are nested
     String safeUserId = json['user_id']?.toString() ?? '';
@@ -136,6 +207,7 @@ class Appointment {
 
     if (parsedPatientName != null && parsedPatientName.isEmpty) parsedPatientName = null;
     if (parsedMidwifeName != null && parsedMidwifeName.isEmpty) parsedMidwifeName = null;
+    if (parsedMidwifePhone != null && parsedMidwifePhone.isEmpty) parsedMidwifePhone = null;
 
     return Appointment(
       appointmentId: json['id']?.toString() ?? json['appointment_id']?.toString() ?? '',
@@ -155,6 +227,7 @@ class Appointment {
       userFullName: parsedPatientName,
       patientPhone: parsedPatientPhone,
       midwifeName: parsedMidwifeName,
+      midwifePhone: parsedMidwifePhone,
     );
   }
 

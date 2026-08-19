@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 import '../../domain/entities/healthcare_facility.dart';
 
 class FacilityDetailsScreen extends StatelessWidget {
@@ -11,7 +13,7 @@ class FacilityDetailsScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F8F4),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1B5E20),
+        backgroundColor: const Color(0xFF315E26),
         elevation: 0,
         title: const Text('Facility Details', style: TextStyle(color: Colors.white)),
         leading: IconButton(
@@ -23,16 +25,26 @@ class FacilityDetailsScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header Image Placeholder
+            // Header Image
             Container(
               width: double.infinity,
               height: 180,
               color: const Color(0xFF315E26).withOpacity(0.1),
-              child: const Icon(
-                Icons.local_hospital_outlined,
-                size: 80,
-                color: Color(0xFF315E26),
-              ),
+              child: facility.image != null
+                  ? Image.network(
+                      facility.image!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => const Icon(
+                        Icons.local_hospital_outlined,
+                        size: 80,
+                        color: Color(0xFF315E26),
+                      ),
+                    )
+                  : const Icon(
+                      Icons.local_hospital_outlined,
+                      size: 80,
+                      color: Color(0xFF315E26),
+                    ),
             ),
             Padding(
               padding: const EdgeInsets.all(20.0),
@@ -47,7 +59,7 @@ class FacilityDetailsScreen extends StatelessWidget {
                           style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF1B5E20),
+                            color: Color(0xFF315E26),
                           ),
                         ),
                       ),
@@ -67,6 +79,24 @@ class FacilityDetailsScreen extends StatelessWidget {
                             ],
                           ),
                         ),
+                      if (facility.rating != null) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.amber.shade200),
+                          ),
+                          child: Row(
+                            children: [
+                              const Text('⭐️', style: TextStyle(fontSize: 12)),
+                              const SizedBox(width: 4),
+                              Text(facility.rating!.toStringAsFixed(1), style: const TextStyle(color: Colors.orange, fontSize: 12, fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -86,7 +116,7 @@ class FacilityDetailsScreen extends StatelessWidget {
                   _buildInfoRow(
                     Icons.access_time, 
                     facility.isOpen ? 'Currently Open' : 'Closed', 
-                    facility.openingHours.join(', '),
+                    facility.operatingHours ?? 'Not specified',
                     iconColor: facility.isOpen ? Colors.green : Colors.red,
                   ),
                   
@@ -122,7 +152,7 @@ class FacilityDetailsScreen extends StatelessWidget {
                     runSpacing: 8,
                     children: facility.services.map((service) {
                       return Chip(
-                        label: Text(service, style: const TextStyle(color: Color(0xFF1B5E20))),
+                        label: Text(service, style: const TextStyle(color: Color(0xFF315E26))),
                         backgroundColor: const Color(0xFFE8F5E9),
                         side: BorderSide.none,
                       );
@@ -136,11 +166,22 @@ class FacilityDetailsScreen extends StatelessWidget {
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton.icon(
-                      onPressed: () {},
+                      onPressed: () async {
+                        final fallbackUrl = 'https://www.google.com/maps/search/?api=1&query=${facility.latitude},${facility.longitude}';
+                        final navUrls = facility.navigationUrls;
+                        
+                        String urlToLaunch = fallbackUrl;
+                        if (navUrls != null && navUrls['google_maps'] != null) {
+                          urlToLaunch = navUrls['google_maps'];
+                        }
+                        
+                        final uri = Uri.parse(urlToLaunch);
+                        launchUrl(uri, mode: LaunchMode.externalApplication);
+                      },
                       icon: const Icon(Icons.directions, color: Colors.white),
                       label: const Text('Get Directions', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1B5E20),
+                        backgroundColor: const Color(0xFF315E26),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                     ),
@@ -151,11 +192,15 @@ class FacilityDetailsScreen extends StatelessWidget {
                       width: double.infinity,
                       height: 50,
                       child: OutlinedButton.icon(
-                        onPressed: () {},
-                        icon: const Icon(Icons.call, color: Color(0xFF1B5E20)),
-                        label: const Text('Call Facility', style: TextStyle(color: Color(0xFF1B5E20), fontSize: 16, fontWeight: FontWeight.bold)),
+                        onPressed: () async {
+                          String phoneUrl = facility.callUrl ?? 'tel:${facility.phone}';
+                          final uri = Uri.parse(phoneUrl);
+                          launchUrl(uri);
+                        },
+                        icon: const Icon(Icons.call, color: Color(0xFF315E26)),
+                        label: const Text('Call Facility', style: TextStyle(color: Color(0xFF315E26), fontSize: 16, fontWeight: FontWeight.bold)),
                         style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Color(0xFF1B5E20)),
+                          side: const BorderSide(color: Color(0xFF315E26)),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
                       ),

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import 'otp_verification_screen.dart';
 import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
 import 'package:cagh_frontend/core/services/language_service.dart';
+import 'package:cagh_frontend/shared/widgets/custom_snackbar.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   final bool isMidwife;
@@ -14,6 +16,7 @@ class ForgotPasswordScreen extends StatefulWidget {
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _emailController = TextEditingController();
   bool _isLoading = false;
+  String? _emailError;
 
   @override
   void dispose() {
@@ -30,7 +33,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           // Green App Bar
           Container(
             width: double.infinity,
-            color: const Color(0xFF1B5E20),
+            color: const Color(0xFF315E26),
             child: SafeArea(
               bottom: false,
               child: Padding(
@@ -39,11 +42,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   children: [
                     IconButton(
                       onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.arrow_back, color: Colors.amber),
+                      icon: const Icon(Icons.arrow_back, color: Color(0xFFFFD22B)),
                     ),
                     Expanded(
                       child: Text(
-                        LanguageService.tr('forgot_password'),
+                        LanguageService.tr(context, 'forgot_password'),
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           color: Colors.white,
@@ -66,11 +69,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    LanguageService.tr('reset_password'),
+                    LanguageService.tr(context, 'reset_password'),
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF1B5E20),
+                      color: Color(0xFF315E26),
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -87,7 +90,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   const SizedBox(height: 36),
 
                   Text(
-                    LanguageService.tr('email_phone'),
+                    LanguageService.tr(context, 'email_phone'),
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
@@ -99,7 +102,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
-                      hintText: LanguageService.tr('enter_contact_details'),
+                      hintText: LanguageService.tr(context, 'enter_contact_details'),
                       hintStyle: TextStyle(color: Colors.grey.shade500),
                       filled: true,
                       fillColor: Colors.white,
@@ -116,8 +119,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: const BorderSide(
-                            color: Color(0xFF1B5E20), width: 1.5),
+                            color: Color(0xFF315E26), width: 1.5),
                       ),
+                      errorText: _emailError,
                     ),
                   ),
 
@@ -131,13 +135,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           ? null
                           : () async {
                               final email = _emailController.text.trim();
-                              if (email.isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Please enter email or phone'),
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
-                                );
+                              
+                              setState(() {
+                                _emailError = email.isEmpty ? LanguageService.tr(context, 'val_email_phone_req') : null;
+                              });
+
+                              if (_emailError != null) {
                                 return;
                               }
 
@@ -151,11 +154,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               setState(() => _isLoading = false);
 
                               if (result.success) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(result.message),
-                                    backgroundColor: Colors.green,
-                                  ),
+                                CustomSnackBar.show(
+                                  context,
+                                  message: result.message,
+                                  type: SnackBarType.success,
                                 );
                                 Navigator.push(
                                   context,
@@ -168,16 +170,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                   ),
                                 );
                               } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(result.message),
-                                    backgroundColor: Colors.red,
-                                  ),
+                                CustomSnackBar.show(
+                                  context,
+                                  message: result.message,
+                                  type: SnackBarType.error,
                                 );
                               }
                             },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1B5E20),
+                        backgroundColor: const Color(0xFF315E26),
                         foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
@@ -194,7 +195,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               ),
                             )
                           : Text(
-                              LanguageService.tr('send_code'),
+                              LanguageService.tr(context, 'send_code'),
                               style: const TextStyle(
                                 fontSize: 17,
                                 fontWeight: FontWeight.w600,

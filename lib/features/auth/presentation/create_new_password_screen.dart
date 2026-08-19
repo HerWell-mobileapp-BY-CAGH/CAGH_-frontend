@@ -134,10 +134,10 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF7FBF5),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1B5E20),
+        backgroundColor: const Color(0xFF315E26),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.amber),
+          icon: const Icon(Icons.arrow_back, color: Color(0xFFFFD22B)),
           onPressed: () => Navigator.pop(context), // Pops back to ForgotPasswordScreen securely
         ),
         title: const Text(
@@ -152,7 +152,7 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
           children: [
             Text(
               'Create New Password',
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: Color(0xFF1B5E20)),
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: Color(0xFF315E26)),
             ),
             const SizedBox(height: 10),
             Text(
@@ -221,7 +221,7 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
               child: ElevatedButton(
                 onPressed: (_isValid() && !_isLoading && passwordsMatch) ? _submit : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF1B5E20),
+                  backgroundColor: const Color(0xFF315E26),
                   foregroundColor: Colors.white,
                   disabledBackgroundColor: Colors.grey.shade300,
                   elevation: 0,
