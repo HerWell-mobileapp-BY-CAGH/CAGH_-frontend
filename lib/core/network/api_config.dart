@@ -12,14 +12,25 @@ class ApiConstants {
 /// Core API Configuration for CAGH Application
 class ApiConfig {
   /// Toggle to enable local UI prototyping without a running backend server.
-  /// Set to `false` when integrating with live backend.
-  static bool useMockData = false;
+  static bool get useMockData => (dotenv.env['USE_MOCK_DATA'] ?? '').toLowerCase() == 'true';
 
-  /// Base REST API URL for backend calls.
-  static String get baseUrl => ApiConstants.baseUrl;
+  /// Base REST API URL for backend calls (reads from .env if present).
+  static String get baseUrl {
+    final envUrl = dotenv.env['API_BASE_URL'] ?? dotenv.env['BASE_URL'];
+    if (envUrl != null && envUrl.trim().isNotEmpty) {
+      return envUrl.trim();
+    }
+    return ApiConstants.baseUrl;
+  }
 
-  /// Base WebSockets URL for real-time channels.
-  static String get wsUrl => ApiConstants.wsUrl;
+  /// Base WebSockets URL for real-time channels (reads from .env if present).
+  static String get wsUrl {
+    final envUrl = dotenv.env['WS_BASE_URL'] ?? dotenv.env['WS_URL'];
+    if (envUrl != null && envUrl.trim().isNotEmpty) {
+      return envUrl.trim();
+    }
+    return ApiConstants.wsUrl;
+  }
 
   // Authentication & Security Endpoints
   static const String login = '/auth/login/';
