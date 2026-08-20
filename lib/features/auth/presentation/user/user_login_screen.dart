@@ -48,6 +48,7 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
     final result = await AuthService.login(
       identifier: identifier,
       password: password,
+      role: 'PATIENT',
     );
 
     if (!mounted) return;

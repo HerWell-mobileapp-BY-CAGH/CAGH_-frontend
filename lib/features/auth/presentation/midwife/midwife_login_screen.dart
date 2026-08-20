@@ -52,6 +52,7 @@ class _MidwifeLoginScreenState extends State<MidwifeLoginScreen> {
     final result = await AuthService.login(
       identifier: identifier,
       password: password,
+      role: 'MIDWIFE',
     );
 
     if (!mounted) return;

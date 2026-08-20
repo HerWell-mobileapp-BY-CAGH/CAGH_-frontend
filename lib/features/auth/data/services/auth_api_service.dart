@@ -47,11 +47,12 @@ class AuthService {
   static Future<ApiResponse<Map<String, dynamic>>> login({
     required String identifier,
     required String password,
+    String? role,
   }) async {
     final isMidwife =
-        identifier.toLowerCase().contains('midwife') || _lastRole == 'MIDWIFE';
-    final role = isMidwife ? 'MIDWIFE' : 'PATIENT';
-    _lastRole = role;
+        identifier.toLowerCase().contains('midwife') || _lastRole == 'MIDWIFE' || role == 'MIDWIFE';
+    final activeRole = role ?? (isMidwife ? 'MIDWIFE' : 'PATIENT');
+    _lastRole = activeRole;
 
     final derivedName = _deriveDisplayName(identifier, isMidwife);
     final userEmail =
@@ -63,7 +64,7 @@ class AuthService {
       'full_name': derivedName,
       'email': userEmail,
       'phone_number': userPhone,
-      'role': role,
+      'role': activeRole,
     };
 
     final prefs = await SharedPreferences.getInstance();
@@ -77,6 +78,7 @@ class AuthService {
             body: jsonEncode({
               'email': identifier,
               'password': password,
+              'role': activeRole,
             }),
           )
           .timeout(const Duration(seconds: 45));
@@ -772,6 +774,9 @@ class AuthService {
       }
       
       final lowerMsg = msg.toLowerCase();
+      if (lowerMsg.contains('access denied') || lowerMsg.contains('registered as') || lowerMsg.contains('role_mismatch') || lowerMsg.contains('cannot log in')) {
+        return msg;
+      }
       if (lowerMsg.contains('unauthorized') || lowerMsg.contains('invalid credentials') || lowerMsg.contains('no active account')) {
         return 'Your email or password is incorrect. Please try again.';
       }
