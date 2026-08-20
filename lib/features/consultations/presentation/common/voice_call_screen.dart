@@ -197,8 +197,8 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
           children: [
             // Hidden video element to play incoming WebRTC audio on web & mobile
             SizedBox(
-              width: 100,
-              height: 100,
+              width: 1,
+              height: 1,
               child: Opacity(
                 opacity: 0.01,
                 child: RTCVideoView(_webrtcService.remoteRenderer),
@@ -376,7 +376,7 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
                           onTap: _toggleMute,
                         ),
                         _buildControlButton(
-                          icon: _isSpeakerOn ? Icons.volume_up : Icons.volume_off,
+                          icon: _isSpeakerOn ? Icons.volume_up : Icons.volume_down,
                           label: 'Speaker',
                           isActive: _isSpeakerOn,
                           onTap: _toggleSpeaker,

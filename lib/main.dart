@@ -88,6 +88,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    GlobalCallService.initUserCallListener();
     if (!kIsWeb) {
       _setupCallkitListener();
     }

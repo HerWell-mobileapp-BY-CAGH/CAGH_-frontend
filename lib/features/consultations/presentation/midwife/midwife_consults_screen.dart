@@ -82,12 +82,13 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
       if (context.mounted) Navigator.pop(context); // Close dialog
 
       if (context.mounted) {
+        final consultId = sessionData?['id']?.toString() ?? apt.appointmentId.toString();
         final result = await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => VoiceCallScreen(
               appointment: apt,
-              consultationId: apt.appointmentId.toString(),
+              consultationId: consultId,
               isCaller: true,
             ),
           ),

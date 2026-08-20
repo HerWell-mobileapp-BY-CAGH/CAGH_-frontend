@@ -118,6 +118,9 @@ class _VoiceConsultationScreenState extends State<VoiceConsultationScreen> {
         }
       });
 
+        if (widget.isCaller) {
+          RingtoneService.playOutgoingRingback();
+        }
         await _webrtcService.connect(wsUrl, widget.isCaller);
       }
     } catch (e) {
@@ -131,6 +134,7 @@ class _VoiceConsultationScreenState extends State<VoiceConsultationScreen> {
   }
 
   void _startTimer() {
+    RingtoneService.stopRingtone();
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_isConnected) {
@@ -181,8 +185,8 @@ class _VoiceConsultationScreenState extends State<VoiceConsultationScreen> {
         children: [
           // Hidden RTCVideoView to attach WebRTC Audio Stream to DOM
           SizedBox(
-            width: 100,
-            height: 100,
+            width: 1,
+            height: 1,
             child: Opacity(
               opacity: 0.01,
               child: RTCVideoView(_webrtcService.remoteRenderer),
@@ -329,7 +333,7 @@ class _VoiceConsultationScreenState extends State<VoiceConsultationScreen> {
                     },
                   ),
                   _buildControlButton(
-                    icon: _isSpeaker ? Icons.volume_up : Icons.volume_off,
+                    icon: _isSpeaker ? Icons.volume_up : Icons.volume_down,
                     label: 'Speaker',
                     isActive: _isSpeaker,
                     onTap: () {

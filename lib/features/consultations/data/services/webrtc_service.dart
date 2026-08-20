@@ -305,17 +305,17 @@ class WebrtcService {
 
   Future<void> toggleSpeaker(bool useSpeaker) async {
     try {
-      _remoteRenderer.muted = !useSpeaker;
+      _remoteRenderer.muted = false;
       if (kIsWeb) {
         if (_remoteStream != null) {
           for (var track in _remoteStream!.getAudioTracks()) {
-            track.enabled = useSpeaker;
+            track.enabled = true;
           }
         }
       } else {
         await Helper.setSpeakerphoneOn(useSpeaker);
       }
-      debugPrint('WebrtcService: Speaker set to $useSpeaker (muted: ${!useSpeaker})');
+      debugPrint('WebrtcService: Speaker route set to useSpeaker=$useSpeaker (earpiece when false)');
     } catch (e) {
       debugPrint('Error toggling speaker: $e');
     }
