@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:flutter/foundation.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class WebrtcService {
   RTCPeerConnection? _peerConnection;
@@ -43,6 +44,17 @@ class WebrtcService {
   Future<void> connect(String wsUrlString, bool isCaller) async {
     _isDisposed = false;
     _isCallAccepted = false;
+
+    if (!kIsWeb) {
+      try {
+        final status = await Permission.microphone.status;
+        if (!status.isGranted) {
+          await Permission.microphone.request();
+        }
+      } catch (e) {
+        debugPrint('Microphone permission request error: $e');
+      }
+    }
 
     await _initRenderers();
     await _initLocalStream();
