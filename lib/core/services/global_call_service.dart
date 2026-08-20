@@ -17,6 +17,8 @@ class GlobalCallService {
   static bool _isRingingShown = false;
   static bool isCallActive = false;
   static String? currentUserId;
+  static bool _isListening = false;
+  static bool _isExplicitClose = false;
 
   static String? _getUserIdFromJwt(String token) {
     try {
@@ -47,6 +49,11 @@ class GlobalCallService {
   }
 
   static Future<void> initUserCallListener() async {
+    if (_isListening && _userCallChannel != null) {
+      debugPrint('GlobalCallService: Already actively listening on user-calls WebSocket');
+      return;
+    }
+
     try {
       final token = await _getSanitizedToken();
       if (token.isEmpty) {
@@ -61,8 +68,12 @@ class GlobalCallService {
       final wsUrl = Uri.parse(wsUrlString);
       
       _heartbeatTimer?.cancel();
+      _isExplicitClose = true;
       _userCallChannel?.sink.close();
+      _isExplicitClose = false;
+
       _userCallChannel = WebSocketChannel.connect(wsUrl);
+      _isListening = true;
       debugPrint('GlobalCallService: Listening on user-calls WebSocket');
 
       _heartbeatTimer = Timer.periodic(const Duration(seconds: 25), (timer) {
@@ -103,9 +114,10 @@ class GlobalCallService {
         },
         onDone: () {
           final code = _userCallChannel?.closeCode;
+          _isListening = false;
           debugPrint('User call WebSocket closed (code: $code)');
-          if (code == 4001 || code == 4003) {
-            debugPrint('Stopping reconnect loop due to unauthorized token/session (code: $code)');
+          if (_isExplicitClose || code == 4001 || code == 4003) {
+            debugPrint('Stopping reconnect loop (explicit close or code: $code)');
             _heartbeatTimer?.cancel();
             return;
           }
