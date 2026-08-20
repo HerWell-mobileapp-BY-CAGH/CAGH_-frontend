@@ -1,10 +1,10 @@
+import 'package:cagh_frontend/core/services/global_call_service.dart';
+import 'package:cagh_frontend/features/appointments/data/services/appointment_api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:cagh_frontend/shared/models/appointment.dart';
 import 'package:cagh_frontend/features/appointments/data/repositories/appointment_repository_impl.dart';
 import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
-import 'package:cagh_frontend/features/auth/presentation/midwife/midwife_login_screen.dart';
 import 'package:cagh_frontend/shared/widgets/globe_language_picker.dart';
-import 'package:cagh_frontend/features/appointments/data/services/appointment_api_service.dart';
 import 'package:cagh_frontend/features/profile/presentation/midwife_profile_screen.dart';
 import 'package:cagh_frontend/features/consultations/presentation/midwife/midwife_consults_screen.dart';
 import 'package:cagh_frontend/features/scheduling/presentation/screens/midwife_schedule_screen.dart';
@@ -31,6 +31,7 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
 
   @override
   void initState() {
+    _initGlobalCallListener();
     super.initState();
     _fetchProfile();
   }
@@ -39,6 +40,17 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
   void dispose() {
     _learnSearchController.dispose();
     super.dispose();
+  }
+
+  Future<void> _initGlobalCallListener() async {
+    try {
+      final api = AppointmentApiService();
+      final apts = await api.getMidwifeAppointments();
+      final ids = apts.map((e) => (e['id'] ?? e['appointment_id'] ?? e['appointment_number'] ?? '').toString()).where((id) => id.isNotEmpty && id != 'null').toList();
+      GlobalCallService.initMultiple(ids);
+    } catch (e) {
+      debugPrint('Failed to init global calls: $e');
+    }
   }
 
   Future<void> _fetchProfile() async {

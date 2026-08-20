@@ -4,6 +4,8 @@ import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../data/services/webrtc_service.dart';
 import '../../data/services/consultation_api_service.dart';
+import 'package:cagh_frontend/core/services/global_call_service.dart';
+import 'package:cagh_frontend/core/services/ringtone_service.dart';
 
 class VoiceConsultationScreen extends StatefulWidget {
   final String consultationId;
@@ -36,19 +38,14 @@ class _VoiceConsultationScreenState extends State<VoiceConsultationScreen> {
   late StreamSubscription<RTCSessionDescription> _incomingCallSub;
   late StreamSubscription<void> _callAnsweredSub;
   late StreamSubscription<String> _debugSub;
+  late StreamSubscription<void> _callEndedSub;
   RTCSessionDescription? _incomingOffer;
   bool _isRinging = false;
 
   @override
   void initState() {
     super.initState();
-    _debugSub = _webrtcService.debugStream.listen((msg) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('PATIENT DEBUG: $msg'), duration: const Duration(seconds: 20)),
-        );
-      }
-    });
+    GlobalCallService.isCallActive = true;
     _startCall();
   }
 
@@ -64,9 +61,18 @@ class _VoiceConsultationScreenState extends State<VoiceConsultationScreen> {
       if (baseWsUrl != null) {
         final wsUrl = '$baseWsUrl${baseWsUrl.contains('?') ? '&' : '?'}token=$token${sessionKey != null ? '&session_key=$sessionKey' : ''}';
         _connectionStateSub = _webrtcService.connectionStateStream.listen((state) {
-          if (state == RTCPeerConnectionState.RTCPeerConnectionStateDisconnected || 
+          if (state == RTCPeerConnectionState.RTCPeerConnectionStateConnected) {
+            if (mounted && !_isConnected) {
+              setState(() {
+                _isConnected = true;
+                _isRinging = false;
+                _startTimer();
+              });
+            }
+          } else if (state == RTCPeerConnectionState.RTCPeerConnectionStateDisconnected || 
               state == RTCPeerConnectionState.RTCPeerConnectionStateFailed ||
               state == RTCPeerConnectionState.RTCPeerConnectionStateClosed) {
+            _timer?.cancel();
             if (mounted) Navigator.pop(context);
           }
         });
@@ -81,42 +87,65 @@ class _VoiceConsultationScreenState extends State<VoiceConsultationScreen> {
           }
         });
 
-        _incomingCallSub = _webrtcService.incomingCallStream.listen((offer) {
+        _callEndedSub = _webrtcService.callEndedStream.listen((_) {
+          _timer?.cancel();
+          if (mounted) Navigator.pop(context);
+        });
+
+        _incomingCallSub = _webrtcService.incomingCallStream.listen((offer) async {
           if (mounted) {
             setState(() {
               _isRinging = true;
               _incomingOffer = offer;
             });
+            await _webrtcService.acceptCall(offer);
+            if (mounted && !_isConnected) {
+              setState(() {
+                _isConnected = true;
+                _isRinging = false;
+                _startTimer();
+              });
+            }
           }
         });
+
+        if (widget.isCaller) {
+          RingtoneService.playOutgoingRingback();
+        }
 
         await _webrtcService.connect(wsUrl, widget.isCaller);
       }
     } catch (e) {
+      RingtoneService.stopRingtone();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Call failed: $e'), backgroundColor: Colors.red, duration: const Duration(seconds: 10)),
         );
-        // Do not pop, let the user read the error
       }
     }
   }
 
   void _startTimer() {
+    RingtoneService.stopRingtone();
+    _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        _secondsElapsed++;
-      });
+      if (_isConnected) {
+        setState(() {
+          _secondsElapsed++;
+        });
+      }
     });
   }
 
   @override
   void dispose() {
+    RingtoneService.stopRingtone();
+    GlobalCallService.isCallActive = false;
     _timer?.cancel();
     _connectionStateSub.cancel();
     _incomingCallSub.cancel();
     _callAnsweredSub.cancel();
-    _debugSub.cancel();
+    _callEndedSub.cancel();
     _webrtcService.dispose();
     super.dispose();
   }
@@ -144,8 +173,16 @@ class _VoiceConsultationScreenState extends State<VoiceConsultationScreen> {
         ),
         centerTitle: true,
       ),
-      body: Column(
+      body: Stack(
         children: [
+          // Hidden video element to play incoming WebRTC audio on web & mobile
+          SizedBox(
+            width: 1,
+            height: 1,
+            child: RTCVideoView(_webrtcService.remoteRenderer),
+          ),
+          Column(
+            children: [
           Expanded(
             child: Center(
               child: Column(
@@ -206,7 +243,8 @@ class _VoiceConsultationScreenState extends State<VoiceConsultationScreen> {
                       _isConnected ? _formatTime(_secondsElapsed) : 'Connecting...',
                       style: const TextStyle(
                         fontSize: 32,
-                        fontWeight: FontWeight.w300,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF315E26),
                         letterSpacing: 2,
                         fontFamily: 'monospace',
                       ),
@@ -297,9 +335,11 @@ class _VoiceConsultationScreenState extends State<VoiceConsultationScreen> {
                 ],
               ),
             ),
-        ],
-      ),
-    );
+          ],
+        ),
+      ],
+    ),
+  );
   }
 
   Widget _buildControlButton({

@@ -14,6 +14,7 @@ import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
 import 'package:flutter_callkit_incoming/entities/call_kit_params.dart';
 import 'package:flutter_callkit_incoming/entities/call_event.dart';
 import 'package:flutter/services.dart';
+import 'package:cagh_frontend/core/services/ringtone_service.dart';
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   if (message.data['action'] == 'INCOMING_CALL') {
@@ -71,7 +72,9 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    _setupCallkitListener();
+    if (!kIsWeb) {
+      _setupCallkitListener();
+    }
   }
 
   void _setupCallkitListener() {
@@ -170,11 +173,14 @@ class _MyAppState extends State<MyApp> {
                   ),
                   builder: (context, child) {
                     final data = MediaQuery.of(context);
-                    return MediaQuery(
-                      data: data.copyWith(
-                        textScaler: TextScaler.linear(textScale),
+                    return Listener(
+                      onPointerDown: (_) => RingtoneService.unlockAudio(),
+                      child: MediaQuery(
+                        data: data.copyWith(
+                          textScaler: TextScaler.linear(textScale),
+                        ),
+                        child: child!,
                       ),
-                      child: child!,
                     );
                   },
                   home: const SplashScreen(),

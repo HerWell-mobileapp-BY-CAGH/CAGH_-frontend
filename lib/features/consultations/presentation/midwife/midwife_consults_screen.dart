@@ -88,6 +88,7 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
             builder: (context) => VoiceCallScreen(
               appointment: apt,
               consultationId: apt.appointmentId.toString(),
+              isCaller: true,
             ),
           ),
         );

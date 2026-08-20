@@ -1,7 +1,4 @@
-import 'package:flutter_callkit_incoming/entities/call_event.dart';
-import 'package:flutter_callkit_incoming/entities/call_kit_params.dart';
-import 'package:flutter_callkit_incoming/entities/android_params.dart';
-import 'package:flutter_callkit_incoming/entities/ios_params.dart';
+import 'package:flutter_callkit_incoming/entities/entities.dart';
 import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
 import 'package:flutter/material.dart';
 
@@ -16,23 +13,24 @@ class CallKitService {
 
   Future<void> init(BuildContext context) async {
     FlutterCallkitIncoming.onEvent.listen((CallEvent? event) {
-      switch (event?.event) {
-        case Event.actionCallIncoming:
+      if (event == null) return;
+      switch (event.eventName) {
+        case 'ACTION_CALL_INCOMING':
           // Call incoming event
           break;
-        case Event.actionCallStart:
+        case 'ACTION_CALL_START':
           // Call start event
           break;
-        case Event.actionCallAccept:
+        case 'ACTION_CALL_ACCEPT':
           // TODO: Navigate to VoiceCallScreen
           break;
-        case Event.actionCallDecline:
+        case 'ACTION_CALL_DECLINE':
           // TODO: Send decline signal to backend
           break;
-        case Event.actionCallEnded:
+        case 'ACTION_CALL_ENDED':
           // Call ended
           break;
-        case Event.actionCallTimeout:
+        case 'ACTION_CALL_TIMEOUT':
           // Missed call
           break;
         default:
@@ -49,8 +47,6 @@ class CallKitService {
       avatar: avatar,
       handle: 'Incoming Voice Call',
       type: 0,
-      textAccept: 'Accept',
-      textDecline: 'Decline',
       missedCallNotification: const NotificationParams(
         showNotification: true,
         isShowCallback: true,
@@ -85,7 +81,7 @@ class CallKitService {
         ringtonePath: 'system_ringtone_default',
       ),
     );
-    
+
     await FlutterCallkitIncoming.showCallkitIncoming(params);
   }
 

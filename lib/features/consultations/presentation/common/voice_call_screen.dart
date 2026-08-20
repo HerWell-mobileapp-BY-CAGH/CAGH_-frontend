@@ -5,16 +5,21 @@ import 'package:cagh_frontend/shared/models/appointment.dart';
 import 'package:cagh_frontend/features/consultations/data/services/webrtc_service.dart';
 import 'package:cagh_frontend/features/consultations/data/services/consultation_api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cagh_frontend/core/services/global_call_service.dart';
+import 'package:cagh_frontend/core/services/ringtone_service.dart';
+
 class VoiceCallScreen extends StatefulWidget {
   final Appointment appointment;
   final String consultationId;
   final bool isIncomingCall;
+  final bool isCaller;
 
   const VoiceCallScreen({
     super.key,
     required this.appointment,
     required this.consultationId,
     this.isIncomingCall = false,
+    this.isCaller = true,
   });
 
   @override
@@ -35,20 +40,14 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
   late StreamSubscription<RTCPeerConnectionState> _connectionStateSub;
   late StreamSubscription<RTCSessionDescription> _incomingCallSub;
   late StreamSubscription<void> _callAnsweredSub;
-  late StreamSubscription<String> _debugSub;
+  late StreamSubscription<void> _callEndedSub;
   RTCSessionDescription? _incomingOffer;
   bool _isRinging = false;
 
   @override
   void initState() {
     super.initState();
-    _debugSub = _webrtcService.debugStream.listen((msg) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('MIDWIFE DEBUG: $msg'), duration: const Duration(seconds: 20)),
-        );
-      }
-    });
+    GlobalCallService.isCallActive = true;
     _initializeCall();
   }
 
@@ -67,7 +66,15 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
       final wsUrl = '$baseWsUrl${baseWsUrl.contains('?') ? '&' : '?'}token=$token${sessionKey != null ? '&session_key=$sessionKey' : ''}';
 
       _connectionStateSub = _webrtcService.connectionStateStream.listen((state) {
-        if (state == RTCPeerConnectionState.RTCPeerConnectionStateDisconnected || 
+        if (state == RTCPeerConnectionState.RTCPeerConnectionStateConnected) {
+          if (mounted && !_isConnected) {
+            setState(() {
+              _isConnected = true;
+              _isRinging = false;
+              _startTimer();
+            });
+          }
+        } else if (state == RTCPeerConnectionState.RTCPeerConnectionStateDisconnected || 
                    state == RTCPeerConnectionState.RTCPeerConnectionStateFailed ||
                    state == RTCPeerConnectionState.RTCPeerConnectionStateClosed) {
           if (mounted) _endCall();
@@ -84,32 +91,52 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
         }
       });
 
-      _incomingCallSub = _webrtcService.incomingCallStream.listen((offer) {
+      _callEndedSub = _webrtcService.callEndedStream.listen((_) {
+        _endCall();
+      });
+
+      _incomingCallSub = _webrtcService.incomingCallStream.listen((offer) async {
         if (mounted) {
           setState(() {
             _isRinging = true;
             _incomingOffer = offer;
           });
+          await _webrtcService.acceptCall(offer);
+          if (mounted && !_isConnected) {
+            setState(() {
+              _isConnected = true;
+              _isRinging = false;
+              _startTimer();
+            });
+          }
         }
       });
 
-      await _webrtcService.connect(wsUrl, false); // Midwife is the recipient
+      if (widget.isCaller) {
+        RingtoneService.playOutgoingRingback();
+      }
+
+      await _webrtcService.connect(wsUrl, widget.isCaller);
     } catch (e) {
+      RingtoneService.stopRingtone();
       debugPrint("Failed to initialize call: $e");
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Call failed: $e'), backgroundColor: Colors.red, duration: const Duration(seconds: 10)),
         );
-        // Do not pop, let the user read the error
       }
     }
   }
 
   void _startTimer() {
+    RingtoneService.stopRingtone();
+    _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        _secondsElapsed++;
-      });
+      if (_isConnected) {
+        setState(() {
+          _secondsElapsed++;
+        });
+      }
     });
   }
 
@@ -134,6 +161,7 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
   }
 
   void _endCall() {
+    RingtoneService.stopRingtone();
     _timer?.cancel();
     _webrtcService.dispose();
     if (mounted) Navigator.of(context).pop();
@@ -141,11 +169,13 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
 
   @override
   void dispose() {
+    RingtoneService.stopRingtone();
+    GlobalCallService.isCallActive = false;
     _timer?.cancel();
-    _connectionStateSub?.cancel();
-    _incomingCallSub?.cancel();
-    _callAnsweredSub?.cancel();
-    _debugSub?.cancel();
+    _connectionStateSub.cancel();
+    _incomingCallSub.cancel();
+    _callAnsweredSub.cancel();
+    _callEndedSub.cancel();
     _webrtcService.dispose();
     super.dispose();
   }
@@ -157,8 +187,16 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAF7),
       body: SafeArea(
-        child: Column(
+        child: Stack(
           children: [
+            // Hidden video element to play incoming WebRTC audio on web & mobile
+            SizedBox(
+              width: 1,
+              height: 1,
+              child: RTCVideoView(_webrtcService.remoteRenderer),
+            ),
+            Column(
+              children: [
             // Header
             Container(
               color: const Color(0xFF315E26),
@@ -177,7 +215,7 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
                       'Voice Consultation',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: Colors.white,
+                        color: const Color(0xFF315E26),
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
@@ -198,7 +236,7 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
                     height: 140,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white,
+                      color: const Color(0xFF315E26),
                       boxShadow: [
                         BoxShadow(
                           color: const Color(0xFF315E26).withOpacity(0.1),
@@ -250,7 +288,7 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.w300,
-                        color: Colors.white70,
+                        color: const Color(0xFF315E26),
                       ),
                     )
                   else
@@ -259,7 +297,7 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
                       style: const TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.w300,
-                        color: Colors.white,
+                        color: const Color(0xFF315E26),
                         letterSpacing: 2,
                         fontFamily: 'monospace',
                       ),
@@ -329,6 +367,8 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
                       ],
                     ),
                   ),
+              ],
+            ),
           ],
         ),
       ),
@@ -399,7 +439,7 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
             ),
             child: const Icon(
               Icons.call_end,
-              color: Colors.white,
+              color: const Color(0xFF315E26),
               size: 32,
             ),
           ),

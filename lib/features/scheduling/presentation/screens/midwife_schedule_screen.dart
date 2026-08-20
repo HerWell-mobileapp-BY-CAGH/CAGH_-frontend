@@ -1,3 +1,4 @@
+import 'package:cagh_frontend/core/services/global_call_service.dart';
 import 'package:flutter/material.dart';
 import 'package:cagh_frontend/features/consultations/data/services/midwife_api_service.dart';
 import 'package:cagh_frontend/features/consultations/data/repositories/midwife_repository_impl.dart';
@@ -45,6 +46,11 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
       final profile = await _repository.getMyProfile();
       final blocked = await _repository.getBlockedDates();
       final availData = await _appointmentsApi.getAvailabilities();
+      try {
+        final midwifeApts = await _appointmentsApi.getMidwifeAppointments();
+        final ids = midwifeApts.map((e) => e['id'].toString()).toList();
+        GlobalCallService.initMultiple(ids);
+      } catch (_) {}
       
       final availList = availData.map((e) => AvailabilitySlot.fromJson(e)).toList();
 

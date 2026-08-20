@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:mime/mime.dart';
 import 'api_config.dart';
-import 'auth_interceptor.dart';
+import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
 import 'package:logging/logging.dart';
 
 class MultipartApiClient {
@@ -23,8 +23,10 @@ class MultipartApiClient {
     final request = http.MultipartRequest(method, url);
 
     // Add authorization header
-    final headers = await AuthInterceptor.getHeaders();
-    request.headers.addAll(headers);
+    final token = await AuthService.getAccessToken();
+    if (token != null && token.isNotEmpty) {
+      request.headers['Authorization'] = 'Bearer $token';
+    }
 
     // Add normal string fields
     if (fields != null) {

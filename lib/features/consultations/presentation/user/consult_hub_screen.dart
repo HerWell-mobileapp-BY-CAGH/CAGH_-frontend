@@ -1,3 +1,4 @@
+import 'package:cagh_frontend/core/services/global_call_service.dart';
 import 'package:flutter/material.dart';
 import 'package:cagh_frontend/features/appointments/data/services/appointment_api_service.dart';
 import 'package:cagh_frontend/features/appointments/data/repositories/appointment_repository_impl.dart';
@@ -41,6 +42,12 @@ class _ConsultHubScreenState extends State<ConsultHubScreen> {
     try {
       final rawAppointments = await AppointmentApiService().getUserAppointments();
       _appointments = rawAppointments.map((json) => Appointment.fromJson(json)).toList();
+      for (var apt in _appointments) {
+        if (apt.status == AppointmentStatus.confirmed || apt.status == AppointmentStatus.pending) {
+          GlobalCallService.init(apt.appointmentId);
+          break;
+        }
+      }
       
       // Workaround: Resolve missing midwife names
       final missingNameIds = _appointments.where((a) => a.midwifeName == null).map((a) => a.midwifeId).toSet().toList();
