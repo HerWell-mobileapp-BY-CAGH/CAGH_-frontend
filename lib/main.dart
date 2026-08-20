@@ -13,19 +13,35 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
 import 'package:flutter_callkit_incoming/entities/call_kit_params.dart';
 import 'package:flutter_callkit_incoming/entities/call_event.dart';
+import 'package:flutter_callkit_incoming/entities/android_params.dart';
+import 'package:flutter_callkit_incoming/entities/ios_params.dart';
 import 'package:flutter/services.dart';
 import 'package:cagh_frontend/core/services/ringtone_service.dart';
+import 'package:cagh_frontend/core/services/global_call_service.dart';
+import 'package:cagh_frontend/shared/utils/name_formatter.dart';
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  if (message.data['action'] == 'INCOMING_CALL') {
+  final action = (message.data['action'] ?? message.data['type'] ?? '').toString();
+  if (action == 'INCOMING_CALL' || action == 'incoming_call_offer' || action == 'call_offer' || action == 'offer') {
     CallKitParams params = CallKitParams(
-      id: message.data['consultation_id'],
-      nameCaller: message.data['caller_name'],
-      appName: 'CAGH Health',
-      avatar: 'assets/images/caller_avatar.png',
-      type: 0, // 0 for Voice, 1 for Video
+      id: message.data['consultation_id']?.toString() ?? 'call_${DateTime.now().millisecondsSinceEpoch}',
+      nameCaller: NameFormatter.format((message.data['caller_name'] ?? message.data['sender_name'] ?? 'Care Provider').toString()),
+      appName: 'CAGH Digital Midwife',
+      avatar: 'assets/images/logo.png',
+      handle: 'End-to-End Encrypted Voice Call',
+      type: 0,
       duration: 30000,
       extra: message.data,
+      android: const AndroidParams(
+        isCustomNotification: true,
+        isShowLogo: false,
+        ringtonePath: 'system_ringtone_default',
+        backgroundColor: '#315E26',
+        actionColor: '#4CAF50',
+      ),
+      ios: const IOSParams(
+        supportsVideo: false,
+      ),
     );
     await FlutterCallkitIncoming.showCallkitIncoming(params);
   }
@@ -83,23 +99,30 @@ class _MyAppState extends State<MyApp> {
       
       if (event is CallEventActionCallAccept) {
         final extra = event.callKitParams.extra ?? {};
-        final consultationId = extra['consultation_id'];
-        final callerName = extra['caller_name'] ?? 'Caller';
+        final consultationId = extra['consultation_id'] ?? event.callKitParams.id;
+        final rawName = (extra['caller_name'] ?? extra['sender_name'] ?? 'Care Provider').toString();
+        final callerName = NameFormatter.format(rawName);
 
         if (consultationId != null) {
+          FlutterCallkitIncoming.endAllCalls();
           globalNavigatorKey.currentState?.push(
             MaterialPageRoute(
               builder: (context) => VoiceConsultationScreen(
                 consultationId: consultationId.toString(),
-                midwifeName: callerName.toString(),
-                phoneNumber: 'Incoming Call',
+                midwifeName: callerName,
+                phoneNumber: 'Active Call',
                 isCaller: false,
               ),
             ),
           );
         }
       } else if (event is CallEventActionCallDecline) {
-        // Future: hit backend to decline
+        final extra = event.callKitParams.extra ?? {};
+        final consultationId = extra['consultation_id'] ?? event.callKitParams.id;
+        if (consultationId != null) {
+          GlobalCallService.declineCall(consultationId.toString());
+        }
+        FlutterCallkitIncoming.endAllCalls();
       }
     });
   }

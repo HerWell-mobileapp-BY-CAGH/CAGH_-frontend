@@ -25,9 +25,10 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
   
   @override
   void initState() {
-    _initGlobalCallListener();
     super.initState();
     _loadProfile();
+    GlobalCallService.initUserCallListener();
+    _initGlobalCallListener();
   }
 
   Future<void> _loadProfile() async {

@@ -5,8 +5,11 @@ import 'package:cagh_frontend/shared/models/appointment.dart';
 import 'package:cagh_frontend/features/consultations/data/services/webrtc_service.dart';
 import 'package:cagh_frontend/features/consultations/data/services/consultation_api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
+import 'package:cagh_frontend/core/network/api_config.dart';
 import 'package:cagh_frontend/core/services/global_call_service.dart';
 import 'package:cagh_frontend/core/services/ringtone_service.dart';
+import 'package:cagh_frontend/shared/utils/name_formatter.dart';
 
 class VoiceCallScreen extends StatefulWidget {
   final Appointment appointment;
@@ -54,19 +57,21 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
   void _initializeCall() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token') ?? '';
+      final rawToken = await AuthService.getAccessToken() ?? prefs.getString('auth_token') ?? prefs.getString('access_token') ?? prefs.getString('access') ?? '';
+      var token = rawToken.trim();
+      if (token.startsWith('Bearer ')) token = token.substring(7).trim();
+      token = token.replaceAll('"', '').replaceAll("'", '').trim();
 
       final response = await _apiService.startConsultation(widget.consultationId);
-      final baseWsUrl = response['ws_url'] ?? response['consultation']?['voice_session']?['ws_signaling_url'];
+      final baseWsUrl = response['ws_url'] ?? response['consultation']?['voice_session']?['ws_signaling_url'] ?? '${ApiConfig.wsUrl}/consultation/${widget.consultationId}/';
       final sessionKey = response['session_key'] ?? response['consultation']?['voice_session']?['session_key'] ?? response['consultation']?['voice_session']?['rtc_token'];
-      
-      if (baseWsUrl == null) throw Exception("Failed to get signaling URL");
 
       // Construct final WebSocket URL with token and session_key
       final wsUrl = '$baseWsUrl${baseWsUrl.contains('?') ? '&' : '?'}token=$token${sessionKey != null ? '&session_key=$sessionKey' : ''}';
 
       _connectionStateSub = _webrtcService.connectionStateStream.listen((state) {
         if (state == RTCPeerConnectionState.RTCPeerConnectionStateConnected) {
+          _webrtcService.toggleSpeaker(_isSpeakerOn);
           if (mounted && !_isConnected) {
             setState(() {
               _isConnected = true;
@@ -82,6 +87,7 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
       });
 
       _callAnsweredSub = _webrtcService.callAnsweredStream.listen((_) {
+        _webrtcService.toggleSpeaker(_isSpeakerOn);
         if (mounted && !_isConnected) {
           setState(() {
             _isConnected = true;
@@ -191,41 +197,43 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
           children: [
             // Hidden video element to play incoming WebRTC audio on web & mobile
             SizedBox(
-              width: 1,
-              height: 1,
-              child: RTCVideoView(_webrtcService.remoteRenderer),
+              width: 100,
+              height: 100,
+              child: Opacity(
+                opacity: 0.01,
+                child: RTCVideoView(_webrtcService.remoteRenderer),
+              ),
             ),
             Column(
               children: [
-            // Header
-            Container(
-              color: const Color(0xFF315E26),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.amber),
-                    onPressed: () {
-                      // Depending on logic, this might background the call instead of ending it
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                  const Expanded(
-                    child: Text(
-                      'Voice Consultation',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: const Color(0xFF315E26),
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                // Header
+                Container(
+                  color: const Color(0xFF315E26),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back, color: Colors.amber),
+                        onPressed: () {
+                          // Depending on logic, this might background the call instead of ending it
+                          Navigator.of(context).pop();
+                        },
                       ),
-                    ),
+                      const Expanded(
+                        child: Text(
+                          'Voice Consultation',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Color(0xFF315E26),
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 48), // To balance the back button
+                    ],
                   ),
-                  const SizedBox(width: 48), // To balance the back button
-                ],
-              ),
-            ),
-            
+                ),
             Expanded(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -261,7 +269,7 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
                   
                   // Name
                   Text(
-                    participantName,
+                    NameFormatter.format(participantName),
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w900,
@@ -269,17 +277,30 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  
-                  // Phone Number or Status
-                  Text(
-                    '+251-995-756-55', // Placeholder, use appointment.userPhone if available
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF315E26),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade50,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.green.shade200),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.lock, size: 13, color: Color(0xFF315E26)),
+                        SizedBox(width: 6),
+                        Text(
+                          'End-to-End Encrypted',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF315E26),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 24),
                   
                   // Status / Timer
                   if (_isRinging)
@@ -288,7 +309,7 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.w300,
-                        color: const Color(0xFF315E26),
+                        color: Color(0xFF315E26),
                       ),
                     )
                   else
@@ -297,7 +318,7 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
                       style: const TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.w300,
-                        color: const Color(0xFF315E26),
+                        color: Color(0xFF315E26),
                         letterSpacing: 2,
                         fontFamily: 'monospace',
                       ),
@@ -318,6 +339,7 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
                           label: 'Decline',
                           color: Colors.red,
                           onTap: () {
+                            RingtoneService.stopRingtone();
                             _webrtcService.declineCall();
                             _endCall();
                           },
@@ -327,6 +349,7 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
                           label: 'Accept',
                           color: Colors.green,
                           onTap: () {
+                            RingtoneService.stopRingtone();
                             if (_incomingOffer != null) {
                               _webrtcService.acceptCall(_incomingOffer!);
                               setState(() {
@@ -353,7 +376,7 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
                           onTap: _toggleMute,
                         ),
                         _buildControlButton(
-                          icon: Icons.volume_up,
+                          icon: _isSpeakerOn ? Icons.volume_up : Icons.volume_off,
                           label: 'Speaker',
                           isActive: _isSpeakerOn,
                           onTap: _toggleSpeaker,
@@ -362,7 +385,11 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
                           icon: Icons.call_end,
                           label: 'End Call',
                           color: Colors.red,
-                          onTap: _endCall,
+                          onTap: () async {
+                            RingtoneService.stopRingtone();
+                            await _webrtcService.declineCall();
+                            _endCall();
+                          },
                         ),
                       ],
                     ),
@@ -384,7 +411,8 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
     Color? color,
   }) {
     final action = onTap ?? onPressed;
-    final btnColor = color ?? (isActive ? Colors.grey.shade300 : Colors.grey.shade200);
+    final btnColor = color ?? (isActive ? const Color(0xFF315E26) : Colors.grey.shade200);
+    final iconColor = color != null ? Colors.white : (isActive ? Colors.white : Colors.black87);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -396,10 +424,17 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> {
             decoration: BoxDecoration(
               color: btnColor,
               shape: BoxShape.circle,
+              boxShadow: isActive ? [
+                BoxShadow(
+                  color: const Color(0xFF315E26).withValues(alpha: 0.3),
+                  blurRadius: 10,
+                  spreadRadius: 2,
+                ),
+              ] : null,
             ),
             child: Icon(
               icon,
-              color: color != null ? Colors.white : (isActive ? Colors.black87 : Colors.black54),
+              color: iconColor,
               size: 28,
             ),
           ),

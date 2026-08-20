@@ -6,6 +6,7 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:cagh_frontend/main.dart';
 import 'package:cagh_frontend/core/network/api_config.dart';
 import 'package:cagh_frontend/core/services/ringtone_service.dart';
+import 'package:cagh_frontend/shared/utils/name_formatter.dart';
 import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
 import 'package:cagh_frontend/features/consultations/presentation/user/voice_consultation_screen.dart';
 
@@ -17,21 +18,44 @@ class GlobalCallService {
   static bool isCallActive = false;
   static String? currentUserId;
 
+  static String? _getUserIdFromJwt(String token) {
+    try {
+      final parts = token.split('.');
+      if (parts.length != 3) return null;
+      var payload = parts[1];
+      while (payload.length % 4 != 0) {
+        payload += '=';
+      }
+      final decodedBytes = base64Url.decode(payload);
+      final decodedMap = jsonDecode(utf8.decode(decodedBytes));
+      if (decodedMap is Map) {
+        final id = decodedMap['user_id'] ?? decodedMap['id'] ?? decodedMap['user']?['id'] ?? decodedMap['sub'];
+        return id?.toString();
+      }
+    } catch (e) {
+      debugPrint('Error decoding JWT user_id: $e');
+    }
+    return null;
+  }
+
+  static Future<String> _getSanitizedToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    final rawToken = await AuthService.getAccessToken() ?? prefs.getString('auth_token') ?? prefs.getString('access_token') ?? prefs.getString('access') ?? '';
+    var token = rawToken.trim();
+    if (token.startsWith('Bearer ')) token = token.substring(7).trim();
+    return token.replaceAll('"', '').replaceAll("'", '').trim();
+  }
+
   static Future<void> initUserCallListener() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final rawToken = await AuthService.getAccessToken() ?? prefs.getString('auth_token') ?? prefs.getString('access_token') ?? prefs.getString('access') ?? '';
-      var token = rawToken.trim();
-      if (token.startsWith('Bearer ')) token = token.substring(7).trim();
-      token = token.replaceAll('"', '').replaceAll("'", '');
-
+      final token = await _getSanitizedToken();
       if (token.isEmpty) {
         debugPrint('GlobalCallService: Token is empty, skipping listener');
         return;
       }
 
-      final userData = await AuthService.getUserData();
-      currentUserId = (userData['id'] ?? userData['user_id'] ?? userData['pk'] ?? '').toString();
+      currentUserId = _getUserIdFromJwt(token);
+      debugPrint('GlobalCallService: currentUserId = $currentUserId');
 
       final wsUrlString = '${ApiConfig.wsUrl}/user-calls/?token=$token';
       final wsUrl = Uri.parse(wsUrlString);
@@ -41,7 +65,6 @@ class GlobalCallService {
       _userCallChannel = WebSocketChannel.connect(wsUrl);
       debugPrint('GlobalCallService: Listening on user-calls WebSocket');
 
-      // Keepalive heartbeat ping every 25 seconds for Render/Nginx proxies
       _heartbeatTimer = Timer.periodic(const Duration(seconds: 25), (timer) {
         try {
           if (_userCallChannel != null) {
@@ -62,10 +85,11 @@ class GlobalCallService {
 
             // Ignore calls initiated by oneself
             if (currentUserId != null && currentUserId!.isNotEmpty && senderId == currentUserId) {
+              debugPrint('GlobalCallService: Ignoring self call offer');
               return;
             }
 
-            if (eventType == 'incoming_call_offer' || eventType == 'call_offer') {
+            if (eventType == 'incoming_call_offer' || eventType == 'call_offer' || eventType == 'offer') {
               if (!_isRingingShown && !isCallActive) {
                 _showIncomingCallModal(data, data['consultation_id']?.toString() ?? '');
               }
@@ -103,8 +127,7 @@ class GlobalCallService {
   static Future<void> initMultiple(List<String> appointmentIds) async {
     await initUserCallListener();
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token') ?? prefs.getString('access_token') ?? prefs.getString('access') ?? '';
+      final token = await _getSanitizedToken();
       if (token.isEmpty) return;
 
       for (var id in appointmentIds) {
@@ -129,7 +152,7 @@ class GlobalCallService {
                 return;
               }
 
-              if (eventType == 'incoming_call_offer' || eventType == 'call_offer') {
+              if (eventType == 'incoming_call_offer' || eventType == 'call_offer' || eventType == 'offer') {
                 if (!_isRingingShown && !isCallActive) {
                   _showIncomingCallModal(data, id);
                 }
@@ -157,20 +180,21 @@ class GlobalCallService {
 
   static void declineCall(String consultationId) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token') ?? prefs.getString('access_token') ?? prefs.getString('access') ?? '';
+      final token = await _getSanitizedToken();
       if (token.isEmpty || consultationId.isEmpty || consultationId == 'null') return;
 
       final wsUrlString = '${ApiConfig.wsUrl}/consultation/$consultationId/?token=$token';
       final wsUrl = Uri.parse(wsUrlString);
       final channel = WebSocketChannel.connect(wsUrl);
+      
+      // Allow WebSocket connection to open before sending frame
+      await Future.delayed(const Duration(milliseconds: 250));
       channel.sink.add(jsonEncode({
         'action': 'end_call',
         'type': 'end_call',
       }));
-      Future.delayed(const Duration(milliseconds: 500), () {
-        channel.sink.close();
-      });
+      await Future.delayed(const Duration(milliseconds: 400));
+      channel.sink.close();
     } catch (e) {
       debugPrint('Failed to send decline end_call: $e');
     }
@@ -184,7 +208,8 @@ class GlobalCallService {
 
     _isRingingShown = true;
     RingtoneService.playIncomingRingtone();
-    final callerName = data['sender_name'] ?? 'Care Provider';
+    final rawName = (data['sender_name'] ?? data['sender_full_name'] ?? 'Care Provider').toString();
+    final callerName = NameFormatter.format(rawName);
     final consultationId = data['consultation_id'] ?? defaultAppointmentId;
 
     showDialog(
@@ -214,9 +239,16 @@ class GlobalCallService {
               style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 6),
-            const Text(
-              'Incoming Voice Consultation...',
-              style: TextStyle(color: Colors.white70, fontSize: 14),
+            const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.lock, size: 12, color: Colors.white70),
+                SizedBox(width: 4),
+                Text(
+                  'End-to-End Encrypted Voice Call',
+                  style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w500),
+                ),
+              ],
             ),
           ],
         ),

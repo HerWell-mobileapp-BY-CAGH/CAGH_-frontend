@@ -115,7 +115,7 @@ class WebrtcService {
                 );
                 await handleRemoteCandidate(candidate);
               }
-            } else if (eventType == 'call_ended' || eventType == 'end_call') {
+            } else if (eventType == 'call_ended' || eventType == 'end_call' || eventType == 'broadcast_call_ended' || eventType == 'decline_call') {
               _callEndedController.add(null);
               dispose();
             }
@@ -126,10 +126,12 @@ class WebrtcService {
         onError: (e) {
           _debugController.add('WS ERROR: $e');
           debugPrint('WebrtcService WS Error: $e');
+          if (!_isDisposed) _callEndedController.add(null);
         },
         onDone: () {
           _debugController.add('WS CLOSED');
           debugPrint('WebrtcService WS Closed');
+          if (!_isDisposed) _callEndedController.add(null);
         },
       );
     } catch (e) {
@@ -184,6 +186,10 @@ class WebrtcService {
       if (state == RTCPeerConnectionState.RTCPeerConnectionStateConnected) {
         _isCallAccepted = true;
         _offerHeartbeatTimer?.cancel();
+      } else if (state == RTCPeerConnectionState.RTCPeerConnectionStateDisconnected ||
+                 state == RTCPeerConnectionState.RTCPeerConnectionStateFailed ||
+                 state == RTCPeerConnectionState.RTCPeerConnectionStateClosed) {
+        if (!_isDisposed) _callEndedController.add(null);
       }
       _connectionStateController.add(state);
     };
@@ -193,6 +199,7 @@ class WebrtcService {
       if (event.streams.isNotEmpty) {
         _remoteStream = event.streams[0];
         _remoteRenderer.srcObject = _remoteStream;
+        _remoteRenderer.muted = false;
         _remoteStreamController.add(_remoteStream);
       }
     };
@@ -201,6 +208,7 @@ class WebrtcService {
       debugPrint('Remote stream added: ${stream.id}');
       _remoteStream = stream;
       _remoteRenderer.srcObject = _remoteStream;
+      _remoteRenderer.muted = false;
       _remoteStreamController.add(_remoteStream);
     };
 
@@ -258,11 +266,14 @@ class WebrtcService {
     }
   }
 
-  void declineCall() {
-    _channel?.sink.add(jsonEncode({
-      'action': 'end_call',
-      'type': 'end_call',
-    }));
+  Future<void> declineCall() async {
+    try {
+      _channel?.sink.add(jsonEncode({
+        'action': 'end_call',
+        'type': 'end_call',
+      }));
+      await Future.delayed(const Duration(milliseconds: 250));
+    } catch (_) {}
     dispose();
   }
 
@@ -293,8 +304,20 @@ class WebrtcService {
   }
 
   Future<void> toggleSpeaker(bool useSpeaker) async {
-    if (!kIsWeb) {
-      Helper.setSpeakerphoneOn(useSpeaker);
+    try {
+      _remoteRenderer.muted = !useSpeaker;
+      if (kIsWeb) {
+        if (_remoteStream != null) {
+          for (var track in _remoteStream!.getAudioTracks()) {
+            track.enabled = useSpeaker;
+          }
+        }
+      } else {
+        await Helper.setSpeakerphoneOn(useSpeaker);
+      }
+      debugPrint('WebrtcService: Speaker set to $useSpeaker (muted: ${!useSpeaker})');
+    } catch (e) {
+      debugPrint('Error toggling speaker: $e');
     }
   }
 

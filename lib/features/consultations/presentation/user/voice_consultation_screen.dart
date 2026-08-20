@@ -4,8 +4,11 @@ import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../data/services/webrtc_service.dart';
 import '../../data/services/consultation_api_service.dart';
+import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
+import 'package:cagh_frontend/core/network/api_config.dart';
 import 'package:cagh_frontend/core/services/global_call_service.dart';
 import 'package:cagh_frontend/core/services/ringtone_service.dart';
+import 'package:cagh_frontend/shared/utils/name_formatter.dart';
 
 class VoiceConsultationScreen extends StatefulWidget {
   final String consultationId;
@@ -37,31 +40,34 @@ class _VoiceConsultationScreenState extends State<VoiceConsultationScreen> {
   late StreamSubscription<RTCPeerConnectionState> _connectionStateSub;
   late StreamSubscription<RTCSessionDescription> _incomingCallSub;
   late StreamSubscription<void> _callAnsweredSub;
-  late StreamSubscription<String> _debugSub;
   late StreamSubscription<void> _callEndedSub;
+  late StreamSubscription<String> _debugSub;
   RTCSessionDescription? _incomingOffer;
   bool _isRinging = false;
 
   @override
   void initState() {
     super.initState();
-    GlobalCallService.isCallActive = true;
     _startCall();
   }
 
   Future<void> _startCall() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token') ?? '';
+      final rawToken = await AuthService.getAccessToken() ?? prefs.getString('auth_token') ?? prefs.getString('access_token') ?? prefs.getString('access') ?? '';
+      var token = rawToken.trim();
+      if (token.startsWith('Bearer ')) token = token.substring(7).trim();
+      token = token.replaceAll('"', '').replaceAll("'", '').trim();
 
       final response = await _apiService.startConsultation(widget.consultationId);
-      final baseWsUrl = response['ws_url'] ?? response['consultation']?['voice_session']?['ws_signaling_url'];
+      final baseWsUrl = response['ws_url'] ?? response['consultation']?['voice_session']?['ws_signaling_url'] ?? '${ApiConfig.wsUrl}/consultation/${widget.consultationId}/';
       final sessionKey = response['session_key'] ?? response['consultation']?['voice_session']?['session_key'] ?? response['consultation']?['voice_session']?['rtc_token'];
 
       if (baseWsUrl != null) {
         final wsUrl = '$baseWsUrl${baseWsUrl.contains('?') ? '&' : '?'}token=$token${sessionKey != null ? '&session_key=$sessionKey' : ''}';
         _connectionStateSub = _webrtcService.connectionStateStream.listen((state) {
           if (state == RTCPeerConnectionState.RTCPeerConnectionStateConnected) {
+            _webrtcService.toggleSpeaker(_isSpeaker);
             if (mounted && !_isConnected) {
               setState(() {
                 _isConnected = true;
@@ -72,12 +78,12 @@ class _VoiceConsultationScreenState extends State<VoiceConsultationScreen> {
           } else if (state == RTCPeerConnectionState.RTCPeerConnectionStateDisconnected || 
               state == RTCPeerConnectionState.RTCPeerConnectionStateFailed ||
               state == RTCPeerConnectionState.RTCPeerConnectionStateClosed) {
-            _timer?.cancel();
             if (mounted) Navigator.pop(context);
           }
         });
 
         _callAnsweredSub = _webrtcService.callAnsweredStream.listen((_) {
+          _webrtcService.toggleSpeaker(_isSpeaker);
           if (mounted && !_isConnected) {
             setState(() {
               _isConnected = true;
@@ -88,45 +94,43 @@ class _VoiceConsultationScreenState extends State<VoiceConsultationScreen> {
         });
 
         _callEndedSub = _webrtcService.callEndedStream.listen((_) {
+          RingtoneService.stopRingtone();
+          GlobalCallService.isCallActive = false;
           _timer?.cancel();
+          _webrtcService.dispose();
           if (mounted) Navigator.pop(context);
         });
 
-        _incomingCallSub = _webrtcService.incomingCallStream.listen((offer) async {
-          if (mounted) {
+      _incomingCallSub = _webrtcService.incomingCallStream.listen((offer) async {
+        if (mounted) {
+          setState(() {
+            _isRinging = true;
+            _incomingOffer = offer;
+          });
+          await _webrtcService.acceptCall(offer);
+          if (mounted && !_isConnected) {
             setState(() {
-              _isRinging = true;
-              _incomingOffer = offer;
+              _isConnected = true;
+              _isRinging = false;
+              _startTimer();
             });
-            await _webrtcService.acceptCall(offer);
-            if (mounted && !_isConnected) {
-              setState(() {
-                _isConnected = true;
-                _isRinging = false;
-                _startTimer();
-              });
-            }
           }
-        });
-
-        if (widget.isCaller) {
-          RingtoneService.playOutgoingRingback();
         }
+      });
 
         await _webrtcService.connect(wsUrl, widget.isCaller);
       }
     } catch (e) {
-      RingtoneService.stopRingtone();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Call failed: $e'), backgroundColor: Colors.red, duration: const Duration(seconds: 10)),
         );
+        // Do not pop, let the user read the error
       }
     }
   }
 
   void _startTimer() {
-    RingtoneService.stopRingtone();
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_isConnected) {
@@ -173,16 +177,17 @@ class _VoiceConsultationScreenState extends State<VoiceConsultationScreen> {
         ),
         centerTitle: true,
       ),
-      body: Stack(
+      body: Column(
         children: [
-          // Hidden video element to play incoming WebRTC audio on web & mobile
+          // Hidden RTCVideoView to attach WebRTC Audio Stream to DOM
           SizedBox(
-            width: 1,
-            height: 1,
-            child: RTCVideoView(_webrtcService.remoteRenderer),
+            width: 100,
+            height: 100,
+            child: Opacity(
+              opacity: 0.01,
+              child: RTCVideoView(_webrtcService.remoteRenderer),
+            ),
           ),
-          Column(
-            children: [
           Expanded(
             child: Center(
               child: Column(
@@ -212,7 +217,7 @@ class _VoiceConsultationScreenState extends State<VoiceConsultationScreen> {
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    widget.midwifeName,
+                    NameFormatter.format(widget.midwifeName),
                     style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
@@ -220,12 +225,27 @@ class _VoiceConsultationScreenState extends State<VoiceConsultationScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    widget.phoneNumber,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF315E26),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade50,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.green.shade200),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.lock, size: 13, color: Color(0xFF315E26)),
+                        SizedBox(width: 6),
+                        Text(
+                          'End-to-End Encrypted',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF315E26),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -266,7 +286,9 @@ class _VoiceConsultationScreenState extends State<VoiceConsultationScreen> {
                     color: Colors.red,
                     isEndCall: true,
                     onTap: () {
+                      RingtoneService.stopRingtone();
                       _webrtcService.declineCall();
+                      GlobalCallService.isCallActive = false;
                       if (mounted) Navigator.pop(context);
                     },
                   ),
@@ -275,6 +297,7 @@ class _VoiceConsultationScreenState extends State<VoiceConsultationScreen> {
                     label: 'Accept',
                     color: Colors.green,
                     onTap: () {
+                      RingtoneService.stopRingtone();
                       if (_incomingOffer != null) {
                         _webrtcService.acceptCall(_incomingOffer!);
                         setState(() {
@@ -306,12 +329,7 @@ class _VoiceConsultationScreenState extends State<VoiceConsultationScreen> {
                     },
                   ),
                   _buildControlButton(
-                    icon: Icons.dialpad,
-                    label: 'Keypad',
-                    onTap: () {},
-                  ),
-                  _buildControlButton(
-                    icon: _isSpeaker ? Icons.volume_up : Icons.volume_down,
+                    icon: _isSpeaker ? Icons.volume_up : Icons.volume_off,
                     label: 'Speaker',
                     isActive: _isSpeaker,
                     onTap: () {
@@ -324,10 +342,13 @@ class _VoiceConsultationScreenState extends State<VoiceConsultationScreen> {
                   _buildControlButton(
                     icon: Icons.call_end,
                     label: 'End Call',
+                    color: Colors.red,
                     isEndCall: true,
                     onTap: () async {
+                      RingtoneService.stopRingtone();
+                      await _webrtcService.declineCall();
+                      GlobalCallService.isCallActive = false;
                       _timer?.cancel();
-                      _webrtcService.dispose();
                       await _apiService.endVoiceSession(widget.consultationId);
                       if (mounted) Navigator.pop(context);
                     },
@@ -335,11 +356,9 @@ class _VoiceConsultationScreenState extends State<VoiceConsultationScreen> {
                 ],
               ),
             ),
-          ],
-        ),
-      ],
-    ),
-  );
+        ],
+      ),
+    );
   }
 
   Widget _buildControlButton({
@@ -350,7 +369,8 @@ class _VoiceConsultationScreenState extends State<VoiceConsultationScreen> {
     bool isActive = false,
     Color? color,
   }) {
-    final btnColor = color ?? (isEndCall ? Colors.red : (isActive ? Colors.grey.shade300 : const Color(0xFFF0F0F0)));
+    final btnColor = color ?? (isEndCall ? Colors.red : (isActive ? const Color(0xFF315E26) : const Color(0xFFF0F0F0)));
+    final iconColor = isEndCall ? Colors.white : (isActive ? Colors.white : Colors.black87);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -362,11 +382,18 @@ class _VoiceConsultationScreenState extends State<VoiceConsultationScreen> {
             decoration: BoxDecoration(
               color: btnColor,
               shape: BoxShape.circle,
+              boxShadow: isActive ? [
+                BoxShadow(
+                  color: const Color(0xFF315E26).withValues(alpha: 0.3),
+                  blurRadius: 10,
+                  spreadRadius: 2,
+                ),
+              ] : null,
             ),
             child: Icon(
               icon,
               size: 28,
-              color: (isEndCall || color != null) ? Colors.white : Colors.black87,
+              color: iconColor,
             ),
           ),
         ),
