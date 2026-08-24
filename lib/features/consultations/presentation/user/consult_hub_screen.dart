@@ -11,6 +11,8 @@ import 'package:cagh_frontend/features/consultations/data/services/midwife_api_s
 import 'package:cagh_frontend/shared/models/midwife_profile.dart';
 import 'package:cagh_frontend/features/consultations/data/services/consultation_api_service.dart';
 import 'chat_screen.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cagh_frontend/features/consultations/presentation/providers/chat_notification_provider.dart';
 
 class ConsultHubScreen extends StatefulWidget {
   final VoidCallback? onFindMidwifeTap;
@@ -613,6 +615,7 @@ class _ConsultHubScreenState extends State<ConsultHubScreen> {
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) => ChatScreen(
+                                        myUserId: apt.userId,
                                         midwife: MidwifeProfile(
                                           id: apt.midwifeId,
                                           userId: apt.midwifeId,
@@ -639,10 +642,30 @@ class _ConsultHubScreenState extends State<ConsultHubScreen> {
                                     ),
                                   );
                                 },
-                                child: Icon(
-                                  Icons.chat_bubble_outline_rounded,
-                                  size: 20,
-                                  color: Colors.grey.shade700,
+                                child: Consumer(
+                                  builder: (context, ref, child) {
+                                    final unreadMap = ref.watch(chatNotificationProvider);
+                                    // Use the midwife's ID to check for unread messages with this specific midwife
+                                    final unreadCount = unreadMap['midwife_${apt.midwifeId}'] ?? 0;
+                                    
+                                    Widget icon = Icon(
+                                      Icons.chat_bubble_outline_rounded,
+                                      size: 20,
+                                      color: Colors.grey.shade700,
+                                    );
+                                    
+                                    if (unreadCount > 0) {
+                                      return Badge(
+                                        label: Text(
+                                          unreadCount > 9 ? '9+' : '$unreadCount', 
+                                          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)
+                                        ),
+                                        backgroundColor: Colors.red,
+                                        child: icon,
+                                      );
+                                    }
+                                    return icon;
+                                  },
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -660,7 +683,9 @@ class _ConsultHubScreenState extends State<ConsultHubScreen> {
 
                       // Title
                       Text(
-                        'General Checkup', // Or map from apt if available
+                        (apt.reason != null && apt.reason!.trim().isNotEmpty)
+                            ? apt.reason!
+                            : 'General Checkup',
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,

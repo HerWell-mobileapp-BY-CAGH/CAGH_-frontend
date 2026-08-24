@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cagh_frontend/shared/models/midwife_profile.dart';
 import 'package:cagh_frontend/features/consultations/data/services/chat_api_service.dart';
 import 'package:cagh_frontend/features/consultations/data/services/chat_websocket_service.dart';
@@ -7,8 +8,9 @@ import 'package:file_picker/file_picker.dart';
 
 class ChatScreen extends StatefulWidget {
   final MidwifeProfile midwife;
+  final String? myUserId;
 
-  const ChatScreen({super.key, required this.midwife});
+  const ChatScreen({super.key, required this.midwife, this.myUserId});
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -34,7 +36,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _initializeChat() async {
     try {
-      // For now, we will identify "me" if the sender ID does not match the midwife ID
+      final prefs = await SharedPreferences.getInstance();
+      _myUserId = prefs.getInt('user_id')?.toString() ?? prefs.getString('user_id') ?? '';
       
       // 1. Fetch all rooms
       final rooms = await ChatApiService.getChatRooms();
@@ -42,7 +45,8 @@ class _ChatScreenState extends State<ChatScreen> {
       // 2. Find room with this midwife
       Map<String, dynamic>? currentRoom;
       for (var room in rooms) {
-        if (room['midwife'] == widget.midwife.id) {
+        String? midwifeId = room['midwife'] is Map ? room['midwife']['id']?.toString() : room['midwife']?.toString();
+        if (midwifeId == widget.midwife.id.toString()) {
           currentRoom = room;
           break;
         }
@@ -82,7 +86,16 @@ class _ChatScreenState extends State<ChatScreen> {
       onMessageReceived: (data) {
         if (mounted) {
           setState(() {
-            _messages.add(_parseMessage(data));
+            final parsedMsg = _parseMessage(data);
+            // Deduplicate local optimistic messages
+            _messages.removeWhere((m) => 
+                m['id'].toString().startsWith('local-') && 
+                m['text'] == parsedMsg['text']);
+            
+            // Also ensure we don't add duplicate server messages
+            if (!_messages.any((m) => m['id'].toString() == parsedMsg['id'].toString())) {
+              _messages.add(parsedMsg);
+            }
           });
           _scrollToBottom();
         }
@@ -114,14 +127,26 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Map<String, dynamic> _parseMessage(Map<String, dynamic> msg) {
-    final sentAt = DateTime.parse(msg['sent_at'] ?? DateTime.now().toIso8601String()).toLocal();
+    final sentAt = DateTime.tryParse(msg['sent_at'] ?? '')?.toLocal() ?? DateTime.now();
     final timeString = DateFormat('h:mm a').format(sentAt);
     
+    String? senderId = msg['sender'] is Map ? msg['sender']['id']?.toString() : msg['sender']?.toString();
+
+    bool isMe = false;
+    if (senderId != null) {
+      if (widget.myUserId != null) {
+        isMe = senderId == widget.myUserId;
+      } else {
+        // Fallback if myUserId is not provided (should not happen if navigating from ConsultHub)
+        isMe = senderId != widget.midwife.userId.toString() && senderId != widget.midwife.id.toString();
+      }
+    }
+
     return {
       "id": msg['id'],
       "text": msg['content'] ?? '',
       "time": timeString,
-      "isMe": msg['sender'] != widget.midwife.id,
+      "isMe": isMe,
       "isRead": msg['status'] == 'READ',
       "type": msg['message_type'],
       "attachment": msg['attachment'],
@@ -185,8 +210,21 @@ class _ChatScreenState extends State<ChatScreen> {
 
     // Existing accepted room
     if (_wsService != null && _roomStatus == 'ACCEPTED') {
+      final now = DateTime.now();
+      setState(() {
+        _messages.add({
+          "id": "local-${now.millisecondsSinceEpoch}",
+          "text": text,
+          "time": DateFormat('h:mm a').format(now),
+          "isMe": true,
+          "isRead": false,
+          "type": "TEXT",
+        });
+      });
+      
       _wsService!.sendMessage(text);
       _messageController.clear();
+      _scrollToBottom();
     }
   }
 
@@ -227,7 +265,7 @@ class _ChatScreenState extends State<ChatScreen> {
     } catch (e) {
       debugPrint('File upload error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to upload file.'), backgroundColor: Colors.red),
+        SnackBar(content: Text('Failed to upload file: $e'), backgroundColor: Colors.red),
       );
     } finally {
       if (mounted) {
@@ -532,7 +570,6 @@ class _ChatScreenState extends State<ChatScreen> {
                         ),
                       ),
                     ),
-                    Icon(Icons.mic_none, color: disabled ? Colors.grey.shade300 : Colors.grey.shade500, size: 22),
                   ],
                 ),
               ),
