@@ -7,7 +7,6 @@ import 'package:cagh_frontend/shared/widgets/globe_language_picker.dart';
 import 'package:cagh_frontend/features/consultations/data/services/midwife_api_service.dart';
 import 'package:cagh_frontend/features/consultations/data/repositories/midwife_repository_impl.dart';
 import 'package:cagh_frontend/shared/models/midwife_profile.dart';
-import 'package:cagh_frontend/shared/widgets/hotline_fab.dart';
 
 class FindMidwifeScreen extends StatefulWidget {
   final VoidCallback? onBack;
@@ -375,18 +374,6 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
             ),
           ),
 
-          // Floating Action Buttons Overlay (Bottom Right)
-          Positioned(
-            right: 20,
-            bottom: 20,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // 24/7 Telehealth Call Badge with Shared Hover Effect
-                const HotlineFab(),
-              ],
-            ),
-          ),
         ],
       ),
     );

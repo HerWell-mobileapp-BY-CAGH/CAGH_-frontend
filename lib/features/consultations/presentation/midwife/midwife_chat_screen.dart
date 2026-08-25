@@ -6,16 +6,19 @@ import 'package:cagh_frontend/features/consultations/data/services/chat_websocke
 import 'package:intl/intl.dart';
 import 'package:file_picker/file_picker.dart';
 
-class MidwifeChatScreen extends StatefulWidget {
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cagh_frontend/features/consultations/presentation/providers/chat_notification_provider.dart';
+
+class MidwifeChatScreen extends ConsumerStatefulWidget {
   final Appointment appointment;
 
   const MidwifeChatScreen({super.key, required this.appointment});
 
   @override
-  State<MidwifeChatScreen> createState() => _MidwifeChatScreenState();
+  ConsumerState<MidwifeChatScreen> createState() => _MidwifeChatScreenState();
 }
 
-class _MidwifeChatScreenState extends State<MidwifeChatScreen> {
+class _MidwifeChatScreenState extends ConsumerState<MidwifeChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   
@@ -90,9 +93,17 @@ class _MidwifeChatScreenState extends State<MidwifeChatScreen> {
           }
         });
 
-        if (_roomStatus == 'ACCEPTED') {
-          _connectWebSocket();
+        // Connect WebSocket always
+        await _connectWebSocket();
+
+        // 5. Mark messages as read and clear local badge
+        try {
+          await ChatApiService.markMessagesAsRead(_roomId!);
+        } catch (e) {
+          debugPrint("markMessagesAsRead failed: $e");
         }
+        _wsService?.markRead();
+        ref.read(chatNotificationProvider.notifier).markRoomAsReadLocally(_roomId!, userId: widget.appointment.userId.toString());
       }
     } catch (e) {
       debugPrint("Error initializing chat: $e");
@@ -113,7 +124,7 @@ class _MidwifeChatScreenState extends State<MidwifeChatScreen> {
     }
   }
 
-  void _connectWebSocket() async {
+  Future<void> _connectWebSocket() async {
     if (_roomId == null) return;
     
     _wsService = ChatWebSocketService(
@@ -129,6 +140,10 @@ class _MidwifeChatScreenState extends State<MidwifeChatScreen> {
             // Also ensure we don't add duplicate server messages
             if (!_messages.any((m) => m['id'].toString() == parsedMsg['id'].toString())) {
               _messages.add(parsedMsg);
+              // It's a new message, we are on the screen, mark it as read
+              if (!parsedMsg['isMe']) {
+                _wsService?.markRead();
+              }
             }
           });
           _scrollToBottom();
@@ -138,7 +153,12 @@ class _MidwifeChatScreenState extends State<MidwifeChatScreen> {
         if (mounted) {
           setState(() {
             for (var msg in _messages) {
-              if (data['message_ids']?.contains(msg['id']) ?? false) {
+              if (data['message_ids'] != null) {
+                if (data['message_ids'].contains(msg['id'])) {
+                  msg['isRead'] = true;
+                }
+              } else {
+                // If message_ids is missing, assume all previous messages are read
                 msg['isRead'] = true;
               }
             }
@@ -329,6 +349,126 @@ class _MidwifeChatScreenState extends State<MidwifeChatScreen> {
     super.dispose();
   }
 
+  Widget _buildMessageBubble({
+    required String text,
+    required String time,
+    required bool isMe,
+    required bool isRead,
+    Map<String, dynamic>? attachment,
+  }) {
+    final bool hasImage = attachment != null &&
+        attachment['file_url'] != null &&
+        (attachment['file_url'].toString().endsWith('.png') ||
+         attachment['file_url'].toString().endsWith('.jpg') ||
+         attachment['file_url'].toString().endsWith('.jpeg'));
+
+    return Align(
+      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+      child: Column(
+        crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        children: [
+          Container(
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * 0.75,
+            ),
+            padding: EdgeInsets.symmetric(
+                horizontal: hasImage ? 4 : 16, vertical: hasImage ? 4 : 12),
+            decoration: BoxDecoration(
+              color: isMe ? const Color(0xFF315E26) : Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: const Radius.circular(20),
+                topRight: const Radius.circular(20),
+                bottomLeft: Radius.circular(isMe ? 20 : 0),
+                bottomRight: Radius.circular(isMe ? 0 : 20),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 5,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (attachment != null) ...[
+                  if (hasImage)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Image.network(
+                        attachment['file_url'],
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const Icon(Icons.broken_image, size: 40),
+                      ),
+                    )
+                  else
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.black12,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.insert_drive_file, color: Colors.white70),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              text.isNotEmpty ? text : 'Attachment',
+                              style: TextStyle(
+                                color: isMe ? Colors.white : Colors.black87,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  if (text.isNotEmpty && !hasImage) const SizedBox(height: 8),
+                ],
+                if (text.isNotEmpty && (!hasImage || attachment == null))
+                  Text(
+                    text,
+                    style: TextStyle(
+                      color: isMe ? Colors.white : Colors.black87,
+                      fontSize: 14,
+                      height: 1.4,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 4),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  time,
+                  style: TextStyle(fontSize: 10, color: Colors.grey.shade600, fontWeight: FontWeight.bold),
+                ),
+                if (isMe) ...[
+                  const SizedBox(width: 4),
+                  Icon(
+                    isRead ? Icons.done_all : Icons.done,
+                    size: 14,
+                    color: isRead ? Colors.blue : Colors.grey.shade600,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -416,68 +556,14 @@ class _MidwifeChatScreenState extends State<MidwifeChatScreen> {
                         final msg = _messages[index];
                         final isMe = msg['isMe'];
                         final isRead = msg['isRead'] ?? false;
-                        return Align(
-                          alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-                          child: Container(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            constraints: BoxConstraints(
-                              maxWidth: MediaQuery.of(context).size.width * 0.75,
-                            ),
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            decoration: BoxDecoration(
-                              color: isMe ? const Color(0xFF315E26) : Colors.white,
-                              borderRadius: BorderRadius.only(
-                                topLeft: const Radius.circular(16),
-                                topRight: const Radius.circular(16),
-                                bottomLeft: Radius.circular(isMe ? 16 : 0),
-                                bottomRight: Radius.circular(isMe ? 0 : 16),
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
-                                  blurRadius: 5,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                              children: [
-                                if (msg['type'] == 'FILE' && msg['attachment'] != null)
-                                  Padding(
-                                    padding: const EdgeInsets.only(bottom: 8.0),
-                                    child: Icon(Icons.insert_drive_file, color: isMe ? Colors.white : Colors.black87),
-                                  ),
-                                Text(
-                                  msg['text'] ?? '',
-                                  style: TextStyle(
-                                    color: isMe ? Colors.white : Colors.black87,
-                                    fontSize: 15,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      msg['time'],
-                                      style: TextStyle(
-                                        color: isMe ? Colors.white70 : Colors.grey.shade500,
-                                        fontSize: 11,
-                                      ),
-                                    ),
-                                    if (isMe) ...[
-                                      const SizedBox(width: 4),
-                                      Icon(
-                                        isRead ? Icons.done_all : Icons.check,
-                                        size: 14,
-                                        color: isRead ? Colors.blue.shade200 : Colors.white70,
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ],
-                            ),
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 16.0),
+                          child: _buildMessageBubble(
+                            text: msg['text'] ?? '',
+                            time: msg['time'],
+                            isMe: isMe,
+                            isRead: isRead,
+                            attachment: msg['type'] == 'FILE' ? msg['attachment'] : null,
                           ),
                         );
                       },

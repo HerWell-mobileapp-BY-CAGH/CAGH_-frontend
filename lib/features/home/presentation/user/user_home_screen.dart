@@ -1,7 +1,7 @@
 import 'package:cagh_frontend/core/services/global_call_service.dart';
 import 'package:cagh_frontend/features/appointments/data/services/appointment_api_service.dart';
 import 'package:flutter/material.dart';
-import 'package:cagh_frontend/features/auth/presentation/user/user_login_screen.dart';
+import 'package:cagh_frontend/features/notifications/data/services/notification_generator_service.dart';
 import 'package:cagh_frontend/features/consultations/presentation/user/find_midwife_screen.dart';
 import 'package:cagh_frontend/features/nearby/presentation/screens/nearby_healthcare_screen.dart';
 import 'package:cagh_frontend/features/consultations/presentation/user/consult_hub_screen.dart';
@@ -9,8 +9,12 @@ import 'package:cagh_frontend/features/profile/presentation/user_profile_screen.
 import 'package:cagh_frontend/features/virtual_consultation/presentation/emergency_support_screen.dart';
 import 'package:cagh_frontend/shared/widgets/floating_glass_nav_bar.dart';
 import 'package:cagh_frontend/core/services/language_service.dart';
-import 'package:cagh_frontend/shared/widgets/hotline_fab.dart';
 import 'package:cagh_frontend/shared/widgets/ai_assistant_fab.dart';
+import 'package:cagh_frontend/features/ai_assistant/presentation/ai_assistant_screen.dart';
+import 'package:cagh_frontend/shared/widgets/hotline_fab.dart';
+import 'package:cagh_frontend/shared/widgets/learning_module_card.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cagh_frontend/features/consultations/presentation/providers/chat_notification_provider.dart';
 
 class UserHomeScreen extends StatefulWidget {
   const UserHomeScreen({super.key});
@@ -84,30 +88,42 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
               ),
               const Divider(),
               Expanded(
-                child: ListView(
-                  children: const [
-                    _NotificationTile(
-                      title: 'Appointment Reminder',
-                      body: 'Your Virtual Voice consultation with Nurse Sarah Jenkins is tomorrow at 10:00 AM.',
-                      time: '10 mins ago',
-                      isUnread: true,
-                      type: 'APPOINTMENT',
-                    ),
-                    _NotificationTile(
-                      title: 'Chat Request Accepted',
-                      body: 'Sr. Martha T. accepted your direct message request. You can now chat freely.',
-                      time: '2 hours ago',
-                      isUnread: true,
-                      type: 'CHAT',
-                    ),
-                    _NotificationTile(
-                      title: 'New Educational Content',
-                      body: 'New article added: "Trimester 2 Nutrition & Essential Vitamins".',
-                      time: '1 day ago',
-                      isUnread: false,
-                      type: 'LEARNING',
-                    ),
-                  ],
+                child: FutureBuilder<List<Map<String, dynamic>>>(
+                  future: NotificationGeneratorService.getUserNotifications(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator(color: Color(0xFF315E26)));
+                    }
+                    if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
+                      return Center(
+                        child: Text(
+                          'No new notifications',
+                          style: TextStyle(color: Colors.grey.shade500),
+                        ),
+                      );
+                    }
+
+                    final notifications = snapshot.data!;
+                    return ListView.builder(
+                      itemCount: notifications.length,
+                      itemBuilder: (context, index) {
+                        final notif = notifications[index];
+                        return _NotificationTile(
+                          title: notif['title'],
+                          body: notif['body'],
+                          time: notif['time'],
+                          isUnread: notif['isUnread'],
+                          type: notif['type'],
+                          onTap: () {
+                            Navigator.pop(context);
+                            setState(() {
+                              _currentIndex = 1;
+                            });
+                          },
+                        );
+                      },
+                    );
+                  },
                 ),
               ),
             ],
@@ -118,6 +134,30 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
   }
 
 // Review modal has been moved to user_chat_room_screen.dart
+  Widget _buildFloatingButtons() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20.0), // Padding to avoid bottom nav bar
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          const HotlineFab(),
+          const SizedBox(height: 16),
+          AiAssistantFab(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AiAssistantScreen(),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_currentIndex == 4) {
@@ -126,6 +166,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
         body: UserProfileScreen(
           onBackTap: () => setState(() => _currentIndex = 0),
         ),
+        floatingActionButton: _buildFloatingButtons(),
         bottomNavigationBar: _buildBottomNav(),
       );
     }
@@ -167,18 +208,41 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                                 color: Color(0xFFFFD22B),
                                 size: 26,
                               ),
-                              Positioned(
-                                right: -2,
-                                top: -2,
-                                child: Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: const BoxDecoration(
-                                    color: Colors.red,
-                                    shape: BoxShape.circle,
-                                  ),
+                                Consumer(
+                                  builder: (context, ref, child) {
+                                    final unreadMap = ref.watch(chatNotificationProvider);
+                                    int totalUnread = 0;
+                                    unreadMap.forEach((k, v) {
+                                      // only sum the raw room IDs to avoid double counting
+                                      if (!k.startsWith('user_') && !k.startsWith('midwife_')) {
+                                        totalUnread += v;
+                                      }
+                                    });
+                                    
+                                    if (totalUnread == 0) return const SizedBox.shrink();
+                                    
+                                    return Positioned(
+                                      right: -4,
+                                      top: -4,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(3),
+                                        decoration: const BoxDecoration(
+                                          color: Colors.red,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Text(
+                                          totalUnread > 9 ? '9+' : '$totalUnread',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 9,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                    );
+                                  },
                                 ),
-                              ),
                             ],
                           ),
                         ),
@@ -223,45 +287,20 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             // ===== MAIN BODY BASED ON SELECTED TAB =====
 
             Expanded(
-              child: Stack(
+              child: IndexedStack(
+                index: _currentIndex,
                 children: [
-                  IndexedStack(
-                    index: _currentIndex,
-                    children: [
-                      _buildHomeTab(),
-                      _buildConsultTab(),
-                      _buildLearnTab(),
-                      _buildNearbyTab(),
-                    ],
-                  ),
-                  if (_currentIndex != 4)
-                  // Floating Action Buttons Overlay (Bottom Right)
-                  if (_currentIndex == 0) // Only show on Home Dashboard
-                    Positioned(
-                      right: 20,
-                      bottom: 20, 
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // 24/7 Telehealth Call Badge
-                          const HotlineFab(),
-                          const SizedBox(height: 16),
-                          // Ask Midwife AI button
-                          AiAssistantFab(
-                            onTap: () {
-                              // Action for AI
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
+                  _buildHomeTab(),
+                  _buildConsultTab(),
+                  _buildLearnTab(),
+                  _buildNearbyTab(),
                 ],
               ),
             ),
           ],
         ),
       ),
-
+      floatingActionButton: _buildFloatingButtons(),
       bottomNavigationBar: _buildBottomNav(),
     );
   }
@@ -387,22 +426,44 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             ),
           ),
 
-          _buildLearningModuleCard(
+          LearningModuleCard(
             icon: Icons.menu_book_rounded,
             iconBgColor: const Color(0xFFE8F5E9),
             iconColor: const Color(0xFF315E26),
             title: 'Adolescent Girls Health & Nutrition',
             subtitle: 'Puberty, menstrual health, nutrition & healthy lifestyle, life skills & well-being.',
             arrowBgColor: const Color(0xFFA5D6A7),
+            onTap: () {},
           ),
           const SizedBox(height: 16),
-          _buildLearningModuleCard(
+          LearningModuleCard(
             icon: Icons.shield_outlined,
             iconBgColor: const Color(0xFFFFF8E1),
             iconColor: const Color(0xFFFFD22B),
             title: 'Prevention and Awareness',
             subtitle: 'STI/HIV prevention, HPV & cervical cancer awareness, healthy relationships.',
             arrowBgColor: const Color(0xFFFFD22B),
+            onTap: () {},
+          ),
+          const SizedBox(height: 16),
+          LearningModuleCard(
+            icon: Icons.favorite_border_rounded,
+            iconBgColor: const Color(0xFFFFF8E1),
+            iconColor: const Color(0xFFFFD22B),
+            title: 'Psychosocial Support & Protection',
+            subtitle: 'Mental health, GBV support, counseling services, and emergency help.',
+            arrowBgColor: const Color(0xFFFFD22B),
+            onTap: () {},
+          ),
+          const SizedBox(height: 16),
+          LearningModuleCard(
+            icon: Icons.female,
+            iconBgColor: const Color(0xFFE8F5E9),
+            iconColor: const Color(0xFF315E26),
+            title: 'Reproductive Health & Care',
+            subtitle: 'Pregnancy prevention, maternal care, ANC, newborn care, and checkups.',
+            arrowBgColor: const Color(0xFFA5D6A7),
+            onTap: () {},
           ),
           const SizedBox(height: 30),
         ],
@@ -432,40 +493,44 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _buildLearningModuleCard(
+          LearningModuleCard(
             icon: Icons.menu_book_rounded,
             iconBgColor: const Color(0xFFE8F5E9),
             iconColor: const Color(0xFF315E26),
             title: 'Adolescent Girls Health & Nutrition',
             subtitle: 'Puberty, menstrual health, nutrition & healthy lifestyle, life skills & well-being.',
             arrowBgColor: const Color(0xFFA5D6A7),
+            onTap: () {},
           ),
           const SizedBox(height: 16),
-          _buildLearningModuleCard(
+          LearningModuleCard(
             icon: Icons.shield_outlined,
             iconBgColor: const Color(0xFFFFF8E1),
             iconColor: const Color(0xFFFFD22B),
             title: 'Prevention and Awareness',
             subtitle: 'STI/HIV prevention, HPV & cervical cancer awareness, healthy relationships.',
             arrowBgColor: const Color(0xFFFFD22B),
+            onTap: () {},
           ),
           const SizedBox(height: 16),
-          _buildLearningModuleCard(
+          LearningModuleCard(
             icon: Icons.favorite_border_rounded,
             iconBgColor: const Color(0xFFFFF8E1),
             iconColor: const Color(0xFFFFD22B),
             title: 'Psychosocial Support & Protection',
             subtitle: 'Mental health, GBV support, counseling services, and emergency help.',
             arrowBgColor: const Color(0xFFFFD22B),
+            onTap: () {},
           ),
           const SizedBox(height: 16),
-          _buildLearningModuleCard(
+          LearningModuleCard(
             icon: Icons.female,
             iconBgColor: const Color(0xFFE8F5E9),
             iconColor: const Color(0xFF315E26),
             title: 'Reproductive Health & Care',
             subtitle: 'Pregnancy prevention, maternal care, ANC, newborn care, and checkups.',
             arrowBgColor: const Color(0xFFA5D6A7),
+            onTap: () {},
           ),
           const SizedBox(height: 80),
         ],
@@ -473,77 +538,6 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
     );
   }
 
-  Widget _buildLearningModuleCard({
-    required IconData icon,
-    required Color iconBgColor,
-    required Color iconColor,
-    required String title,
-    required String subtitle,
-    required Color arrowBgColor,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: iconBgColor,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: iconColor, size: 24),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 8.0),
-                  child: Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF315E26),
-                      height: 1.3,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            subtitle,
-            style: TextStyle(
-              fontSize: 12.5,
-              color: Colors.grey.shade600,
-              height: 1.4,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Align(
-            alignment: Alignment.bottomRight,
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: arrowBgColor,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.arrow_forward, color: Colors.black87, size: 20),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   // TAB 3: NEARBY FACILITY
   Widget _buildNearbyTab() {
@@ -597,6 +591,7 @@ class _NotificationTile extends StatelessWidget {
   final String time;
   final bool isUnread;
   final String type;
+  final VoidCallback? onTap;
 
   const _NotificationTile({
     required this.title,
@@ -604,11 +599,14 @@ class _NotificationTile extends StatelessWidget {
     required this.time,
     required this.isUnread,
     required this.type,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -642,6 +640,7 @@ class _NotificationTile extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }

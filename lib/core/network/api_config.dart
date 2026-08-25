@@ -60,4 +60,8 @@ class ApiConfig {
 
   // Nearby Facilities Endpoints
   static const String facilities = '/common/facilities/';
+
+  // Emergency SOS Endpoints
+  static const String sosHotlines = '/users/sos/hotlines/';
+  static const String sosAlert = '/users/sos/';
 }

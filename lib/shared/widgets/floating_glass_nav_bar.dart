@@ -77,8 +77,8 @@ class FloatingGlassNavBar extends StatelessWidget {
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 240),
                           curve: Curves.easeOutCubic,
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 16,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(

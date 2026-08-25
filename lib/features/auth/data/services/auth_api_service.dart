@@ -130,6 +130,7 @@ class AuthService {
     required String role,
     String? passwordConfirm,
     String? phone,
+    int? yearsOfExperience,
   }) async {
     _lastRole = role.toUpperCase();
 
@@ -158,6 +159,7 @@ class AuthService {
         'last_name': lastName,
         'role': role.toUpperCase(),
         if (phone != null && phone.isNotEmpty) 'phone_number': phone,
+        if (yearsOfExperience != null) 'years_of_experience': yearsOfExperience,
       };
 
       final response = await http

@@ -69,7 +69,7 @@ class MidwifeProfile {
       hospitalAddress: hospital['address'] ?? '',
 
       specialty: json['specialty'] ?? '',
-      experienceYears: json['experience_years'] ?? 0,
+      experienceYears: json['years_of_experience'] ?? json['experience_years'] ?? userProfile['years_of_experience'] ?? userProfile['experience_years'] ?? 0,
       languages: (json['languages'] as String?)?.split(',').map((e) => e.trim()).toList() ?? [],
       bio: json['bio'] ?? '',
       offeredConsultationTypes: json['offered_consultation_types'] != null 

@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:web_socket_channel/io.dart';
+
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:cagh_frontend/core/network/api_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -25,7 +25,7 @@ class ChatWebSocketService {
 
     final wsUrl = Uri.parse('${ApiConfig.wsUrl}/chat/$roomId/?token=$token');
     
-    _channel = IOWebSocketChannel.connect(wsUrl);
+    _channel = WebSocketChannel.connect(wsUrl);
 
     _channel!.stream.listen((message) {
       final data = jsonDecode(message);
@@ -53,6 +53,13 @@ class ChatWebSocketService {
           }
           break;
       }
+    }, onError: (error) {
+      print('WebSocket Error: $error');
+      if (onError != null) {
+        onError!({'message': 'WebSocket connection error: $error'});
+      }
+    }, onDone: () {
+      print('WebSocket connection closed.');
     });
   }
 

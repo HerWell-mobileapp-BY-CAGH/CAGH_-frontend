@@ -54,6 +54,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
 
   final Set<String> selectedExpertise = {};
   PlatformFile? selectedFile;
+  int _yearsOfExperience = 0;
 
   @override
   void dispose() {
@@ -438,11 +439,64 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                     icon: Icons.work_history_outlined,
                     title: 'Experience',
                     children: [
-                      _buildLabel('Years of Experience'),
-                      _buildTextField(
-                        controller: TextEditingController(), // Just a dummy for now since this screen drops data anyway
-                        hint: 'e.g., 5',
-                        keyboardType: TextInputType.number,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const Text(
+                            'Years of Experience',
+                            style: TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF333333),
+                            ),
+                          ),
+                          Container(
+                            width: 60,
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.grey.shade300),
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                InkWell(
+                                  onTap: _yearsOfExperience < 50
+                                      ? () => setState(() => _yearsOfExperience++)
+                                      : null,
+                                  child: Icon(
+                                    Icons.arrow_drop_up,
+                                    size: 32,
+                                    color: _yearsOfExperience < 50 ? const Color(0xFF315E26) : Colors.grey.shade400,
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 4),
+                                  child: Text(
+                                    '$_yearsOfExperience',
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF1A1A1A),
+                                    ),
+                                  ),
+                                ),
+                                InkWell(
+                                  onTap: _yearsOfExperience > 0
+                                      ? () => setState(() => _yearsOfExperience--)
+                                      : null,
+                                  child: Icon(
+                                    Icons.arrow_drop_down,
+                                    size: 32,
+                                    color: _yearsOfExperience > 0 ? const Color(0xFF315E26) : Colors.grey.shade400,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -614,6 +668,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                                 lastName: lastName,
                                 role: 'MIDWIFE',
                                 phone: phone.isNotEmpty ? fullPhone : null,
+                                yearsOfExperience: _yearsOfExperience,
                               );
 
                               if (!mounted) return;

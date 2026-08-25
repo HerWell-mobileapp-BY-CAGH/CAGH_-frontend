@@ -6,17 +6,20 @@ import 'package:cagh_frontend/features/consultations/data/services/chat_websocke
 import 'package:intl/intl.dart';
 import 'package:file_picker/file_picker.dart';
 
-class ChatScreen extends StatefulWidget {
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cagh_frontend/features/consultations/presentation/providers/chat_notification_provider.dart';
+
+class ChatScreen extends ConsumerStatefulWidget {
   final MidwifeProfile midwife;
   final String? myUserId;
 
   const ChatScreen({super.key, required this.midwife, this.myUserId});
 
   @override
-  State<ChatScreen> createState() => _ChatScreenState();
+  ConsumerState<ChatScreen> createState() => _ChatScreenState();
 }
 
-class _ChatScreenState extends State<ChatScreen> {
+class _ChatScreenState extends ConsumerState<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
@@ -64,11 +67,19 @@ class _ChatScreenState extends State<ChatScreen> {
           }
         });
 
-        // 4. Connect WebSocket if accepted
-        if (_roomStatus == 'ACCEPTED') {
-          _connectWebSocket();
+        // 4. Connect WebSocket always to receive status updates or messages
+        await _connectWebSocket();
+
+        // 5. Mark messages as read and clear local badge
+        try {
+          await ChatApiService.markMessagesAsRead(_roomId!);
+        } catch (e) {
+          debugPrint("markMessagesAsRead failed: $e");
         }
+        _wsService?.markRead();
+        ref.read(chatNotificationProvider.notifier).markRoomAsReadLocally(_roomId!, midwifeId: widget.midwife.id.toString());
       }
+
     } catch (e) {
       debugPrint("Error initializing chat: $e");
     } finally {
@@ -79,13 +90,16 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  void _connectWebSocket() async {
+  Future<void> _connectWebSocket() async {
     if (_roomId == null) return;
     
     _wsService = ChatWebSocketService(
       onMessageReceived: (data) {
         if (mounted) {
           setState(() {
+            if (_roomStatus == 'REQUESTED' && data['sender'] != null) {
+              _roomStatus = 'ACCEPTED';
+            }
             final parsedMsg = _parseMessage(data);
             // Deduplicate local optimistic messages
             _messages.removeWhere((m) => 
@@ -95,6 +109,10 @@ class _ChatScreenState extends State<ChatScreen> {
             // Also ensure we don't add duplicate server messages
             if (!_messages.any((m) => m['id'].toString() == parsedMsg['id'].toString())) {
               _messages.add(parsedMsg);
+              // It's a new message, we are on the screen, mark it as read
+              if (!parsedMsg['isMe']) {
+                _wsService?.markRead();
+              }
             }
           });
           _scrollToBottom();
@@ -107,7 +125,12 @@ class _ChatScreenState extends State<ChatScreen> {
         if (mounted) {
           setState(() {
             for (var msg in _messages) {
-              if (data['message_ids']?.contains(msg['id']) ?? false) {
+              if (data['message_ids'] != null) {
+                if (data['message_ids'].contains(msg['id'])) {
+                  msg['isRead'] = true;
+                }
+              } else {
+                // If message_ids is missing, assume all previous messages are read
                 msg['isRead'] = true;
               }
             }
@@ -191,6 +214,7 @@ class _ChatScreenState extends State<ChatScreen> {
         
         _messageController.clear();
         _scrollToBottom();
+        await _connectWebSocket();
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Failed to send request. Try again.'), backgroundColor: Colors.red),

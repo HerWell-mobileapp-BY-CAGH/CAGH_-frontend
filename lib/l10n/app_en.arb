@@ -31,5 +31,11 @@
   "ai_nearby": "AI & Nearby",
   "notifications": "Notifications",
   "reviews": "Reviews",
-  "logout": "Logout"
+  "logout": "Logout",
+  "ai_assistant_title": "AI Health Assistant",
+  "ai_disclaimer": "This AI is for informational purposes only and is not a substitute for professional medical advice, diagnosis, or treatment. In case of emergency, use the SOS button.",
+  "ai_type_message": "Type your health question...",
+  "ai_suggested_1": "What are common pregnancy symptoms?",
+  "ai_suggested_2": "How can I improve my nutrition?",
+  "ai_suggested_3": "Tell me about mental well-being."
 }

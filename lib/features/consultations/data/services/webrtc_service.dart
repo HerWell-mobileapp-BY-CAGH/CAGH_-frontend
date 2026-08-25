@@ -47,12 +47,16 @@ class WebrtcService {
 
     if (!kIsWeb) {
       try {
-        final status = await Permission.microphone.status;
-        if (!status.isGranted) {
-          await Permission.microphone.request();
-        }
+        Map<Permission, PermissionStatus> statuses = await [
+          Permission.microphone,
+          Permission.camera,
+          Permission.bluetoothConnect,
+          Permission.phone,
+        ].request();
+        
+        debugPrint('Permissions requested. Microphone: ${statuses[Permission.microphone]}, Camera: ${statuses[Permission.camera]}');
       } catch (e) {
-        debugPrint('Microphone permission request error: $e');
+        debugPrint('Permission request error (safe to ignore if some are unavailable): $e');
       }
     }
 

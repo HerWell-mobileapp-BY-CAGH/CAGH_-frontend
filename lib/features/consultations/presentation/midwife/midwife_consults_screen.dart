@@ -3,9 +3,11 @@ import 'package:cagh_frontend/features/appointments/data/services/appointment_ap
 import 'package:cagh_frontend/features/appointments/data/repositories/appointment_repository_impl.dart';
 import 'package:cagh_frontend/shared/models/appointment.dart';
 import 'package:cagh_frontend/features/consultations/data/services/consultation_api_service.dart';
-import 'package:cagh_frontend/features/consultations/presentation/midwife/consultation_session_screen.dart';
 import 'package:cagh_frontend/features/consultations/presentation/midwife/midwife_chat_screen.dart';
+import 'package:cagh_frontend/features/consultations/data/services/chat_api_service.dart';
 import 'package:cagh_frontend/features/consultations/presentation/common/voice_call_screen.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cagh_frontend/features/consultations/presentation/providers/chat_notification_provider.dart';
 
 class MidwifeConsultsScreen extends StatefulWidget {
   const MidwifeConsultsScreen({super.key});
@@ -19,6 +21,7 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
   
   final _appointmentRepository = AppointmentRepositoryImpl(AppointmentApiService());
   List<Appointment> _appointments = [];
+  List<dynamic> _chatRooms = [];
   bool _isLoading = true;
 
   @override
@@ -31,6 +34,7 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
     setState(() => _isLoading = true);
     try {
       _appointments = await _appointmentRepository.getMidwifeAppointments();
+      _chatRooms = await ChatApiService.getChatRooms();
     } catch (e) {
       print('Error loading consults: $e');
     } finally {
@@ -292,31 +296,30 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
                                     ),
                                   );
                                 },
-                                child: Stack(
-                                  clipBehavior: Clip.none,
-                                  children: [
-                                    Icon(Icons.chat_bubble_outline_rounded, size: 20, color: Colors.grey.shade700),
-                                    if (apt.status == AppointmentStatus.confirmed)
-                                      Positioned(
-                                        right: -2,
-                                        top: -2,
-                                        child: Container(
-                                          padding: const EdgeInsets.all(3),
-                                          decoration: const BoxDecoration(
-                                            color: Colors.red,
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: const Text(
-                                            '1',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 8,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
+                                child: Consumer(
+                                  builder: (context, ref, child) {
+                                    final unreadMap = ref.watch(chatNotificationProvider);
+                                    // Use the patient's ID to check for unread messages with this specific patient
+                                    final unreadCount = unreadMap['user_${apt.userId}'] ?? 0;
+                                    
+                                    Widget icon = Icon(
+                                      Icons.chat_bubble_outline_rounded,
+                                      size: 20,
+                                      color: Colors.grey.shade700,
+                                    );
+                                    
+                                    if (unreadCount > 0) {
+                                      return Badge(
+                                        label: Text(
+                                          unreadCount > 9 ? '9+' : '$unreadCount', 
+                                          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)
                                         ),
-                                      ),
-                                  ],
+                                        backgroundColor: Colors.red,
+                                        child: icon,
+                                      );
+                                    }
+                                    return icon;
+                                  },
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -332,9 +335,11 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
                       const SizedBox(height: 10),
 
                       // Title & Patient Info
-                      const Text(
-                        'General Checkup',
-                        style: TextStyle(
+                      Text(
+                        (apt.reason != null && apt.reason!.trim().isNotEmpty) 
+                            ? apt.reason! 
+                            : 'General Checkup',
+                        style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF315E26),
@@ -474,5 +479,18 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
         ),
       ),
     );
+  }
+
+  bool _hasUnreadChat(Appointment apt) {
+    for (var room in _chatRooms) {
+      String? userId = room['user'] is Map ? room['user']['id']?.toString() : room['user']?.toString();
+      String? patientId = room['patient'] is Map ? room['patient']['id']?.toString() : room['patient']?.toString();
+
+      if (userId == apt.userId.toString() || patientId == apt.userId.toString() || room.toString().contains(apt.userId.toString())) {
+        if (room['status'] == 'REQUESTED') return true;
+        if (room['unread_count'] != null && (room['unread_count'] as num) > 0) return true;
+      }
+    }
+    return false;
   }
 }
