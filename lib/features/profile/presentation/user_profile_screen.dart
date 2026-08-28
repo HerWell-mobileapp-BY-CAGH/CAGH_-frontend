@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
+import 'package:cagh_frontend/shared/constants/app_constants.dart';
 import 'package:cagh_frontend/core/services/language_service.dart';
 import 'package:cagh_frontend/features/auth/presentation/user/user_login_screen.dart';
 import 'package:cagh_frontend/features/profile/presentation/personal_information_screen.dart';
 import 'package:cagh_frontend/features/profile/presentation/appearance_accessibility_screen.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
+import 'package:cagh_frontend/core/utils/app_logger.dart';
 
 class UserProfileScreen extends StatefulWidget {
   final VoidCallback? onBackTap;
@@ -73,7 +76,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           }
         });
       }
-    } catch (_) {}
+    } catch (e) {
+      AppLogger.d('UserProfileScreen: Error parsing profile data: $e');
+    }
     if (mounted) {
       setState(() {
          isLoading = false;
@@ -88,12 +93,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         : 'English (US)';
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFAF9F6),
+      backgroundColor: AppColors.backgroundWarmWhite,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF315E26),
+        backgroundColor: AppColors.primaryGreen,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFFFFD22B)),
+          icon: const Icon(Icons.arrow_back, color: AppColors.accentYellow),
           onPressed: () {
             if (widget.onBackTap != null) {
               widget.onBackTap!();
@@ -113,7 +118,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       ),
       body: isLoading
           ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFF315E26)),
+              child: CircularProgressIndicator(color: AppColors.primaryGreen),
             )
           : SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
@@ -139,18 +144,18 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                                 padding: const EdgeInsets.all(3),
                                 decoration: const BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: Color(0xFFFFD22B),
+                                  color: AppColors.accentYellow,
                                 ),
                                 child: const CircleAvatar(
                                   radius: 42,
-                                  backgroundColor: Color(0xFFE8F5E9),
-                                  backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=47'),
+                                  backgroundColor: AppColors.lightGreen,
+                                  backgroundImage: NetworkImage(AppConstants.placeholderAvatarUrl),
                                 ),
                               ),
                               Container(
                                 padding: const EdgeInsets.all(5),
                                 decoration: const BoxDecoration(
-                                  color: Color(0xFF315E26),
+                                  color: AppColors.primaryGreen,
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Icon(
@@ -170,7 +175,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF1A1A1A),
+                            color: AppColors.textDark,
                           ),
                         ),
 
@@ -219,7 +224,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: Color(0xFFFFD22B),
+                          color: AppColors.accentYellow,
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Text(
@@ -227,7 +232,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF315E26),
+                            color: AppColors.primaryGreen,
                           ),
                         ),
                       ),
@@ -277,22 +282,22 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       trailing: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFE8F5E9),
+                          color: AppColors.lightGreen,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFFA5D6A7)),
+                          border: Border.all(color: AppColors.mint),
                         ),
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<String>(
                             value: LanguageService.currentLanguage.value,
                             isDense: true,
-                            icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF315E26), size: 20),
+                            icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.primaryGreen, size: 20),
                             borderRadius: BorderRadius.circular(12),
                             items: LanguageService.supportedLanguages.map((lang) {
                               return DropdownMenuItem<String>(
                                 value: lang.code,
                                 child: Text(
                                   '${lang.flag} ${lang.nativeName}',
-                                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF315E26)),
+                                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
                                 ),
                               );
                             }).toList(),
@@ -312,7 +317,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       title: 'Notifications',
                       trailing: Switch(
                         value: notificationsEnabled,
-                        activeColor: const Color(0xFF315E26),
+                        activeThumbColor: AppColors.primaryGreen,
                         onChanged: (val) {
                           setState(() => notificationsEnabled = val);
                         },
@@ -374,8 +379,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         ),
                       ),
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Color(0xFFF4C7C7), width: 1.5),
-                        backgroundColor: const Color(0xFFFFF7F7),
+                        side: const BorderSide(color: AppColors.borderRedSoft, width: 1.5),
+                        backgroundColor: AppColors.backgroundPinkWhite,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30),
@@ -408,7 +413,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           width: 3.5,
           height: 16,
           decoration: BoxDecoration(
-            color: Color(0xFFFFD22B),
+            color: AppColors.accentYellow,
             borderRadius: BorderRadius.circular(2),
           ),
         ),
@@ -418,7 +423,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w700,
-            color: Color(0xFF315E26),
+            color: AppColors.primaryGreen,
           ),
         ),
       ],
@@ -454,13 +459,13 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     return ListTile(
       onTap: onTap,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-      leading: Icon(icon, color: const Color(0xFF315E26), size: 22),
+      leading: Icon(icon, color: AppColors.primaryGreen, size: 22),
       title: Text(
         title,
         style: const TextStyle(
           fontSize: 14.5,
           fontWeight: FontWeight.w600,
-          color: Color(0xFF222222),
+          color: AppColors.textNearBlackAlt,
         ),
       ),
       subtitle: subtitle != null

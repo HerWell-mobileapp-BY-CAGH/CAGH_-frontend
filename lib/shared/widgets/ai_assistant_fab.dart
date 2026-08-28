@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cagh_frontend/shared/widgets/hover_scale_widget.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 class AiAssistantFab extends StatelessWidget {
   final VoidCallback onTap;
@@ -13,7 +14,7 @@ class AiAssistantFab extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: const BoxDecoration(
-          color: Color(0xFF7C5B8B), // Purpleish brand color for AI
+          color: AppColors.brandPurple, // Purpleish brand color for AI
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(

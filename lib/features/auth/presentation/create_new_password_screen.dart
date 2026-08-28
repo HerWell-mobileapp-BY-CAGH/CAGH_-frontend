@@ -3,6 +3,7 @@ import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart'
 import 'password_reset_success_screen.dart';
 import 'widgets/password_input_field.dart';
 import 'widgets/password_strength_indicator.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 class CreateNewPasswordScreen extends StatefulWidget {
   final String contact;
@@ -54,9 +55,13 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
     if (RegExp(r'[0-9]').hasMatch(pass) && RegExp(r'[!@#\$&*~]').hasMatch(pass)) score++;
 
     setState(() {
-      if (score <= 1) _strength = PasswordStrength.weak;
-      else if (score == 2) _strength = PasswordStrength.medium;
-      else _strength = PasswordStrength.strong;
+      if (score <= 1) {
+        _strength = PasswordStrength.weak;
+      } else if (score == 2) {
+        _strength = PasswordStrength.medium;
+      } else {
+        _strength = PasswordStrength.strong;
+      }
     });
   }
 
@@ -132,12 +137,12 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
     final passwordsMatch = pass.isNotEmpty && confirm.isNotEmpty && pass == confirm;
     
     return Scaffold(
-      backgroundColor: const Color(0xFFF7FBF5),
+      backgroundColor: AppColors.backgroundMintWhite,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF315E26),
+        backgroundColor: AppColors.primaryGreen,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFFFFD22B)),
+          icon: const Icon(Icons.arrow_back, color: AppColors.accentYellow),
           onPressed: () => Navigator.pop(context), // Pops back to ForgotPasswordScreen securely
         ),
         title: const Text(
@@ -152,7 +157,7 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
           children: [
             Text(
               'Create New Password',
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: Color(0xFF315E26)),
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: AppColors.primaryGreen),
             ),
             const SizedBox(height: 10),
             Text(
@@ -175,7 +180,7 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
             const SizedBox(height: 16),
             const Text(
               'Password must contain:',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF333333)),
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textGray),
             ),
             const SizedBox(height: 8),
             _buildRequirement('At least 8 characters', pass.length >= 8),
@@ -221,7 +226,7 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
               child: ElevatedButton(
                 onPressed: (_isValid() && !_isLoading && passwordsMatch) ? _submit : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF315E26),
+                  backgroundColor: AppColors.primaryGreen,
                   foregroundColor: Colors.white,
                   disabledBackgroundColor: Colors.grey.shade300,
                   elevation: 0,

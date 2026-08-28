@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'dart:ui';
 import 'package:file_picker/file_picker.dart';
 import '../otp_verification_screen.dart';
 import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
 import 'package:cagh_frontend/core/services/language_service.dart';
 import 'package:cagh_frontend/shared/widgets/custom_snackbar.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 class MidwifeRegistrationScreen extends StatefulWidget {
   const MidwifeRegistrationScreen({super.key});
@@ -153,6 +153,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
       );
 
       if (result != null && result.files.isNotEmpty) {
+        if (!mounted) return;
         setState(() {
           selectedFile = result.files.first;
         });
@@ -173,7 +174,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
           // Green App Bar
           Container(
             width: double.infinity,
-            color: const Color(0xFF315E26),
+            color: AppColors.primaryGreen,
             child: SafeArea(
               bottom: false,
               child: Padding(
@@ -182,7 +183,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                   children: [
                     IconButton(
                       onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.arrow_back, color: Color(0xFFFFD22B)),
+                      icon: const Icon(Icons.arrow_back, color: AppColors.accentYellow),
                     ),
                     const Expanded(
                       child: Text(
@@ -214,7 +215,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                       height: 80,
                       margin: const EdgeInsets.only(bottom: 16),
                       decoration: const BoxDecoration(
-                        color: Color(0xFFFFF5E6),
+                        color: AppColors.creamAlt,
                         shape: BoxShape.circle,
                       ),
                       child: Center(
@@ -249,7 +250,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                           width: 48,
                           height: 48,
                           decoration: BoxDecoration(
-                            color: const Color(0xFF315E26),
+                            color: AppColors.primaryGreen,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Icon(Icons.medical_services,
@@ -265,7 +266,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                                 style: TextStyle(
                                   fontSize: 17,
                                   fontWeight: FontWeight.w700,
-                                  color: Color(0xFF1A1A1A),
+                                  color: AppColors.textDark,
                                 ),
                               ),
                             ],
@@ -336,7 +337,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(color: Colors.grey.shade300),
                             ),
-                            child: const Text('🇪🇹 +251', style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF315E26))),
+                            child: const Text('🇪🇹 +251', style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.primaryGreen)),
                           ),
                           const SizedBox(width: 10),
                           Expanded(
@@ -463,12 +464,12 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                           decoration: BoxDecoration(
                             color: selectedFile == null
                                 ? Colors.grey.shade50
-                                : const Color(0xFFE8F5E9),
+                                : AppColors.lightGreen,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: selectedFile == null
                                   ? Colors.grey.shade300
-                                  : const Color(0xFF315E26),
+                                  : AppColors.primaryGreen,
                               width: selectedFile == null ? 1 : 1.5,
                             ),
                           ),
@@ -496,7 +497,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                               : Row(
                             children: [
                               const Icon(Icons.insert_drive_file,
-                                  color: Color(0xFF315E26), size: 32),
+                                  color: AppColors.primaryGreen, size: 32),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
@@ -508,7 +509,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                                       style: const TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,
-                                        color: Color(0xFF1A1A1A),
+                                        color: AppColors.textDark,
                                       ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
@@ -597,7 +598,6 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                                 return;
                               }
 
-                              final messenger = ScaffoldMessenger.of(context);
                               final navigator = Navigator.of(context);
 
                               setState(() => _isLoading = true);
@@ -642,7 +642,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                               }
                             },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF315E26),
+                        backgroundColor: AppColors.primaryGreen,
                         foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
@@ -716,14 +716,14 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
         children: [
           Row(
             children: [
-              Icon(icon, size: 20, color: const Color(0xFF315E26)),
+              Icon(icon, size: 20, color: AppColors.primaryGreen),
               const SizedBox(width: 8),
               Text(
                 title,
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF1A1A1A),
+                  color: AppColors.textDark,
                 ),
               ),
             ],
@@ -743,7 +743,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
         style: const TextStyle(
           fontSize: 13.5,
           fontWeight: FontWeight.w500,
-          color: Color(0xFF333333),
+          color: AppColors.textGray,
         ),
       ),
     );
@@ -780,7 +780,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF315E26), width: 1.5),
+          borderSide: const BorderSide(color: AppColors.primaryGreen, width: 1.5),
         ),
         errorText: errorText,
       ),

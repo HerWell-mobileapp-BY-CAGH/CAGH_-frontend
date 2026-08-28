@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'user_type_selection_screen.dart';
 import 'package:cagh_frontend/core/services/language_service.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 class LanguageSelectionScreen extends StatefulWidget {
   const LanguageSelectionScreen({super.key});
@@ -21,7 +22,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FBF7),
+      backgroundColor: AppColors.backgroundSoftMint,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -30,7 +31,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              color: const Color(0xFF315E26),
+              color: AppColors.primaryGreen,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -65,7 +66,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                       style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF1A1A1A),
+                        color: AppColors.textDark,
                       ),
                     ),
 
@@ -87,7 +88,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
-                        color: Color(0xFF333333),
+                        color: AppColors.textGray,
                       ),
                     ),
 
@@ -99,7 +100,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: const Color(0xFF315E26),
+                          color: AppColors.primaryGreen,
                           width: 1.5,
                         ),
                       ),
@@ -111,7 +112,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                             padding: EdgeInsets.only(right: 12),
                             child: Icon(
                               Icons.keyboard_arrow_down,
-                              color: Color(0xFF315E26),
+                              color: AppColors.primaryGreen,
                               size: 24,
                             ),
                           ),
@@ -128,7 +129,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                                     '${lang.nativeName} (${lang.name})',
                                     style: const TextStyle(
                                       fontSize: 15,
-                                      color: Color(0xFF1A1A1A),
+                                      color: AppColors.textDark,
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
@@ -164,7 +165,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                           );
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF315E26),
+                          backgroundColor: AppColors.primaryGreen,
                           foregroundColor: Colors.white,
                           elevation: 0,
                           shape: RoundedRectangleBorder(

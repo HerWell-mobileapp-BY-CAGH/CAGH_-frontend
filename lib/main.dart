@@ -4,46 +4,52 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:cagh_frontend/features/onboarding/presentation/splash_screen.dart';
 import 'package:cagh_frontend/core/services/language_service.dart';
 import 'package:cagh_frontend/core/services/appearance_service.dart';
-import 'package:cagh_frontend/features/consultations/presentation/user/voice_consultation_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
-import 'package:flutter_callkit_incoming/entities/call_kit_params.dart';
-import 'package:flutter_callkit_incoming/entities/call_event.dart';
-import 'package:flutter_callkit_incoming/entities/android_params.dart';
-import 'package:flutter_callkit_incoming/entities/ios_params.dart';
 import 'package:flutter/services.dart';
-import 'package:cagh_frontend/core/services/ringtone_service.dart';
 import 'package:cagh_frontend/core/services/global_call_service.dart';
 import 'package:cagh_frontend/shared/utils/name_formatter.dart';
+import 'package:cagh_frontend/features/consultations/data/services/callkit_service.dart';
+import 'package:cagh_frontend/core/services/fcm_service.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
+import 'package:cagh_frontend/core/utils/app_logger.dart';
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  WidgetsFlutterBinding.ensureInitialized();
   final action = (message.data['action'] ?? message.data['type'] ?? '').toString();
   if (action == 'INCOMING_CALL' || action == 'incoming_call_offer' || action == 'call_offer' || action == 'offer') {
-    CallKitParams params = CallKitParams(
-      id: message.data['consultation_id']?.toString() ?? 'call_${DateTime.now().millisecondsSinceEpoch}',
-      nameCaller: NameFormatter.format((message.data['caller_name'] ?? message.data['sender_name'] ?? 'Care Provider').toString()),
-      appName: 'CAGH Digital Midwife',
-      avatar: 'assets/images/logo.png',
-      handle: 'End-to-End Encrypted Voice Call',
-      type: 0,
-      duration: 30000,
-      extra: message.data,
-      android: const AndroidParams(
-        isCustomNotification: true,
-        isShowLogo: false,
-        ringtonePath: 'system_ringtone_default',
-        backgroundColor: '#315E26',
-        actionColor: '#4CAF50',
-      ),
-      ios: const IOSParams(
-        supportsVideo: false,
-      ),
+    final callerId = (message.data['caller_id'] ?? message.data['caller'] ?? message.data['sender_id'] ?? message.data['sender']?['id'] ?? message.data['user_id'] ?? '').toString().trim();
+    
+    try {
+      // Note: Executed in an isolated background Dart isolate.
+      final currentUserId = (await GlobalCallService.getAuthenticatedUserId() ?? '').trim();
+      
+      AppLogger.d('====================================================');
+      AppLogger.d('[FCM BACKGROUND SIGNALING HANDLER]');
+      AppLogger.d('  Action          : $action');
+      AppLogger.d('  Caller ID       : $callerId');
+      AppLogger.d('  Current User ID : $currentUserId');
+      AppLogger.d('====================================================');
+
+      if (callerId.isNotEmpty && currentUserId.isNotEmpty && callerId == currentUserId) {
+        AppLogger.d('FCM Handler: IGNORED self incoming call notification');
+        return;
+      }
+    } catch (e) {
+      AppLogger.d('FCM Handler: Error inspecting incoming call notification: $e');
+    }
+
+    final consultationId = message.data['consultation_id']?.toString() ?? 'call_${DateTime.now().millisecondsSinceEpoch}';
+    final callerName = NameFormatter.format((message.data['caller_name'] ?? message.data['sender_name'] ?? 'Care Provider').toString());
+
+    await CallKitService().showCallkitIncoming(
+      consultationId: consultationId,
+      name: callerName,
+      extra: Map<String, dynamic>.from(message.data),
     );
-    await FlutterCallkitIncoming.showCallkitIncoming(params);
   }
 }
 
@@ -57,7 +63,7 @@ void main() async {
 
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
-      statusBarColor: Color(0xFF315E26),
+      statusBarColor: AppColors.primaryGreen,
       statusBarIconBrightness: Brightness.light,
       statusBarBrightness: Brightness.dark,
       systemNavigationBarColor: Colors.white,
@@ -69,8 +75,9 @@ void main() async {
     try {
       await Firebase.initializeApp();
       FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+      await FcmService.initialize();
     } catch (e) {
-      debugPrint('Firebase initialization failed: $e');
+      AppLogger.d('Firebase initialization failed: $e');
     }
   }
 
@@ -90,40 +97,40 @@ class _MyAppState extends State<MyApp> {
     super.initState();
     GlobalCallService.initUserCallListener();
     if (!kIsWeb) {
-      _setupCallkitListener();
+      CallKitService().init();
+      _setupFcmForegroundListener();
     }
   }
 
-  void _setupCallkitListener() {
-    FlutterCallkitIncoming.onEvent.listen((CallEvent? event) {
-      if (event == null) return;
-      
-      if (event is CallEventActionCallAccept) {
-        final extra = event.callKitParams.extra ?? {};
-        final consultationId = extra['consultation_id'] ?? event.callKitParams.id;
-        final rawName = (extra['caller_name'] ?? extra['sender_name'] ?? 'Care Provider').toString();
-        final callerName = NameFormatter.format(rawName);
+  void _setupFcmForegroundListener() {
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+      final action = (message.data['action'] ?? message.data['type'] ?? '').toString();
+      if (action == 'INCOMING_CALL' || action == 'incoming_call_offer' || action == 'call_offer' || action == 'offer') {
+        if (GlobalCallService.isCallActive || GlobalCallService.isRingingShown) {
+          AppLogger.d('FCM Foreground: Ignoring incoming_call push — call is already active/ringing');
+          return;
+        }
 
-        if (consultationId != null) {
-          FlutterCallkitIncoming.endAllCalls();
-          globalNavigatorKey.currentState?.push(
-            MaterialPageRoute(
-              builder: (context) => VoiceConsultationScreen(
-                consultationId: consultationId.toString(),
-                midwifeName: callerName,
-                phoneNumber: 'Active Call',
-                isCaller: false,
-              ),
-            ),
-          );
+        final callerId = (message.data['caller_id'] ?? message.data['caller'] ?? message.data['sender_id'] ?? message.data['sender']?['id'] ?? message.data['user_id'] ?? '').toString().trim();
+        try {
+          final currentUserId = (await GlobalCallService.getAuthenticatedUserId() ?? '').trim();
+          if (callerId.isNotEmpty && currentUserId.isNotEmpty && callerId == currentUserId) {
+            AppLogger.d('FCM Foreground: IGNORED self incoming call notification');
+            return;
+          }
+        } catch (e) {
+          AppLogger.d('FCM Foreground: Error inspecting incoming call notification: $e');
         }
-      } else if (event is CallEventActionCallDecline) {
-        final extra = event.callKitParams.extra ?? {};
-        final consultationId = extra['consultation_id'] ?? event.callKitParams.id;
-        if (consultationId != null) {
-          GlobalCallService.declineCall(consultationId.toString());
-        }
-        FlutterCallkitIncoming.endAllCalls();
+
+        final consultationId = message.data['consultation_id']?.toString() ?? 'call_${DateTime.now().millisecondsSinceEpoch}';
+
+        // Reuse the same guarded incoming-call path as the WebSocket handler so
+        // the native CallKit screen is shown exactly once (no duplicate UI when
+        // both WS and FCM deliver the offer while the app is in the foreground).
+        GlobalCallService.showIncomingCallModal(
+          Map<String, dynamic>.from(message.data),
+          consultationId,
+        );
       }
     });
   }
@@ -132,13 +139,13 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return ValueListenableBuilder<String>(
       valueListenable: LanguageService.currentLanguage,
-      builder: (context, langCode, child) {
+      builder: (_, langCode, _) {
         return ValueListenableBuilder<ThemeMode>(
           valueListenable: AppearanceService.currentThemeMode,
-          builder: (context, themeMode, child) {
+          builder: (_, themeMode, _) {
             return ValueListenableBuilder<double>(
               valueListenable: AppearanceService.currentTextScale,
-              builder: (context, textScale, child) {
+              builder: (_, textScale, _) {
                 return MaterialApp(
                   navigatorKey: globalNavigatorKey,
                   locale: Locale(langCode),
@@ -161,14 +168,14 @@ class _MyAppState extends State<MyApp> {
                   themeMode: themeMode,
                   theme: ThemeData(
                     brightness: Brightness.light,
-                    primaryColor: const Color(0xFF315E26),
+                    primaryColor: AppColors.primaryGreen,
                     appBarTheme: const AppBarTheme(
-                      backgroundColor: Color(0xFF315E26),
+                      backgroundColor: AppColors.primaryGreen,
                       foregroundColor: Colors.white,
                       elevation: 0,
                       centerTitle: true,
                       systemOverlayStyle: SystemUiOverlayStyle(
-                        statusBarColor: Color(0xFF315E26),
+                        statusBarColor: AppColors.primaryGreen,
                         statusBarIconBrightness: Brightness.light,
                         statusBarBrightness: Brightness.dark,
                       ),
@@ -179,12 +186,12 @@ class _MyAppState extends State<MyApp> {
                   ),
                   darkTheme: ThemeData(
                     brightness: Brightness.dark,
-                    primaryColor: const Color(0xFF315E26),
-                    scaffoldBackgroundColor: const Color(0xFF121212),
-                    cardColor: const Color(0xFF1E1E1E),
+                    primaryColor: AppColors.primaryGreen,
+                    scaffoldBackgroundColor: AppColors.textDarkAlt,
+                    cardColor: AppColors.textNearBlack,
                     dividerColor: Colors.grey.shade800,
                     appBarTheme: const AppBarTheme(
-                      backgroundColor: Color(0xFF1E1E1E),
+                      backgroundColor: AppColors.textNearBlack,
                       foregroundColor: Colors.white,
                       elevation: 0,
                       centerTitle: true,
@@ -197,14 +204,11 @@ class _MyAppState extends State<MyApp> {
                   ),
                   builder: (context, child) {
                     final data = MediaQuery.of(context);
-                    return Listener(
-                      onPointerDown: (_) => RingtoneService.unlockAudio(),
-                      child: MediaQuery(
-                        data: data.copyWith(
-                          textScaler: TextScaler.linear(textScale),
-                        ),
-                        child: child!,
+                    return MediaQuery(
+                      data: data.copyWith(
+                        textScaler: TextScaler.linear(textScale),
                       ),
+                      child: child!,
                     );
                   },
                   home: const SplashScreen(),

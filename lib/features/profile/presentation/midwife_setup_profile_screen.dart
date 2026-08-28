@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cagh_frontend/features/consultations/data/repositories/midwife_repository_impl.dart';
 import 'package:cagh_frontend/features/consultations/data/services/midwife_api_service.dart';
 import 'package:cagh_frontend/features/home/presentation/midwife/midwife_home_screen.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 class MidwifeSetupProfileScreen extends StatefulWidget {
   const MidwifeSetupProfileScreen({super.key});
@@ -75,7 +76,7 @@ class _MidwifeSetupProfileScreenState extends State<MidwifeSetupProfileScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Complete Your Profile'),
-        backgroundColor: const Color(0xFF315E26),
+        backgroundColor: AppColors.primaryGreen,
         foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
@@ -146,7 +147,7 @@ class _MidwifeSetupProfileScreenState extends State<MidwifeSetupProfileScreen> {
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _submitProfile,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF315E26),
+                    backgroundColor: AppColors.primaryGreen,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),

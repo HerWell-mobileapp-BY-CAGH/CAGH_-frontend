@@ -3,6 +3,7 @@ import 'package:cagh_frontend/features/auth/presentation/user/user_login_screen.
 import 'package:cagh_frontend/features/auth/presentation/midwife/midwife_login_screen.dart';
 import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
 import 'package:cagh_frontend/core/services/language_service.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 class UserTypeSelectionScreen extends StatefulWidget {
   const UserTypeSelectionScreen({super.key});
@@ -24,7 +25,7 @@ class _UserTypeSelectionScreenState extends State<UserTypeSelectionScreen> {
           // Green App Bar
           Container(
             width: double.infinity,
-            color: const Color(0xFF315E26),
+            color: AppColors.primaryGreen,
             child: SafeArea(
               bottom: false,
               child: Padding(
@@ -33,7 +34,7 @@ class _UserTypeSelectionScreenState extends State<UserTypeSelectionScreen> {
                   children: [
                     IconButton(
                       onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.arrow_back, color: Color(0xFFFFD22B)),
+                      icon: const Icon(Icons.arrow_back, color: AppColors.accentYellow),
                     ),
                     Expanded(
                       child: Text(
@@ -66,7 +67,7 @@ class _UserTypeSelectionScreenState extends State<UserTypeSelectionScreen> {
                     height: 180,
                     decoration: const BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Color(0xFFFFF0E0),
+                      color: AppColors.accentPeach,
                     ),
                     child: ClipOval(
                       child: Image.asset(
@@ -76,7 +77,7 @@ class _UserTypeSelectionScreenState extends State<UserTypeSelectionScreen> {
                           return const Icon(
                             Icons.person,
                             size: 90,
-                            color: Color(0xFF315E26),
+                            color: AppColors.primaryGreen,
                           );
                         },
                       ),
@@ -90,7 +91,7 @@ class _UserTypeSelectionScreenState extends State<UserTypeSelectionScreen> {
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF315E26),
+                      color: AppColors.primaryGreen,
                     ),
                   ),
 
@@ -111,7 +112,7 @@ class _UserTypeSelectionScreenState extends State<UserTypeSelectionScreen> {
                   // User Card
                   _RoleCard(
                     icon: Icons.person,
-                    iconBgColor: const Color(0xFFFFD22B),
+                    iconBgColor: AppColors.accentYellow,
                     title: LanguageService.tr(context, 'user_title'),
                     subtitle: LanguageService.tr(context, 'user_subtitle'),
                     isSelected: selectedRole == 'user',
@@ -126,7 +127,7 @@ class _UserTypeSelectionScreenState extends State<UserTypeSelectionScreen> {
                   // Midwife Card
                   _RoleCard(
                     icon: Icons.medical_services,
-                    iconBgColor: const Color(0xFF315E26),
+                    iconBgColor: AppColors.primaryGreen,
                     title: LanguageService.tr(context, 'midwife_title'),
                     subtitle: LanguageService.tr(context, 'midwife_subtitle'),
                     isSelected: selectedRole == 'midwife',
@@ -167,7 +168,7 @@ class _UserTypeSelectionScreenState extends State<UserTypeSelectionScreen> {
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF315E26),
+                        backgroundColor: AppColors.primaryGreen,
                         disabledBackgroundColor: Colors.grey.shade400,
                         foregroundColor: Colors.white,
                         elevation: 0,
@@ -232,13 +233,13 @@ class _RoleCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected
-                ? const Color(0xFF315E26)
+                ? AppColors.primaryGreen
                 : Colors.grey.shade300,
             width: isSelected ? 2 : 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -265,7 +266,7 @@ class _RoleCard extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF1A1A1A),
+                      color: AppColors.textDark,
                     ),
                   ),
                   const SizedBox(height: 3),

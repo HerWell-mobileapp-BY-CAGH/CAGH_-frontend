@@ -2,30 +2,41 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cagh_frontend/core/network/api_config.dart';
+import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
+import 'package:cagh_frontend/shared/constants/app_durations.dart';
+import 'package:cagh_frontend/core/utils/app_logger.dart';
 
 class ConsultationApiService {
   Future<Map<String, String>> _getHeaders() async {
     final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('auth_token') ?? '';
+    final rawToken = await AuthService.getAccessToken() ??
+        prefs.getString('auth_token') ??
+        prefs.getString('access_token') ??
+        prefs.getString('access') ??
+        '';
+    var token = rawToken.trim();
+    if (token.startsWith('Bearer ')) token = token.substring(7).trim();
+    token = token.replaceAll('"', '').replaceAll("'", '').trim();
+
     return {
       'Content-Type': 'application/json',
       if (token.isNotEmpty) 'Authorization': 'Bearer $token',
     };
   }
 
-  Future<List<dynamic>> getConsultationsForAppointment(String appointmentId) async {
+  Future<List<Map<String, dynamic>>> getConsultationsForAppointment(String appointmentId) async {
     final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}?appointment=$appointmentId');
     final response = await http.get(
       url,
       headers: await _getHeaders(),
-    ).timeout(const Duration(seconds: 15));
+    ).timeout(AppDurations.apiRequestTimeout);
 
     if (response.statusCode == 200) {
       final decoded = jsonDecode(response.body);
       if (decoded is List) {
-        return decoded;
+        return (decoded as List).cast<Map<String, dynamic>>();
       } else if (decoded is Map<String, dynamic> && decoded.containsKey('results')) {
-        return decoded['results'] as List<dynamic>;
+        return decoded['results'] as List<Map<String, dynamic>>;
       }
       return [];
     } else {
@@ -39,7 +50,7 @@ class ConsultationApiService {
       url,
       headers: await _getHeaders(),
       body: jsonEncode({'appointment': appointmentId}),
-    ).timeout(const Duration(seconds: 15));
+    ).timeout(AppDurations.apiRequestTimeout);
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       return jsonDecode(response.body);
@@ -53,7 +64,7 @@ class ConsultationApiService {
     final response = await http.post(
       url,
       headers: await _getHeaders(),
-    ).timeout(const Duration(seconds: 15));
+    ).timeout(AppDurations.apiRequestTimeout);
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       return jsonDecode(response.body);
@@ -68,7 +79,7 @@ class ConsultationApiService {
       url,
       headers: await _getHeaders(),
       body: jsonEncode({'action': 'START'}),
-    ).timeout(const Duration(seconds: 15));
+    ).timeout(AppDurations.apiRequestTimeout);
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
@@ -78,30 +89,153 @@ class ConsultationApiService {
   }
 
   Future<Map<String, dynamic>> startVoiceSession(String consultationId) async {
-    final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}$consultationId/voice-session/');
+    // Try explicit endpoint first, fallback to start consultation action
+    final primaryUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}$consultationId/voice-session/start/');
+    final fallbackUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}$consultationId/start/');
+    
+    try {
+      final response = await http.post(
+        primaryUrl,
+        headers: await _getHeaders(),
+      ).timeout(AppDurations.apiRequestTimeout);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return jsonDecode(response.body);
+      }
+    } catch (e) {
+      AppLogger.d('ConsultationApiService: Primary start voice session failed, trying fallback: $e');
+    }
+
     final response = await http.post(
-      url,
+      fallbackUrl,
       headers: await _getHeaders(),
       body: jsonEncode({'action': 'START'}),
-    ).timeout(const Duration(seconds: 15));
+    ).timeout(AppDurations.apiRequestTimeout);
 
-    if (response.statusCode == 200) {
+    if (response.statusCode == 200 || response.statusCode == 201) {
       return jsonDecode(response.body);
     } else {
       throw Exception('Failed to start voice session. Status: ${response.statusCode}');
     }
   }
 
-  Future<bool> endVoiceSession(String consultationId) async {
-    final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}$consultationId/voice-session/');
+  Future<Map<String, dynamic>> getVoiceToken(String consultationId) async {
+    final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}$consultationId/voice-session/token/');
+    final response = await http.post(
+      url,
+      headers: await _getHeaders(),
+    ).timeout(AppDurations.apiRequestTimeout);
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to get Agora token. Status: ${response.statusCode}');
+    }
+  }
+
+  Future<bool> acceptVoiceSession(String consultationId) async {
+    final primaryUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}$consultationId/voice-session/accept/');
+    final fallbackUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}$consultationId/voice-session/');
+    
     try {
       final response = await http.post(
-        url,
+        primaryUrl,
+        headers: await _getHeaders(),
+      ).timeout(AppDurations.apiRequestTimeout);
+      if (response.statusCode == 200) return true;
+    } catch (e) {
+      AppLogger.d('ConsultationApiService: acceptVoiceSession primary request failed, trying fallback: $e');
+    }
+
+    try {
+      final response = await http.post(
+        fallbackUrl,
+        headers: await _getHeaders(),
+        body: jsonEncode({'action': 'ACCEPT'}),
+      ).timeout(AppDurations.apiRequestTimeout);
+      return response.statusCode == 200;
+    } catch (e) {
+      AppLogger.d('ConsultationApiService: Voice session request ultimately failed: $e');
+      return false;
+    }
+  }
+
+  Future<bool> declineVoiceSession(String consultationId) async {
+    final primaryUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}$consultationId/voice-session/decline/');
+    final fallbackUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}$consultationId/voice-session/');
+    
+    try {
+      final response = await http.post(
+        primaryUrl,
+        headers: await _getHeaders(),
+      ).timeout(AppDurations.apiRequestTimeout);
+      if (response.statusCode == 200 || response.statusCode == 201 || response.statusCode == 204 || response.statusCode == 409) return true;
+    } catch (e) {
+      AppLogger.d('ConsultationApiService: Primary voice session request failed, trying fallback: $e');
+    }
+
+    try {
+      final response = await http.post(
+        fallbackUrl,
+        headers: await _getHeaders(),
+        body: jsonEncode({'action': 'DECLINE'}),
+      ).timeout(AppDurations.apiRequestTimeout);
+      return response.statusCode == 200 || response.statusCode == 201 || response.statusCode == 204 || response.statusCode == 409;
+    } catch (e) {
+      AppLogger.d('ConsultationApiService: Voice session request ultimately failed: $e');
+      return false;
+    }
+  }
+
+  Future<bool> missedVoiceSession(String consultationId) async {
+    final primaryUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}$consultationId/voice-session/cancel/');
+    final fallbackUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}$consultationId/voice-session/');
+
+    try {
+      final response = await http.post(
+        primaryUrl,
+        headers: await _getHeaders(),
+      ).timeout(AppDurations.apiRequestTimeout);
+      if (response.statusCode == 200 || response.statusCode == 201 || response.statusCode == 204 || response.statusCode == 409) return true;
+    } catch (e) {
+      AppLogger.d('ConsultationApiService: Primary voice session request failed, trying fallback: $e');
+    }
+
+    try {
+      final response = await http.post(
+        fallbackUrl,
+        headers: await _getHeaders(),
+        body: jsonEncode({'action': 'MISSED'}),
+      ).timeout(AppDurations.apiRequestTimeout);
+      return response.statusCode == 200 || response.statusCode == 201 || response.statusCode == 204 || response.statusCode == 409;
+    } catch (e) {
+      AppLogger.d('ConsultationApiService: Voice session request ultimately failed: $e');
+      return false;
+    }
+  }
+
+  Future<bool> endVoiceSession(String consultationId) async {
+    final primaryUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}$consultationId/voice-session/end/');
+    final fallbackUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}$consultationId/voice-session/');
+
+    try {
+      final response = await http.post(
+        primaryUrl,
+        headers: await _getHeaders(),
+      ).timeout(AppDurations.apiRequestTimeout);
+      if (response.statusCode == 200 || response.statusCode == 201 || response.statusCode == 204 || response.statusCode == 409) return true;
+    } catch (e) {
+      AppLogger.d('ConsultationApiService: Primary voice session request failed, trying fallback: $e');
+    }
+
+    try {
+      final response = await http.post(
+        fallbackUrl,
         headers: await _getHeaders(),
         body: jsonEncode({'action': 'END'}),
-      ).timeout(const Duration(seconds: 15));
+      ).timeout(AppDurations.apiRequestTimeout);
 
-      return response.statusCode == 200;
+      return response.statusCode == 200 || response.statusCode == 201 || response.statusCode == 204 || response.statusCode == 409;
     } catch (e) {
       return false;
     }
@@ -113,7 +247,7 @@ class ConsultationApiService {
       url,
       headers: await _getHeaders(),
       body: jsonEncode({'note': note}),
-    ).timeout(const Duration(seconds: 15));
+    ).timeout(AppDurations.apiRequestTimeout);
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       return jsonDecode(response.body);
@@ -128,7 +262,7 @@ class ConsultationApiService {
       url,
       headers: await _getHeaders(),
       body: jsonEncode(data),
-    ).timeout(const Duration(seconds: 15));
+    ).timeout(AppDurations.apiRequestTimeout);
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);

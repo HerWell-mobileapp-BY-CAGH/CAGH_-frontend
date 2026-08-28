@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 class NearbyEmptyState extends StatelessWidget {
   final VoidCallback onExpandRadius;
@@ -21,13 +22,13 @@ class NearbyEmptyState extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: const Color(0xFFE8F5E9),
+                color: AppColors.lightGreen,
                 shape: BoxShape.circle,
               ),
               child: const Icon(
                 Icons.search_off_rounded,
                 size: 64,
-                color: Color(0xFF315E26),
+                color: AppColors.primaryGreen,
               ),
             ),
             const SizedBox(height: 24),
@@ -54,7 +55,7 @@ class NearbyEmptyState extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: onExpandRadius,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF315E26),
+                  backgroundColor: AppColors.primaryGreen,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -68,7 +69,7 @@ class NearbyEmptyState extends StatelessWidget {
               child: OutlinedButton(
                 onPressed: onClearFilters,
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFF315E26), side: const BorderSide(color: Color(0xFF315E26)),
+                  foregroundColor: AppColors.primaryGreen, side: const BorderSide(color: AppColors.primaryGreen),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),

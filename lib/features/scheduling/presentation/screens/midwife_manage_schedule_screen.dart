@@ -5,6 +5,7 @@ import 'package:cagh_frontend/features/consultations/data/services/midwife_api_s
 import 'package:cagh_frontend/features/consultations/data/repositories/midwife_repository_impl.dart';
 import 'package:cagh_frontend/shared/models/working_hours.dart';
 import 'package:cagh_frontend/shared/models/blocked_date.dart';
+import 'package:cagh_frontend/core/utils/app_logger.dart';
 
 class MidwifeManageScheduleScreen extends StatefulWidget {
   const MidwifeManageScheduleScreen({super.key});
@@ -39,20 +40,29 @@ class _MidwifeManageScheduleScreenState extends State<MidwifeManageScheduleScree
   }
 
   Future<void> _fetchData() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
+
     try {
       final availabilities = await _appointmentRepository.getAvailabilities();
-      final blocked = await _midwifeRepository.getBlockedDates();
       if (mounted) {
-        setState(() {
-          _availabilities = availabilities;
-          _blockedDates = blocked;
-        });
+        setState(() => _availabilities = availabilities);
       }
     } catch (e) {
-      print('Error fetching schedule data: $e');
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
+      AppLogger.d('Error fetching availabilities: $e');
+    }
+
+    try {
+      final blocked = await _midwifeRepository.getBlockedDates();
+      if (mounted) {
+        setState(() => _blockedDates = blocked);
+      }
+    } catch (e) {
+      AppLogger.d('Error fetching blocked dates: $e');
+    }
+
+    if (mounted) {
+      setState(() => _isLoading = false);
     }
   }
 

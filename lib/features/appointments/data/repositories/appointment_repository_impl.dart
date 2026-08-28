@@ -84,4 +84,9 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
     final response = await _apiService.setAvailability(data);
     return WorkingHours.fromJson(response);
   }
+
+  @override
+  Future<void> deleteAvailability(String id) async {
+    await _apiService.deleteAvailability(id);
+  }
 }

@@ -8,6 +8,7 @@ import 'package:cagh_frontend/features/consultations/data/services/midwife_api_s
 import 'package:cagh_frontend/features/consultations/data/repositories/midwife_repository_impl.dart';
 import 'package:cagh_frontend/shared/models/midwife_profile.dart';
 import 'package:cagh_frontend/shared/widgets/hotline_fab.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 class FindMidwifeScreen extends StatefulWidget {
   final VoidCallback? onBack;
@@ -71,9 +72,9 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FBF6),
+      backgroundColor: AppColors.backgroundPaleMint,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF315E26),
+        backgroundColor: AppColors.primaryGreen,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -94,7 +95,7 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
           ),
         ),
         actions: [
-          const GlobeLanguagePicker(iconColor: Color(0xFFFFD22B)),
+          const GlobeLanguagePicker(iconColor: AppColors.accentYellow),
           IconButton(
             icon: const Icon(Icons.more_vert, color: Colors.white),
             onPressed: () {},
@@ -112,7 +113,7 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF1F4EE),
+                    color: AppColors.backgroundTealWhite,
                     borderRadius: BorderRadius.circular(24),
                   ),
                   child: TextField(
@@ -139,7 +140,7 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                   const Center(
                     child: Padding(
                       padding: EdgeInsets.only(top: 40.0),
-                      child: CircularProgressIndicator(color: Color(0xFF315E26)),
+                      child: CircularProgressIndicator(color: AppColors.primaryGreen),
                     ),
                   )
                 else if (_errorMessage != null)
@@ -190,7 +191,7 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                           children: [
                             CircleAvatar(
                               radius: 28,
-                              backgroundColor: const Color(0xFFE8F5E9),
+                              backgroundColor: AppColors.lightGreen,
                               backgroundImage: mw.avatarUrl != null ? NetworkImage(mw.avatarUrl!) : null,
                               child: mw.avatarUrl == null 
                                 ? Icon(Icons.person, color: Colors.green.shade800, size: 30) 
@@ -209,18 +210,18 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                                         style: const TextStyle(
                                           fontSize: 16.5,
                                           fontWeight: FontWeight.bold,
-                                          color: Color(0xFF1A1A1A),
+                                          color: AppColors.textDark,
                                         ),
                                       ),
                                       Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                                         decoration: BoxDecoration(
-                                          color: const Color(0xFFFFF8E1),
+                                          color: AppColors.cream,
                                           borderRadius: BorderRadius.circular(12),
                                         ),
                                         child: Row(
                                           children: [
-                                            const Icon(Icons.star, color: Color(0xFFFFD22B), size: 14),
+                                            const Icon(Icons.star, color: AppColors.accentYellow, size: 14),
                                             const SizedBox(width: 3),
                                             Text(
                                               mw.ratingAverage.toStringAsFixed(1),
@@ -240,7 +241,7 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                                     mw.specialty,
                                     style: const TextStyle(
                                       fontSize: 13,
-                                      color: Color(0xFF315E26),
+                                      color: AppColors.primaryGreen,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
@@ -314,8 +315,8 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                                     );
                                   },
                                   style: OutlinedButton.styleFrom(
-                                    foregroundColor: const Color(0xFF315E26),
-                                    side: const BorderSide(color: Color(0xFF315E26), width: 1.5),
+                                    foregroundColor: AppColors.primaryGreen,
+                                    side: const BorderSide(color: AppColors.primaryGreen, width: 1.5),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(14),
                                     ),
@@ -346,7 +347,7 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                                     );
                                   },
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF315E26),
+                                    backgroundColor: AppColors.primaryGreen,
                                     elevation: 0,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(14),

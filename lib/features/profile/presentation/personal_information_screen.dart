@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 class PersonalInformationScreen extends StatefulWidget {
   const PersonalInformationScreen({super.key});
@@ -19,37 +20,37 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
   final List<Map<String, dynamic>> _avatarOptions = [
     {
       'label': 'Original Photo',
-      'bgColor': const Color(0xFFE8F5E9),
-      'iconColor': const Color(0xFF315E26),
+      'bgColor': AppColors.lightGreen,
+      'iconColor': AppColors.primaryGreen,
       'icon': Icons.person,
       'isAsset': true,
       'assetPath': 'assets/images/home_illustration.png',
     },
     {
       'label': 'Warm Amber',
-      'bgColor': const Color(0xFFFFF8E1),
-      'iconColor': const Color(0xFFFFD22B),
+      'bgColor': AppColors.cream,
+      'iconColor': AppColors.accentYellow,
       'icon': Icons.face_rounded,
       'isAsset': false,
     },
     {
       'label': 'Ocean Blue',
-      'bgColor': const Color(0xFFE1F5FE),
-      'iconColor': const Color(0xFF0288D1),
+      'bgColor': AppColors.infoBlueBg,
+      'iconColor': AppColors.infoBlue,
       'icon': Icons.account_circle,
       'isAsset': false,
     },
     {
       'label': 'Royal Purple',
-      'bgColor': const Color(0xFFF3E5F5),
-      'iconColor': const Color(0xFF7B1FA2),
+      'bgColor': AppColors.accentPurpleBg,
+      'iconColor': AppColors.accentPurpleStrong,
       'icon': Icons.face_retouching_natural,
       'isAsset': false,
     },
     {
       'label': 'Soft Coral',
-      'bgColor': const Color(0xFFFFEBEE),
-      'iconColor': const Color(0xFFC62828),
+      'bgColor': AppColors.backgroundSoftPink,
+      'iconColor': AppColors.errorRedDark,
       'icon': Icons.person_pin,
       'isAsset': false,
     },
@@ -79,7 +80,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF315E26),
+                          color: AppColors.primaryGreen,
                         ),
                       ),
                       IconButton(
@@ -104,15 +105,15 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text('Camera photo captured and profile updated!'),
-                                backgroundColor: Color(0xFF315E26),
+                                backgroundColor: AppColors.primaryGreen,
                               ),
                             );
                           },
-                          icon: const Icon(Icons.camera_alt_outlined, color: Color(0xFF315E26)),
-                          label: const Text('Take Photo', style: TextStyle(color: Color(0xFF315E26), fontWeight: FontWeight.bold)),
+                          icon: const Icon(Icons.camera_alt_outlined, color: AppColors.primaryGreen),
+                          label: const Text('Take Photo', style: TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.bold)),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),
-                            side: const BorderSide(color: Color(0xFF315E26)),
+                            side: const BorderSide(color: AppColors.primaryGreen),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                           ),
                         ),
@@ -129,15 +130,15 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text('Gallery photo uploaded successfully!'),
-                                backgroundColor: Color(0xFF315E26),
+                                backgroundColor: AppColors.primaryGreen,
                               ),
                             );
                           },
-                          icon: const Icon(Icons.photo_library_outlined, color: Color(0xFF315E26)),
-                          label: const Text('From Gallery', style: TextStyle(color: Color(0xFF315E26), fontWeight: FontWeight.bold)),
+                          icon: const Icon(Icons.photo_library_outlined, color: AppColors.primaryGreen),
+                          label: const Text('From Gallery', style: TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.bold)),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),
-                            side: const BorderSide(color: Color(0xFF315E26)),
+                            side: const BorderSide(color: AppColors.primaryGreen),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                           ),
                         ),
@@ -179,7 +180,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text('Profile photo updated to ${item['label']}!'),
-                                backgroundColor: const Color(0xFF315E26),
+                                backgroundColor: AppColors.primaryGreen,
                               ),
                             );
                           },
@@ -192,7 +193,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     border: Border.all(
-                                      color: isSelected ? const Color(0xFF315E26) : Colors.transparent,
+                                      color: isSelected ? AppColors.primaryGreen : Colors.transparent,
                                       width: 2.5,
                                     ),
                                   ),
@@ -212,7 +213,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                    color: isSelected ? const Color(0xFF315E26) : Colors.black87,
+                                    color: isSelected ? AppColors.primaryGreen : Colors.black87,
                                   ),
                                 ),
                               ],
@@ -351,7 +352,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                           style: TextStyle(
                             fontSize: 19,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF315E26),
+                            color: AppColors.primaryGreen,
                           ),
                         ),
                         IconButton(
@@ -368,17 +369,17 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                       readOnly: true,
                       decoration: InputDecoration(
                         labelText: 'Full Name',
-                        prefixIcon: const Icon(Icons.badge_outlined, color: Color(0xFF315E26)),
+                        prefixIcon: const Icon(Icons.badge_outlined, color: AppColors.primaryGreen),
                         suffixIcon: const Icon(Icons.lock_outline, size: 18, color: Colors.grey),
                         filled: true,
                         fillColor: Colors.grey.shade100,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
-                          borderSide: const BorderSide(color: Color(0xFFC8E6C9)),
+                          borderSide: const BorderSide(color: AppColors.mintLight),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
-                          borderSide: const BorderSide(color: Color(0xFFC8E6C9)),
+                          borderSide: const BorderSide(color: AppColors.mintLight),
                         ),
                       ),
                     ),
@@ -397,7 +398,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                             return Theme(
                               data: Theme.of(context).copyWith(
                                 colorScheme: const ColorScheme.light(
-                                  primary: Color(0xFF315E26),
+                                  primary: AppColors.primaryGreen,
                                   onPrimary: Colors.white,
                                   onSurface: Colors.black,
                                 ),
@@ -419,13 +420,13 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF9FBF7),
+                          color: AppColors.backgroundSoftMintAlt,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(color: Colors.grey.shade300),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.calendar_today_outlined, color: Color(0xFF315E26), size: 20),
+                            const Icon(Icons.calendar_today_outlined, color: AppColors.primaryGreen, size: 20),
                             const SizedBox(width: 12),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -440,7 +441,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                                   style: const TextStyle(
                                     fontSize: 14.5,
                                     fontWeight: FontWeight.bold,
-                                    color: Color(0xFF1A1A1A),
+                                    color: AppColors.textDark,
                                   ),
                                 ),
                               ],
@@ -459,17 +460,17 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                       readOnly: true,
                       decoration: InputDecoration(
                         labelText: 'Phone Number',
-                        prefixIcon: const Icon(Icons.phone_outlined, color: Color(0xFF315E26)),
+                        prefixIcon: const Icon(Icons.phone_outlined, color: AppColors.primaryGreen),
                         suffixIcon: const Icon(Icons.lock_outline, size: 18, color: Colors.grey),
                         filled: true,
                         fillColor: Colors.grey.shade100,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
-                          borderSide: const BorderSide(color: Color(0xFFC8E6C9)),
+                          borderSide: const BorderSide(color: AppColors.mintLight),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
-                          borderSide: const BorderSide(color: Color(0xFFC8E6C9)),
+                          borderSide: const BorderSide(color: AppColors.mintLight),
                         ),
                       ),
                     ),
@@ -483,17 +484,17 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                       readOnly: true,
                       decoration: InputDecoration(
                         labelText: 'Email Address',
-                        prefixIcon: const Icon(Icons.email_outlined, color: Color(0xFF315E26)),
+                        prefixIcon: const Icon(Icons.email_outlined, color: AppColors.primaryGreen),
                         suffixIcon: const Icon(Icons.lock_outline, size: 18, color: Colors.grey),
                         filled: true,
                         fillColor: Colors.grey.shade100,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
-                          borderSide: const BorderSide(color: Color(0xFFC8E6C9)),
+                          borderSide: const BorderSide(color: AppColors.mintLight),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
-                          borderSide: const BorderSide(color: Color(0xFFC8E6C9)),
+                          borderSide: const BorderSide(color: AppColors.mintLight),
                         ),
                       ),
                     ),
@@ -537,13 +538,13 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text('Personal profile updated successfully!'),
-                                backgroundColor: Color(0xFF315E26),
+                                backgroundColor: AppColors.primaryGreen,
                               ),
                             );
                           }
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF315E26),
+                          backgroundColor: AppColors.primaryGreen,
                           elevation: 0,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(28),
@@ -574,7 +575,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF315E26),
+        backgroundColor: AppColors.primaryGreen,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -631,7 +632,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFFD22B), // Yellow camera icon container
+                            color: AppColors.accentYellow, // Yellow camera icon container
                             shape: BoxShape.circle,
                             border: Border.all(color: Colors.white, width: 2),
                             boxShadow: [
@@ -659,7 +660,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF315E26),
+                      color: AppColors.primaryGreen,
                     ),
                   ),
 
@@ -736,7 +737,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                     ),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF315E26),
+                    backgroundColor: AppColors.primaryGreen,
                     elevation: 2,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
@@ -780,12 +781,12 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFFF1F6EE),
+                color: AppColors.backgroundMintGray3,
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Icon(
                 icon,
-                color: const Color(0xFF315E26),
+                color: AppColors.primaryGreen,
                 size: 22,
               ),
             ),
@@ -809,7 +810,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF1A1A1A),
+                      color: AppColors.textDark,
                     ),
                   ),
                 ],

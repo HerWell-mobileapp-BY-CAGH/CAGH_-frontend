@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'dart:ui';
 import '../otp_verification_screen.dart';
 import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
 import 'package:cagh_frontend/core/services/language_service.dart';
 import 'package:cagh_frontend/shared/widgets/custom_snackbar.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 class UserRegistrationScreen extends StatefulWidget {
   const UserRegistrationScreen({super.key});
@@ -130,7 +130,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
           // Green Header Bar
           Container(
             width: double.infinity,
-            color: const Color(0xFF315E26),
+            color: AppColors.primaryGreen,
             child: SafeArea(
               bottom: false,
               child: Padding(
@@ -139,7 +139,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                   children: [
                     IconButton(
                       onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.arrow_back, color: Color(0xFFFFD22B)),
+                      icon: const Icon(Icons.arrow_back, color: AppColors.accentYellow),
                     ),
                     Expanded(
                       child: Text(
@@ -191,7 +191,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                     style: const TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF315E26),
+                      color: AppColors.primaryGreen,
                     ),
                   ),
 
@@ -265,7 +265,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                                color: Color(0xFF315E26),
+                                color: AppColors.primaryGreen,
                               ),
                             ),
                           ],
@@ -315,6 +315,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                         lastDate: DateTime.now(),
                       );
                       if (date != null) {
+                        if (!mounted) return;
                         _dobController.text =
                             "${date.day}/${date.month}/${date.year}";
                       }
@@ -382,7 +383,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                         height: 24,
                         child: Checkbox(
                           value: _agreeTerms,
-                          activeColor: const Color(0xFF315E26),
+                          activeColor: AppColors.primaryGreen,
                           onChanged: (value) {
                             setState(() => _agreeTerms = value ?? false);
                           },
@@ -460,7 +461,6 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                                 return;
                               }
 
-                              final messenger = ScaffoldMessenger.of(context);
                               final navigator = Navigator.of(context);
 
                               setState(() => _isLoading = true);
@@ -505,7 +505,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                             }
                           : null,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF315E26),
+                        backgroundColor: AppColors.primaryGreen,
                         disabledBackgroundColor: Colors.grey.shade400,
                         foregroundColor: Colors.white,
                         elevation: 0,
@@ -549,7 +549,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                           child: Text(
                             LanguageService.tr(context, 'login'),
                             style: const TextStyle(
-                              color: Color(0xFF315E26),
+                              color: AppColors.primaryGreen,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -576,7 +576,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
         style: const TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w500,
-          color: Color(0xFF333333),
+          color: AppColors.textGray,
         ),
       ),
     );
@@ -618,7 +618,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF315E26), width: 1.5),
+          borderSide: const BorderSide(color: AppColors.primaryGreen, width: 1.5),
         ),
         errorText: errorText,
       ),

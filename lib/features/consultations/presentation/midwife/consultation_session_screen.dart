@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cagh_frontend/features/consultations/data/services/consultation_api_service.dart';
 import 'package:cagh_frontend/shared/models/appointment.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 class ConsultationSessionScreen extends StatefulWidget {
   final Map<String, dynamic> sessionData;
@@ -122,9 +123,9 @@ class _ConsultationSessionScreenState extends State<ConsultationSessionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAF8),
+      backgroundColor: AppColors.backgroundPinkGray,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF315E26),
+        backgroundColor: AppColors.primaryGreen,
         title: Row(
           children: [
             const Text('Consultation Session', style: TextStyle(color: Colors.white, fontSize: 18)),
@@ -161,8 +162,8 @@ class _ConsultationSessionScreenState extends State<ConsultationSessionScreen> {
                 children: [
                   const CircleAvatar(
                     radius: 30,
-                    backgroundColor: Color(0xFFE8F5E9),
-                    child: Icon(Icons.person, color: Color(0xFF315E26), size: 34),
+                    backgroundColor: AppColors.lightGreen,
+                    child: Icon(Icons.person, color: AppColors.primaryGreen, size: 34),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -171,7 +172,7 @@ class _ConsultationSessionScreenState extends State<ConsultationSessionScreen> {
                       children: [
                         Text(
                           widget.appointment.userFullName ?? 'Patient',
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF315E26)),
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -191,7 +192,7 @@ class _ConsultationSessionScreenState extends State<ConsultationSessionScreen> {
             // Completion Form
             const Text(
               'Consultation Report',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A)),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textDark),
             ),
             const SizedBox(height: 16),
             
@@ -220,7 +221,7 @@ class _ConsultationSessionScreenState extends State<ConsultationSessionScreen> {
                     children: [
                       Checkbox(
                         value: _followUpRequired,
-                        activeColor: const Color(0xFF315E26),
+                        activeColor: AppColors.primaryGreen,
                         onChanged: (val) {
                           setState(() {
                             _followUpRequired = val ?? false;
@@ -255,7 +256,7 @@ class _ConsultationSessionScreenState extends State<ConsultationSessionScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(_followUpDate == null ? 'Select Follow-up Date' : '${_followUpDate!.year}-${_followUpDate!.month}-${_followUpDate!.day}'),
-                            const Icon(Icons.calendar_month, color: Color(0xFF315E26)),
+                            const Icon(Icons.calendar_month, color: AppColors.primaryGreen),
                           ],
                         ),
                       ),
@@ -274,7 +275,7 @@ class _ConsultationSessionScreenState extends State<ConsultationSessionScreen> {
               child: ElevatedButton(
                 onPressed: _isLoading ? null : _completeSession,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF315E26),
+                  backgroundColor: AppColors.primaryGreen,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                 ),
                 child: _isLoading
@@ -310,7 +311,7 @@ class _ConsultationSessionScreenState extends State<ConsultationSessionScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF315E26), width: 2),
+          borderSide: const BorderSide(color: AppColors.primaryGreen, width: 2),
         ),
       ),
     );

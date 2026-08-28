@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'user/user_login_screen.dart';
 import 'midwife/midwife_login_screen.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 class PasswordResetSuccessScreen extends StatelessWidget {
   final bool isMidwife;
@@ -13,7 +14,7 @@ class PasswordResetSuccessScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7FBF5),
+      backgroundColor: AppColors.backgroundMintWhite,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
@@ -24,11 +25,11 @@ class PasswordResetSuccessScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE8F5E9),
+                  color: AppColors.lightGreen,
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF315E26).withOpacity(0.1),
+                      color: AppColors.primaryGreen.withValues(alpha: 0.1),
                       blurRadius: 20,
                       spreadRadius: 5,
                     ),
@@ -36,7 +37,7 @@ class PasswordResetSuccessScreen extends StatelessWidget {
                 ),
                 child: const Icon(
                   Icons.check_circle,
-                  color: Color(0xFF315E26),
+                  color: AppColors.primaryGreen,
                   size: 80,
                 ),
               ),
@@ -47,7 +48,7 @@ class PasswordResetSuccessScreen extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF315E26),
+                  color: AppColors.primaryGreen,
                 ),
               ),
               const SizedBox(height: 16),
@@ -87,7 +88,7 @@ class PasswordResetSuccessScreen extends StatelessWidget {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF315E26),
+                    backgroundColor: AppColors.primaryGreen,
                     foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(

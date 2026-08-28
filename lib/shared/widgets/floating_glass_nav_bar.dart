@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 class FloatingNavBarItem {
   final IconData icon;
@@ -29,10 +30,10 @@ class FloatingGlassNavBar extends StatelessWidget {
     required this.selectedIndex,
     required this.items,
     required this.onTabSelected,
-    this.backgroundColor = const Color(0xF5F6F9F4), // Soft mint-tinted frosted glass with high contrast
-    this.activeCapsuleColor = const Color(0xFF315E26), // Deep green active capsule
+    this.backgroundColor = AppColors.frostedMint, // Soft mint-tinted frosted glass with high contrast
+    this.activeCapsuleColor = AppColors.primaryGreen, // Deep green active capsule
     this.activeItemColor = Colors.white,
-    this.inactiveItemColor = const Color(0xFF4E574B), // Sleek dark sage-grey for unselected items
+    this.inactiveItemColor = AppColors.sageGrey, // Sleek dark sage-grey for unselected items
   });
 
   @override
@@ -82,7 +83,7 @@ class FloatingGlassNavBar extends StatelessWidget {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: isSelected ? const Color(0xFF315E26) : Colors.transparent,
+                            color: isSelected ? AppColors.primaryGreen : Colors.transparent,
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Column(
@@ -105,7 +106,7 @@ class FloatingGlassNavBar extends StatelessWidget {
                                         width: 8,
                                         height: 8,
                                         decoration: const BoxDecoration(
-                                          color: Color(0xFFFFD22B),
+                                          color: AppColors.accentYellow,
                                           shape: BoxShape.circle,
                                         ),
                                       ),

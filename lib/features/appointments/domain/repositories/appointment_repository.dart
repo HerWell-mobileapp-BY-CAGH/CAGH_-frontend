@@ -28,4 +28,6 @@ abstract class AppointmentRepository {
   Future<List<WorkingHours>> getAvailabilities();
   
   Future<WorkingHours> setAvailability(Map<String, dynamic> data);
+
+  Future<void> deleteAvailability(String id);
 }

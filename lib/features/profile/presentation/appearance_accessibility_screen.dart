@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cagh_frontend/core/services/appearance_service.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 class AppearanceAccessibilityScreen extends StatefulWidget {
   const AppearanceAccessibilityScreen({super.key});
@@ -11,14 +12,12 @@ class AppearanceAccessibilityScreen extends StatefulWidget {
 class _AppearanceAccessibilityScreenState extends State<AppearanceAccessibilityScreen> {
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: const Color(0xFFFFD22B)),
+          icon: Icon(Icons.arrow_back, color: AppColors.accentYellow),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -112,7 +111,7 @@ class _AppearanceAccessibilityScreenState extends State<AppearanceAccessibilityS
           width: 3.5,
           height: 16,
           decoration: BoxDecoration(
-            color: const Color(0xFFFFD22B),
+            color: AppColors.accentYellow,
             borderRadius: BorderRadius.circular(2),
           ),
         ),
@@ -122,7 +121,7 @@ class _AppearanceAccessibilityScreenState extends State<AppearanceAccessibilityS
           style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w700,
-            color: Color(0xFF315E26),
+            color: AppColors.primaryGreen,
           ),
         ),
       ],
@@ -165,7 +164,7 @@ class _AppearanceAccessibilityScreenState extends State<AppearanceAccessibilityS
       value: value,
       groupValue: groupValue,
       onChanged: onChanged,
-      activeColor: const Color(0xFF315E26),
+      activeColor: AppColors.primaryGreen,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       visualDensity: const VisualDensity(horizontal: 0, vertical: -2),
     );

@@ -25,7 +25,7 @@ dependencies:
   flutter_dotenv: ^5.1.0
   table_calendar: ^3.2.1
   url_launcher: ^6.3.2
-  flutter_webrtc: ^1.6.0
+  agora_rtc_engine: ^6.3.2
   flutter_callkit_incoming: ^3.1.5
   web_socket_channel: ^3.0.3
   audioplayers: ^6.1.1
@@ -33,6 +33,7 @@ dependencies:
   mime: ^2.0.0
   firebase_core: ^4.13.0
   firebase_messaging: ^16.5.0
+  logging: ^1.2.0
 
 dev_dependencies:
   flutter_test:

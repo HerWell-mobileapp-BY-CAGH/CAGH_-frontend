@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 class NearbySearchBar extends StatelessWidget {
   final TextEditingController controller;
@@ -20,7 +21,7 @@ class NearbySearchBar extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -32,7 +33,7 @@ class NearbySearchBar extends StatelessWidget {
         decoration: InputDecoration(
           hintText: 'Search hospitals, health centers, midwives...',
           hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 14),
-          prefixIcon: const Icon(Icons.search, color: Color(0xFF315E26)),
+          prefixIcon: const Icon(Icons.search, color: AppColors.primaryGreen),
           suffixIcon: controller.text.isNotEmpty
               ? IconButton(
                   icon: const Icon(Icons.clear, color: Colors.grey),

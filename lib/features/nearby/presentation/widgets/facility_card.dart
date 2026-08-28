@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../domain/entities/healthcare_facility.dart';
+import 'package:cagh_frontend/shared/constants/app_constants.dart';
 import '../screens/facility_details_screen.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 class FacilityCard extends StatelessWidget {
   final HealthcareFacility facility;
@@ -56,7 +58,7 @@ class FacilityCard extends StatelessWidget {
                     width: 56,
                     height: 56,
                     decoration: BoxDecoration(
-                      color: facility.emergencyAvailable ? Colors.red.shade50 : const Color(0xFFE8F5E9),
+                      color: facility.emergencyAvailable ? Colors.red.shade50 : AppColors.lightGreen,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     clipBehavior: Clip.hardEdge,
@@ -68,7 +70,7 @@ class FacilityCard extends StatelessWidget {
                               padding: const EdgeInsets.all(10),
                               child: Icon(
                                 _getIconForType(),
-                                color: facility.emergencyAvailable ? Colors.red : const Color(0xFF315E26),
+                                color: facility.emergencyAvailable ? Colors.red : AppColors.primaryGreen,
                                 size: 28,
                               ),
                             ),
@@ -77,7 +79,7 @@ class FacilityCard extends StatelessWidget {
                             padding: const EdgeInsets.all(10),
                             child: Icon(
                               _getIconForType(),
-                              color: facility.emergencyAvailable ? Colors.red : const Color(0xFF315E26),
+                              color: facility.emergencyAvailable ? Colors.red : AppColors.primaryGreen,
                               size: 28,
                             ),
                           ),
@@ -138,7 +140,7 @@ class FacilityCard extends StatelessWidget {
                         '${facility.distance.toStringAsFixed(1)} km',
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF315E26),
+                          color: AppColors.primaryGreen,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -204,7 +206,7 @@ class FacilityCard extends StatelessWidget {
                         );
                       },
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFF315E26), side: const BorderSide(color: Color(0xFF315E26)),
+                        foregroundColor: AppColors.primaryGreen, side: const BorderSide(color: AppColors.primaryGreen),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       ),
                       child: const Text('Details'),
@@ -214,7 +216,7 @@ class FacilityCard extends StatelessWidget {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () async {
-                        final fallbackUrl = 'https://www.google.com/maps/search/?api=1&query=${facility.latitude},${facility.longitude}';
+                        final fallbackUrl = AppConstants.googleMapsSearchUrl(facility.latitude, facility.longitude);
                         final navUrls = facility.navigationUrls;
                         
                         String urlToLaunch = fallbackUrl;
@@ -226,7 +228,7 @@ class FacilityCard extends StatelessWidget {
                         launchUrl(uri, mode: LaunchMode.externalApplication);
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF315E26),
+                        backgroundColor: AppColors.primaryGreen,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       ),

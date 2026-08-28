@@ -4,6 +4,8 @@ import 'package:cagh_frontend/features/consultations/data/services/chat_api_serv
 import 'package:cagh_frontend/features/consultations/data/services/chat_websocket_service.dart';
 import 'package:intl/intl.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
+import 'package:cagh_frontend/core/utils/app_logger.dart';
 
 class ChatScreen extends StatefulWidget {
   final MidwifeProfile midwife;
@@ -23,7 +25,6 @@ class _ChatScreenState extends State<ChatScreen> {
   String? _roomId;
   String? _roomStatus;
   ChatWebSocketService? _wsService;
-  String? _myUserId;
   bool _isUploadingFile = false;
 
   @override
@@ -66,7 +67,7 @@ class _ChatScreenState extends State<ChatScreen> {
         }
       }
     } catch (e) {
-      debugPrint("Error initializing chat: $e");
+      AppLogger.d("Error initializing chat: $e");
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -167,9 +168,11 @@ class _ChatScreenState extends State<ChatScreen> {
         _messageController.clear();
         _scrollToBottom();
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to send request. Try again.'), backgroundColor: Colors.red),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to send request. Try again.'), backgroundColor: Colors.red),
+          );
+        }
       } finally {
         setState(() => _isLoading = false);
       }
@@ -225,10 +228,12 @@ class _ChatScreenState extends State<ChatScreen> {
         }
       }
     } catch (e) {
-      debugPrint('File upload error: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to upload file.'), backgroundColor: Colors.red),
-      );
+      AppLogger.d('File upload error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to upload file.'), backgroundColor: Colors.red),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -253,14 +258,14 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F9F4),
+      backgroundColor: AppColors.backgroundPaleGreen,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(60),
         child: AppBar(
-          backgroundColor: const Color(0xFF315E26),
+          backgroundColor: AppColors.primaryGreen,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Color(0xFFFFD22B)),
+            icon: const Icon(Icons.arrow_back, color: AppColors.accentYellow),
             onPressed: () => Navigator.pop(context),
           ),
           title: Row(
@@ -269,7 +274,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 radius: 16,
                 backgroundColor: Colors.white,
                 backgroundImage: widget.midwife.avatarUrl != null ? NetworkImage(widget.midwife.avatarUrl!) : null,
-                child: widget.midwife.avatarUrl == null ? const Icon(Icons.person, color: Color(0xFF315E26), size: 20) : null,
+                child: widget.midwife.avatarUrl == null ? const Icon(Icons.person, color: AppColors.primaryGreen, size: 20) : null,
               ),
               const SizedBox(width: 12),
               Column(
@@ -290,14 +295,14 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           actions: [
             IconButton(
-              icon: const Icon(Icons.more_vert, color: Color(0xFFFFD22B)),
+              icon: const Icon(Icons.more_vert, color: AppColors.accentYellow),
               onPressed: () {},
             ),
           ],
         ),
       ),
       body: _isLoading 
-        ? const Center(child: CircularProgressIndicator(color: Color(0xFF315E26)))
+        ? const Center(child: CircularProgressIndicator(color: AppColors.primaryGreen))
         : Column(
           children: [
             if (_roomStatus == 'REQUESTED')
@@ -383,7 +388,7 @@ class _ChatScreenState extends State<ChatScreen> {
             padding: EdgeInsets.symmetric(
                 horizontal: hasImage ? 4 : 16, vertical: hasImage ? 4 : 12),
             decoration: BoxDecoration(
-              color: isMe ? const Color(0xFF33691E) : Colors.white,
+              color: isMe ? AppColors.darkGreen : Colors.white,
               borderRadius: BorderRadius.only(
                 topLeft: const Radius.circular(20),
                 topRight: const Radius.circular(20),
@@ -485,7 +490,7 @@ class _ChatScreenState extends State<ChatScreen> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -504,7 +509,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
                 child: _isUploadingFile 
                     ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))
-                    : Icon(Icons.add, color: disabled ? Colors.grey : const Color(0xFF315E26), size: 24),
+                    : Icon(Icons.add, color: disabled ? Colors.grey : AppColors.primaryGreen, size: 24),
               ),
             ),
             const SizedBox(width: 12),
@@ -543,7 +548,7 @@ class _ChatScreenState extends State<ChatScreen> {
               child: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: disabled ? Colors.grey.shade400 : const Color(0xFF315E26),
+                  color: disabled ? Colors.grey.shade400 : AppColors.primaryGreen,
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.send, color: Colors.white, size: 20),

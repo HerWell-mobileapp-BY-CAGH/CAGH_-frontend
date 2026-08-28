@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 class EmergencySupportScreen extends StatelessWidget {
   const EmergencySupportScreen({super.key});
@@ -8,7 +9,7 @@ class EmergencySupportScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFFE5E5),
+        backgroundColor: AppColors.backgroundRedPale,
         elevation: 0,
         centerTitle: true,
         leadingWidth: 80,
@@ -17,7 +18,7 @@ class EmergencySupportScreen extends StatelessWidget {
           child: const Text(
             'close',
             style: TextStyle(
-              color: Color(0xFF900000),
+              color: AppColors.errorRedMaroon,
               fontWeight: FontWeight.bold,
               fontSize: 16,
             ),
@@ -26,7 +27,7 @@ class EmergencySupportScreen extends StatelessWidget {
         title: const Text(
           'Emergency',
           style: TextStyle(
-            color: Color(0xFF900000),
+            color: AppColors.errorRedMaroon,
             fontWeight: FontWeight.bold,
             fontSize: 16,
           ),
@@ -43,7 +44,7 @@ class EmergencySupportScreen extends StatelessWidget {
               const Text(
                 'Are you okay?',
                 style: TextStyle(
-                  color: Color(0xFFB71C1C),
+                  color: AppColors.errorRedDeep,
                   fontSize: 26,
                   fontWeight: FontWeight.bold,
                 ),
@@ -53,7 +54,7 @@ class EmergencySupportScreen extends StatelessWidget {
                 'If this is a life-threatening medical\nemergency, tap SOS immediately.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Color(0xFFC62828),
+                  color: AppColors.errorRedDark,
                   fontSize: 15,
                   height: 1.4,
                 ),
@@ -72,7 +73,7 @@ class EmergencySupportScreen extends StatelessWidget {
                   height: 220,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: const Color(0xFFE53935).withOpacity(0.5), // Outer ring
+                    color: AppColors.errorRedBright.withValues(alpha: 0.5), // Outer ring
                   ),
                   child: Center(
                     child: Container(
@@ -80,7 +81,7 @@ class EmergencySupportScreen extends StatelessWidget {
                       height: 170,
                       decoration: const BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Color(0xFFB71C1C), // Inner circle
+                        color: AppColors.errorRedDeep, // Inner circle
                       ),
                       child: const Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -112,8 +113,8 @@ class EmergencySupportScreen extends StatelessWidget {
               // Call Emergency Services Card
               _buildActionCard(
                 icon: Icons.phone,
-                iconBgColor: const Color(0xFFFFEBEE),
-                iconColor: const Color(0xFFC62828),
+                iconBgColor: AppColors.backgroundSoftPink,
+                iconColor: AppColors.errorRedDark,
                 title: 'Call Emergency\nServices',
                 subtitle: 'Dial 911 immediately',
                 onTap: () {
@@ -128,8 +129,8 @@ class EmergencySupportScreen extends StatelessWidget {
               // Notify Contacts Card
               _buildActionCard(
                 icon: Icons.group,
-                iconBgColor: const Color(0xFFE8F5E9),
-                iconColor: const Color(0xFF2E7D32),
+                iconBgColor: AppColors.lightGreen,
+                iconColor: AppColors.accentGreenDark,
                 title: 'Notify Contacts',
                 subtitle: 'Send alert to 3 contacts',
                 onTap: () {
@@ -161,7 +162,7 @@ class EmergencySupportScreen extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFF315E26), width: 1.0), // Dark green border
+          border: Border.all(color: AppColors.primaryGreen, width: 1.0), // Dark green border
         ),
         child: Row(
           children: [

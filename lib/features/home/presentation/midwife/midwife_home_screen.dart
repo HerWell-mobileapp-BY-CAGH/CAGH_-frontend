@@ -20,7 +20,7 @@ class MidwifeHomeScreen extends StatefulWidget {
 }
 
 class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
-  String midwifeName = 'Sarah Jenkins';
+  String midwifeName = '';
   bool isLoadingProfile = true;
   int selectedIndex = 0;
 
@@ -204,26 +204,19 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            LanguageService.tr(context, 'welcome_back').toUpperCase(),
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Welcome ${_getFirstName(midwifeName)}',
+                            _getFirstName(midwifeName).isEmpty
+                                ? 'Welcome'
+                                : 'Welcome ${_getFirstName(midwifeName)}',
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 22,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 6),
                           Text(
                             upcomingApts.isEmpty
-                                ? 'Welcome to Digital Midwife! Your patient bookings will appear here.'
+                                ? 'Your patient bookings will appear here.'
                                 : 'You have ${upcomingApts.length} patient consultation bookings pending.',
                             style: TextStyle(
                               color: Colors.white.withValues(alpha: 0.87),

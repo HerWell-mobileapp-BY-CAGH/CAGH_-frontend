@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 enum SnackBarType { success, error, warning, info }
 
@@ -15,20 +16,19 @@ class CustomSnackBar {
 
     switch (type) {
       case SnackBarType.success:
-        backgroundColor = const Color(0xFF315E26); // Primary Green
+        backgroundColor = AppColors.primaryGreen; // Primary Green
         icon = Icons.check_circle_outline;
         break;
       case SnackBarType.error:
-        backgroundColor = const Color(0xFFD32F2F); // Red
+        backgroundColor = AppColors.errorRed; // Red
         icon = Icons.error_outline;
         break;
       case SnackBarType.warning:
-        backgroundColor = const Color(0xFFF57C00); // Orange
+        backgroundColor = AppColors.accentOrange; // Orange
         icon = Icons.warning_amber_rounded;
         break;
       case SnackBarType.info:
-      default:
-        backgroundColor = const Color(0xFF1976D2); // Blue
+        backgroundColor = AppColors.accentBlue; // Blue
         icon = Icons.info_outline;
         break;
     }

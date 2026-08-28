@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../domain/entities/healthcare_facility.dart';
+import 'package:cagh_frontend/shared/constants/app_constants.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 class FacilityDetailsScreen extends StatelessWidget {
   final HealthcareFacility facility;
@@ -11,9 +13,9 @@ class FacilityDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F8F4),
+      backgroundColor: AppColors.backgroundOffWhite,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF315E26),
+        backgroundColor: AppColors.primaryGreen,
         elevation: 0,
         title: const Text('Facility Details', style: TextStyle(color: Colors.white)),
         leading: IconButton(
@@ -29,7 +31,7 @@ class FacilityDetailsScreen extends StatelessWidget {
             Container(
               width: double.infinity,
               height: 180,
-              color: const Color(0xFF315E26).withOpacity(0.1),
+              color: AppColors.primaryGreen.withValues(alpha: 0.1),
               child: facility.image != null
                   ? Image.network(
                       facility.image!,
@@ -37,13 +39,13 @@ class FacilityDetailsScreen extends StatelessWidget {
                       errorBuilder: (context, error, stackTrace) => const Icon(
                         Icons.local_hospital_outlined,
                         size: 80,
-                        color: Color(0xFF315E26),
+                        color: AppColors.primaryGreen,
                       ),
                     )
                   : const Icon(
                       Icons.local_hospital_outlined,
                       size: 80,
-                      color: Color(0xFF315E26),
+                      color: AppColors.primaryGreen,
                     ),
             ),
             Padding(
@@ -59,7 +61,7 @@ class FacilityDetailsScreen extends StatelessWidget {
                           style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF315E26),
+                            color: AppColors.primaryGreen,
                           ),
                         ),
                       ),
@@ -152,8 +154,8 @@ class FacilityDetailsScreen extends StatelessWidget {
                     runSpacing: 8,
                     children: facility.services.map((service) {
                       return Chip(
-                        label: Text(service, style: const TextStyle(color: Color(0xFF315E26))),
-                        backgroundColor: const Color(0xFFE8F5E9),
+                        label: Text(service, style: const TextStyle(color: AppColors.primaryGreen)),
+                        backgroundColor: AppColors.lightGreen,
                         side: BorderSide.none,
                       );
                     }).toList(),
@@ -167,7 +169,7 @@ class FacilityDetailsScreen extends StatelessWidget {
                     height: 50,
                     child: ElevatedButton.icon(
                       onPressed: () async {
-                        final fallbackUrl = 'https://www.google.com/maps/search/?api=1&query=${facility.latitude},${facility.longitude}';
+                        final fallbackUrl = AppConstants.googleMapsSearchUrl(facility.latitude, facility.longitude);
                         final navUrls = facility.navigationUrls;
                         
                         String urlToLaunch = fallbackUrl;
@@ -181,7 +183,7 @@ class FacilityDetailsScreen extends StatelessWidget {
                       icon: const Icon(Icons.directions, color: Colors.white),
                       label: const Text('Get Directions', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF315E26),
+                        backgroundColor: AppColors.primaryGreen,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                     ),
@@ -197,10 +199,10 @@ class FacilityDetailsScreen extends StatelessWidget {
                           final uri = Uri.parse(phoneUrl);
                           launchUrl(uri);
                         },
-                        icon: const Icon(Icons.call, color: Color(0xFF315E26)),
-                        label: const Text('Call Facility', style: TextStyle(color: Color(0xFF315E26), fontSize: 16, fontWeight: FontWeight.bold)),
+                        icon: const Icon(Icons.call, color: AppColors.primaryGreen),
+                        label: const Text('Call Facility', style: TextStyle(color: AppColors.primaryGreen, fontSize: 16, fontWeight: FontWeight.bold)),
                         style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Color(0xFF315E26)),
+                          side: const BorderSide(color: AppColors.primaryGreen),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
                       ),
@@ -215,7 +217,7 @@ class FacilityDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String title, String subtitle, {Color iconColor = const Color(0xFF315E26)}) {
+  Widget _buildInfoRow(IconData icon, String title, String subtitle, {Color iconColor = AppColors.primaryGreen}) {
     return Row(
       children: [
         Container(
@@ -224,7 +226,7 @@ class FacilityDetailsScreen extends StatelessWidget {
             color: Colors.white,
             shape: BoxShape.circle,
             boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))
+              BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4, offset: const Offset(0, 2))
             ]
           ),
           child: Icon(icon, color: iconColor, size: 20),

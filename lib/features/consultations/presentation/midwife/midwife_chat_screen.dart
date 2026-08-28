@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cagh_frontend/shared/models/appointment.dart';
 import 'package:intl/intl.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 class MidwifeChatScreen extends StatefulWidget {
   final Appointment appointment;
@@ -53,9 +54,9 @@ class _MidwifeChatScreenState extends State<MidwifeChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAF7),
+      backgroundColor: AppColors.backgroundPale,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF315E26),
+        backgroundColor: AppColors.primaryGreen,
         foregroundColor: Colors.white,
         title: Row(
           children: [
@@ -104,7 +105,7 @@ class _MidwifeChatScreenState extends State<MidwifeChatScreen> {
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     decoration: BoxDecoration(
-                      color: isMe ? const Color(0xFF315E26) : Colors.white,
+                      color: isMe ? AppColors.primaryGreen : Colors.white,
                       borderRadius: BorderRadius.only(
                         topLeft: const Radius.circular(16),
                         topRight: const Radius.circular(16),
@@ -113,7 +114,7 @@ class _MidwifeChatScreenState extends State<MidwifeChatScreen> {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 5,
                           offset: const Offset(0, 2),
                         ),
@@ -150,7 +151,7 @@ class _MidwifeChatScreenState extends State<MidwifeChatScreen> {
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, -5),
                 ),
@@ -162,7 +163,7 @@ class _MidwifeChatScreenState extends State<MidwifeChatScreen> {
                   Expanded(
                     child: Container(
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF4F6F4),
+                        color: AppColors.backgroundMintGray,
                         borderRadius: BorderRadius.circular(24),
                       ),
                       child: Row(
@@ -188,7 +189,7 @@ class _MidwifeChatScreenState extends State<MidwifeChatScreen> {
                   const SizedBox(width: 12),
                   CircleAvatar(
                     radius: 24,
-                    backgroundColor: const Color(0xFF315E26),
+                    backgroundColor: AppColors.primaryGreen,
                     child: IconButton(
                       icon: const Icon(Icons.send, color: Colors.white),
                       onPressed: _sendMessage,

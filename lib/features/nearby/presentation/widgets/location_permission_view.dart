@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 class LocationPermissionView extends StatelessWidget {
   final bool isDisabled;
@@ -64,7 +65,7 @@ class LocationPermissionView extends StatelessWidget {
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF315E26),
+                backgroundColor: AppColors.primaryGreen,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

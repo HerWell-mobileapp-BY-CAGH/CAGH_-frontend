@@ -26,6 +26,12 @@ class MidwifeProfile {
   // Computed property
   String get fullName => '$firstName $lastName';
 
+  bool get supportsVoiceCall =>
+      offeredConsultationTypes.any((t) => t.toLowerCase().contains('voice'));
+
+  bool get supportsInPerson =>
+      offeredConsultationTypes.any((t) => t.toLowerCase().contains('in-person') || t.toLowerCase().contains('in_person'));
+
   MidwifeProfile({
     required this.id,
     required this.userId,

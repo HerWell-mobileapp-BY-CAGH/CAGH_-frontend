@@ -3,6 +3,7 @@ import 'package:cagh_frontend/shared/models/appointment.dart';
 import 'package:cagh_frontend/features/appointments/data/services/appointment_api_service.dart';
 import 'package:cagh_frontend/features/appointments/data/repositories/appointment_repository_impl.dart';
 import 'package:intl/intl.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 class AppointmentDetailsScreen extends StatefulWidget {
   final Appointment appointment;
@@ -101,9 +102,9 @@ class _AppointmentDetailsScreenState extends State<AppointmentDetailsScreen> {
     final isConfirmed = _appointment.status == AppointmentStatus.confirmed;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAF7),
+      backgroundColor: AppColors.backgroundPale,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF315E26),
+        backgroundColor: AppColors.primaryGreen,
         title: const Text('Appointment Details', style: TextStyle(color: Colors.white)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -111,7 +112,7 @@ class _AppointmentDetailsScreenState extends State<AppointmentDetailsScreen> {
         ),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF315E26)))
+          ? const Center(child: CircularProgressIndicator(color: AppColors.primaryGreen))
           : SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Column(

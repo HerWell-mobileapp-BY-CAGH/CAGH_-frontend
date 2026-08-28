@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cagh_frontend/core/services/language_service.dart';
 import 'language_selection_screen.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -37,11 +38,11 @@ class _SplashScreenState extends State<SplashScreen> {
               width: 180,
               height: 180,
               decoration: BoxDecoration(
-                color: const Color(0xFFFFF5E6),
+                color: AppColors.creamAlt,
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   ),
@@ -78,7 +79,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 fontSize: 22,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 1.5,
-                color: Color(0xFF315E26),
+                color: AppColors.primaryGreen,
               ),
             ),
 

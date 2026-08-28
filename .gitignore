@@ -50,3 +50,8 @@ app.*.map.json
 
 # Android build artifacts
 /android/build/
+
+# Selenium & Chrome test profiles
+.selenium_*
+.chrome_profile_*
+

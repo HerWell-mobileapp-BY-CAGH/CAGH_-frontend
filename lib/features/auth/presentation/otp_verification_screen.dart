@@ -1,15 +1,13 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'dart:ui';
 import 'package:flutter/services.dart';
 import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
 import 'package:cagh_frontend/core/services/language_service.dart';
-import 'package:cagh_frontend/features/home/presentation/user/user_home_screen.dart';
-import 'package:cagh_frontend/features/home/presentation/midwife/midwife_home_screen.dart';
 import 'package:cagh_frontend/features/auth/presentation/midwife/midwife_login_screen.dart';
 import 'package:cagh_frontend/features/auth/presentation/user/user_login_screen.dart';
 import 'package:cagh_frontend/shared/widgets/custom_snackbar.dart';
 import 'create_new_password_screen.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 class OtpVerificationScreen extends StatefulWidget {
   final String contact;
@@ -101,13 +99,13 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7FBF5),
+      backgroundColor: AppColors.backgroundMintWhite,
       body: Column(
         children: [
           // Green App Bar
           Container(
             width: double.infinity,
-            color: const Color(0xFF315E26),
+            color: AppColors.primaryGreen,
             child: SafeArea(
               bottom: false,
               child: Padding(
@@ -116,7 +114,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                   children: [
                     IconButton(
                       onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.arrow_back, color: Color(0xFFFFD22B)),
+                      icon: const Icon(Icons.arrow_back, color: AppColors.accentYellow),
                     ),
                     Expanded(
                       child: Text(
@@ -145,7 +143,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                   const Icon(
                     Icons.sms_outlined,
                     size: 64,
-                    color: Color(0xFF315E26),
+                    color: AppColors.primaryGreen,
                   ),
                   const SizedBox(height: 24),
                   Text(
@@ -153,7 +151,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                     style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF1A1A1A),
+                      color: AppColors.textDark,
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -169,12 +167,12 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                             width: 18, height: 18,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: Color(0xFF315E26),
+                              color: AppColors.primaryGreen,
                             ),
                           ),
                           SizedBox(width: 10),
                           Text('Sending verification code…',
-                              style: TextStyle(color: Color(0xFF315E26), fontSize: 13)),
+                              style: TextStyle(color: AppColors.primaryGreen, fontSize: 13)),
                         ],
                       ),
                     )
@@ -183,22 +181,22 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                       margin: const EdgeInsets.only(bottom: 16),
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFFF8E1),
+                        color: AppColors.cream,
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: const Color(0xFFFFCC02)),
+                        border: Border.all(color: AppColors.accentYellowBright),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             children: const [
-                              Icon(Icons.info_outline, color: Color(0xFFE65100), size: 18),
+                              Icon(Icons.info_outline, color: AppColors.deepOrange, size: 18),
                               SizedBox(width: 8),
                               Expanded(
                                 child: Text(
                                   'Check your email inbox — the code was likely sent.',
                                   style: TextStyle(
-                                    color: Color(0xFFE65100),
+                                    color: AppColors.deepOrange,
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -209,7 +207,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                           const SizedBox(height: 6),
                           const Text(
                             'Enter the 6-digit code from your email below. If you did not receive it, tap Resend after the timer expires.',
-                            style: TextStyle(color: Color(0xFF795548), fontSize: 12.5),
+                            style: TextStyle(color: AppColors.brownText, fontSize: 12.5),
                           ),
                         ],
                       ),
@@ -258,7 +256,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: const BorderSide(
-                                color: Color(0xFF315E26),
+                                color: AppColors.primaryGreen,
                                 width: 2,
                               ),
                             ),
@@ -301,7 +299,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                       child: Text(
                         LanguageService.tr(context, 'resend_code'),
                         style: const TextStyle(
-                          color: Color(0xFF315E26),
+                          color: AppColors.primaryGreen,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -333,11 +331,13 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                                 setState(() => _isLoading = false);
 
                                 if (result.success) {
-                                  CustomSnackBar.show(
-                                    context,
-                                    message: 'OTP Verified Successfully!',
-                                    type: SnackBarType.success,
-                                  );
+                                  if (mounted) {
+                                    CustomSnackBar.show(
+                                      context,
+                                      message: 'OTP Verified Successfully!',
+                                      type: SnackBarType.success,
+                                    );
+                                  }
 
                                   if (!mounted) return;
 
@@ -384,7 +384,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                               }
                             },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF315E26),
+                        backgroundColor: AppColors.primaryGreen,
                         foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
