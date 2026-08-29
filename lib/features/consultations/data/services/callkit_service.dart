@@ -51,6 +51,7 @@ class CallKitService {
           case 'ACTION_CALL_START':
             break;
           case 'ACTION_CALL_ACCEPT':
+            AppLogger.d('[CALL][ACCEPT] Accept action received for consultation: $consultationId');
             RingtoneService.stopRingtone();
             GlobalCallService.isRingingShown = false;
             final navStateAccept = globalNavigatorKey.currentState;
@@ -99,6 +100,7 @@ class CallKitService {
             }
             break;
           case 'ACTION_CALL_DECLINE':
+            AppLogger.d('[CALL][DECLINE] Decline action received for consultation: $consultationId');
             RingtoneService.stopRingtone();
             GlobalCallService.isCallActive = false;
             GlobalCallService.isRingingShown = false;
@@ -135,6 +137,40 @@ class CallKitService {
             }
             await FlutterCallkitIncoming.endAllCalls();
             break;
+          case 'ACTION_CALL_CALLBACK':
+          case 'ACTION_CALL_TOGGLE_DPO_WITH_DISPLAY':
+          case 'ACTION_CALL_CUSTOM':
+            AppLogger.d('[CALL][NOTIFICATION_TAP] CallKit notification body tapped for consultation: $consultationId');
+            if (consultationId.isNotEmpty && !GlobalCallService.isCallActive) {
+              final mapExtra = Map<String, dynamic>.from(extra);
+              final callerId = GlobalCallService.extractId(mapExtra['caller_id'] ?? mapExtra['sender_id'] ?? mapExtra['caller'] ?? mapExtra['sender'] ?? mapExtra['user_id']);
+              final receiverId = GlobalCallService.extractId(mapExtra['receiver_id'] ?? mapExtra['recipient_id'] ?? mapExtra['receiver'] ?? mapExtra['recipient'] ?? mapExtra['midwife_id']);
+              final receiverName = GlobalCallService.extractPersonName(mapExtra, isSender: false);
+              final recipientDisplayName = receiverName.isNotEmpty && receiverName != 'Recipient' ? receiverName : 'Midwife';
+
+              globalNavigatorKey.currentState?.push(
+                MaterialPageRoute(
+                  builder: (context) => VoiceCallScreen(
+                    consultationId: consultationId,
+                    appointment: Appointment(
+                      appointmentId: consultationId,
+                      userId: callerId,
+                      midwifeId: receiverId,
+                      date: '',
+                      startTime: '',
+                      endTime: '',
+                      appointmentType: 'VIRTUAL_VOICE',
+                      status: AppointmentStatus.confirmed,
+                      userFullName: callerName,
+                      midwifeName: recipientDisplayName,
+                    ),
+                    isCaller: false,
+                    isIncomingCall: true,
+                  ),
+                ),
+              );
+            }
+            break;
           default:
             break;
         }
@@ -169,15 +205,15 @@ class CallKitService {
       duration: 30000,
       extra: extra,
       android: const AndroidParams(
-        isCustomNotification: true,
+        isCustomNotification: false,
         isShowLogo: false,
         ringtonePath: 'system_ringtone_default',
         backgroundColor: AppColors.primaryGreenHex,
         actionColor: AppColors.accentGreenHex,
-        incomingCallNotificationChannelName: 'Incoming Calls',
-        missedCallNotificationChannelName: 'Missed Calls',
+        incomingCallNotificationChannelName: 'Incoming Voice Calls v3',
+        missedCallNotificationChannelName: 'Missed Voice Calls v3',
         isShowFullLockedScreen: true,
-        textAccept: 'Accept',
+        textAccept: 'Answer',
         textDecline: 'Decline',
       ),
       ios: const IOSParams(

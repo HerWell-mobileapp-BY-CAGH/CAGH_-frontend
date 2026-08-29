@@ -61,7 +61,12 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
     }
   }
 
+  bool _isJoiningCall = false;
+
   Future<void> _startConsultation(BuildContext context, Appointment apt) async {
+    if (_isJoiningCall) return;
+    _isJoiningCall = true;
+
     try {
       showDialog(
         context: context,
@@ -70,19 +75,8 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
       );
 
       final consultationApiService = ConsultationApiService();
-      Map<String, dynamic>? sessionData;
-      
-      try {
-        final existing = await consultationApiService.getConsultationsForAppointment(apt.appointmentId);
-        if (existing.isNotEmpty) {
-          sessionData = existing.first;
-        }
-      } catch (e) {
-        AppLogger.d('Error checking existing consultations: $e');
-      }
+      final sessionData = await consultationApiService.getConsultationByAppointment(apt.appointmentId);
 
-      sessionData ??= await consultationApiService.createConsultation(apt.appointmentId);
-      
       if (context.mounted) Navigator.pop(context);
 
       if (context.mounted) {
@@ -102,12 +96,18 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
         }
       }
     } catch (e) {
+      AppLogger.d('Error starting midwife consultation: $e');
       if (context.mounted) Navigator.pop(context);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to start consultation: $e'), backgroundColor: Colors.red),
+          const SnackBar(
+            content: Text('Unable to connect to consultation. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
+    } finally {
+      _isJoiningCall = false;
     }
   }
 

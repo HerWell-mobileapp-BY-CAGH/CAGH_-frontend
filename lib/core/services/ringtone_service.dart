@@ -67,8 +67,17 @@ class RingtoneService {
       await stopRingtone();
       _isPlaying = true;
       _audioPlayer = AudioPlayer();
+      await AudioPlayer.global.setAudioContext(AudioContext(
+        android: const AudioContextAndroid(
+          audioFocus: AndroidAudioFocus.gainTransient,
+          audioMode: AndroidAudioMode.normal,
+          contentType: AndroidContentType.music,
+          usageType: AndroidUsageType.voiceCommunication,
+          stayAwake: true,
+        ),
+      ));
       await _audioPlayer!.setReleaseMode(ReleaseMode.loop);
-      await _audioPlayer!.setVolume(0.8);
+      await _audioPlayer!.setVolume(1.0);
       if (_isPlaying) {
         final base64Str = _generateRingbackWav().split(',').last;
         final bytes = base64Decode(base64Str);
@@ -88,6 +97,15 @@ class RingtoneService {
       await stopRingtone();
       _isPlaying = true;
       _audioPlayer = AudioPlayer();
+      await AudioPlayer.global.setAudioContext(AudioContext(
+        android: const AudioContextAndroid(
+          audioFocus: AndroidAudioFocus.gainTransient,
+          audioMode: AndroidAudioMode.normal,
+          contentType: AndroidContentType.music,
+          usageType: AndroidUsageType.voiceCommunication,
+          stayAwake: true,
+        ),
+      ));
       await _audioPlayer!.setReleaseMode(ReleaseMode.loop);
       await _audioPlayer!.setVolume(1.0);
       if (_isPlaying) {

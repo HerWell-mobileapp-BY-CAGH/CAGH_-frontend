@@ -70,11 +70,12 @@ class AgoraVoiceService {
       await _engine!.setClientRole(role: ClientRoleType.clientRoleBroadcaster);
       await _engine!.enableAudio();
       await _engine!.setAudioProfile(
-        profile: AudioProfileType.audioProfileDefault,
+        profile: AudioProfileType.audioProfileSpeechStandard,
         scenario: AudioScenarioType.audioScenarioDefault,
       );
 
       _isInitialized = true;
+      AppLogger.d('[VOICE] Engine initialized successfully');
     } catch (e) {
       AppLogger.d("AgoraVoiceService: Engine initialization notice ($e)");
       if (kIsWeb) {
@@ -92,20 +93,20 @@ class AgoraVoiceService {
     _engine!.registerEventHandler(
       RtcEngineEventHandler(
         onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
-          AppLogger.d("AgoraVoiceService: Joined channel ${connection.channelId} with uid ${connection.localUid}");
+          AppLogger.d("[VOICE] Joined channel ${connection.channelId} with local UID ${connection.localUid}");
           _isJoined = true;
           if (!_joinSuccessController.isClosed) {
             _joinSuccessController.add(true);
           }
         },
         onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
-          AppLogger.d("AgoraVoiceService: Remote user $remoteUid joined");
+          AppLogger.d("[VOICE] Remote user joined: UID $remoteUid (elapsed: ${elapsed}ms)");
           if (!_userJoinedController.isClosed) {
             _userJoinedController.add(remoteUid);
           }
         },
         onUserOffline: (RtcConnection connection, int remoteUid, UserOfflineReasonType reason) {
-          AppLogger.d("AgoraVoiceService: Remote user $remoteUid offline reason $reason");
+          AppLogger.d("[VOICE] Remote user $remoteUid offline (reason: $reason)");
           if (!_userOfflineController.isClosed) {
             _userOfflineController.add({
               'uid': remoteUid,
@@ -114,25 +115,31 @@ class AgoraVoiceService {
           }
         },
         onUserMuteAudio: (RtcConnection connection, int remoteUid, bool muted) {
-          AppLogger.d("AgoraVoiceService: Remote user $remoteUid muted audio: $muted");
+          AppLogger.d("[VOICE] Remote user $remoteUid muted audio: $muted");
         },
         onFirstRemoteAudioFrame: (RtcConnection connection, int remoteUid, int elapsed) {
-          AppLogger.d("AgoraVoiceService: Received first remote audio frame from $remoteUid (elapsed: ${elapsed}ms)");
+          AppLogger.d("[VOICE] First remote audio frame received from $remoteUid (elapsed: ${elapsed}ms)");
+        },
+        onRemoteAudioStateChanged: (RtcConnection connection, int remoteUid, RemoteAudioState state, RemoteAudioStateReason reason, int elapsed) {
+          AppLogger.d("[VOICE] Remote audio state changed for UID $remoteUid: state=$state, reason=$reason");
+        },
+        onLocalAudioStateChanged: (RtcConnection connection, LocalAudioStreamState state, LocalAudioStreamReason reason) {
+          AppLogger.d("[VOICE] Local audio state changed: state=$state, reason=$reason");
         },
         onConnectionStateChanged: (RtcConnection connection, ConnectionStateType state, ConnectionChangedReasonType reason) {
-          AppLogger.d("AgoraVoiceService: Connection state changed to $state (reason: $reason)");
+          AppLogger.d("[VOICE] Connection state changed to $state (reason: $reason)");
           if (!_connectionStateController.isClosed) {
             _connectionStateController.add(state);
           }
         },
         onError: (ErrorCodeType err, String msg) {
-          AppLogger.d("AgoraVoiceService: Error $err, $msg");
+          AppLogger.d("[VOICE] Error $err: $msg");
           if (!_errorController.isClosed) {
             _errorController.add("Agora error $err: $msg");
           }
         },
         onLeaveChannel: (RtcConnection connection, RtcStats stats) {
-          AppLogger.d("AgoraVoiceService: Left channel");
+          AppLogger.d("[VOICE] Left channel: ${connection.channelId}");
           _isJoined = false;
         },
       ),
@@ -207,12 +214,14 @@ class AgoraVoiceService {
   Future<void> toggleMute(bool isMuted) async {
     if (_engine != null) {
       await _engine!.muteLocalAudioStream(isMuted);
+      AppLogger.d('[VOICE] Mute requested: $isMuted, Local microphone muted: $isMuted');
     }
   }
 
   Future<void> toggleSpeaker(bool isSpeaker) async {
     if (_engine != null) {
       await _engine!.setEnableSpeakerphone(isSpeaker);
+      AppLogger.d('[VOICE] Speaker requested: $isSpeaker, Speaker route changed to ${isSpeaker ? "speaker" : "earpiece"}');
     }
   }
 

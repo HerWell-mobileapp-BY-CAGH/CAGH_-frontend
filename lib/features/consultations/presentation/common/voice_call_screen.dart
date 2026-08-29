@@ -48,6 +48,8 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> with TickerProviderSt
   bool _isConnected = false;
   bool _isRinging = false;
   bool _isEndingCall = false;
+  bool _hasInitializedToken = false;
+  bool _isInitializingToken = false;
 
   StreamSubscription? _callEventSub;
   StreamSubscription? _userJoinedSub;
@@ -68,10 +70,15 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> with TickerProviderSt
     _isRinging = true;
 
     _callEventSub = GlobalCallService.onCallEvent.listen((event) {
-      final eventConsultId = (event['consultation_id'] ?? event['session_id'] ?? event['appointment_id'] ?? '').toString();
-      if (eventConsultId.isNotEmpty && eventConsultId != widget.consultationId && eventConsultId != widget.appointment.appointmentId) return;
+      final eventConsultId = (event['consultation_id'] ?? event['call_id'] ?? event['session_id'] ?? event['appointment_id'] ?? '').toString();
+      if (eventConsultId.isNotEmpty &&
+          eventConsultId != widget.consultationId &&
+          eventConsultId != widget.appointment.appointmentId) {
+        return;
+      }
 
       final signalType = GlobalCallService.parseSignalType(event);
+      AppLogger.d('[CALLER RECEIVED] VoiceCallScreen signalType: $signalType, payload: $event');
 
       if (signalType == CallSignalType.callAccepted) {
         RingtoneService.stopRingtone();
@@ -87,13 +94,14 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> with TickerProviderSt
       } else if (signalType == CallSignalType.callEnded ||
           signalType == CallSignalType.callCancelled ||
           signalType == CallSignalType.callDeclined) {
-        _endCall();
+        AppLogger.d('[CALL STATE RESET] Call declined or ended signal received in caller UI');
+        _handleCallTerminated(signalType);
       }
     });
 
     _pulseController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1800),
+      duration: const Duration(milliseconds: 1400),
     )..repeat(reverse: true);
 
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.25).animate(
@@ -105,6 +113,13 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> with TickerProviderSt
   }
 
   Future<void> _initializeCall() async {
+    if (_hasInitializedToken || _isInitializingToken || _isEndingCall) {
+      AppLogger.d('[VOICE] Token request SKIPPED — already initialized');
+      return;
+    }
+    _isInitializingToken = true;
+    AppLogger.d('[VOICE] Token request START');
+
     try {
       final currentUserId = GlobalCallService.currentUserId ?? await GlobalCallService.getAuthenticatedUserId() ?? 'unknown';
       await GlobalCallService.init(widget.consultationId);
@@ -115,36 +130,6 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> with TickerProviderSt
       AppLogger.d('  Consultation ID               : ${widget.consultationId}');
       AppLogger.d('  Is Caller                     : ${widget.isCaller}');
       AppLogger.d('====================================================');
-
-      // Check status periodically for terminal cancellation or end events
-      _statusTimer?.cancel();
-      _statusTimer = Timer.periodic(const Duration(seconds: 2), (statusTimer) async {
-        if (!mounted || _isEndingCall) {
-          statusTimer.cancel();
-          return;
-        }
-        try {
-          final tokenRes = await _apiService.getVoiceToken(widget.consultationId);
-          final currentStatus = (tokenRes['status'] ?? tokenRes['voice_session']?['status'] ?? '').toString().toUpperCase();
-          if (currentStatus == 'ACCEPTED' || currentStatus == 'ONGOING') {
-            if (mounted) {
-              RingtoneService.stopRingtone();
-              if (!_isConnected) {
-                setState(() {
-                  _isRinging = false;
-                  _isConnected = true;
-                  _startTimer(startedAt: _serverStartedAt);
-                });
-              }
-            }
-          } else if (currentStatus == 'CANCELLED' || currentStatus == 'DECLINED' || currentStatus == 'ENDED' || currentStatus == 'MISSED' || currentStatus == 'COMPLETED') {
-            statusTimer.cancel();
-            _endCall();
-          }
-        } catch (e) {
-          AppLogger.d('VoiceCallScreen: Error checking call status: $e');
-        }
-      });
 
       Map<String, dynamic> response;
       if (widget.isCaller) {
@@ -158,9 +143,14 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> with TickerProviderSt
       }
 
       if (_isEndingCall || !mounted) {
+        _isInitializingToken = false;
         AppLogger.d('[VOICE CALL INIT] Aborted because call was cancelled or screen unmounted.');
         return;
       }
+
+      _hasInitializedToken = true;
+      _isInitializingToken = false;
+      AppLogger.d('[VOICE] Token acquired successfully');
 
       final voiceSession = response['voice_session'] ?? response['consultation']?['voice_session'] ?? response;
       final appId = (response['agora_app_id'] ?? response['app_id'] ?? voiceSession['agora_app_id'] ?? voiceSession['app_id'] ?? '').toString();
@@ -343,6 +333,8 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> with TickerProviderSt
 
   void _startTimer({DateTime? startedAt}) {
     RingtoneService.stopRingtone();
+    _statusTimer?.cancel();
+    _statusTimer = null;
     _timer?.cancel();
     final now = DateTime.now().toUtc();
 
@@ -382,9 +374,59 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> with TickerProviderSt
     _agoraVoiceService.toggleSpeaker(_isSpeakerOn);
   }
 
+  Future<void> _handleCallTerminated(CallSignalType signalType) async {
+    if (_isEndingCall) return;
+    _isEndingCall = true;
+    _hasInitializedToken = true;
+    _isInitializingToken = false;
+
+    AppLogger.d('[CALL STATE RESET] _handleCallTerminated started: signalType=$signalType');
+
+    RingtoneService.stopRingtone();
+    GlobalCallService.isCallActive = false;
+    _timer?.cancel();
+    _ringTimeoutTimer?.cancel();
+
+    try {
+      await _agoraVoiceService.leaveChannel();
+    } catch (_) {}
+
+    try {
+      await _agoraVoiceService.dispose();
+    } catch (_) {}
+
+    try {
+      if (!kIsWeb) {
+        await FlutterCallkitIncoming.endAllCalls();
+      }
+    } catch (_) {}
+
+    AppLogger.d('[CALL] Cleanup complete');
+
+    if (mounted) {
+      final message = (signalType == CallSignalType.callDeclined)
+          ? 'Call declined'
+          : (signalType == CallSignalType.callCancelled)
+              ? 'Call cancelled'
+              : 'Call ended';
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.black87,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+
+      Navigator.of(context).pop();
+    }
+  }
+
   Future<void> _endCall() async {
     if (_isEndingCall) return;
     _isEndingCall = true;
+    _hasInitializedToken = true;
+    _isInitializingToken = false;
 
     RingtoneService.stopRingtone();
     GlobalCallService.isCallActive = false;
@@ -435,6 +477,8 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> with TickerProviderSt
     } catch (e) {
       AppLogger.d('CallKit endAllCalls failed: $e');
     }
+
+    AppLogger.d('[CALL] Cleanup complete');
 
     if (mounted) {
       Navigator.of(context).pop();
@@ -588,8 +632,8 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> with TickerProviderSt
                           Transform.scale(
                             scale: scale * 1.35,
                             child: Container(
-                              width: 130,
-                              height: 130,
+                              width: 140,
+                              height: 140,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: Colors.greenAccent.withValues(alpha: 0.08),
@@ -600,8 +644,8 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> with TickerProviderSt
                           Transform.scale(
                             scale: scale * 1.15,
                             child: Container(
-                              width: 130,
-                              height: 130,
+                              width: 140,
+                              height: 140,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: Colors.greenAccent.withValues(alpha: 0.18),
@@ -645,7 +689,7 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> with TickerProviderSt
                     },
                   ),
 
-                  const SizedBox(height: 28),
+                  const SizedBox(height: 24),
 
                   // Participant Name
                   Text(
@@ -658,13 +702,13 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> with TickerProviderSt
                     ),
                   ),
 
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
 
-                  // Dynamic Call Status / Signal Icon + Duration Timer (Matching reference image)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      if (_isConnected) ...[
+                  // Consultation Voice Call Label / Duration Timer
+                  if (_isConnected) ...[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
                         const Icon(Icons.signal_cellular_alt_rounded, color: Colors.white70, size: 18),
                         const SizedBox(width: 6),
                         Text(
@@ -676,155 +720,228 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> with TickerProviderSt
                             letterSpacing: 1.0,
                           ),
                         ),
-                      ] else
-                        Text(
-                          _isRinging
-                              ? (_isCaller ? 'Waiting . .' : 'Incoming Call . .')
-                              : 'Connecting . .',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w400,
-                            color: Colors.white70,
+                      ],
+                    ),
+                  ] else ...[
+                    Text(
+                      _isRinging
+                          ? (_isCaller ? 'Ringing . .' : 'Voice Consultation')
+                          : 'Connecting . .',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.white70,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.shield_outlined, size: 13, color: Colors.white70),
+                          SizedBox(width: 4),
+                          Text(
+                            'Encrypted Consultation',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                        ),
-                    ],
-                  ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ],
               ),
 
               const Spacer(),
 
-              // 4-Button Action Bar (Matching reference image)
+              // ACTION BAR
               Padding(
-                padding: const EdgeInsets.only(bottom: 44, left: 12, right: 12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    // 1. Speaker Button
-                    Expanded(
-                      child: Center(
-                        child: _buildTelegramActionButton(
-                          icon: _isSpeakerOn ? Icons.volume_up_rounded : Icons.volume_down_rounded,
-                          label: 'Speaker',
-                          isActive: _isSpeakerOn,
-                          onTap: () {
-                            _toggleSpeaker();
-                            ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(_isSpeakerOn ? 'Speakerphone ON' : 'Speakerphone OFF'),
-                                duration: const Duration(seconds: 1),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
+                padding: const EdgeInsets.only(bottom: 48, left: 24, right: 24),
+                child: _isRinging && !_isCaller
+                    ? // FULL-SCREEN INCOMING CALL MODE (Ringing Callee): Symmetrical Accept & Decline
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          // DECLINE BUTTON (Red)
+                          _buildTelegramCallCircleButton(
+                            icon: Icons.call_end_rounded,
+                            label: 'Decline',
+                            color: const Color(0xFFEF4444),
+                            onTap: () async {
+                              RingtoneService.stopRingtone();
+                              GlobalCallService.isRingingShown = false;
+                              try {
+                                _apiService.declineVoiceSession(widget.consultationId);
+                              } catch (e) {
+                                AppLogger.d('VoiceCallScreen: Error declining: $e');
+                              }
+                              try {
+                                GlobalCallService.declineCall(widget.consultationId);
+                              } catch (_) {}
+                              await _endCall();
+                            },
+                          ),
 
-                    // 2. Start Video Button
-                    Expanded(
-                      child: Center(
-                        child: _buildTelegramActionButton(
-                          icon: Icons.videocam_off_rounded,
-                          label: 'Start Video',
-                          isActive: false,
-                          onTap: () {
-                            ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Voice Consultation active. Video is disabled.'),
-                                duration: Duration(seconds: 2),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
+                          // ACCEPT BUTTON (Green)
+                          _buildTelegramCallCircleButton(
+                            icon: Icons.call_rounded,
+                            label: 'Accept',
+                            color: const Color(0xFF22C55E),
+                            onTap: () async {
+                              RingtoneService.stopRingtone();
+                              GlobalCallService.isRingingShown = false;
+                              try {
+                                await _apiService.acceptVoiceSession(widget.consultationId);
+                              } catch (e) {
+                                AppLogger.d('VoiceCallScreen: Error accepting voice session: $e');
+                              }
+                              try {
+                                GlobalCallService.sendCallEvent({
+                                  'type': 'accept_call',
+                                  'action': 'accept_call',
+                                  'event': 'call_accepted',
+                                  'consultation_id': widget.consultationId,
+                                });
+                              } catch (e) {
+                                AppLogger.d('VoiceCallScreen: Error sending accept_call event: $e');
+                              }
+                              if (mounted) {
+                                setState(() {
+                                  _isRinging = false;
+                                  _isConnected = true;
+                                  _startTimer(startedAt: _serverStartedAt);
+                                });
+                                _agoraVoiceService.toggleMute(_isMuted);
+                                _agoraVoiceService.toggleSpeaker(_isSpeakerOn);
+                              }
+                            },
+                          ),
+                        ],
+                      )
+                    : // ACTIVE VOICE CALL MODE (Voice-Only Controls: Speaker, Mute, End Call)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          // 1. Speaker
+                          _buildTelegramActionButton(
+                            icon: _isSpeakerOn ? Icons.volume_up_rounded : Icons.volume_down_rounded,
+                            label: 'Speaker',
+                            isActive: _isSpeakerOn,
+                            onTap: () {
+                              _toggleSpeaker();
+                              ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(_isSpeakerOn ? 'Speakerphone ON' : 'Speakerphone OFF'),
+                                  duration: const Duration(seconds: 1),
+                                ),
+                              );
+                            },
+                          ),
 
-                    // 3. Mute Button
-                    Expanded(
-                      child: Center(
-                        child: _buildTelegramActionButton(
-                          icon: _isMuted ? Icons.mic_off_rounded : Icons.mic_rounded,
-                          label: _isMuted ? 'Muted' : 'Mute',
-                          isActive: _isMuted,
-                          onTap: () {
-                            _toggleMute();
-                            ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(_isMuted ? 'Microphone Muted' : 'Microphone Unmuted'),
-                                duration: const Duration(seconds: 1),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
+                          // 2. Mute
+                          _buildTelegramActionButton(
+                            icon: _isMuted ? Icons.mic_off_rounded : Icons.mic_rounded,
+                            label: _isMuted ? 'Muted' : 'Mute',
+                            isActive: _isMuted,
+                            onTap: () {
+                              _toggleMute();
+                              ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(_isMuted ? 'Microphone Muted' : 'Microphone Unmuted'),
+                                  duration: const Duration(seconds: 1),
+                                ),
+                              );
+                            },
+                          ),
 
-                    // 4. End Call Button
-                    Expanded(
-                      child: Center(
-                        child: _isRinging && !_isCaller
-                            ? _buildTelegramActionButton(
-                                icon: Icons.call_rounded,
-                                label: 'Accept',
-                                bgColor: Colors.green,
-                                iconColor: Colors.white,
-                                onTap: () async {
-                                  RingtoneService.stopRingtone();
-                                  try {
-                                    await _apiService.acceptVoiceSession(widget.consultationId);
-                                  } catch (e) {
-                                    AppLogger.d('VoiceCallScreen: Error accepting voice session: $e');
-                                  }
-                                  try {
-                                    GlobalCallService.sendCallEvent({
-                                      'type': 'accept_call',
-                                      'action': 'accept_call',
-                                      'event': 'call_accepted',
-                                      'consultation_id': widget.consultationId,
-                                    });
-                                  } catch (e) {
-                                    AppLogger.d('VoiceCallScreen: Error sending accept_call event: $e');
-                                  }
-                                  if (mounted) {
-                                    setState(() {
-                                      _isRinging = false;
-                                      _isConnected = true;
-                                      _startTimer(startedAt: _serverStartedAt);
-                                    });
-                                    _agoraVoiceService.toggleMute(_isMuted);
-                                    _agoraVoiceService.toggleSpeaker(_isSpeakerOn);
-                                  }
-                                },
-                              )
-                            : _buildTelegramActionButton(
-                                icon: Icons.call_end_rounded,
-                                label: _isRinging ? 'Cancel' : 'End Call',
-                                bgColor: AppColors.errorRedBright,
-                                iconColor: Colors.white,
-                                onTap: () async {
-                                  RingtoneService.stopRingtone();
-                                  if (_isRinging) {
-                                    try {
-                                      _apiService.declineVoiceSession(widget.consultationId);
-                                    } catch (e) {
-                                      AppLogger.d('VoiceCallScreen: Error declining voice session: $e');
-                                    }
-                                  }
-                                  await _endCall();
-                                },
-                              ),
+                          // 3. End Call
+                          _buildTelegramActionButton(
+                            icon: Icons.call_end_rounded,
+                            label: _isRinging ? 'Cancel' : 'End Call',
+                            bgColor: AppColors.errorRedBright,
+                            iconColor: Colors.white,
+                            onTap: () async {
+                              RingtoneService.stopRingtone();
+                              if (_isRinging) {
+                                try {
+                                  _apiService.declineVoiceSession(widget.consultationId);
+                                } catch (e) {
+                                  AppLogger.d('VoiceCallScreen: Error declining voice session: $e');
+                                }
+                              }
+                              await _endCall();
+                            },
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildTelegramCallCircleButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Material(
+          color: Colors.transparent,
+          shape: const CircleBorder(),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            splashColor: Colors.white30,
+            child: Container(
+              width: 74,
+              height: 74,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: color,
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.4),
+                    blurRadius: 20,
+                    spreadRadius: 2,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Icon(
+                icon,
+                size: 34,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.3,
+          ),
+        ),
+      ],
     );
   }
 

@@ -83,7 +83,12 @@ class ConsultHubScreenState extends State<ConsultHubScreen> {
     }
   }
 
+  bool _isJoiningCall = false;
+
   Future<void> _startPatientConsultation(BuildContext context, Appointment apt) async {
+    if (_isJoiningCall) return;
+    _isJoiningCall = true;
+
     try {
       showDialog(
         context: context,
@@ -92,18 +97,7 @@ class ConsultHubScreenState extends State<ConsultHubScreen> {
       );
 
       final consultationApiService = ConsultationApiService();
-      Map<String, dynamic>? sessionData;
-
-      try {
-        final existing = await consultationApiService.getConsultationsForAppointment(apt.appointmentId);
-        if (existing.isNotEmpty) {
-          sessionData = existing.first;
-        }
-      } catch (e) {
-        AppLogger.d('Error checking existing consultations: $e');
-      }
-
-      sessionData ??= await consultationApiService.createConsultation(apt.appointmentId);
+      final sessionData = await consultationApiService.getConsultationByAppointment(apt.appointmentId);
 
       if (context.mounted) Navigator.pop(context);
 
@@ -123,12 +117,18 @@ class ConsultHubScreenState extends State<ConsultHubScreen> {
         );
       }
     } catch (e) {
+      AppLogger.d('Error starting consultation: $e');
       if (context.mounted) Navigator.pop(context);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to start consultation: $e'), backgroundColor: Colors.red),
+          const SnackBar(
+            content: Text('Unable to connect to consultation. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
+    } finally {
+      _isJoiningCall = false;
     }
   }
 
