@@ -8,6 +8,7 @@ import 'package:cagh_frontend/shared/widgets/custom_snackbar.dart';
 import 'package:cagh_frontend/shared/widgets/app_text_field.dart';
 import 'package:cagh_frontend/shared/widgets/primary_button.dart';
 import 'package:cagh_frontend/shared/widgets/standard_app_bar.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 class UserLoginScreen extends StatefulWidget {
   const UserLoginScreen({super.key});
@@ -37,8 +38,8 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
 
     setState(() {
       _apiError = null;
-      _emailError = identifier.isEmpty ? LanguageService.tr(context, 'val_email_phone_req') ?? 'Please enter your email or phone' : null;
-      _passwordError = password.isEmpty ? LanguageService.tr(context, 'val_password_req') ?? 'Please enter your password' : null;
+      _emailError = identifier.isEmpty ? LanguageService.tr(context, 'val_email_phone_req') : null;
+      _passwordError = password.isEmpty ? LanguageService.tr(context, 'val_password_req') : null;
     });
 
     if (_emailError != null || _passwordError != null) return;
@@ -57,7 +58,7 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
     if (result.success) {
       CustomSnackBar.show(
         context,
-        message: LanguageService.tr(context, 'login_successful') ?? 'Welcome back!',
+        message: LanguageService.tr(context, 'login_successful'),
         type: SnackBarType.success,
       );
 
@@ -79,7 +80,7 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bgColor = isDark ? Theme.of(context).scaffoldBackgroundColor : Colors.white;
     final cardColor = isDark ? Theme.of(context).cardColor : Colors.white;
-    final textColor = isDark ? Colors.white : const Color(0xFF1A1A1A);
+    final textColor = isDark ? Colors.white : AppColors.textDark;
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -100,7 +101,7 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
                   boxShadow: [
                     if (!isDark)
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withValues(alpha: 0.05),
                         blurRadius: 20,
                         offset: const Offset(0, 8),
                       ),
@@ -115,7 +116,7 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
                         height: 80,
                         margin: const EdgeInsets.only(bottom: 16),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFFF5E6),
+                          color: AppColors.creamAlt,
                           shape: BoxShape.circle,
                         ),
                         child: Center(

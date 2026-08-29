@@ -25,10 +25,9 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
   List<BlockedDate> _blockedDates = [];
   List<AvailabilitySlot> _availabilities = [];
 
-  bool _isAvailable = false;
   bool _voiceCall = false;
-  bool _videoCall = false;
   bool _inPerson = false;
+  bool _isSavingPrefs = false;
 
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
@@ -60,10 +59,8 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
           _blockedDates = blocked;
           _availabilities = availList;
           if (profile != null) {
-            _isAvailable = profile.isAcceptingBookings;
-            _voiceCall = profile.offeredConsultationTypes.contains('Voice Call') || profile.offeredConsultationTypes.contains('VOICE_CALL');
-            _videoCall = profile.offeredConsultationTypes.contains('Video Call') || profile.offeredConsultationTypes.contains('VIDEO_CALL');
-            _inPerson = profile.offeredConsultationTypes.contains('In-person') || profile.offeredConsultationTypes.contains('IN_PERSON');
+            _voiceCall = profile.supportsVoiceCall;
+            _inPerson = profile.supportsInPerson;
           }
         });
       }
@@ -74,31 +71,31 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
     }
   }
 
-  Future<void> _toggleAvailability(bool value) async {
-    setState(() => _isAvailable = value);
-    try {
-      await _repository.updateMyProfile({'is_accepting_bookings': value});
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isAvailable = !value);
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to update status')));
-      }
-    }
-  }
-
   Future<void> _updatePrefs() async {
+    if (_isSavingPrefs) return;
+    setState(() => _isSavingPrefs = true);
+
     final types = <String>[];
-    if (_voiceCall) types.add('VOICE_CALL');
-    if (_videoCall) types.add('VIDEO_CALL');
-    if (_inPerson) types.add('IN_PERSON');
+    if (_voiceCall) types.add('Voice Call');
+    if (_inPerson) types.add('In-person');
+
     try {
       await _repository.updateMyProfile({'offered_consultation_types': types});
+      await _fetchData();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Preferences updated'), backgroundColor: Colors.green));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Preferences saved successfully!'), backgroundColor: Colors.green),
+        );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to update preferences'), backgroundColor: Colors.red));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save preferences: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSavingPrefs = false);
       }
     }
   }
@@ -106,12 +103,17 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
   Future<void> _deleteBlockedDate(String id) async {
     try {
       await _repository.deleteBlockedDate(id);
-      setState(() {
-        _blockedDates.removeWhere((b) => b.id == id);
-      });
+      await _fetchData();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Blocked date removed.'), backgroundColor: Colors.green),
+        );
+      }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to delete blocked date')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to remove blocked date: $e'), backgroundColor: Colors.red),
+        );
       }
     }
   }
@@ -228,6 +230,12 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                   }
                   
                   final dateStr = '${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}';
+                  if (_blockedDates.any((b) => b.date == dateStr)) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('This date is already blocked.'), backgroundColor: Colors.orange),
+                    );
+                    return;
+                  }
                   Navigator.pop(ctx);
                   setState(() => _isLoading = true);
                   try {
@@ -489,44 +497,6 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                     ),
                     const SizedBox(height: 24),
 
-                    // Live Status Card
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF4F6ED),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: isDark ? Colors.grey.shade800 : Colors.grey.shade300, width: 0.5),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: isDark ? const Color(0xFF2C2C2C) : const Color(0xFFE5E9DF),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(Icons.event_available, color: Color(0xFF2E5B2E), size: 24),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Live Status', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: isDark ? Colors.white : Colors.black)),
-                                const SizedBox(height: 2),
-                                Text('Available for new bookings', style: TextStyle(fontSize: 12, color: isDark ? Colors.grey.shade400 : Colors.grey)),
-                              ],
-                            ),
-                          ),
-                          Switch(
-                            value: _isAvailable,
-                            onChanged: _toggleAvailability,
-                            activeColor: Colors.white,
-                            activeTrackColor: const Color(0xFF2E5B2E),
-                          ),
-                        ],
-                      ),
-                    ),
                     const SizedBox(height: 24),
 
                     // Weekly Schedule Picker
@@ -585,7 +555,9 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                     ),
                     const SizedBox(height: 24),
 
-                    // Consultation Types Card
+                    // Dedicated My Schedules Section
+                    _buildMySchedulesSection(isDark),
+                    const SizedBox(height: 24),
                     Container(
                       decoration: BoxDecoration(
                         color: isDark ? const Color(0xFF2C2533) : const Color(0xFFFDF7E7),
@@ -612,13 +584,6 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                                   isDark: isDark,
                                 ),
                                 _buildConsultationChip(
-                                  title: 'Video Call',
-                                  icon: Icons.videocam_outlined,
-                                  isSelected: _videoCall,
-                                  onSelected: (v) => setState(() => _videoCall = v),
-                                  isDark: isDark,
-                                ),
-                                _buildConsultationChip(
                                   title: 'In-person',
                                   icon: Icons.person_outline,
                                   isSelected: _inPerson,
@@ -633,9 +598,11 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                             child: SizedBox(
                               width: double.infinity,
                               child: ElevatedButton.icon(
-                                onPressed: _updatePrefs,
-                                icon: const Icon(Icons.save_outlined, color: Colors.white, size: 18),
-                                label: const Text('Update Prefs', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                onPressed: _isSavingPrefs ? null : _updatePrefs,
+                                icon: _isSavingPrefs 
+                                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                                    : const Icon(Icons.save_outlined, color: Colors.white, size: 18),
+                                label: Text(_isSavingPrefs ? 'Saving...' : 'Save Preferences', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xFF2E5B2E),
                                   padding: const EdgeInsets.symmetric(vertical: 14),
@@ -699,6 +666,118 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
     );
   }
 
+  Widget _buildMySchedulesSection(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'My Schedules',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: isDark ? Colors.white : const Color(0xFF2E5B2E),
+                ),
+              ),
+              Text(
+                '${_availabilities.length} active',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (_availabilities.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Center(
+                child: Text(
+                  'No recurring schedules configured.',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ),
+            )
+          else
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: _availabilities.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 10),
+              itemBuilder: (context, index) {
+                final slot = _availabilities[index];
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF2C2C2C) : const Color(0xFFF4F6ED),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: isDark ? Colors.grey.shade800 : Colors.grey.shade200),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.access_time_filled,
+                          size: 18,
+                          color: Color(0xFF2E5B2E),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              slot.dayDisplayName,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                                color: isDark ? Colors.white : Colors.black87,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              slot.formattedTimeRange,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildConsultationChip({
     required String title,
     required IconData icon,
@@ -736,46 +815,45 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
 
   Widget _buildBlockedDateItem(BlockedDate b, bool isDark) {
     DateTime? d = DateTime.tryParse(b.date);
-    String month = d != null ? _formatShortMonth(d).toUpperCase() : '';
-    String day = d != null ? d.day.toString().padLeft(2, '0') : '';
+    String dateFormatted = d != null ? _formatMonthYearDay(d) : b.date;
     
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF331E1E) : const Color(0xFFFFF4F4),
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: isDark ? const Color(0xFF4A2A2A) : const Color(0xFFFFEAEA)),
+        border: Border.all(color: isDark ? Colors.grey.shade800 : Colors.grey.shade200),
       ),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF4A2A2A) : const Color(0xFFFFEAEA),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              children: [
-                Text(month, style: const TextStyle(fontSize: 10, color: Colors.red, fontWeight: FontWeight.bold)),
-                Text(day, style: const TextStyle(fontSize: 14, color: Colors.red, fontWeight: FontWeight.bold)),
-              ],
-            ),
+          Row(
+            children: [
+              Icon(Icons.event_busy, size: 18, color: isDark ? Colors.redAccent : Colors.red.shade700),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    dateFormatted,
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: isDark ? Colors.white : Colors.black87),
+                  ),
+                  if (b.reason.isNotEmpty && b.reason != 'Leave / Holiday') ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      b.reason,
+                      style: TextStyle(fontSize: 11, color: isDark ? Colors.grey.shade400 : Colors.grey.shade600),
+                    ),
+                  ],
+                ],
+              ),
+            ],
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(b.reason ?? 'Blocked', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: isDark ? const Color(0xFFE57373) : const Color(0xFFA12C2C))),
-                Text('Full Day', style: TextStyle(fontSize: 11, color: isDark ? Colors.grey.shade400 : Colors.grey)),
-              ],
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.cancel_outlined, color: Colors.redAccent, size: 20),
+          TextButton(
             onPressed: () => _deleteBlockedDate(b.id),
-          )
+            child: const Text('Remove', style: TextStyle(color: Colors.redAccent, fontSize: 13, fontWeight: FontWeight.bold)),
+          ),
         ],
       ),
     );

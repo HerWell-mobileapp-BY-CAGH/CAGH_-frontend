@@ -10,16 +10,16 @@ import 'package:flutter/foundation.dart';
 class ChatApiService {
   static Future<Map<String, String>> _getHeaders() async {
     final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('auth_token');
+    final token = prefs.getString('auth_token') ?? prefs.getString('access_token') ?? '';
     return {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+      if (token.isNotEmpty) 'Authorization': 'Bearer $token',
     };
   }
 
-  static Future<List<dynamic>> getChatRooms() async {
-    final url = Uri.parse('${ApiConstants.baseUrl}/chat/rooms/');
+  static Future<List<Map<String, dynamic>>> getChatRooms() async {
+    final url = Uri.parse('${ApiConfig.baseUrl}/chat/rooms/');
     final headers = await _getHeaders();
 
     final response = await http.get(url, headers: headers);
@@ -41,7 +41,7 @@ class ChatApiService {
     required String midwifeId,
     required String initialMessage,
   }) async {
-    final url = Uri.parse('${ApiConstants.baseUrl}/chat/rooms/');
+    final url = Uri.parse('${ApiConfig.baseUrl}/chat/rooms/');
     final headers = await _getHeaders();
 
     final response = await http.post(
@@ -60,8 +60,8 @@ class ChatApiService {
     }
   }
 
-  static Future<List<dynamic>> getMessageHistory(String roomId) async {
-    final url = Uri.parse('${ApiConstants.baseUrl}/chat/rooms/$roomId/messages/');
+  static Future<List<Map<String, dynamic>>> getMessageHistory(String roomId) async {
+    final url = Uri.parse('${ApiConfig.baseUrl}/chat/rooms/$roomId/messages/');
     final headers = await _getHeaders();
 
     final response = await http.get(url, headers: headers);
@@ -80,7 +80,7 @@ class ChatApiService {
   }
 
   static Future<void> markMessagesAsRead(String roomId) async {
-    final url = Uri.parse('${ApiConstants.baseUrl}/chat/rooms/$roomId/read/');
+    final url = Uri.parse('${ApiConfig.baseUrl}/chat/rooms/$roomId/read/');
     final headers = await _getHeaders();
 
     await http.post(url, headers: headers);
@@ -107,8 +107,7 @@ class ChatApiService {
   }
 
   static Future<Map<String, dynamic>> uploadAttachment(String roomId, PlatformFile file) async {
-    // We post directly to the messages endpoint, as the attachments endpoint does not allow POST.
-    final url = Uri.parse('${ApiConstants.baseUrl}/chat/rooms/$roomId/messages/');
+    final url = Uri.parse('${ApiConfig.baseUrl}/chat/rooms/$roomId/attachments/');
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
 

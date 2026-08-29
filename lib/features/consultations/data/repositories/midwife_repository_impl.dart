@@ -3,7 +3,6 @@ import 'package:cagh_frontend/features/consultations/data/services/midwife_api_s
 import 'package:cagh_frontend/shared/models/midwife_profile.dart';
 import 'package:cagh_frontend/shared/models/midwife_dashboard.dart';
 import 'package:cagh_frontend/shared/models/blocked_date.dart';
-import 'package:cagh_frontend/shared/models/availability_slot.dart';
 
 class MidwifeRepositoryImpl implements MidwifeRepository {
   final MidwifeApiService _apiService;
@@ -56,7 +55,9 @@ class MidwifeRepositoryImpl implements MidwifeRepository {
   @override
   Future<List<BlockedDate>> getBlockedDates() async {
     final response = await _apiService.getBlockedDates();
-    return response.map((json) => BlockedDate.fromJson(json)).toList();
+    return response
+        .map((json) => BlockedDate.fromJson(Map<String, dynamic>.from(json as Map)))
+        .toList();
   }
 
   @override

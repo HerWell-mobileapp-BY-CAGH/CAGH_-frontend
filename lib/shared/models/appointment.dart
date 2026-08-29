@@ -1,23 +1,40 @@
+import 'package:cagh_frontend/core/utils/app_logger.dart';
+import 'package:cagh_frontend/shared/utils/name_formatter.dart';
+
 enum AppointmentStatus {
   pending,
   confirmed,
   declined,
   cancelled,
   completed,
+  missed,
   unknown;
 
   static AppointmentStatus fromString(String status) {
-    switch (status.toUpperCase()) {
+    switch (status.toUpperCase().trim()) {
       case 'PENDING':
+      case 'REQUESTED':
+      case 'REQUEST':
+      case 'WAITING':
+      case 'SCHEDULED':
         return AppointmentStatus.pending;
       case 'CONFIRMED':
+      case 'ACCEPTED':
+      case 'APPROVED':
+      case 'ACTIVE':
         return AppointmentStatus.confirmed;
       case 'DECLINED':
+      case 'REJECTED':
         return AppointmentStatus.declined;
       case 'CANCELLED':
+      case 'CANCELED':
         return AppointmentStatus.cancelled;
       case 'COMPLETED':
+      case 'DONE':
+      case 'FINISHED':
         return AppointmentStatus.completed;
+      case 'MISSED':
+        return AppointmentStatus.missed;
       default:
         return AppointmentStatus.unknown;
     }
@@ -47,6 +64,7 @@ class Appointment {
   final String? patientPhone;
   String? midwifeName;
   final String? midwifePhone;
+  final String? midwifeUserId;
 
   Appointment({
     required this.appointmentId,
@@ -67,16 +85,38 @@ class Appointment {
     this.patientPhone,
     this.midwifeName,
     this.midwifePhone,
+    this.midwifeUserId,
   });
 
-  static String? _extractName(Map<String, dynamic>? map) {
-    if (map == null) return null;
-    String? name = map['full_name'] ?? map['name'];
-    if (name != null && name.trim().isNotEmpty) return name.trim();
-    String first = (map['first_name'] ?? '').toString().trim();
-    String last = (map['last_name'] ?? '').toString().trim();
-    String built = '$first $last'.trim();
-    return built.isNotEmpty ? built : null;
+  DateTime? get scheduledDateTime {
+    if (date.isEmpty) return null;
+    try {
+      final dateParts = date.split('-');
+      if (dateParts.length < 3) return null;
+      final year = int.parse(dateParts[0]);
+      final month = int.parse(dateParts[1]);
+      final day = int.parse(dateParts[2]);
+
+      int hour = 0;
+      int minute = 0;
+      String t = endTime.isNotEmpty ? endTime : startTime;
+      if (t.isNotEmpty) {
+        final timeParts = t.split(':');
+        if (timeParts.length >= 2) {
+          hour = int.parse(timeParts[0]);
+          minute = int.parse(timeParts[1]);
+        }
+      }
+      return DateTime(year, month, day, hour, minute);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  bool get isPast {
+    final dt = scheduledDateTime;
+    if (dt == null) return false;
+    return dt.isBefore(DateTime.now());
   }
 
   static String? _extractPhone(Map<String, dynamic>? map) {
@@ -85,99 +125,93 @@ class Appointment {
     return phone?.trim().isNotEmpty == true ? phone!.trim() : null;
   }
 
+  static String? extractPersonFullName(dynamic data) {
+    if (data == null) return null;
+    if (data is String) {
+      final s = data.trim();
+      if (s.isEmpty || s == 'null' || s.toLowerCase() == 'recipient' || s.toLowerCase() == 'caller') {
+        return null;
+      }
+      return NameFormatter.format(s);
+    }
+    if (data is! Map) return null;
+
+    final map = Map<String, dynamic>.from(data);
+
+    // 1. Check nested 'profile' map
+    if (map['profile'] is Map) {
+      final prof = Map<String, dynamic>.from(map['profile'] as Map);
+      final fn = (prof['first_name'] ?? prof['firstName'] ?? '').toString().trim();
+      final ln = (prof['last_name'] ?? prof['lastName'] ?? '').toString().trim();
+      if (fn.isNotEmpty || ln.isNotEmpty) {
+        return NameFormatter.format('$fn $ln'.trim());
+      }
+      final full = (prof['full_name'] ?? prof['name'])?.toString().trim();
+      if (full != null && full.isNotEmpty && full != 'null' && full.toLowerCase() != 'recipient') {
+        return NameFormatter.format(full);
+      }
+    }
+
+    // 2. Check nested 'user' map (e.g. midwife_detail -> user)
+    if (map['user'] is Map) {
+      final res = extractPersonFullName(map['user']);
+      if (res != null && res.isNotEmpty) return res;
+    }
+
+    // 3. Check direct first_name and last_name on map
+    final fn = (map['first_name'] ?? map['firstName'] ?? '').toString().trim();
+    final ln = (map['last_name'] ?? map['lastName'] ?? '').toString().trim();
+    if (fn.isNotEmpty || ln.isNotEmpty) {
+      return NameFormatter.format('$fn $ln'.trim());
+    }
+
+    // 4. Check direct full_name or name on map
+    final full = (map['full_name'] ?? map['name'] ?? map['display_name'])?.toString().trim();
+    if (full != null && full.isNotEmpty && full != 'null' && full.toLowerCase() != 'recipient') {
+      return NameFormatter.format(full);
+    }
+
+    return null;
+  }
+
   factory Appointment.fromJson(Map<String, dynamic> json) {
-    print('Appointment JSON: $json');
-    String? parsedPatientName = json['user_full_name'] ?? json['patient_name'];
+    AppLogger.d('Appointment JSON: $json');
+
+    // Extract Patient Name
+    String? parsedPatientName = extractPersonFullName(json['user_full_name'] ?? json['patient_name'] ?? json['patient_full_name']);
     String? parsedPatientPhone = json['patient_phone'] ?? json['user_phone'];
-    String? parsedMidwifeName = json['midwife_name'] ?? json['midwife_full_name'];
+
+    if (parsedPatientName == null) {
+      for (final key in ['user_detail', 'patient_detail', 'patient', 'user', 'user_profile']) {
+        if (json[key] != null) {
+          parsedPatientName = extractPersonFullName(json[key]);
+          if (parsedPatientName != null) break;
+        }
+      }
+    }
+
+    if (parsedPatientPhone == null || parsedPatientPhone.isEmpty) {
+      if (json['user_detail'] is Map) parsedPatientPhone = _extractPhone(json['user_detail']);
+      if (json['patient_detail'] is Map) parsedPatientPhone ??= _extractPhone(json['patient_detail']);
+      if (json['patient'] is Map) parsedPatientPhone ??= _extractPhone(json['patient']);
+    }
+
+    // Extract Midwife Name
+    String? parsedMidwifeName = extractPersonFullName(json['midwife_name'] ?? json['midwife_full_name']);
     String? parsedMidwifePhone = json['midwife_phone'];
 
-    if (json['patient'] is Map) {
-      final p = json['patient'];
-      parsedPatientName ??= _extractName(p);
-      parsedPatientPhone ??= _extractPhone(p);
-    }
-    if (json['user'] is Map) {
-      final u = json['user'];
-      parsedPatientName ??= _extractName(u);
-      parsedPatientPhone ??= _extractPhone(u);
-    }
-    if (json['patient_detail'] is Map) {
-      final pd = json['patient_detail'];
-      parsedPatientName ??= _extractName(pd);
-      parsedPatientPhone ??= _extractPhone(pd);
-      if (pd['user'] is Map) {
-        parsedPatientName ??= _extractName(pd['user']);
-        parsedPatientPhone ??= _extractPhone(pd['user']);
-      }
-    }
-    if (json['user_detail'] is Map) {
-      final ud = json['user_detail'];
-      parsedPatientName ??= _extractName(ud);
-      parsedPatientPhone ??= _extractPhone(ud);
-      if (ud['user'] is Map) {
-        parsedPatientName ??= _extractName(ud['user']);
-        parsedPatientPhone ??= _extractPhone(ud['user']);
-      }
-      if (ud['profile'] is Map) {
-        parsedPatientName ??= _extractName(ud['profile']);
-        parsedPatientPhone ??= _extractPhone(ud['profile']);
-      }
-      if (parsedPatientName == null || parsedPatientName!.isEmpty) {
-        parsedPatientName = ud['username'];
-      }
-    }
-    if (json['patient_profile'] is Map) {
-      final pp = json['patient_profile'];
-      parsedPatientName ??= _extractName(pp);
-      parsedPatientPhone ??= _extractPhone(pp);
-      if (pp['user'] is Map) {
-        parsedPatientName ??= _extractName(pp['user']);
-        parsedPatientPhone ??= _extractPhone(pp['user']);
-      }
-    }
-    if (json['profile'] is Map) {
-      final p2 = json['profile'];
-      parsedPatientName ??= _extractName(p2);
-      parsedPatientPhone ??= _extractPhone(p2);
-      if (p2['user'] is Map) {
-        parsedPatientName ??= _extractName(p2['user']);
-        parsedPatientPhone ??= _extractPhone(p2['user']);
+    if (parsedMidwifeName == null) {
+      for (final key in ['midwife_detail', 'midwife', 'midwife_profile']) {
+        if (json[key] != null) {
+          parsedMidwifeName = extractPersonFullName(json[key]);
+          if (parsedMidwifeName != null) break;
+        }
       }
     }
 
-    // Try parsing nested midwife object
-    if (json['midwife'] is Map) {
-      final m = json['midwife'];
-      parsedMidwifeName ??= m['full_name'] ?? m['name'] ?? m['midwife_name'] ?? '${m['first_name'] ?? ''} ${m['last_name'] ?? ''}'.trim();
-      parsedMidwifePhone ??= m['phone'] ?? m['phone_number'];
-      if (m['user'] is Map) {
-        parsedMidwifeName ??= m['user']['full_name'] ?? m['user']['name'] ?? '${m['user']['first_name'] ?? ''} ${m['user']['last_name'] ?? ''}'.trim();
-        parsedMidwifePhone ??= m['user']['phone'] ?? m['user']['phone_number'];
-      }
-    }
-    if (json['midwife_detail'] is Map) {
-      final md = json['midwife_detail'];
-      parsedMidwifeName ??= md['full_name'] ?? md['name'] ?? md['midwife_name'] ?? '${md['first_name'] ?? ''} ${md['last_name'] ?? ''}'.trim();
-      parsedMidwifePhone ??= md['phone'] ?? md['phone_number'];
-      if (md['user'] is Map) {
-        parsedMidwifeName ??= md['user']['full_name'] ?? md['user']['name'] ?? '${md['user']['first_name'] ?? ''} ${md['user']['last_name'] ?? ''}'.trim();
-        parsedMidwifePhone ??= md['user']['phone'] ?? md['user']['phone_number'];
-      }
-    }
-    if (json['midwife_id'] is Map) {
-      final mi = json['midwife_id'];
-      parsedMidwifeName ??= mi['full_name'] ?? mi['name'] ?? mi['midwife_name'] ?? '${mi['first_name'] ?? ''} ${mi['last_name'] ?? ''}'.trim();
-      if (mi['user'] is Map) {
-        parsedMidwifeName ??= mi['user']['full_name'] ?? mi['user']['name'] ?? '${mi['user']['first_name'] ?? ''} ${mi['user']['last_name'] ?? ''}'.trim();
-      }
-    }
-    if (json['midwife_profile'] is Map) {
-      final mp = json['midwife_profile'];
-      parsedMidwifeName ??= mp['full_name'] ?? mp['name'] ?? mp['midwife_name'] ?? '${mp['first_name'] ?? ''} ${mp['last_name'] ?? ''}'.trim();
-      if (mp['user'] is Map) {
-        parsedMidwifeName ??= mp['user']['full_name'] ?? mp['user']['name'] ?? '${mp['user']['first_name'] ?? ''} ${mp['user']['last_name'] ?? ''}'.trim();
-      }
+    if (parsedMidwifePhone == null || parsedMidwifePhone.isEmpty) {
+      if (json['midwife_detail'] is Map) parsedMidwifePhone = _extractPhone(json['midwife_detail']);
+      if (json['midwife'] is Map) parsedMidwifePhone ??= _extractPhone(json['midwife']);
     }
 
     if (parsedPatientName?.isEmpty == true) parsedPatientName = null;
@@ -205,6 +239,15 @@ class Appointment {
       safeMidwifeId = json['midwife_detail'] is Map ? (json['midwife_detail']['id']?.toString() ?? '') : json['midwife_detail'].toString();
     }
 
+    String safeMidwifeUserId = '';
+    if (json['midwife_detail'] is Map && json['midwife_detail']['user'] != null) {
+      final u = json['midwife_detail']['user'];
+      safeMidwifeUserId = u is Map ? (u['id']?.toString() ?? '') : u.toString();
+    } else if (json['midwife'] is Map && json['midwife']['user'] != null) {
+      final u = json['midwife']['user'];
+      safeMidwifeUserId = u is Map ? (u['id']?.toString() ?? '') : u.toString();
+    }
+
     if (parsedPatientName != null && parsedPatientName.isEmpty) parsedPatientName = null;
     if (parsedMidwifeName != null && parsedMidwifeName.isEmpty) parsedMidwifeName = null;
     if (parsedMidwifePhone != null && parsedMidwifePhone.isEmpty) parsedMidwifePhone = null;
@@ -228,6 +271,7 @@ class Appointment {
       patientPhone: parsedPatientPhone,
       midwifeName: parsedMidwifeName,
       midwifePhone: parsedMidwifePhone,
+      midwifeUserId: safeMidwifeUserId,
     );
   }
 

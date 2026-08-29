@@ -4,7 +4,7 @@ import 'package:cagh_frontend/shared/models/appointment.dart';
 import 'package:cagh_frontend/features/consultations/data/services/chat_api_service.dart';
 import 'package:cagh_frontend/features/consultations/data/services/chat_websocket_service.dart';
 import 'package:intl/intl.dart';
-import 'package:file_picker/file_picker.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cagh_frontend/features/consultations/presentation/providers/chat_notification_provider.dart';
@@ -472,9 +472,9 @@ class _MidwifeChatScreenState extends ConsumerState<MidwifeChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAF7),
+      backgroundColor: AppColors.backgroundPale,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF315E26),
+        backgroundColor: AppColors.primaryGreen,
         foregroundColor: Colors.white,
         title: Row(
           children: [
@@ -504,14 +504,40 @@ class _MidwifeChatScreenState extends ConsumerState<MidwifeChatScreen> {
           ],
         ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF315E26)))
-          : Column(
-              children: [
-                if (_roomStatus == 'REQUESTED')
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    color: Colors.orange.shade50,
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              controller: _scrollController,
+              padding: const EdgeInsets.all(16),
+              itemCount: _messages.length,
+              itemBuilder: (context, index) {
+                final msg = _messages[index];
+                final isMe = msg['isMe'];
+                return Align(
+                  alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    constraints: BoxConstraints(
+                      maxWidth: MediaQuery.of(context).size.width * 0.75,
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: isMe ? AppColors.primaryGreen : Colors.white,
+                      borderRadius: BorderRadius.only(
+                        topLeft: const Radius.circular(16),
+                        topRight: const Radius.circular(16),
+                        bottomLeft: Radius.circular(isMe ? 16 : 0),
+                        bottomRight: Radius.circular(isMe ? 0 : 16),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.05),
+                          blurRadius: 5,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
                     child: Column(
                       children: [
                         const Text(
@@ -537,12 +563,30 @@ class _MidwifeChatScreenState extends ConsumerState<MidwifeChatScreen> {
                       ],
                     ),
                   ),
-                if (_roomId == null)
+                );
+              },
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, -5),
+                ),
+              ],
+            ),
+            child: SafeArea(
+              child: Row(
+                children: [
                   Expanded(
-                    child: Center(
-                      child: Text(
-                        'No chat initiated by patient yet.',
-                        style: TextStyle(color: Colors.grey.shade500),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.backgroundMintGray,
+                        borderRadius: BorderRadius.circular(24),
                       ),
                     ),
                   )
@@ -625,7 +669,17 @@ class _MidwifeChatScreenState extends ConsumerState<MidwifeChatScreen> {
                       ),
                     ),
                   ),
-              ],
+                  const SizedBox(width: 12),
+                  CircleAvatar(
+                    radius: 24,
+                    backgroundColor: AppColors.primaryGreen,
+                    child: IconButton(
+                      icon: const Icon(Icons.send, color: Colors.white),
+                      onPressed: _sendMessage,
+                    ),
+                  ),
+                ],
+              ),
             ),
     );
   }

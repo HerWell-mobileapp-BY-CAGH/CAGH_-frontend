@@ -3,6 +3,9 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cagh_frontend/core/network/api_config.dart';
+import 'package:cagh_frontend/core/services/global_call_service.dart';
+import 'package:cagh_frontend/core/services/fcm_service.dart';
+import 'package:cagh_frontend/core/utils/app_logger.dart';
 
 class ApiResponse<T> {
   final bool success;
@@ -98,6 +101,13 @@ class AuthService {
             ? body['user'] as Map<String, dynamic>
             : userObj;
         await prefs.setString(_userDataKey, jsonEncode(finalUserObj));
+
+        try {
+          await GlobalCallService.initUserCallListener(force: true);
+          await FcmService.registerDeviceToken();
+        } catch (e) {
+          AppLogger.d('Failed to initialize GlobalCallService or FCM token on login: $e');
+        }
 
         return ApiResponse(
           success: true,
@@ -677,7 +687,7 @@ class AuthService {
   // ---------------------------------------------------------------------------
   // GET MIDWIVES DIRECTORY
   // ---------------------------------------------------------------------------
-  static Future<ApiResponse<List<dynamic>>> getMidwivesDirectory() async {
+  static Future<ApiResponse<List<Map<String, dynamic>>>> getMidwivesDirectory() async {
     final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.midwivesProfiles}');
     try {
       final response = await http
@@ -726,12 +736,15 @@ class AuthService {
         if (decoded is Map<String, dynamic>) {
           return decoded;
         }
-      } catch (_) {}
+      } catch (e) {
+        AppLogger.d('AuthApiService: Error decoding cached user data: $e');
+      }
     }
     return {};
   }
 
   static Future<void> logout() async {
+    GlobalCallService.dispose();
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_accessTokenKey);
     await prefs.remove(_refreshTokenKey);
@@ -758,12 +771,16 @@ class AuthService {
     return 'Something went wrong. Please try again.';
   }
 
-  static String _extractErrorMessage(dynamic body) {
+  static String _extractErrorMessage(Object? body) {
     if (body is Map) {
       String msg = '';
-      if (body.containsKey('detail')) msg = body['detail'].toString();
-      else if (body.containsKey('message')) msg = body['message'].toString();
-      else if (body.containsKey('error')) msg = body['error'].toString();
+      if (body.containsKey('detail')) {
+        msg = body['detail'].toString();
+      } else if (body.containsKey('message')) {
+        msg = body['message'].toString();
+      } else if (body.containsKey('error')) {
+        msg = body['error'].toString();
+      }
       else if (body.containsKey('non_field_errors')) {
         final nfe = body['non_field_errors'];
         msg = nfe is List ? nfe.join(', ') : nfe.toString();

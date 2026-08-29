@@ -1,5 +1,4 @@
 import 'package:cagh_frontend/shared/models/midwife_profile.dart';
-import 'package:cagh_frontend/shared/models/availability_slot.dart';
 import 'package:cagh_frontend/shared/models/midwife_dashboard.dart';
 import 'package:cagh_frontend/shared/models/blocked_date.dart';
 

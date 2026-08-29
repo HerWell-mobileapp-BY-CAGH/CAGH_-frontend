@@ -6,7 +6,6 @@ import 'package:cagh_frontend/core/services/language_service.dart';
 import 'package:cagh_frontend/features/consultations/data/repositories/midwife_repository_impl.dart';
 import 'package:cagh_frontend/features/consultations/data/services/midwife_api_service.dart';
 import 'package:cagh_frontend/shared/models/midwife_profile.dart';
-import 'package:cagh_frontend/features/scheduling/presentation/screens/midwife_manage_schedule_screen.dart';
 
 class MidwifeProfileScreen extends StatefulWidget {
   const MidwifeProfileScreen({super.key});
@@ -640,44 +639,7 @@ class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
 
                   const SizedBox(height: 16),
 
-                  // Recurring Schedule Container
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF4F6ED),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0xFFD6E3D6), width: 1),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Recurring Schedule', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF2E5B2E))),
-                        const SizedBox(height: 4),
-                        Text('Set your default weekly working schedule for all days.', style: TextStyle(fontSize: 13, color: Colors.grey.shade700)),
-                        const SizedBox(height: 16),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (_) => const MidwifeManageScheduleScreen()),
-                              );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF315E26),
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            ),
-                            child: const Text('Manage Default Schedule', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                          ),
-                        )
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 28),
+                  const SizedBox(height: 12),
 
                   // Logout Button (Light Pink/Red Outlined Pill matching screenshot)
                   SizedBox(

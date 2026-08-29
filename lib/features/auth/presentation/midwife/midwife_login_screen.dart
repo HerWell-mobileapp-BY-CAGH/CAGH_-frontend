@@ -12,6 +12,7 @@ import 'package:cagh_frontend/shared/widgets/custom_snackbar.dart';
 import 'package:cagh_frontend/shared/widgets/app_text_field.dart';
 import 'package:cagh_frontend/shared/widgets/primary_button.dart';
 import 'package:cagh_frontend/shared/widgets/standard_app_bar.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 class MidwifeLoginScreen extends StatefulWidget {
   const MidwifeLoginScreen({super.key});
@@ -41,8 +42,8 @@ class _MidwifeLoginScreenState extends State<MidwifeLoginScreen> {
 
     setState(() {
       _apiError = null;
-      _emailError = identifier.isEmpty ? LanguageService.tr(context, 'val_email_phone_req') ?? 'Please enter your email or phone' : null;
-      _passwordError = password.isEmpty ? LanguageService.tr(context, 'val_password_req') ?? 'Please enter your password' : null;
+      _emailError = identifier.isEmpty ? LanguageService.tr(context, 'val_email_phone_req') : null;
+      _passwordError = password.isEmpty ? LanguageService.tr(context, 'val_password_req') : null;
     });
 
     if (_emailError != null || _passwordError != null) return;
@@ -61,7 +62,7 @@ class _MidwifeLoginScreenState extends State<MidwifeLoginScreen> {
     if (result.success) {
       CustomSnackBar.show(
         context,
-        message: LanguageService.tr(context, 'login_successful') ?? 'Welcome back!',
+        message: LanguageService.tr(context, 'login_successful'),
         type: SnackBarType.success,
       );
 
@@ -80,6 +81,7 @@ class _MidwifeLoginScreenState extends State<MidwifeLoginScreen> {
         try {
           final repo = MidwifeRepositoryImpl(MidwifeApiService());
           final profile = await repo.getMyProfile();
+          if (!mounted) return;
           
           if (profile == null) {
             Navigator.pushAndRemoveUntil(
@@ -115,12 +117,12 @@ class _MidwifeLoginScreenState extends State<MidwifeLoginScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bgColor = isDark ? Theme.of(context).scaffoldBackgroundColor : Colors.white;
     final cardColor = isDark ? Theme.of(context).cardColor : Colors.white;
-    final textColor = isDark ? Colors.white : const Color(0xFF1A1A1A);
+    final textColor = isDark ? Colors.white : AppColors.textDark;
 
     return Scaffold(
       backgroundColor: bgColor,
       appBar: StandardAppBar(
-        title: LanguageService.tr(context, 'midwife_login') ?? 'Midwife Login',
+        title: LanguageService.tr(context, 'midwife_login'),
         showLanguagePicker: true,
       ),
       body: SafeArea(
@@ -136,7 +138,7 @@ class _MidwifeLoginScreenState extends State<MidwifeLoginScreen> {
                   boxShadow: [
                     if (!isDark)
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withValues(alpha: 0.05),
                         blurRadius: 20,
                         offset: const Offset(0, 8),
                       ),
@@ -151,7 +153,7 @@ class _MidwifeLoginScreenState extends State<MidwifeLoginScreen> {
                         height: 80,
                         margin: const EdgeInsets.only(bottom: 16),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFFF5E6),
+                          color: AppColors.creamAlt,
                           shape: BoxShape.circle,
                         ),
                         child: Center(
@@ -167,7 +169,7 @@ class _MidwifeLoginScreenState extends State<MidwifeLoginScreen> {
                       ),
                     ),
                     Text(
-                      LanguageService.tr(context, 'welcome_back') ?? 'Welcome Back',
+                      LanguageService.tr(context, 'welcome_back'),
                       style: TextStyle(
                         fontSize: 26,
                         fontWeight: FontWeight.w700,
@@ -206,7 +208,7 @@ class _MidwifeLoginScreenState extends State<MidwifeLoginScreen> {
                           );
                         },
                         child: Text(
-                          LanguageService.tr(context, 'forgot_password') ?? 'Forgot Password?',
+                          LanguageService.tr(context, 'forgot_password'),
                           style: TextStyle(
                             color: Theme.of(context).primaryColor,
                             fontWeight: FontWeight.w500,
@@ -245,7 +247,7 @@ class _MidwifeLoginScreenState extends State<MidwifeLoginScreen> {
                       const SizedBox(height: 16),
 
                     PrimaryButton(
-                      text: LanguageService.tr(context, 'login') ?? 'Sign In',
+                      text: LanguageService.tr(context, 'login'),
                       isLoading: _isLoading,
                       onPressed: _handleLogin,
                     ),
@@ -257,7 +259,7 @@ class _MidwifeLoginScreenState extends State<MidwifeLoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    LanguageService.tr(context, 'dont_have_account') ?? "Don't have an account?",
+                    LanguageService.tr(context, 'dont_have_account'),
                     style: TextStyle(color: isDark ? Colors.grey.shade400 : Colors.grey.shade800),
                   ),
                   const SizedBox(width: 4),
@@ -271,7 +273,7 @@ class _MidwifeLoginScreenState extends State<MidwifeLoginScreen> {
                       );
                     },
                     child: Text(
-                      LanguageService.tr(context, 'register') ?? 'Register',
+                      LanguageService.tr(context, 'register'),
                       style: TextStyle(
                         color: Theme.of(context).primaryColor,
                         fontWeight: FontWeight.w700,

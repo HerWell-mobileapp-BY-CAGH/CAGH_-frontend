@@ -8,6 +8,7 @@ void main() async {
     'purpose': 'REGISTRATION',
   };
 
+// ignore: avoid_print
   print('Sending request to backend...');
   try {
     final response = await http.post(
@@ -16,9 +17,12 @@ void main() async {
       body: jsonEncode(payload),
     ).timeout(Duration(seconds: 60));
 
+    // ignore: avoid_print
     print('Status Code: ${response.statusCode}');
+    // ignore: avoid_print
     print('Response Body: ${response.body}');
   } catch (e) {
+    // ignore: avoid_print
     print('Error: $e');
   }
 }

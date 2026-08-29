@@ -1,5 +1,4 @@
 import 'package:cagh_frontend/shared/models/appointment.dart';
-import 'package:cagh_frontend/shared/models/availability_slot.dart'; // We may reuse this for the today_schedule
 
 class MidwifeDashboard {
   final String verificationStatus;

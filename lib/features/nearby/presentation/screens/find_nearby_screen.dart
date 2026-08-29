@@ -6,6 +6,7 @@ import '../widgets/nearby_filter_chips.dart';
 import '../widgets/facility_card.dart';
 import '../widgets/location_permission_view.dart';
 import '../widgets/nearby_empty_state.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 class FindNearbyScreen extends ConsumerStatefulWidget {
   final String initialCategory;
@@ -35,12 +36,19 @@ class _FindNearbyScreenState extends ConsumerState<FindNearbyScreen> {
   void _fetchInitialFacilities() {
     String? apiType;
     if (_currentUiCategory != 'All') {
-      if (_currentUiCategory == 'Hospitals') apiType = 'Hospital';
-      else if (_currentUiCategory == 'Health Centers') apiType = 'Health Center';
-      else if (_currentUiCategory == 'Clinics') apiType = 'Clinic';
-      else if (_currentUiCategory == 'Midwives') apiType = 'Midwife';
-      else if (_currentUiCategory == 'Pharmacies') apiType = 'Pharmacy';
-      else if (_currentUiCategory == 'Emergency') apiType = 'Emergency';
+      if (_currentUiCategory == 'Hospitals') {
+        apiType = 'Hospital';
+      } else if (_currentUiCategory == 'Health Centers') {
+        apiType = 'Health Center';
+      } else if (_currentUiCategory == 'Clinics') {
+        apiType = 'Clinic';
+      } else if (_currentUiCategory == 'Midwives') {
+        apiType = 'Midwife';
+      } else if (_currentUiCategory == 'Pharmacies') {
+        apiType = 'Pharmacy';
+      } else if (_currentUiCategory == 'Emergency') {
+        apiType = 'Emergency';
+      }
     }
     ref.read(nearbyStateProvider.notifier).fetchNearbyFacilities(type: apiType ?? 'All');
   }
@@ -61,12 +69,19 @@ class _FindNearbyScreenState extends ConsumerState<FindNearbyScreen> {
     });
     String? apiType;
     if (category != 'All') {
-      if (category == 'Hospitals') apiType = 'Hospital';
-      else if (category == 'Health Centers') apiType = 'Health Center';
-      else if (category == 'Clinics') apiType = 'Clinic';
-      else if (category == 'Midwives') apiType = 'Midwife';
-      else if (category == 'Pharmacies') apiType = 'Pharmacy';
-      else if (category == 'Emergency') apiType = 'Emergency';
+      if (category == 'Hospitals') {
+        apiType = 'Hospital';
+      } else if (category == 'Health Centers') {
+        apiType = 'Health Center';
+      } else if (category == 'Clinics') {
+        apiType = 'Clinic';
+      } else if (category == 'Midwives') {
+        apiType = 'Midwife';
+      } else if (category == 'Pharmacies') {
+        apiType = 'Pharmacy';
+      } else if (category == 'Emergency') {
+        apiType = 'Emergency';
+      }
     }
     ref.read(nearbyStateProvider.notifier).updateFilters(type: apiType ?? 'All');
   }
@@ -76,9 +91,9 @@ class _FindNearbyScreenState extends ConsumerState<FindNearbyScreen> {
     final state = ref.watch(nearbyStateProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F8F4),
+      backgroundColor: AppColors.backgroundOffWhite,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF315E26),
+        backgroundColor: AppColors.primaryGreen,
         elevation: 0,
         title: const Text('Find Nearby', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         leading: IconButton(
@@ -96,7 +111,7 @@ class _FindNearbyScreenState extends ConsumerState<FindNearbyScreen> {
         children: [
           // Search and Filters
           Container(
-            color: const Color(0xFF315E26),
+            color: AppColors.primaryGreen,
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             child: NearbySearchBar(
               controller: _searchController,
@@ -120,7 +135,7 @@ class _FindNearbyScreenState extends ConsumerState<FindNearbyScreen> {
   Widget _buildBody(NearbyState state) {
     if (state is NearbyInitial || state is NearbyLoading) {
       return const Center(
-        child: CircularProgressIndicator(color: Color(0xFF315E26)),
+        child: CircularProgressIndicator(color: AppColors.primaryGreen),
       );
     }
     
@@ -156,21 +171,26 @@ class _FindNearbyScreenState extends ConsumerState<FindNearbyScreen> {
       );
     }
 
-    // Success states (Empty or Loaded)
     final bool isEmpty = state is NearbyEmpty;
-    final position = isEmpty ? (state).userLocation : (state as NearbyLoaded).userLocation;
     final type = isEmpty ? (state).selectedType : (state as NearbyLoaded).selectedType;
     final radius = isEmpty ? (state).radius : (state as NearbyLoaded).radius;
     final facilities = isEmpty ? [] : (state as NearbyLoaded).facilities;
 
     // Map Category UI name back from API type
     String uiCategory = 'All';
-    if (type == 'Hospital') uiCategory = 'Hospitals';
-    else if (type == 'Health Center') uiCategory = 'Health Centers';
-    else if (type == 'Clinic') uiCategory = 'Clinics';
-    else if (type == 'Midwife') uiCategory = 'Midwives';
-    else if (type == 'Pharmacy') uiCategory = 'Pharmacies';
-    else if (type == 'Emergency') uiCategory = 'Emergency';
+    if (type == 'Hospital') {
+      uiCategory = 'Hospitals';
+    } else if (type == 'Health Center') {
+      uiCategory = 'Health Centers';
+    } else if (type == 'Clinic') {
+      uiCategory = 'Clinics';
+    } else if (type == 'Midwife') {
+      uiCategory = 'Midwives';
+    } else if (type == 'Pharmacy') {
+      uiCategory = 'Pharmacies';
+    } else if (type == 'Emergency') {
+      uiCategory = 'Emergency';
+    }
 
     return Column(
       children: [

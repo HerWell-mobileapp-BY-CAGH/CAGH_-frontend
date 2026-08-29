@@ -46,7 +46,9 @@ class LanguageService {
     try {
       // This tells Flutter to rebuild this widget whenever the Locale changes
       Localizations.localeOf(context);
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('LanguageService: Error resolving locale: $e');
+    }
     final lang = currentLanguage.value;
     return _translations[lang]?[key] ?? _translations['en']?[key] ?? key;
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 class PasswordInputField extends StatefulWidget {
   final TextEditingController controller;
@@ -33,7 +34,7 @@ class _PasswordInputFieldState extends State<PasswordInputField> {
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w500,
-            color: Color(0xFF333333),
+            color: AppColors.textGray,
           ),
         ),
         const SizedBox(height: 8),
@@ -59,7 +60,7 @@ class _PasswordInputFieldState extends State<PasswordInputField> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF315E26), width: 1.5),
+              borderSide: const BorderSide(color: AppColors.primaryGreen, width: 1.5),
             ),
             suffixIcon: IconButton(
               icon: Icon(

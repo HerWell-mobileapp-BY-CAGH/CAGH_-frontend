@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 class AppTextField extends StatefulWidget {
   final TextEditingController controller;
@@ -30,8 +31,8 @@ class _AppTextFieldState extends State<AppTextField> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : const Color(0xFF333333);
-    final fillColor = isDark ? Colors.grey.shade900 : const Color(0xFFF8F8F8);
+    final textColor = isDark ? Colors.white : AppColors.textGray;
+    final fillColor = isDark ? Colors.grey.shade900 : AppColors.backgroundGrayLight;
     final hintColor = isDark ? Colors.grey.shade500 : Colors.grey.shade500;
     final iconColor = isDark ? Colors.grey.shade400 : Colors.grey.shade600;
 

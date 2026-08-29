@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/healthcare_facility.dart';
 import 'facility_card.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 class FacilityBottomSheet extends StatefulWidget {
   final List<HealthcareFacility> facilities;
@@ -28,11 +29,11 @@ class _FacilityBottomSheetState extends State<FacilityBottomSheet> {
         curve: Curves.easeInOut,
         height: MediaQuery.of(context).size.height * (_isExpanded ? 0.8 : 0.4),
         decoration: BoxDecoration(
-          color: const Color(0xFFF8F8F4),
+          color: AppColors.backgroundOffWhite,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: const Offset(0, -2),
             ),
@@ -79,7 +80,7 @@ class _FacilityBottomSheetState extends State<FacilityBottomSheet> {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF315E26),
+                      color: AppColors.primaryGreen,
                     ),
                   ),
                   Text(

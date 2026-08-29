@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 class NearbyFilterChips extends StatelessWidget {
   final List<String> categories;
@@ -30,20 +31,20 @@ class NearbyFilterChips extends StatelessWidget {
                 style: TextStyle(
                   color: isSelected 
                       ? Colors.white 
-                      : (isEmergency ? Colors.red : const Color(0xFF315E26)),
+                      : (isEmergency ? Colors.red : AppColors.primaryGreen),
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 ),
               ),
               selected: isSelected,
               onSelected: (_) => onSelected(category),
-              selectedColor: isEmergency ? Colors.red : const Color(0xFF315E26),
+              selectedColor: isEmergency ? Colors.red : AppColors.primaryGreen,
               backgroundColor: isEmergency ? Colors.red.shade50 : Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
                 side: BorderSide(
                   color: isSelected 
                       ? Colors.transparent 
-                      : (isEmergency ? Colors.red.shade200 : const Color(0xFF315E26).withOpacity(0.3)),
+                      : (isEmergency ? Colors.red.shade200 : AppColors.primaryGreen.withValues(alpha: 0.3)),
                 ),
               ),
             ),

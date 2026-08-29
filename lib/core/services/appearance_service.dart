@@ -25,9 +25,13 @@ class AppearanceService {
     // Theme Mode
     final savedThemeStr = prefs.getString(_themeModeKey);
     if (savedThemeStr != null) {
-      if (savedThemeStr == 'light') currentThemeMode.value = ThemeMode.light;
-      else if (savedThemeStr == 'dark') currentThemeMode.value = ThemeMode.dark;
-      else currentThemeMode.value = ThemeMode.light;
+      if (savedThemeStr == 'light') {
+        currentThemeMode.value = ThemeMode.light;
+      } else if (savedThemeStr == 'dark') {
+        currentThemeMode.value = ThemeMode.dark;
+      } else {
+        currentThemeMode.value = ThemeMode.light;
+      }
     } else {
       currentThemeMode.value = ThemeMode.light;
     }
@@ -44,8 +48,11 @@ class AppearanceService {
     currentThemeMode.value = mode;
     final prefs = await SharedPreferences.getInstance();
     String modeStr = 'system';
-    if (mode == ThemeMode.light) modeStr = 'light';
-    else if (mode == ThemeMode.dark) modeStr = 'dark';
+    if (mode == ThemeMode.light) {
+      modeStr = 'light';
+    } else if (mode == ThemeMode.dark) {
+      modeStr = 'dark';
+    }
     await prefs.setString(_themeModeKey, modeStr);
   }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cagh_frontend/core/services/language_service.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 class GlobeLanguagePicker extends StatelessWidget {
   final Color iconColor;
@@ -7,7 +8,7 @@ class GlobeLanguagePicker extends StatelessWidget {
 
   const GlobeLanguagePicker({
     super.key,
-    this.iconColor = const Color(0xFFFFD22B),
+    this.iconColor = AppColors.accentYellow,
     this.iconSize = 24.0,
   });
 
@@ -35,12 +36,12 @@ class GlobeLanguagePicker extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                      color: isSelected ? const Color(0xFF315E26) : Colors.black87,
+                      color: isSelected ? AppColors.primaryGreen : Colors.black87,
                     ),
                   ),
                   const SizedBox(width: 12),
                   if (isSelected)
-                    const Icon(Icons.check_circle_rounded, color: Color(0xFF315E26), size: 18),
+                    const Icon(Icons.check_circle_rounded, color: AppColors.primaryGreen, size: 18),
                 ],
               ),
             );

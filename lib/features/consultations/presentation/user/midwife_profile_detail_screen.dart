@@ -106,6 +106,8 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
                         const SizedBox(height: 24),
                         _buildLanguagesSection(),
                         const SizedBox(height: 24),
+                        _buildConsultationTypesSection(),
+                        const SizedBox(height: 24),
                         _buildAboutSection(),
                         const SizedBox(height: 32),
                         _buildAvailabilitySection(),
@@ -322,6 +324,60 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
             );
           }).toList(),
         ),
+      ],
+    );
+  }
+
+  Widget _buildConsultationTypesSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'OFFERED CONSULTATIONS',
+          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: Colors.grey.shade500),
+        ),
+        const SizedBox(height: 12),
+        if (!widget.midwife.supportsVoiceCall && !widget.midwife.supportsInPerson)
+          Text('No consultation options currently offered.', style: TextStyle(fontSize: 13, color: Colors.grey.shade600))
+        else
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              if (widget.midwife.supportsVoiceCall)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE8F5E9),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.call, size: 16, color: Color(0xFF315E26)),
+                      SizedBox(width: 6),
+                      Text('Voice Call', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF315E26))),
+                    ],
+                  ),
+                ),
+              if (widget.midwife.supportsInPerson)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE8F5E9),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.home_outlined, size: 16, color: Color(0xFF315E26)),
+                      SizedBox(width: 6),
+                      Text('In-person', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF315E26))),
+                    ],
+                  ),
+                ),
+            ],
+          ),
       ],
     );
   }

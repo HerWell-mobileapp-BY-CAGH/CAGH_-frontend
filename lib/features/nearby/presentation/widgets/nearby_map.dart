@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../domain/entities/healthcare_facility.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 class NearbyMap extends StatefulWidget {
   final Position userLocation;
@@ -117,7 +118,7 @@ class _NearbyMapState extends State<NearbyMap> {
               }
               widget.onMyLocationTapped();
             },
-            child: const Icon(Icons.my_location, color: Color(0xFF315E26)),
+            child: const Icon(Icons.my_location, color: AppColors.primaryGreen),
           ),
         ),
       ],

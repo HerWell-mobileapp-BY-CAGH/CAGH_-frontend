@@ -10,6 +10,16 @@ import 'package:cagh_frontend/shared/utils/name_formatter.dart';
 import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
 import 'package:cagh_frontend/features/consultations/presentation/user/voice_consultation_screen.dart';
 
+enum CallSignalType {
+  callOffer,
+  callAccepted,
+  callDeclined,
+  callEnded,
+  callCancelled,
+  pingPong,
+  unknown,
+}
+
 class GlobalCallService {
   static WebSocketChannel? _userCallChannel;
   static final Map<String, WebSocketChannel> _appointmentChannels = {};
@@ -19,6 +29,60 @@ class GlobalCallService {
   static String? currentUserId;
   static bool _isListening = false;
   static bool _isExplicitClose = false;
+
+  static bool get isRingingShown => _isRingingShown;
+  static set isRingingShown(bool val) => _isRingingShown = val;
+
+  static Future<String?> getAuthenticatedUserId() async {
+    final token = await _getSanitizedToken();
+    return _getUserIdFromJwt(token);
+  }
+
+  static void showIncomingCallModal(Map<String, dynamic> data, String defaultAppointmentId) {
+    _showIncomingCallModal(data, defaultAppointmentId);
+  }
+
+  static String extractId(dynamic val) {
+    if (val == null) return '';
+    if (val is Map) return (val['id'] ?? val['user_id'] ?? '').toString();
+    return val.toString();
+  }
+
+  static String extractPersonName(Map<String, dynamic> data, {bool isSender = false}) {
+    final topName = isSender
+        ? (data['sender_name'] ?? data['sender_full_name'] ?? data['caller_name'] ?? data['patient_name'] ?? data['user_full_name'])
+        : (data['receiver_name'] ?? data['receiver_full_name'] ?? data['recipient_name'] ?? data['midwife_name'] ?? data['midwife_full_name']);
+    if (topName != null && topName.toString().trim().isNotEmpty && topName.toString() != 'null') {
+      return NameFormatter.format(topName.toString());
+    }
+    final keysToTry = isSender
+        ? ['sender', 'caller', 'patient_detail', 'patient', 'user_detail', 'user']
+        : ['receiver', 'recipient', 'midwife_detail', 'midwife_profile', 'midwife'];
+    for (final key in keysToTry) {
+      if (data[key] != null) {
+        final res = NameFormatter.format(data[key].toString());
+        if (res.isNotEmpty && res.toLowerCase() != 'recipient') return res;
+      }
+    }
+    return isSender ? 'Caller' : 'Care Provider';
+  }
+
+  static CallSignalType parseSignalType(Map<String, dynamic> data) {
+    final type = (data['type'] ?? data['action'] ?? '').toString().toLowerCase();
+    if (type.contains('offer')) return CallSignalType.callOffer;
+    if (type.contains('accept')) return CallSignalType.callAccepted;
+    if (type.contains('decline') || type.contains('reject')) return CallSignalType.callDeclined;
+    if (type.contains('end') || type.contains('hangup') || type.contains('cancel')) return CallSignalType.callEnded;
+    if (type.contains('ping') || type.contains('pong')) return CallSignalType.pingPong;
+    return CallSignalType.unknown;
+  }
+
+  static final StreamController<Map<String, dynamic>> _callEventController = StreamController<Map<String, dynamic>>.broadcast();
+  static Stream<Map<String, dynamic>> get onCallEvent => _callEventController.stream;
+
+  static void sendCallEvent(Map<String, dynamic> event) {
+    _callEventController.add(event);
+  }
 
   static String? _getUserIdFromJwt(String token) {
     try {
@@ -48,8 +112,8 @@ class GlobalCallService {
     return token.replaceAll('"', '').replaceAll("'", '').trim();
   }
 
-  static Future<void> initUserCallListener() async {
-    if (_isListening && _userCallChannel != null) {
+  static Future<void> initUserCallListener({bool force = false}) async {
+    if (!force && _isListening && _userCallChannel != null) {
       debugPrint('GlobalCallService: Already actively listening on user-calls WebSocket');
       return;
     }

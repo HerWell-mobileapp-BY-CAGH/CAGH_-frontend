@@ -1,12 +1,10 @@
 import 'package:cagh_frontend/core/services/global_call_service.dart';
 import 'package:cagh_frontend/features/appointments/data/services/appointment_api_service.dart';
 import 'package:flutter/material.dart';
-import 'package:cagh_frontend/features/notifications/data/services/notification_generator_service.dart';
 import 'package:cagh_frontend/features/consultations/presentation/user/find_midwife_screen.dart';
 import 'package:cagh_frontend/features/nearby/presentation/screens/nearby_healthcare_screen.dart';
 import 'package:cagh_frontend/features/consultations/presentation/user/consult_hub_screen.dart';
 import 'package:cagh_frontend/features/profile/presentation/user_profile_screen.dart';
-import 'package:cagh_frontend/features/virtual_consultation/presentation/emergency_support_screen.dart';
 import 'package:cagh_frontend/shared/widgets/floating_glass_nav_bar.dart';
 import 'package:cagh_frontend/core/services/language_service.dart';
 import 'package:cagh_frontend/shared/widgets/ai_assistant_fab.dart';
@@ -88,42 +86,30 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
               ),
               const Divider(),
               Expanded(
-                child: FutureBuilder<List<Map<String, dynamic>>>(
-                  future: NotificationGeneratorService.getUserNotifications(),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator(color: Color(0xFF315E26)));
-                    }
-                    if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
-                      return Center(
-                        child: Text(
-                          'No new notifications',
-                          style: TextStyle(color: Colors.grey.shade500),
-                        ),
-                      );
-                    }
-
-                    final notifications = snapshot.data!;
-                    return ListView.builder(
-                      itemCount: notifications.length,
-                      itemBuilder: (context, index) {
-                        final notif = notifications[index];
-                        return _NotificationTile(
-                          title: notif['title'],
-                          body: notif['body'],
-                          time: notif['time'],
-                          isUnread: notif['isUnread'],
-                          type: notif['type'],
-                          onTap: () {
-                            Navigator.pop(context);
-                            setState(() {
-                              _currentIndex = 1;
-                            });
-                          },
-                        );
-                      },
-                    );
-                  },
+                child: ListView(
+                  children: const [
+                    _NotificationTile(
+                      title: 'Appointment Reminder',
+                      body: 'Your Voice consultation with your assigned midwife is tomorrow at 10:00 AM.',
+                      time: '10 mins ago',
+                      isUnread: true,
+                      type: 'APPOINTMENT',
+                    ),
+                    _NotificationTile(
+                      title: 'Chat Request Accepted',
+                      body: 'Sr. Martha T. accepted your direct message request. You can now chat freely.',
+                      time: '2 hours ago',
+                      isUnread: true,
+                      type: 'CHAT',
+                    ),
+                    _NotificationTile(
+                      title: 'New Educational Content',
+                      body: 'New article added: "Trimester 2 Nutrition & Essential Vitamins".',
+                      time: '1 day ago',
+                      isUnread: false,
+                      type: 'LEARNING',
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -407,23 +393,19 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
 
           const SizedBox(height: 24),
 
-          const Center(
-            child: Text(
-              'Our Focus Areas',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF315E26),
-              ),
+          const Text(
+            'Our Focus Areas',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF315E26),
             ),
           ),
-          Center(
-            child: Container(
-              height: 2,
-              width: 50,
-              margin: const EdgeInsets.only(top: 4, bottom: 20),
-              color: const Color(0xFFFFD22B),
-            ),
+          Container(
+            height: 2,
+            width: 40,
+            margin: const EdgeInsets.only(top: 4, bottom: 16),
+            color: const Color(0xFFFFD22B),
           ),
 
           LearningModuleCard(
@@ -432,38 +414,38 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             iconColor: const Color(0xFF315E26),
             title: 'Adolescent Girls Health & Nutrition',
             subtitle: 'Puberty, menstrual health, nutrition & healthy lifestyle, life skills & well-being.',
-            arrowBgColor: const Color(0xFFA5D6A7),
-            onTap: () {},
+            arrowBgColor: const Color(0xFFF1F8E9),
+            onTap: () => setState(() => _currentIndex = 2),
           ),
-          const SizedBox(height: 16),
-          LearningModuleCard(
+          const SizedBox(height: 14),
+          _buildLearningModuleCard(
             icon: Icons.shield_outlined,
             iconBgColor: const Color(0xFFFFF8E1),
             iconColor: const Color(0xFFFFD22B),
             title: 'Prevention and Awareness',
             subtitle: 'STI/HIV prevention, HPV & cervical cancer awareness, healthy relationships.',
-            arrowBgColor: const Color(0xFFFFD22B),
-            onTap: () {},
+            arrowBgColor: const Color(0xFFFFF8E1),
+            onTap: () => setState(() => _currentIndex = 2),
           ),
-          const SizedBox(height: 16),
-          LearningModuleCard(
+          const SizedBox(height: 14),
+          _buildLearningModuleCard(
             icon: Icons.favorite_border_rounded,
             iconBgColor: const Color(0xFFFFF8E1),
             iconColor: const Color(0xFFFFD22B),
             title: 'Psychosocial Support & Protection',
             subtitle: 'Mental health, GBV support, counseling services, and emergency help.',
-            arrowBgColor: const Color(0xFFFFD22B),
-            onTap: () {},
+            arrowBgColor: const Color(0xFFFFF8E1),
+            onTap: () => setState(() => _currentIndex = 2),
           ),
-          const SizedBox(height: 16),
-          LearningModuleCard(
+          const SizedBox(height: 14),
+          _buildLearningModuleCard(
             icon: Icons.female,
             iconBgColor: const Color(0xFFE8F5E9),
             iconColor: const Color(0xFF315E26),
             title: 'Reproductive Health & Care',
             subtitle: 'Pregnancy prevention, maternal care, ANC, newborn care, and checkups.',
-            arrowBgColor: const Color(0xFFA5D6A7),
-            onTap: () {},
+            arrowBgColor: const Color(0xFFF1F8E9),
+            onTap: () => setState(() => _currentIndex = 2),
           ),
           const SizedBox(height: 30),
         ],
@@ -499,38 +481,34 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             iconColor: const Color(0xFF315E26),
             title: 'Adolescent Girls Health & Nutrition',
             subtitle: 'Puberty, menstrual health, nutrition & healthy lifestyle, life skills & well-being.',
-            arrowBgColor: const Color(0xFFA5D6A7),
-            onTap: () {},
+            arrowBgColor: const Color(0xFFF1F8E9),
           ),
-          const SizedBox(height: 16),
-          LearningModuleCard(
+          const SizedBox(height: 14),
+          _buildLearningModuleCard(
             icon: Icons.shield_outlined,
             iconBgColor: const Color(0xFFFFF8E1),
             iconColor: const Color(0xFFFFD22B),
             title: 'Prevention and Awareness',
             subtitle: 'STI/HIV prevention, HPV & cervical cancer awareness, healthy relationships.',
-            arrowBgColor: const Color(0xFFFFD22B),
-            onTap: () {},
+            arrowBgColor: const Color(0xFFFFF8E1),
           ),
-          const SizedBox(height: 16),
-          LearningModuleCard(
+          const SizedBox(height: 14),
+          _buildLearningModuleCard(
             icon: Icons.favorite_border_rounded,
             iconBgColor: const Color(0xFFFFF8E1),
             iconColor: const Color(0xFFFFD22B),
             title: 'Psychosocial Support & Protection',
             subtitle: 'Mental health, GBV support, counseling services, and emergency help.',
-            arrowBgColor: const Color(0xFFFFD22B),
-            onTap: () {},
+            arrowBgColor: const Color(0xFFFFF8E1),
           ),
-          const SizedBox(height: 16),
-          LearningModuleCard(
+          const SizedBox(height: 14),
+          _buildLearningModuleCard(
             icon: Icons.female,
             iconBgColor: const Color(0xFFE8F5E9),
             iconColor: const Color(0xFF315E26),
             title: 'Reproductive Health & Care',
             subtitle: 'Pregnancy prevention, maternal care, ANC, newborn care, and checkups.',
-            arrowBgColor: const Color(0xFFA5D6A7),
-            onTap: () {},
+            arrowBgColor: const Color(0xFFF1F8E9),
           ),
           const SizedBox(height: 80),
         ],
@@ -538,6 +516,91 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
     );
   }
 
+  Widget _buildLearningModuleCard({
+    required IconData icon,
+    required Color iconBgColor,
+    required Color iconColor,
+    required String title,
+    required String subtitle,
+    required Color arrowBgColor,
+    VoidCallback? onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: iconBgColor,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: iconColor, size: 22),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF315E26),
+                          height: 1.3,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle,
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          color: Color(0xFF64748B),
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Align(
+              alignment: Alignment.bottomRight,
+              child: Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: arrowBgColor,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.arrow_forward_rounded, color: Color(0xFF315E26), size: 16),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   // TAB 3: NEARBY FACILITY
   Widget _buildNearbyTab() {

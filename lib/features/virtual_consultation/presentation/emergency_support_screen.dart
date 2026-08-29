@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:cagh_frontend/features/virtual_consultation/data/services/sos_api_service.dart';
-import 'package:cagh_frontend/features/virtual_consultation/domain/models/hotline.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 class EmergencySupportScreen extends StatefulWidget {
   const EmergencySupportScreen({super.key});
@@ -141,7 +139,7 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFFE5E5),
+        backgroundColor: AppColors.backgroundRedPale,
         elevation: 0,
         centerTitle: true,
         leadingWidth: 80,
@@ -150,7 +148,7 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
           child: const Text(
             'close',
             style: TextStyle(
-              color: Color(0xFF900000),
+              color: AppColors.errorRedMaroon,
               fontWeight: FontWeight.bold,
               fontSize: 16,
             ),
@@ -159,43 +157,61 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
         title: const Text(
           'Emergency',
           style: TextStyle(
-            color: Color(0xFF900000),
+            color: AppColors.errorRedMaroon,
             fontWeight: FontWeight.bold,
             fontSize: 16,
           ),
         ),
       ),
       body: SafeArea(
-        child: _isLoading 
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFFC62828)))
-          : _errorMessage != null
-            ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(_errorMessage!, style: const TextStyle(color: Color(0xFFC62828))),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFC62828)),
-                      onPressed: _fetchHotlines,
-                      child: const Text('Retry', style: TextStyle(color: Colors.white)),
-                    )
-                  ],
-                )
-              )
-            : SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 40),
-                    const Text(
-                      'Are you okay?',
-                      style: TextStyle(
-                        color: Color(0xFFB71C1C),
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const SizedBox(height: 40),
+              const Text(
+                'Are you okay?',
+                style: TextStyle(
+                  color: AppColors.errorRedDeep,
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'If this is a life-threatening medical\nemergency, tap SOS immediately.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: AppColors.errorRedDark,
+                  fontSize: 15,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 50),
+              
+              // SOS Button
+              GestureDetector(
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('SOS Alert Triggered!')),
+                  );
+                },
+                child: Container(
+                  width: 220,
+                  height: 220,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.errorRedBright.withValues(alpha: 0.5), // Outer ring
+                  ),
+                  child: Center(
+                    child: Container(
+                      width: 170,
+                      height: 170,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.errorRedDeep, // Inner circle
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -288,7 +304,42 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
                   ],
                 ),
               ),
-            ),
+              
+              const SizedBox(height: 50),
+              
+              // Call Emergency Services Card
+              _buildActionCard(
+                icon: Icons.phone,
+                iconBgColor: AppColors.backgroundSoftPink,
+                iconColor: AppColors.errorRedDark,
+                title: 'Call Emergency\nServices',
+                subtitle: 'Dial 911 immediately',
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Dialing 911...')),
+                  );
+                },
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Notify Contacts Card
+              _buildActionCard(
+                icon: Icons.group,
+                iconBgColor: AppColors.lightGreen,
+                iconColor: AppColors.accentGreenDark,
+                title: 'Notify Contacts',
+                subtitle: 'Send alert to 3 contacts',
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Alert sent to emergency contacts!')),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+        ),
       ),
     );
   }
@@ -308,7 +359,7 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFF315E26), width: 1.0), // Dark green border
+          border: Border.all(color: AppColors.primaryGreen, width: 1.0), // Dark green border
         ),
         child: Row(
           children: [

@@ -20,8 +20,8 @@ class BookAppointmentScreen extends StatefulWidget {
 
 class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
   bool _isLoading = false;
-  String _consultationType = 'Video Call';
-  
+  late String _consultationType;
+
   DateTime _focusedDay = DateTime.now();
   DateTime _selectedDay = DateTime.now();
   
@@ -37,6 +37,13 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
   @override
   void initState() {
     super.initState();
+    if (widget.midwife.supportsVoiceCall) {
+      _consultationType = 'Voice Call';
+    } else if (widget.midwife.supportsInPerson) {
+      _consultationType = 'In-person';
+    } else {
+      _consultationType = 'Voice Call';
+    }
     _fetchSchedule();
   }
   
@@ -168,8 +175,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                 height: 50,
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.pop(context);
-                    Navigator.pop(context); // Go back to profile
+                    Navigator.popUntil(context, (route) => route.isFirst);
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF315E26),
@@ -229,20 +235,38 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
               style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: Colors.grey.shade600),
             ),
             const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: widget.midwife.offeredConsultationTypes.map((type) {
-                if (type == 'VOICE_CALL' || type == 'Voice Call') {
-                  return _buildConsultationTypeCard('Voice Call', Icons.call);
-                } else if (type == 'VIDEO_CALL' || type == 'Video Call') {
-                  return _buildConsultationTypeCard('Video Call', Icons.videocam);
-                } else if (type == 'IN_PERSON' || type == 'In-person') {
-                  return _buildConsultationTypeCard('In-person', Icons.home_outlined);
-                }
-                return const SizedBox.shrink();
-              }).toList(),
-            ),
+            if (!widget.midwife.supportsVoiceCall && !widget.midwife.supportsInPerson)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.orange.shade200),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline, color: Colors.orange),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'This midwife is not currently offering consultation options.',
+                        style: TextStyle(color: Colors.orange.shade900, fontSize: 13, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else
+              Row(
+                children: [
+                  if (widget.midwife.supportsVoiceCall)
+                    _buildConsultationTypeCard('Voice Call', Icons.call),
+                  if (widget.midwife.supportsVoiceCall && widget.midwife.supportsInPerson)
+                    const SizedBox(width: 12),
+                  if (widget.midwife.supportsInPerson)
+                    _buildConsultationTypeCard('In-person', Icons.home_outlined),
+                ],
+              ),
             const SizedBox(height: 24),
 
             // Calendar Section
@@ -252,7 +276,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
                 ],
               ),
               child: TableCalendar(
@@ -408,7 +432,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
                 ],
               ),
               child: Column(
@@ -573,21 +597,49 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
         });
       } : null,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF315E26) : Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          color: isSelected 
+              ? const Color(0xFF315E26) 
+              : (isAvailable ? Colors.white : Colors.grey.shade100),
+          borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: isSelected ? const Color(0xFF315E26) : const Color(0xFFE0E0E0),
+            color: isSelected 
+                ? const Color(0xFF315E26) 
+                : (isAvailable ? const Color(0xFFE0E0E0) : Colors.grey.shade300),
+            width: isSelected ? 2 : 1,
           ),
         ),
-        child: Text(
-          displayTime.isNotEmpty ? displayTime : startTime,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-            color: isAvailable ? (isSelected ? Colors.white : Colors.black87) : Colors.grey.shade400,
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              displayTime.isNotEmpty ? displayTime : startTime,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                color: isSelected ? Colors.white : (isAvailable ? Colors.black87 : Colors.grey.shade500),
+              ),
+            ),
+            if (!isSelected) ...[
+              const SizedBox(width: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                decoration: BoxDecoration(
+                  color: isAvailable ? Colors.green.shade50 : Colors.red.shade50,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  isAvailable ? 'Available' : 'Booked',
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                    color: isAvailable ? Colors.green.shade700 : Colors.red.shade700,
+                  ),
+                ),
+              ),
+            ],
+          ],
         ),
       ),
     );

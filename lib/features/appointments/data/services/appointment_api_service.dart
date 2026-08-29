@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cagh_frontend/core/network/api_config.dart';
+import 'package:cagh_frontend/shared/constants/app_durations.dart';
 
 class AppointmentApiService {
   Future<Map<String, String>> _getHeaders() async {
@@ -19,7 +20,7 @@ class AppointmentApiService {
     final response = await http.get(
       url,
       headers: await _getHeaders(),
-    ).timeout(const Duration(seconds: 15));
+    ).timeout(AppDurations.apiRequestTimeout);
 
     if (response.statusCode == 200) {
       try {
@@ -43,10 +44,9 @@ class AppointmentApiService {
       url,
       headers: await _getHeaders(),
       body: jsonEncode(body),
-    ).timeout(const Duration(seconds: 15));
+    ).timeout(AppDurations.apiRequestTimeout);
 
     if (response.statusCode == 200 || response.statusCode == 201) {
-      // TODO: Connect to backend notification endpoint (Phase 14)
       return jsonDecode(response.body);
     } else if (response.statusCode == 409) {
       throw Exception('CONFLICT: Slot is no longer available.');
@@ -55,45 +55,47 @@ class AppointmentApiService {
     }
   }
 
-  Future<List<dynamic>> getUserAppointments() async {
+  Future<List<Map<String, dynamic>>> getUserAppointments() async {
     final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.appointments}');
     
     final response = await http.get(
       url,
       headers: await _getHeaders(),
-    ).timeout(const Duration(seconds: 15));
+    ).timeout(AppDurations.apiRequestTimeout);
 
     if (response.statusCode == 200) {
       final decoded = jsonDecode(response.body);
+      List<dynamic> listData = [];
       if (decoded is Map<String, dynamic> && decoded.containsKey('results')) {
-        return decoded['results'] as List<dynamic>;
+        listData = decoded['results'] as List<dynamic>? ?? [];
       } else if (decoded is List) {
-        return decoded;
+        listData = decoded;
       }
-      return [];
+      return listData.map((item) => Map<String, dynamic>.from(item as Map)).toList();
     } else {
-      throw Exception('Failed to fetch user appointments.');
+      throw Exception('Failed to fetch user appointments. Status: ${response.statusCode}');
     }
   }
 
-  Future<List<dynamic>> getMidwifeAppointments() async {
+  Future<List<Map<String, dynamic>>> getMidwifeAppointments() async {
     final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.appointments}');
     
     final response = await http.get(
       url,
       headers: await _getHeaders(),
-    ).timeout(const Duration(seconds: 15));
+    ).timeout(AppDurations.apiRequestTimeout);
 
     if (response.statusCode == 200) {
       final decoded = jsonDecode(response.body);
+      List<dynamic> listData = [];
       if (decoded is Map<String, dynamic> && decoded.containsKey('results')) {
-        return decoded['results'] as List<dynamic>;
+        listData = decoded['results'] as List<dynamic>? ?? [];
       } else if (decoded is List) {
-        return decoded;
+        listData = decoded;
       }
-      return [];
+      return listData.map((item) => Map<String, dynamic>.from(item as Map)).toList();
     } else {
-      throw Exception('Failed to fetch midwife appointments.');
+      throw Exception('Failed to fetch midwife appointments. Status: ${response.statusCode}');
     }
   }
 
@@ -103,7 +105,7 @@ class AppointmentApiService {
     final response = await http.post(
       url,
       headers: await _getHeaders(),
-    ).timeout(const Duration(seconds: 15));
+    ).timeout(AppDurations.apiRequestTimeout);
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
@@ -118,7 +120,7 @@ class AppointmentApiService {
     final response = await http.post(
       url,
       headers: await _getHeaders(),
-    ).timeout(const Duration(seconds: 15));
+    ).timeout(AppDurations.apiRequestTimeout);
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
@@ -133,7 +135,7 @@ class AppointmentApiService {
     final response = await http.post(
       url,
       headers: await _getHeaders(),
-    ).timeout(const Duration(seconds: 15));
+    ).timeout(AppDurations.apiRequestTimeout);
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
@@ -148,7 +150,7 @@ class AppointmentApiService {
     final response = await http.get(
       url,
       headers: await _getHeaders(),
-    ).timeout(const Duration(seconds: 15));
+    ).timeout(AppDurations.apiRequestTimeout);
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
@@ -157,22 +159,23 @@ class AppointmentApiService {
     }
   }
 
-  Future<List<dynamic>> getAvailabilities() async {
+  Future<List<Map<String, dynamic>>> getAvailabilities() async {
     final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.availabilities}');
     
     final response = await http.get(
       url,
       headers: await _getHeaders(),
-    ).timeout(const Duration(seconds: 15));
+    ).timeout(AppDurations.apiRequestTimeout);
 
     if (response.statusCode == 200) {
       final decoded = jsonDecode(response.body);
+      List<dynamic> listData = [];
       if (decoded is Map<String, dynamic> && decoded.containsKey('results')) {
-        return decoded['results'] as List<dynamic>;
+        listData = decoded['results'] as List<dynamic>? ?? [];
       } else if (decoded is List) {
-        return decoded;
+        listData = decoded;
       }
-      return [];
+      return listData.map((item) => Map<String, dynamic>.from(item as Map)).toList();
     } else {
       throw Exception('Failed to fetch availabilities. Status: ${response.statusCode}');
     }
@@ -185,12 +188,25 @@ class AppointmentApiService {
       url,
       headers: await _getHeaders(),
       body: jsonEncode(data),
-    ).timeout(const Duration(seconds: 15));
+    ).timeout(AppDurations.apiRequestTimeout);
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
       throw Exception('Failed to set availability. Status: ${response.statusCode}');
+    }
+  }
+
+  Future<void> deleteAvailability(String availabilityId) async {
+    final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.availabilities}$availabilityId/');
+    
+    final response = await http.delete(
+      url,
+      headers: await _getHeaders(),
+    ).timeout(AppDurations.apiRequestTimeout);
+
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Failed to delete availability. Status: ${response.statusCode}');
     }
   }
 }
