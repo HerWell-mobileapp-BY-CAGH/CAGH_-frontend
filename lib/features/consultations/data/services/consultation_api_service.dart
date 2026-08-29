@@ -36,12 +36,42 @@ class ConsultationApiService {
       if (decoded is List) {
         return (decoded as List).cast<Map<String, dynamic>>();
       } else if (decoded is Map<String, dynamic> && decoded.containsKey('results')) {
-        return decoded['results'] as List<Map<String, dynamic>>;
+        return (decoded['results'] as List).cast<Map<String, dynamic>>();
       }
       return [];
     } else {
       throw Exception('Failed to fetch consultations. Status: ${response.statusCode}');
     }
+  }
+
+  Future<Map<String, dynamic>> getConsultationByAppointment(String appointmentId) async {
+    try {
+      final existingList = await getConsultationsForAppointment(appointmentId);
+      if (existingList.isNotEmpty) {
+        return existingList.first;
+      }
+    } catch (e) {
+      AppLogger.d('ConsultationApiService: Query by appointment failed, trying direct detail lookup: $e');
+    }
+
+    final detailUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}$appointmentId/');
+    try {
+      final response = await http.get(
+        detailUrl,
+        headers: await _getHeaders(),
+      ).timeout(AppDurations.apiRequestTimeout);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data is Map<String, dynamic> && data.containsKey('id')) {
+          return data;
+        }
+      }
+    } catch (e) {
+      AppLogger.d('ConsultationApiService: Direct detail lookup failed: $e');
+    }
+
+    return await createConsultation(appointmentId);
   }
 
   Future<Map<String, dynamic>> createConsultation(String appointmentId) async {

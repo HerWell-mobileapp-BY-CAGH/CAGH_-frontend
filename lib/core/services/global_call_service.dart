@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:cagh_frontend/main.dart';
@@ -8,7 +10,10 @@ import 'package:cagh_frontend/core/network/api_config.dart';
 import 'package:cagh_frontend/core/services/ringtone_service.dart';
 import 'package:cagh_frontend/shared/utils/name_formatter.dart';
 import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
+import 'package:cagh_frontend/features/consultations/presentation/common/voice_call_screen.dart';
 import 'package:cagh_frontend/features/consultations/presentation/user/voice_consultation_screen.dart';
+import 'package:cagh_frontend/shared/models/appointment.dart';
+import 'package:cagh_frontend/core/utils/app_logger.dart';
 
 enum CallSignalType {
   callOffer,
@@ -24,14 +29,13 @@ class GlobalCallService {
   static WebSocketChannel? _userCallChannel;
   static final Map<String, WebSocketChannel> _appointmentChannels = {};
   static Timer? _heartbeatTimer;
-  static bool _isRingingShown = false;
+  static bool isRingingShown = false;
+  static bool get _isRingingShown => isRingingShown;
+  static set _isRingingShown(bool v) => isRingingShown = v;
   static bool isCallActive = false;
   static String? currentUserId;
   static bool _isListening = false;
   static bool _isExplicitClose = false;
-
-  static bool get isRingingShown => _isRingingShown;
-  static set isRingingShown(bool val) => _isRingingShown = val;
 
   static Future<String?> getAuthenticatedUserId() async {
     final token = await _getSanitizedToken();
@@ -151,12 +155,15 @@ class GlobalCallService {
       _userCallChannel!.stream.listen(
         (message) {
           try {
-            debugPrint('GlobalCallService RECEIVED: $message');
+            debugPrint('[CALLER RECEIVED] GlobalCallService user-calls frame: $message');
             final data = jsonDecode(message);
             final eventType = (data['type'] ?? data['action'] ?? '').toString();
             final senderId = (data['sender_id'] ?? data['sender']?['id'] ?? '').toString();
 
             if (eventType == 'pong') return;
+
+            // Broadcast all non-pong events to local listeners (_callEventController)
+            sendCallEvent(data);
 
             // Ignore calls initiated by oneself
             if (currentUserId != null && currentUserId!.isNotEmpty && senderId == currentUserId) {
@@ -164,9 +171,18 @@ class GlobalCallService {
               return;
             }
 
-            if (eventType == 'incoming_call_offer' || eventType == 'call_offer' || eventType == 'offer') {
+            final typeLower = eventType.toLowerCase();
+            if (typeLower.contains('incoming') || typeLower.contains('offer') || typeLower.contains('initiated')) {
               if (!_isRingingShown && !isCallActive) {
-                _showIncomingCallModal(data, data['consultation_id']?.toString() ?? '');
+                showIncomingCallModal(data, data['consultation_id']?.toString() ?? '');
+              }
+            } else if (typeLower.contains('ended') || typeLower.contains('cancelled') || typeLower.contains('declined')) {
+              if (!isCallActive && !kIsWeb) {
+                try {
+                  FlutterCallkitIncoming.endAllCalls();
+                  RingtoneService.stopRingtone();
+                  _isRingingShown = false;
+                } catch (_) {}
               }
             }
           } catch (e) {
@@ -219,18 +235,22 @@ class GlobalCallService {
         channel.stream.listen(
           (message) {
             try {
-              debugPrint('AppointmentCallService RECEIVED ($id): $message');
+              debugPrint('[CALLER RECEIVED] AppointmentCallService frame ($id): $message');
               final data = jsonDecode(message);
               final eventType = (data['type'] ?? data['action'] ?? '').toString();
               final senderId = (data['sender_id'] ?? data['sender']?['id'] ?? '').toString();
+
+              // Broadcast to local call subscribers
+              sendCallEvent(data);
 
               if (currentUserId != null && currentUserId!.isNotEmpty && senderId == currentUserId) {
                 return;
               }
 
-              if (eventType == 'incoming_call_offer' || eventType == 'call_offer' || eventType == 'offer') {
+              final typeLower = eventType.toLowerCase();
+              if (typeLower.contains('incoming') || typeLower.contains('offer') || typeLower.contains('initiated')) {
                 if (!_isRingingShown && !isCallActive) {
-                  _showIncomingCallModal(data, id);
+                  showIncomingCallModal(data, id);
                 }
               }
             } catch (e) {
@@ -246,7 +266,7 @@ class GlobalCallService {
         );
       }
     } catch (e) {
-      debugPrint('Failed to initialize appointment call service: $e');
+      debugPrint('Error in initMultiple: $e');
     }
   }
 
@@ -256,118 +276,147 @@ class GlobalCallService {
 
   static void declineCall(String consultationId) async {
     try {
+      debugPrint('[DECLINE SENT] Callee tapped decline for consultation: $consultationId');
+      
+      RingtoneService.stopRingtone();
+      _isRingingShown = false;
+
+      sendCallEvent({
+        'type': 'call_declined',
+        'action': 'call_declined',
+        'consultation_id': consultationId,
+      });
+
       final token = await _getSanitizedToken();
       if (token.isEmpty || consultationId.isEmpty || consultationId == 'null') return;
+
+      if (_appointmentChannels.containsKey(consultationId)) {
+        _appointmentChannels[consultationId]?.sink.add(jsonEncode({
+          'action': 'call_declined',
+          'type': 'call_declined',
+          'consultation_id': consultationId,
+        }));
+        debugPrint('[DECLINE SENT] Sent via existing appointment channel for consultation: $consultationId');
+        return;
+      }
 
       final wsUrlString = '${ApiConfig.wsUrl}/consultation/$consultationId/?token=$token';
       final wsUrl = Uri.parse(wsUrlString);
       final channel = WebSocketChannel.connect(wsUrl);
       
-      // Allow WebSocket connection to open before sending frame
       await Future.delayed(const Duration(milliseconds: 250));
       channel.sink.add(jsonEncode({
-        'action': 'end_call',
-        'type': 'end_call',
+        'action': 'call_declined',
+        'type': 'call_declined',
+        'consultation_id': consultationId,
       }));
-      await Future.delayed(const Duration(milliseconds: 400));
+      debugPrint('[DECLINE SENT] Sent via temporary WebSocket channel for consultation: $consultationId');
+      await Future.delayed(const Duration(milliseconds: 300));
       channel.sink.close();
     } catch (e) {
-      debugPrint('Failed to send decline end_call: $e');
+      debugPrint('Failed to send declineCall WS frame: $e');
     }
   }
 
+  static String? _lastCallDeduplicationId;
+
   static void _showIncomingCallModal(Map<String, dynamic> data, String defaultAppointmentId) {
     final context = globalNavigatorKey.currentContext;
+    final consultationId = (data['consultation_id'] ?? data['call_id'] ?? defaultAppointmentId).toString();
+
+    if (_lastCallDeduplicationId == consultationId && (_isRingingShown || isCallActive)) {
+      AppLogger.d('[CALL][DEDUP] Duplicate call ignored for consultation $consultationId');
+      return;
+    }
+
     if (context == null || _isRingingShown || isCallActive) {
       return;
     }
 
+    _lastCallDeduplicationId = consultationId;
     _isRingingShown = true;
+    AppLogger.d('[CALL][UI] Incoming call UI shown for consultation $consultationId');
     RingtoneService.playIncomingRingtone();
-    final rawName = (data['sender_name'] ?? data['sender_full_name'] ?? 'Care Provider').toString();
-    final callerName = NameFormatter.format(rawName);
-    final consultationId = data['consultation_id'] ?? defaultAppointmentId;
 
-    showDialog(
+    final rawName = (data['sender_name'] ?? data['sender_full_name'] ?? data['caller_name'] ?? 'Care Provider').toString();
+    final callerName = NameFormatter.format(rawName);
+
+    showGeneralDialog(
       context: context,
       barrierDismissible: false,
-      builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        backgroundColor: const Color(0xFF315E26),
-        title: const Row(
-          children: [
-            Icon(Icons.phone_in_talk, color: Colors.white, size: 28),
-            SizedBox(width: 10),
-            Text('Incoming Call', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const CircleAvatar(
-              radius: 40,
-              backgroundColor: Colors.white24,
-              child: Icon(Icons.person, size: 50, color: Colors.white),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              callerName,
-              style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 6),
-            const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.lock, size: 12, color: Colors.white70),
-                SizedBox(width: 4),
-                Text(
-                  'End-to-End Encrypted Voice Call',
-                  style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w500),
-                ),
-              ],
-            ),
-          ],
-        ),
-        actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        actions: [
-          TextButton.icon(
-            onPressed: () {
-              RingtoneService.stopRingtone();
-              _isRingingShown = false;
-              declineCall(consultationId.toString());
-              Navigator.pop(dialogContext);
-            },
-            icon: const Icon(Icons.call_end, color: Colors.redAccent),
-            label: const Text('Decline', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
-          ),
-          ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
-            onPressed: () {
-              RingtoneService.stopRingtone();
-              _isRingingShown = false;
-              isCallActive = true;
-              Navigator.pop(dialogContext);
-              globalNavigatorKey.currentState?.push(
-                MaterialPageRoute(
-                  builder: (context) => VoiceConsultationScreen(
-                    consultationId: consultationId.toString(),
-                    midwifeName: callerName,
-                    phoneNumber: 'Active Call',
-                    isCaller: false,
+      barrierColor: Colors.black.withValues(alpha: 0.45),
+      transitionDuration: const Duration(milliseconds: 320),
+      pageBuilder: (dialogContext, animation, secondaryAnimation) {
+        return _IncomingCallOverlayCardWidget(
+          callerName: callerName,
+          onTapCard: () {
+            _isRingingShown = false;
+            if (dialogContext.mounted) Navigator.pop(dialogContext);
+            final mapExtra = Map<String, dynamic>.from(data);
+            final callerId = extractId(mapExtra['caller_id'] ?? mapExtra['sender_id'] ?? mapExtra['caller'] ?? mapExtra['sender'] ?? mapExtra['user_id']);
+            final receiverId = extractId(mapExtra['receiver_id'] ?? mapExtra['recipient_id'] ?? mapExtra['receiver'] ?? mapExtra['recipient'] ?? mapExtra['midwife_id']);
+            final receiverName = extractPersonName(mapExtra, isSender: false);
+            final recipientDisplayName = receiverName.isNotEmpty && receiverName != 'Recipient' ? receiverName : 'Midwife';
+
+            globalNavigatorKey.currentState?.push(
+              MaterialPageRoute(
+                builder: (context) => VoiceCallScreen(
+                  consultationId: consultationId,
+                  appointment: Appointment(
+                    appointmentId: consultationId,
+                    userId: callerId,
+                    midwifeId: receiverId,
+                    date: '',
+                    startTime: '',
+                    endTime: '',
+                    appointmentType: 'VIRTUAL_VOICE',
+                    status: AppointmentStatus.confirmed,
+                    userFullName: callerName,
+                    midwifeName: recipientDisplayName,
                   ),
+                  isCaller: false,
+                  isIncomingCall: true,
                 ),
-              );
-            },
-            icon: const Icon(Icons.call),
-            label: const Text('Accept', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            );
+          },
+          onDecline: () {
+            RingtoneService.stopRingtone();
+            _isRingingShown = false;
+            declineCall(consultationId);
+            if (dialogContext.mounted) Navigator.pop(dialogContext);
+          },
+          onAccept: () {
+            RingtoneService.stopRingtone();
+            _isRingingShown = false;
+            isCallActive = true;
+            if (dialogContext.mounted) Navigator.pop(dialogContext);
+            globalNavigatorKey.currentState?.push(
+              MaterialPageRoute(
+                builder: (context) => VoiceConsultationScreen(
+                  consultationId: consultationId,
+                  midwifeName: callerName,
+                  phoneNumber: 'Active Call',
+                  isCaller: false,
+                ),
+              ),
+            );
+          },
+        );
+      },
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        final curvedAnimation = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+        return SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, 0.12),
+            end: Offset.zero,
+          ).animate(curvedAnimation),
+          child: FadeTransition(
+            opacity: curvedAnimation,
+            child: child,
           ),
-        ],
-      ),
+        );
+      },
     ).then((_) {
       RingtoneService.stopRingtone();
     });
@@ -384,4 +433,278 @@ class GlobalCallService {
     _isRingingShown = false;
     isCallActive = false;
   }
+}
+
+class _IncomingCallOverlayCardWidget extends StatefulWidget {
+  final String callerName;
+  final VoidCallback onTapCard;
+  final VoidCallback onDecline;
+  final VoidCallback onAccept;
+
+  const _IncomingCallOverlayCardWidget({
+    required this.callerName,
+    required this.onTapCard,
+    required this.onDecline,
+    required this.onAccept,
+  });
+
+  @override
+  State<_IncomingCallOverlayCardWidget> createState() => _IncomingCallOverlayCardWidgetState();
+}
+
+class _IncomingCallOverlayCardWidgetState extends State<_IncomingCallOverlayCardWidget> with SingleTickerProviderStateMixin {
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat(reverse: true);
+
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.18).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  String _getInitials(String name) {
+    final clean = name.trim();
+    if (clean.isEmpty) return 'DM';
+    final parts = clean.split(' ').where((p) => p.isNotEmpty).toList();
+    if (parts.length >= 2) {
+      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    }
+    return clean.substring(0, clean.length >= 2 ? 2 : 1).toUpperCase();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final initials = _getInitials(widget.callerName);
+
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 28, left: 16, right: 16),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: widget.onTapCard,
+            borderRadius: BorderRadius.circular(28),
+            splashColor: Colors.black12,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(28),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.18),
+                    blurRadius: 30,
+                    spreadRadius: 2,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Animated Double-Ring Avatar
+                AnimatedBuilder(
+                  animation: _pulseAnimation,
+                  builder: (context, child) {
+                    return Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        // Outer Pulsing Ring
+                        Transform.scale(
+                          scale: _pulseAnimation.value,
+                          child: Container(
+                            width: 100,
+                            height: 100,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: const Color(0xFF315E26).withValues(alpha: 0.12),
+                            ),
+                          ),
+                        ),
+                        // Inner Border Ring
+                        Container(
+                          width: 88,
+                          height: 88,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: const Color(0xFF315E26).withValues(alpha: 0.3),
+                              width: 2.5,
+                            ),
+                          ),
+                        ),
+                        // Main Avatar
+                        Container(
+                          width: 80,
+                          height: 80,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Color(0xFF315E26),
+                          ),
+                          child: Center(
+                            child: Text(
+                              initials,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+
+                const SizedBox(height: 18),
+
+                // Caller Name (Strongest Text Element)
+                Text(
+                  widget.callerName,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Color(0xFF1E293B),
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+
+                const SizedBox(height: 4),
+
+                // Status Line
+                const Text(
+                  'Incoming voice call',
+                  style: TextStyle(
+                    color: Color(0xFF64748B),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                // Security Badge (Understated Shield Badge)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.shield_outlined, size: 13, color: Color(0xFF315E26)),
+                      SizedBox(width: 4),
+                      Text(
+                        'Encrypted Call',
+                        style: TextStyle(
+                          color: Color(0xFF475569),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 28),
+
+                // Action Buttons Row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    // Decline Action
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Material(
+                          color: Colors.transparent,
+                          shape: const CircleBorder(),
+                          clipBehavior: Clip.antiAlias,
+                          child: InkWell(
+                            onTap: widget.onDecline,
+                            splashColor: Colors.white24,
+                            child: Container(
+                              width: 64,
+                              height: 64,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Color(0xFFEF4444),
+                              ),
+                              child: const Icon(Icons.call_end, color: Colors.white, size: 30),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Decline',
+                          style: TextStyle(
+                            color: Color(0xFF475569),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    // Accept Action
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Material(
+                          color: Colors.transparent,
+                          shape: const CircleBorder(),
+                          clipBehavior: Clip.antiAlias,
+                          child: InkWell(
+                            onTap: widget.onAccept,
+                            splashColor: Colors.white24,
+                            child: Container(
+                              width: 64,
+                              height: 64,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Color(0xFF315E26),
+                              ),
+                              child: const Icon(Icons.call, color: Colors.white, size: 30),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Accept',
+                          style: TextStyle(
+                            color: Color(0xFF315E26),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
 }

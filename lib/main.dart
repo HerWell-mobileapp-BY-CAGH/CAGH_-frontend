@@ -19,32 +19,33 @@ import 'package:cagh_frontend/core/utils/app_logger.dart';
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   WidgetsFlutterBinding.ensureInitialized();
-  final action = (message.data['action'] ?? message.data['type'] ?? '').toString();
-  if (action == 'INCOMING_CALL' || action == 'incoming_call_offer' || action == 'call_offer' || action == 'offer') {
+  final action = (message.data['action'] ?? message.data['type'] ?? message.data['event'] ?? '').toString().toLowerCase();
+  if (action.contains('incoming') || action.contains('offer') || action.contains('initiated')) {
+    final callId = (message.data['call_id'] ?? message.data['consultation_id'] ?? '').toString();
     final callerId = (message.data['caller_id'] ?? message.data['caller'] ?? message.data['sender_id'] ?? message.data['sender']?['id'] ?? message.data['user_id'] ?? '').toString().trim();
     
+    AppLogger.d('[CALL][FCM] Incoming call received');
+    AppLogger.d('[CALL][FCM] call_id=$callId');
+    AppLogger.d('[CALL][FCM] App state=background/terminated');
+
     try {
       // Note: Executed in an isolated background Dart isolate.
       final currentUserId = (await GlobalCallService.getAuthenticatedUserId() ?? '').trim();
-      
-      AppLogger.d('====================================================');
-      AppLogger.d('[FCM BACKGROUND SIGNALING HANDLER]');
-      AppLogger.d('  Action          : $action');
-      AppLogger.d('  Caller ID       : $callerId');
-      AppLogger.d('  Current User ID : $currentUserId');
-      AppLogger.d('====================================================');
 
       if (callerId.isNotEmpty && currentUserId.isNotEmpty && callerId == currentUserId) {
-        AppLogger.d('FCM Handler: IGNORED self incoming call notification');
+        AppLogger.d('[CALL][DEDUP] Duplicate/Self call ignored');
         return;
       }
     } catch (e) {
-      AppLogger.d('FCM Handler: Error inspecting incoming call notification: $e');
+      AppLogger.d('[CALL][FCM] Error inspecting incoming call notification: $e');
     }
 
-    final consultationId = message.data['consultation_id']?.toString() ?? 'call_${DateTime.now().millisecondsSinceEpoch}';
+    final consultationId = message.data['consultation_id']?.toString() ?? callId;
     final callerName = NameFormatter.format((message.data['caller_name'] ?? message.data['sender_name'] ?? 'Care Provider').toString());
 
+    await CallKitService().init();
+    AppLogger.d('[CALL][NOTIFICATION] Incoming call notification created');
+    AppLogger.d('[CALL][NOTIFICATION] Full-screen intent triggered');
     await CallKitService().showCallkitIncoming(
       consultationId: consultationId,
       name: callerName,
@@ -75,7 +76,10 @@ void main() async {
     try {
       await Firebase.initializeApp();
       FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-      await FcmService.initialize();
+      // Run FCM service initialization in background without blocking runApp()
+      FcmService.initialize().catchError((e) {
+        AppLogger.d('FCM Service background init notice: $e');
+      });
     } catch (e) {
       AppLogger.d('Firebase initialization failed: $e');
     }
@@ -104,8 +108,8 @@ class _MyAppState extends State<MyApp> {
 
   void _setupFcmForegroundListener() {
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
-      final action = (message.data['action'] ?? message.data['type'] ?? '').toString();
-      if (action == 'INCOMING_CALL' || action == 'incoming_call_offer' || action == 'call_offer' || action == 'offer') {
+      final action = (message.data['action'] ?? message.data['type'] ?? message.data['event'] ?? '').toString().toLowerCase();
+      if (action.contains('incoming') || action.contains('offer') || action.contains('initiated')) {
         if (GlobalCallService.isCallActive || GlobalCallService.isRingingShown) {
           AppLogger.d('FCM Foreground: Ignoring incoming_call push — call is already active/ringing');
           return;

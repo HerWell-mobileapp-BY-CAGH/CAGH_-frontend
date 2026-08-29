@@ -1,4 +1,5 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <!-- Network & Internet -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -49,6 +50,18 @@
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="phoneCall|microphone" />
+
+        <!-- CallKit Full-Screen Activity for Lock Screen & Screen Off Calls -->
+        <activity
+            android:name="com.hiennv.flutter_callkit_incoming.CallkitIncomingActivity"
+            android:action="com.hiennv.flutter_callkit_incoming.ACTION_CALL_INCOMING"
+            android:enabled="true"
+            android:exported="true"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:launchMode="singleInstance"
+            android:theme="@style/CallkitIncomingTheme"
+            tools:replace="android:launchMode,android:theme" />
 
         <activity
             android:name=".MainActivity"
