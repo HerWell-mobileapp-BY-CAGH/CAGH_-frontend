@@ -101,11 +101,13 @@ class _MyAppState extends ConsumerState<MyApp> {
   @override
   void initState() {
     super.initState();
-    GlobalCallService.initUserCallListener();
     if (!kIsWeb) {
       CallKitService().init();
       _setupFcmForegroundListener();
     }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      CallNavigationCoordinator.checkAndNavigatePendingCall();
+    });
   }
 
   void _setupFcmForegroundListener() {
@@ -132,7 +134,7 @@ class _MyAppState extends ConsumerState<MyApp> {
 
         GlobalCallService.showIncomingCallModal(
           Map<String, dynamic>.from(message.data),
-          consultationId,
+          defaultConsultationId: consultationId,
         );
       } else {
         // Refresh notifications for other actions (like messages, consultation updates, etc)

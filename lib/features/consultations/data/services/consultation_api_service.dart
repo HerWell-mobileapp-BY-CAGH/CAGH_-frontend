@@ -34,7 +34,7 @@ class ConsultationApiService {
     if (response.statusCode == 200) {
       final decoded = jsonDecode(response.body);
       if (decoded is List) {
-        return (decoded as List).cast<Map<String, dynamic>>();
+        return decoded.cast<Map<String, dynamic>>();
       } else if (decoded is Map<String, dynamic> && decoded.containsKey('results')) {
         return (decoded['results'] as List).cast<Map<String, dynamic>>();
       }
@@ -149,6 +149,28 @@ class ConsultationApiService {
     }
   }
 
+  Future<bool> verifyVoiceSessionActive(String consultationId) async {
+    if (consultationId.isEmpty || consultationId == 'null') return false;
+    try {
+      final primaryUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}$consultationId/voice-session/token/');
+      final response = await http.post(
+        primaryUrl,
+        headers: await _getHeaders(),
+      ).timeout(const Duration(seconds: 4));
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final body = jsonDecode(response.body);
+        final status = (body['status'] ?? body['voice_session']?['status'] ?? '').toString().toLowerCase();
+        if (status == 'ended' || status == 'declined' || status == 'cancelled' || status == 'missed') {
+          return false;
+        }
+        return true;
+      }
+    } catch (e) {
+      AppLogger.d('ConsultationApiService: verifyVoiceSessionActive check notice: $e');
+    }
+    return true;
+  }
+
   Future<Map<String, dynamic>> getVoiceToken(String consultationId) async {
     final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}$consultationId/voice-session/token/');
     final response = await http.post(
@@ -163,68 +185,86 @@ class ConsultationApiService {
     }
   }
 
-  Future<bool> acceptVoiceSession(String consultationId) async {
+  Future<int> acceptVoiceSessionDetailed(String consultationId) async {
+    final headers = await _getHeaders();
     final primaryUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}$consultationId/voice-session/accept/');
     final fallbackUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}$consultationId/voice-session/');
     
+    AppLogger.d('[CALL][$consultationId][API_ACCEPT_REQUEST] POST $primaryUrl');
     try {
       final response = await http.post(
         primaryUrl,
-        headers: await _getHeaders(),
+        headers: headers,
       ).timeout(AppDurations.apiRequestTimeout);
-      if (response.statusCode == 200) return true;
+      AppLogger.d('[CALL][$consultationId][API_ACCEPT_RESPONSE] status=${response.statusCode}, body=${response.body}');
+      if (response.statusCode == 200 || response.statusCode == 201 || response.statusCode == 409 || response.statusCode == 401) {
+        return response.statusCode;
+      }
     } catch (e) {
-      AppLogger.d('ConsultationApiService: acceptVoiceSession primary request failed, trying fallback: $e');
+      AppLogger.d('[CALL][$consultationId][API_ACCEPT_ERROR] Primary endpoint failed: $e');
     }
 
+    AppLogger.d('[CALL][$consultationId][API_ACCEPT_FALLBACK] POST $fallbackUrl');
     try {
       final response = await http.post(
         fallbackUrl,
-        headers: await _getHeaders(),
+        headers: headers,
         body: jsonEncode({'action': 'ACCEPT'}),
       ).timeout(AppDurations.apiRequestTimeout);
-      return response.statusCode == 200;
+      AppLogger.d('[CALL][$consultationId][API_ACCEPT_FALLBACK_RESPONSE] status=${response.statusCode}, body=${response.body}');
+      return response.statusCode;
     } catch (e) {
-      AppLogger.d('ConsultationApiService: Voice session request ultimately failed: $e');
-      return false;
+      AppLogger.d('[CALL][$consultationId][API_ACCEPT_ERROR] Fallback endpoint failed: $e');
+      return 500;
     }
   }
 
+  Future<bool> acceptVoiceSession(String consultationId) async {
+    final status = await acceptVoiceSessionDetailed(consultationId);
+    return status == 200 || status == 201;
+  }
+
   Future<bool> declineVoiceSession(String consultationId) async {
+    final headers = await _getHeaders();
     final primaryUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}$consultationId/voice-session/decline/');
     final fallbackUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}$consultationId/voice-session/');
     
+    AppLogger.d('[CALL][$consultationId][API_DECLINE_REQUEST] POST $primaryUrl');
     try {
       final response = await http.post(
         primaryUrl,
-        headers: await _getHeaders(),
+        headers: headers,
       ).timeout(AppDurations.apiRequestTimeout);
+      AppLogger.d('[CALL][$consultationId][API_DECLINE_RESPONSE] status=${response.statusCode}, body=${response.body}');
       if (response.statusCode == 200 || response.statusCode == 201 || response.statusCode == 204 || response.statusCode == 409) return true;
     } catch (e) {
-      AppLogger.d('ConsultationApiService: Primary voice session request failed, trying fallback: $e');
+      AppLogger.d('[CALL][$consultationId][API_DECLINE_ERROR] Primary endpoint failed: $e');
     }
 
+    AppLogger.d('[CALL][$consultationId][API_DECLINE_FALLBACK] POST $fallbackUrl');
     try {
       final response = await http.post(
         fallbackUrl,
-        headers: await _getHeaders(),
+        headers: headers,
         body: jsonEncode({'action': 'DECLINE'}),
       ).timeout(AppDurations.apiRequestTimeout);
+      AppLogger.d('[CALL][$consultationId][API_DECLINE_FALLBACK_RESPONSE] status=${response.statusCode}, body=${response.body}');
       return response.statusCode == 200 || response.statusCode == 201 || response.statusCode == 204 || response.statusCode == 409;
     } catch (e) {
-      AppLogger.d('ConsultationApiService: Voice session request ultimately failed: $e');
+      AppLogger.d('[CALL][$consultationId][API_DECLINE_ERROR] Voice session request failed: $e');
       return false;
     }
   }
 
   Future<bool> missedVoiceSession(String consultationId) async {
+    final headers = await _getHeaders();
     final primaryUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}$consultationId/voice-session/cancel/');
     final fallbackUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}$consultationId/voice-session/');
 
     try {
       final response = await http.post(
         primaryUrl,
-        headers: await _getHeaders(),
+        headers: headers,
       ).timeout(AppDurations.apiRequestTimeout);
       if (response.statusCode == 200 || response.statusCode == 201 || response.statusCode == 204 || response.statusCode == 409) return true;
     } catch (e) {
@@ -234,7 +274,7 @@ class ConsultationApiService {
     try {
       final response = await http.post(
         fallbackUrl,
-        headers: await _getHeaders(),
+        headers: headers,
         body: jsonEncode({'action': 'MISSED'}),
       ).timeout(AppDurations.apiRequestTimeout);
       return response.statusCode == 200 || response.statusCode == 201 || response.statusCode == 204 || response.statusCode == 409;
@@ -245,28 +285,34 @@ class ConsultationApiService {
   }
 
   Future<bool> endVoiceSession(String consultationId) async {
+    final headers = await _getHeaders();
     final primaryUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}$consultationId/voice-session/end/');
     final fallbackUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}$consultationId/voice-session/');
 
+    AppLogger.d('[CALL][$consultationId][API_END_REQUEST] POST $primaryUrl');
     try {
       final response = await http.post(
         primaryUrl,
-        headers: await _getHeaders(),
+        headers: headers,
       ).timeout(AppDurations.apiRequestTimeout);
+      AppLogger.d('[CALL][$consultationId][API_END_RESPONSE] status=${response.statusCode}, body=${response.body}');
       if (response.statusCode == 200 || response.statusCode == 201 || response.statusCode == 204 || response.statusCode == 409) return true;
     } catch (e) {
-      AppLogger.d('ConsultationApiService: Primary voice session request failed, trying fallback: $e');
+      AppLogger.d('[CALL][$consultationId][API_END_ERROR] Primary endpoint failed: $e');
     }
 
+    AppLogger.d('[CALL][$consultationId][API_END_FALLBACK] POST $fallbackUrl');
     try {
       final response = await http.post(
         fallbackUrl,
-        headers: await _getHeaders(),
+        headers: headers,
         body: jsonEncode({'action': 'END'}),
       ).timeout(AppDurations.apiRequestTimeout);
+      AppLogger.d('[CALL][$consultationId][API_END_FALLBACK_RESPONSE] status=${response.statusCode}, body=${response.body}');
 
       return response.statusCode == 200 || response.statusCode == 201 || response.statusCode == 204 || response.statusCode == 409;
     } catch (e) {
+      AppLogger.d('[CALL][$consultationId][API_END_ERROR] Voice session request failed: $e');
       return false;
     }
   }

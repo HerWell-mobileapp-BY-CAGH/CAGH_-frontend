@@ -35,7 +35,6 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
 
   @override
   void initState() {
-    _initGlobalCallListener();
     super.initState();
     _fetchProfile();
   }
@@ -44,17 +43,6 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
   void dispose() {
     _learnSearchController.dispose();
     super.dispose();
-  }
-
-  Future<void> _initGlobalCallListener() async {
-    try {
-      final api = AppointmentApiService();
-      final apts = await api.getMidwifeAppointments();
-      final ids = apts.map((e) => (e['id'] ?? e['appointment_id'] ?? e['appointment_number'] ?? '').toString()).where((id) => id.isNotEmpty && id != 'null').toList();
-      GlobalCallService.initMultiple(ids);
-    } catch (e) {
-      debugPrint('Failed to init global calls: $e');
-    }
   }
 
   Future<void> _fetchProfile() async {

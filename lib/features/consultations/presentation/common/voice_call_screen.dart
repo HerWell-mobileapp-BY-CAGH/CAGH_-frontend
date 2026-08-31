@@ -39,6 +39,7 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> with TickerProviderSt
   Timer? _timer;
   Timer? _statusTimer;
   Timer? _ringTimeoutTimer;
+  Timer? _connectionTimeoutTimer;
 
   // Standard unanswered-call behaviour: the caller stops ringing after this
   // duration (WhatsApp/Telegram ring for ~30-60s, then the call auto-cancels).
@@ -96,7 +97,7 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> with TickerProviderSt
           signalType == CallSignalType.callCancelled ||
           signalType == CallSignalType.callDeclined) {
         AppLogger.d('[CALL STATE RESET] Call declined or ended signal received in caller UI');
-        _handleCallTerminated(signalType);
+        _endCall(notifyBackendApi: false);
       }
     });
 
@@ -135,6 +136,24 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> with TickerProviderSt
       Map<String, dynamic> response;
       if (widget.isCaller) {
         response = await _apiService.startVoiceSession(widget.consultationId);
+
+        // Broadcast canonical call_offer over WebSocket to receiver
+        final receiverId = widget.appointment.midwifeId.isNotEmpty ? widget.appointment.midwifeId : widget.appointment.userId;
+        final rawName = widget.appointment.userFullName ?? '';
+        final callerName = rawName.isNotEmpty ? rawName : 'Care Provider';
+
+        AppLogger.d('[VOICE] Broadcasting call_offer WS signal to receiverId: $receiverId');
+        await GlobalCallService.broadcastWsSignal(
+          widget.consultationId,
+          'call_offer',
+          extraPayload: {
+            'caller_id': currentUserId,
+            'receiver_id': receiverId,
+            'caller_name': callerName,
+            'consultation_id': widget.consultationId,
+            'call_id': 'VOICE_${widget.consultationId.replaceAll('-', '').toUpperCase()}',
+          },
+        );
       } else {
         try {
           response = await _apiService.getVoiceToken(widget.consultationId);
@@ -233,14 +252,16 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> with TickerProviderSt
 
       _joinSuccessSub = _agoraVoiceService.onJoinSuccess.listen((_) {
         AppLogger.d("[AGORA RTC] Channel joined successfully: $channelName (localUid: $uid)");
+        _connectionTimeoutTimer?.cancel();
         RingtoneService.stopRingtone();
+        GlobalCallService.isRingingShown = false;
+        GlobalCallService.isCallActive = true;
+        GlobalCallService.stateMachine.transitionTo(CallState.connected);
         if (mounted) {
           setState(() {
             _isRinging = false;
-            if (!_isCaller || kIsWeb || _isConnected) {
-              _isConnected = true;
-              _startTimer(startedAt: _serverStartedAt);
-            }
+            _isConnected = true;
+            _startTimer(startedAt: _serverStartedAt);
           });
           _agoraVoiceService.toggleMute(_isMuted);
           _agoraVoiceService.toggleSpeaker(_isSpeakerOn);
@@ -250,6 +271,9 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> with TickerProviderSt
       _userJoinedSub = _agoraVoiceService.onUserJoined.listen((remoteUid) {
         AppLogger.d("[AGORA RTC] Remote user joined channel: remoteUid=$remoteUid");
         RingtoneService.stopRingtone();
+        GlobalCallService.isRingingShown = false;
+        GlobalCallService.isCallActive = true;
+        GlobalCallService.stateMachine.transitionTo(CallState.connected);
         if (mounted) {
           setState(() {
             _isConnected = true;
@@ -302,13 +326,21 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> with TickerProviderSt
           }
         });
       } else {
-        RingtoneService.playIncomingRingtone();
+        RingtoneService.stopRingtone();
         if (mounted) {
           setState(() {
-            _isRinging = true;
+            _isRinging = false;
           });
         }
       }
+
+      _connectionTimeoutTimer?.cancel();
+      _connectionTimeoutTimer = Timer(const Duration(seconds: 20), () {
+        if (!_isEndingCall && !_isConnected && mounted) {
+          AppLogger.d('[AGORA RTC TIMEOUT] 20s connection timeout reached without onJoinChannelSuccess');
+          _endCall();
+        }
+      });
 
       await _agoraVoiceService.joinChannel(
         channelId: channelName,
@@ -385,6 +417,8 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> with TickerProviderSt
 
     RingtoneService.stopRingtone();
     GlobalCallService.isCallActive = false;
+    GlobalCallService.stateMachine.transitionTo(CallState.ended);
+    GlobalCallService.stateMachine.transitionTo(CallState.idle);
     _timer?.cancel();
     _ringTimeoutTimer?.cancel();
 
@@ -423,19 +457,19 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> with TickerProviderSt
     }
   }
 
-  Future<void> _endCall() async {
+  Future<void> _endCall({bool notifyBackendApi = true}) async {
     if (_isEndingCall) return;
     _isEndingCall = true;
     _hasInitializedToken = true;
     _isInitializingToken = false;
 
-    RingtoneService.stopRingtone();
-    GlobalCallService.isCallActive = false;
     _timer?.cancel();
     _statusTimer?.cancel();
     _statusTimer = null;
     _ringTimeoutTimer?.cancel();
     _ringTimeoutTimer = null;
+    _connectionTimeoutTimer?.cancel();
+    _connectionTimeoutTimer = null;
 
     try {
       GlobalCallService.sendCallEvent({
@@ -452,34 +486,26 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> with TickerProviderSt
 
     try {
       await _agoraVoiceService.leaveChannel();
-      AppLogger.d('leaveChannel succeeded');
-    } catch (e) {
-      AppLogger.d('leaveChannel failed: $e');
-    }
-
-    try {
       await _agoraVoiceService.dispose();
-      AppLogger.d('Agora dispose succeeded');
     } catch (e) {
-      AppLogger.d('Agora dispose failed: $e');
+      AppLogger.d('Agora teardown notice: $e');
     }
 
-    try {
-      await _apiService.endVoiceSession(widget.consultationId);
-      AppLogger.d('endVoiceSession API succeeded');
-    } catch (e) {
-      AppLogger.d('endVoiceSession API failed: $e');
-    }
-
-    try {
-      if (!kIsWeb) {
-        await FlutterCallkitIncoming.endAllCalls();
+    if (notifyBackendApi) {
+      try {
+        await _apiService.endVoiceSession(widget.consultationId);
+      } catch (e) {
+        AppLogger.d('endVoiceSession API notice: $e');
       }
-    } catch (e) {
-      AppLogger.d('CallKit endAllCalls failed: $e');
     }
 
-    AppLogger.d('[CALL] Cleanup complete');
+    await GlobalCallService.teardownCall(
+      callId: widget.consultationId,
+      consultationId: widget.consultationId,
+      reason: CallTerminalReason.hangup,
+    );
+
+    AppLogger.d('[CALL] Teardown complete');
 
     if (mounted) {
       Navigator.of(context).pop();
@@ -497,6 +523,8 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> with TickerProviderSt
     _statusTimer = null;
     _ringTimeoutTimer?.cancel();
     _ringTimeoutTimer = null;
+    _connectionTimeoutTimer?.cancel();
+    _connectionTimeoutTimer = null;
     _callEventSub?.cancel();
     _userJoinedSub?.cancel();
     _userOfflineSub?.cancel();
