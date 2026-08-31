@@ -99,42 +99,25 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    GlobalCallService.initUserCallListener();
     if (!kIsWeb) {
       CallKitService().init();
       _setupFcmForegroundListener();
     }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      CallNavigationCoordinator.checkAndNavigatePendingCall();
+    });
   }
 
   void _setupFcmForegroundListener() {
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
       final action = (message.data['action'] ?? message.data['type'] ?? message.data['event'] ?? '').toString().toLowerCase();
       if (action.contains('incoming') || action.contains('offer') || action.contains('initiated')) {
-        if (GlobalCallService.isCallActive || GlobalCallService.isRingingShown) {
-          AppLogger.d('FCM Foreground: Ignoring incoming_call push — call is already active/ringing');
-          return;
-        }
-
-        final callerId = (message.data['caller_id'] ?? message.data['caller'] ?? message.data['sender_id'] ?? message.data['sender']?['id'] ?? message.data['user_id'] ?? '').toString().trim();
-        try {
-          final currentUserId = (await GlobalCallService.getAuthenticatedUserId() ?? '').trim();
-          if (callerId.isNotEmpty && currentUserId.isNotEmpty && callerId == currentUserId) {
-            AppLogger.d('FCM Foreground: IGNORED self incoming call notification');
-            return;
-          }
-        } catch (e) {
-          AppLogger.d('FCM Foreground: Error inspecting incoming call notification: $e');
-        }
-
-        final consultationId = message.data['consultation_id']?.toString() ?? 'call_${DateTime.now().millisecondsSinceEpoch}';
-
-        // Reuse the same guarded incoming-call path as the WebSocket handler so
-        // the native CallKit screen is shown exactly once (no duplicate UI when
-        // both WS and FCM deliver the offer while the app is in the foreground).
-        GlobalCallService.showIncomingCallModal(
+        AppLogger.d('[FCM FOREGROUND] Incoming call notification received');
+        final event = IncomingCallEvent.fromMap(
           Map<String, dynamic>.from(message.data),
-          consultationId,
+          defaultConsultationId: message.data['consultation_id']?.toString() ?? '',
         );
+        await GlobalCallService.handleIncomingCallEvent(event);
       }
     });
   }

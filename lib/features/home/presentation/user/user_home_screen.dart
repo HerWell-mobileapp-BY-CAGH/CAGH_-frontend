@@ -25,22 +25,10 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
   void initState() {
     super.initState();
     _loadProfile();
-    GlobalCallService.initUserCallListener();
-    _initGlobalCallListener();
   }
 
   Future<void> _loadProfile() async {
     // Left empty since _userProfile is no longer used, but kept for future use.
-  }
-  Future<void> _initGlobalCallListener() async {
-    try {
-      final api = AppointmentApiService();
-      final raw = await api.getUserAppointments();
-      final ids = raw.map((e) => (e['appointment_id'] ?? e['id'] ?? e['appointment_number'] ?? '').toString()).where((id) => id.isNotEmpty && id != 'null').toList();
-      GlobalCallService.initMultiple(ids);
-    } catch (e) {
-      debugPrint('Failed to init global calls: $e');
-    }
   }
 
   void _showNotificationsModal() {

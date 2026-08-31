@@ -62,14 +62,24 @@ class FcmService {
         return;
       }
 
+      final userData = await AuthService.getUserData();
+      final userId = (userData['id'] ?? userData['user_id'] ?? 'anonymous').toString();
+      final prefKey = 'last_registered_fcm_token_$userId';
+
       final fcmToken = overrideToken ?? await FirebaseMessaging.instance.getToken();
       if (fcmToken == null || fcmToken.isEmpty) {
         AppLogger.d('[FCM SERVICE] FCM Token is null or empty');
         return;
       }
 
+      final lastToken = prefs.getString(prefKey);
+      if (overrideToken == null && lastToken == fcmToken) {
+        AppLogger.d('[FCM SERVICE] FCM Token unchanged for user $userId, skipping backend POST');
+        return;
+      }
+
       AppLogger.d('====================================================');
-      AppLogger.d('[FCM SERVICE] Registering Device Token to Backend');
+      AppLogger.d('[FCM SERVICE] Registering Device Token to Backend for User $userId');
       AppLogger.d('  FCM Token : $fcmToken');
       AppLogger.d('  Platform  : ${defaultTargetPlatform == TargetPlatform.iOS ? "IOS" : "ANDROID"}');
       AppLogger.d('====================================================');
@@ -88,7 +98,8 @@ class FcmService {
       ).timeout(AppDurations.apiRequestTimeout);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        AppLogger.d('[FCM SERVICE] Device token registered successfully!');
+        await prefs.setString(prefKey, fcmToken);
+        AppLogger.d('[FCM SERVICE] Device token registered successfully for user $userId!');
       } else {
         AppLogger.d('[FCM SERVICE] Failed to register device token. Status: ${response.statusCode}, Body: ${response.body}');
       }
