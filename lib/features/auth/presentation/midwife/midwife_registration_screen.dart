@@ -1,3 +1,4 @@
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import '../otp_verification_screen.dart';
@@ -5,6 +6,7 @@ import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart'
 import 'package:cagh_frontend/core/services/language_service.dart';
 import 'package:cagh_frontend/shared/widgets/custom_snackbar.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 class MidwifeRegistrationScreen extends StatefulWidget {
   const MidwifeRegistrationScreen({super.key});
@@ -72,7 +74,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
     final nameRegExp = RegExp(r'^[a-zA-Z\s]+$');
     setState(() {
       if (value.trim().isEmpty) {
-        _firstNameError = LanguageService.tr(context, 'val_name_req');
+        _firstNameError = AppLocalizations.of(context)!.valNameReq;
       } else if (!nameRegExp.hasMatch(value.trim())) {
         _firstNameError = 'Cannot contain numbers or special characters';
       } else {
@@ -85,7 +87,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
     final nameRegExp = RegExp(r'^[a-zA-Z\s]+$');
     setState(() {
       if (value.trim().isEmpty) {
-        _lastNameError = LanguageService.tr(context, 'val_name_req');
+        _lastNameError = AppLocalizations.of(context)!.valNameReq;
       } else if (!nameRegExp.hasMatch(value.trim())) {
         _lastNameError = 'Cannot contain numbers or special characters';
       } else {
@@ -98,9 +100,9 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
     final emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     setState(() {
       if (value.trim().isEmpty) {
-        _emailError = LanguageService.tr(context, 'val_email_req');
+        _emailError = AppLocalizations.of(context)!.valEmailReq;
       } else if (!emailRegExp.hasMatch(value.trim())) {
-        _emailError = LanguageService.tr(context, 'val_invalid_email');
+        _emailError = AppLocalizations.of(context)!.valInvalidEmail;
       } else {
         _emailError = null;
       }
@@ -115,7 +117,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
         final cleanPhone = value.trim().replaceAll(RegExp(r'\s+'), '');
         final ethPhoneRegExp = RegExp(r'^(?:\+251|0)?[97]\d{8}$');
         if (!ethPhoneRegExp.hasMatch(cleanPhone)) {
-          _phoneError = LanguageService.tr(context, 'val_invalid_phone');
+          _phoneError = AppLocalizations.of(context)!.valInvalidPhone;
         } else {
           _phoneError = null;
         }
@@ -126,7 +128,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
   void _validatePassword(String value) {
     setState(() {
       if (value.isEmpty) {
-        _passwordError = LanguageService.tr(context, 'val_password_req');
+        _passwordError = AppLocalizations.of(context)!.valPasswordReq;
       } else {
         _passwordError = null;
       }
@@ -136,9 +138,9 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
   void _validateConfirmPassword(String value) {
     setState(() {
       if (value.isEmpty) {
-        _confirmPasswordError = LanguageService.tr(context, 'val_password_confirm_req');
+        _confirmPasswordError = AppLocalizations.of(context)!.valPasswordConfirmReq;
       } else if (value != _passwordController.text) {
-        _confirmPasswordError = LanguageService.tr(context, 'val_password_mismatch');
+        _confirmPasswordError = AppLocalizations.of(context)!.valPasswordMismatch;
       } else {
         _confirmPasswordError = null;
       }
@@ -258,12 +260,12 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                               color: Colors.white),
                         ),
                         const SizedBox(width: 14),
-                        const Expanded(
+                        Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Midwife Registration',
+                                AppLocalizations.of(context)!.midwifeRegistration,
                                 style: TextStyle(
                                   fontSize: 17,
                                   fontWeight: FontWeight.w700,
@@ -420,7 +422,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                           child: DropdownButton<String>(
                             value: selectedQualification,
                             isExpanded: true,
-                            hint: const Text('Select qualification'),
+                            hint: Text(AppLocalizations.of(context)!.selectQualification),
                             items: qualifications.map((q) {
                               return DropdownMenuItem(value: q, child: Text(q));
                             }).toList(),
@@ -444,8 +446,8 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          const Text(
-                            'Years of Experience',
+                          Text(
+                            AppLocalizations.of(context)!.yearsOfExperience,
                             style: TextStyle(
                               fontSize: 13.5,
                               fontWeight: FontWeight.w500,
@@ -532,9 +534,9 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                             children: [
                               Icon(Icons.cloud_upload_outlined,
                                   size: 36, color: Colors.grey.shade500),
-                              const SizedBox(height: 10),
+                              SizedBox(height: 10),
                               Text(
-                                'Tap to upload your CV or resume',
+                                AppLocalizations.of(context)!.tapToUploadCV,
                                 style: TextStyle(
                                     fontSize: 14,
                                     color: Colors.grey.shade700),
@@ -610,11 +612,11 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                               final confirmPassword = _confirmPasswordController.text;
 
                               setState(() {
-                                _firstNameError = firstName.isEmpty ? LanguageService.tr(context, 'val_name_req') : null;
-                                _lastNameError = lastName.isEmpty ? LanguageService.tr(context, 'val_name_req') : null;
-                                _emailError = email.isEmpty ? LanguageService.tr(context, 'val_email_req') : null;
-                                _passwordError = password.isEmpty ? LanguageService.tr(context, 'val_password_req') : null;
-                                _confirmPasswordError = confirmPassword.isEmpty ? LanguageService.tr(context, 'val_password_confirm_req') : null;
+                                _firstNameError = firstName.isEmpty ? AppLocalizations.of(context)!.valNameReq : null;
+                                _lastNameError = lastName.isEmpty ? AppLocalizations.of(context)!.valNameReq : null;
+                                _emailError = email.isEmpty ? AppLocalizations.of(context)!.valEmailReq : null;
+                                _passwordError = password.isEmpty ? AppLocalizations.of(context)!.valPasswordReq : null;
+                                _confirmPasswordError = confirmPassword.isEmpty ? AppLocalizations.of(context)!.valPasswordConfirmReq : null;
                                 _phoneError = null;
                               });
 
@@ -634,7 +636,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
 
                               final emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
                               if (!emailRegExp.hasMatch(email)) {
-                                setState(() => _emailError = LanguageService.tr(context, 'val_invalid_email'));
+                                setState(() => _emailError = AppLocalizations.of(context)!.valInvalidEmail);
                                 return;
                               }
 
@@ -642,13 +644,13 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                                 final cleanPhone = phone.replaceAll(RegExp(r'\s+'), '');
                                 final ethPhoneRegExp = RegExp(r'^(?:\+251|0)?[97]\d{8}$');
                                 if (!ethPhoneRegExp.hasMatch(cleanPhone)) {
-                                  setState(() => _phoneError = LanguageService.tr(context, 'val_invalid_phone'));
+                                  setState(() => _phoneError = AppLocalizations.of(context)!.valInvalidPhone);
                                   return;
                                 }
                               }
 
                               if (password != confirmPassword) {
-                                setState(() => _confirmPasswordError = LanguageService.tr(context, 'val_password_mismatch'));
+                                setState(() => _confirmPasswordError = AppLocalizations.of(context)!.valPasswordMismatch);
                                 return;
                               }
 
@@ -713,8 +715,8 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                                 strokeWidth: 2.5,
                               ),
                             )
-                          : const Text(
-                              'Continue to Admin Check',
+                          : Text(
+                              AppLocalizations.of(context)!.continueToAdminCheck,
                               style: TextStyle(
                                 fontSize: 17,
                                 fontWeight: FontWeight.w600,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cagh_frontend/core/services/appearance_service.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 class AppearanceAccessibilityScreen extends StatefulWidget {
   const AppearanceAccessibilityScreen({super.key});
@@ -21,7 +22,7 @@ class _AppearanceAccessibilityScreenState extends State<AppearanceAccessibilityS
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Appearance & Accessibility',
+          AppLocalizations.of(context)!.appearanceAccessibility,
           style: TextStyle(
             fontSize: 19,
             fontWeight: FontWeight.w700,
@@ -118,10 +119,10 @@ class _AppearanceAccessibilityScreenState extends State<AppearanceAccessibilityS
         const SizedBox(width: 8),
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w700,
-            color: AppColors.primaryGreen,
+            color: Theme.of(context).colorScheme.primary,
           ),
         ),
       ],
@@ -142,7 +143,12 @@ class _AppearanceAccessibilityScreenState extends State<AppearanceAccessibilityS
           ),
         ],
       ),
-      child: Column(children: children),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        clipBehavior: Clip.antiAlias,
+        child: Column(children: children),
+      ),
     );
   }
 
@@ -164,7 +170,7 @@ class _AppearanceAccessibilityScreenState extends State<AppearanceAccessibilityS
       value: value,
       groupValue: groupValue,
       onChanged: onChanged,
-      activeColor: AppColors.primaryGreen,
+      activeColor: Theme.of(context).colorScheme.primary,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       visualDensity: const VisualDensity(horizontal: 0, vertical: -2),
     );

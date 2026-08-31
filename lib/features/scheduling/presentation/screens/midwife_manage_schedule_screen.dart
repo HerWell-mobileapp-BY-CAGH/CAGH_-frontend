@@ -6,6 +6,7 @@ import 'package:cagh_frontend/features/consultations/data/repositories/midwife_r
 import 'package:cagh_frontend/shared/models/working_hours.dart';
 import 'package:cagh_frontend/shared/models/blocked_date.dart';
 import 'package:cagh_frontend/core/utils/app_logger.dart';
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 class MidwifeManageScheduleScreen extends StatefulWidget {
   const MidwifeManageScheduleScreen({super.key});
@@ -131,9 +132,9 @@ class _MidwifeManageScheduleScreenState extends State<MidwifeManageScheduleScree
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAF8),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF315E26),
+        backgroundColor: Color(0xFF315E26),
         elevation: 0,
-        title: const Text('Manage Schedule', style: TextStyle(color: Colors.white, fontSize: 18)),
+        title: Text(AppLocalizations.of(context)!.manageSchedule, style: TextStyle(color: Colors.white, fontSize: 18)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
@@ -146,13 +147,13 @@ class _MidwifeManageScheduleScreenState extends State<MidwifeManageScheduleScree
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Set Working Hours',
+                Text(
+                  AppLocalizations.of(context)!.setWorkingHours,
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A)),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 Text(
-                  'Define your regular working hours. This will automatically generate 30-minute bookable slots for patients.',
+                  AppLocalizations.of(context)!.defineRegularWorkingHours,
                   style: TextStyle(fontSize: 14, color: Colors.grey.shade700, height: 1.4),
                 ),
                 const SizedBox(height: 24),
@@ -168,7 +169,7 @@ class _MidwifeManageScheduleScreenState extends State<MidwifeManageScheduleScree
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Add Availability', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      Text(AppLocalizations.of(context)!.addAvailability, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                       const SizedBox(height: 16),
                       DropdownButtonFormField<int>(
                         value: _selectedDayOfWeek,
@@ -230,18 +231,18 @@ class _MidwifeManageScheduleScreenState extends State<MidwifeManageScheduleScree
                         width: double.infinity,
                         child: ElevatedButton(
                           onPressed: _isSaving ? null : _addWorkingHours,
-                          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF315E26)),
-                          child: const Text('Add Time Range', style: TextStyle(color: Colors.white)),
+                          style: ElevatedButton.styleFrom(backgroundColor: Color(0xFF315E26)),
+                          child: Text(AppLocalizations.of(context)!.addTimeRange, style: TextStyle(color: Colors.white)),
                         ),
                       ),
                     ],
                   ),
                 ),
 
-                const SizedBox(height: 32),
+                SizedBox(height: 32),
                 
-                const Text(
-                  'Current Availabilities',
+                Text(
+                  AppLocalizations.of(context)!.currentAvailabilities,
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A)),
                 ),
                 const SizedBox(height: 12),
@@ -264,9 +265,9 @@ class _MidwifeManageScheduleScreenState extends State<MidwifeManageScheduleScree
                     );
                   }),
 
-                const SizedBox(height: 32),
-                const Text(
-                  'Manage Blocked Dates',
+                SizedBox(height: 32),
+                Text(
+                  AppLocalizations.of(context)!.manageBlockedDates,
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A)),
                 ),
                 const SizedBox(height: 8),
@@ -287,7 +288,7 @@ class _MidwifeManageScheduleScreenState extends State<MidwifeManageScheduleScree
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Add Blocked Date', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      Text(AppLocalizations.of(context)!.addBlockedDate, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                       const SizedBox(height: 16),
                       Row(
                         children: [
@@ -303,8 +304,8 @@ class _MidwifeManageScheduleScreenState extends State<MidwifeManageScheduleScree
                                 if (date != null) setState(() => _blockedDate = date);
                               },
                               child: InputDecorator(
-                                decoration: const InputDecoration(
-                                  labelText: 'Select Date',
+                                decoration: InputDecoration(
+                                  labelText: AppLocalizations.of(context)!.selectDate,
                                   border: OutlineInputBorder(),
                                   contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                                 ),
@@ -333,7 +334,7 @@ class _MidwifeManageScheduleScreenState extends State<MidwifeManageScheduleScree
                             backgroundColor: Colors.red.shade700,
                             foregroundColor: Colors.white,
                           ),
-                          child: const Text('Block Date'),
+                          child: Text(AppLocalizations.of(context)!.blockDate),
                         ),
                       ),
                     ],

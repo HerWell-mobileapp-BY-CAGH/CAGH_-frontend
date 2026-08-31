@@ -4,6 +4,7 @@ import 'password_reset_success_screen.dart';
 import 'widgets/password_input_field.dart';
 import 'widgets/password_strength_indicator.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 class CreateNewPasswordScreen extends StatefulWidget {
   final String contact;
@@ -142,11 +143,11 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
         backgroundColor: AppColors.primaryGreen,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.accentYellow),
+          icon: Icon(Icons.arrow_back, color: AppColors.accentYellow),
           onPressed: () => Navigator.pop(context), // Pops back to ForgotPasswordScreen securely
         ),
-        title: const Text(
-          'Create New Password',
+        title: Text(
+          AppLocalizations.of(context)!.createNewPassword,
           style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
         ),
       ),
@@ -156,7 +157,7 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Create New Password',
+              AppLocalizations.of(context)!.createNewPassword,
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: AppColors.primaryGreen),
             ),
             const SizedBox(height: 10),
@@ -166,20 +167,20 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
                   : 'Create a strong new password for your CAGH account.',
               style: TextStyle(fontSize: 15, height: 1.4, color: Colors.grey.shade700),
             ),
-            const SizedBox(height: 36),
+            SizedBox(height: 36),
 
             PasswordInputField(
               controller: _passwordController,
-              label: 'New Password',
+              label: AppLocalizations.of(context)!.newPassword,
               hint: 'Enter your new password',
             ),
             
             const SizedBox(height: 12),
             PasswordStrengthIndicator(strength: _strength),
             
-            const SizedBox(height: 16),
-            const Text(
-              'Password must contain:',
+            SizedBox(height: 16),
+            Text(
+              AppLocalizations.of(context)!.passwordMustContain,
               style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textGray),
             ),
             const SizedBox(height: 8),
@@ -187,11 +188,11 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
             _buildRequirement('One uppercase & lowercase letter', RegExp(r'[A-Z]').hasMatch(pass) && RegExp(r'[a-z]').hasMatch(pass)),
             _buildRequirement('One number & special character', RegExp(r'[0-9]').hasMatch(pass) && RegExp(r'[!@#\$&*~]').hasMatch(pass)),
 
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
 
             PasswordInputField(
               controller: _confirmPasswordController,
-              label: 'Confirm New Password',
+              label: AppLocalizations.of(context)!.confirmNewPassword,
               hint: 'Re-enter your new password',
               onChanged: (v) => setState((){}),
             ),

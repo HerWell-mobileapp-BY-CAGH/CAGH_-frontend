@@ -1,3 +1,4 @@
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:cagh_frontend/core/services/language_service.dart';
 import 'language_selection_screen.dart';
@@ -70,11 +71,11 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
             ),
 
-            const Spacer(flex: 2),
+            Spacer(flex: 2),
 
             // App name
             Text(
-              LanguageService.tr(context, 'app_title').toUpperCase(),
+              AppLocalizations.of(context)!.appTitle.toUpperCase(),
               style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w600,
@@ -94,9 +95,9 @@ class _SplashScreenState extends State<SplashScreen> {
                   size: 16,
                   color: Colors.green.shade700,
                 ),
-                const SizedBox(width: 6),
+                SizedBox(width: 6),
                 Text(
-                  LanguageService.tr(context, 'secure_connection'),
+                  AppLocalizations.of(context)!.secureConnection,
                   style: TextStyle(
                     fontSize: 13,
                     color: Colors.green.shade700,

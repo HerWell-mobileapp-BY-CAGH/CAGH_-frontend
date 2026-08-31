@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:cagh_frontend/features/virtual_consultation/data/services/sos_api_service.dart';
+import 'package:cagh_frontend/features/virtual_consultation/domain/models/hotline.dart';
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 class EmergencySupportScreen extends StatefulWidget {
   const EmergencySupportScreen({super.key});
@@ -71,10 +75,10 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Padding(
+              Padding(
                 padding: EdgeInsets.symmetric(horizontal: 20),
                 child: Text(
-                  'Emergency Hotlines',
+                  AppLocalizations.of(context)!.emergencyHotlines,
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -145,7 +149,7 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
         leadingWidth: 80,
         leading: TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text(
+          child: Text(
             'close',
             style: TextStyle(
               color: AppColors.errorRedMaroon,
@@ -154,8 +158,8 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
             ),
           ),
         ),
-        title: const Text(
-          'Emergency',
+        title: Text(
+          AppLocalizations.of(context)!.emergency,
           style: TextStyle(
             color: AppColors.errorRedMaroon,
             fontWeight: FontWeight.bold,
@@ -170,9 +174,9 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
             child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(height: 40),
-              const Text(
-                'Are you okay?',
+              SizedBox(height: 40),
+              Text(
+                AppLocalizations.of(context)!.areYouOkay,
                 style: TextStyle(
                   color: AppColors.errorRedDeep,
                   fontSize: 26,
@@ -193,17 +197,13 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
               
               // SOS Button
               GestureDetector(
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('SOS Alert Triggered!')),
-                  );
-                },
+                onTap: _triggerSos,
                 child: Container(
                   width: 220,
                   height: 220,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppColors.errorRedBright.withValues(alpha: 0.5), // Outer ring
+                    color: const Color(0xFFE53935).withOpacity(0.5), // Outer ring
                   ),
                   child: Center(
                     child: Container(
@@ -211,100 +211,32 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
                       height: 170,
                       decoration: const BoxDecoration(
                         shape: BoxShape.circle,
-                        color: AppColors.errorRedDeep, // Inner circle
+                        color: Color(0xFFB71C1C), // Inner circle
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'If this is a life-threatening medical\nemergency, tap SOS immediately.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Color(0xFFC62828),
-                        fontSize: 15,
-                        height: 1.4,
-                      ),
-                    ),
-                    const SizedBox(height: 50),
-                    
-                    // SOS Button
-                    GestureDetector(
-                      onTap: _triggerSos,
-                      child: Container(
-                        width: 220,
-                        height: 220,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: const Color(0xFFE53935).withOpacity(0.5), // Outer ring
-                        ),
-                        child: Center(
-                          child: Container(
-                            width: 170,
-                            height: 170,
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Color(0xFFB71C1C), // Inner circle
-                            ),
-                            child: const Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.warning_amber_rounded,
-                                  color: Colors.white,
-                                  size: 48,
-                                ),
-                                SizedBox(height: 8),
-                                Text(
-                                  'SOS',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 2,
-                                  ),
-                                ),
-                              ],
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.warning_amber_rounded,
+                            color: Colors.white,
+                            size: 48,
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            AppLocalizations.of(context)!.sos,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 2,
                             ),
                           ),
-                        ),
+                        ],
                       ),
                     ),
-                    
-                    const SizedBox(height: 50),
-                    
-                    // Call Emergency Services Card
-                    _buildActionCard(
-                      icon: Icons.phone,
-                      iconBgColor: const Color(0xFFFFEBEE),
-                      iconColor: const Color(0xFFC62828),
-                      title: 'Call Emergency\nServices',
-                      subtitle: _sosData != null && _sosData!.primaryHotlineNumber.isNotEmpty
-                          ? 'Primary: ${_sosData!.primaryHotlineNumber}'
-                          : '',
-                      onTap: _showHotlinesModal,
-                    ),
-                    
-                    const SizedBox(height: 16),
-                    
-                    // Notify Contacts Card
-                    _buildActionCard(
-                      icon: Icons.group,
-                      iconBgColor: const Color(0xFFE8F5E9),
-                      iconColor: const Color(0xFF2E7D32),
-                      title: 'Notify Contacts',
-                      subtitle: _sosData != null 
-                          ? 'Send alert to ${_sosData!.savedContactsCount} contacts'
-                          : 'Send alert to contacts',
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Use the SOS button above to notify contacts.')),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 50),
-                  ],
+                  ),
                 ),
               ),
-              
               const SizedBox(height: 50),
               
               // Call Emergency Services Card
@@ -313,12 +245,10 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
                 iconBgColor: AppColors.backgroundSoftPink,
                 iconColor: AppColors.errorRedDark,
                 title: 'Call Emergency\nServices',
-                subtitle: 'Dial 911 immediately',
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Dialing 911...')),
-                  );
-                },
+                subtitle: _sosData != null && _sosData!.primaryHotlineNumber.isNotEmpty
+                    ? 'Primary: ${_sosData!.primaryHotlineNumber}'
+                    : 'Dial 911 immediately',
+                onTap: _showHotlinesModal,
               ),
               
               const SizedBox(height: 16),
@@ -329,17 +259,19 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
                 iconBgColor: AppColors.lightGreen,
                 iconColor: AppColors.accentGreenDark,
                 title: 'Notify Contacts',
-                subtitle: 'Send alert to 3 contacts',
+                subtitle: _sosData != null 
+                    ? 'Send alert to ${_sosData!.savedContactsCount} contacts'
+                    : 'Send alert to emergency contacts',
                 onTap: () {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Alert sent to emergency contacts!')),
+                    SnackBar(content: Text(AppLocalizations.of(context)!.useSosButton)),
                   );
                 },
               ),
             ],
           ),
         ),
-        ),
+      ),
       ),
     );
   }

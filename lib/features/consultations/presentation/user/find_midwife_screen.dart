@@ -9,6 +9,7 @@ import 'package:cagh_frontend/features/consultations/data/repositories/midwife_r
 import 'package:cagh_frontend/shared/models/midwife_profile.dart';
 import 'package:cagh_frontend/shared/widgets/hotline_fab.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 class FindMidwifeScreen extends StatefulWidget {
   final VoidCallback? onBack;
@@ -72,9 +73,9 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundPaleMint,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.primaryGreen,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -86,10 +87,10 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
             }
           },
         ),
-        title: const Text(
+        title: Text(
           'Find a Midwife',
           style: TextStyle(
-            color: Colors.white,
+            color: Theme.of(context).appBarTheme.foregroundColor,
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
@@ -113,21 +114,22 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   decoration: BoxDecoration(
-                    color: AppColors.backgroundTealWhite,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: Theme.of(context).dividerColor),
                   ),
                   child: TextField(
                     controller: _searchController,
                     onChanged: (val) {
                       setState(() => _searchQuery = val);
                       if (_debounce?.isActive ?? false) _debounce!.cancel();
-                      _debounce = Timer(const Duration(milliseconds: 500), () {
+                      _debounce = Timer(Duration(milliseconds: 500), () {
                         _fetchMidwives();
                       });
                     },
                     decoration: InputDecoration(
                       icon: Icon(Icons.search, color: Colors.grey.shade600, size: 22),
-                      hintText: 'Search by name or specialty...',
+                      hintText: AppLocalizations.of(context)!.searchByNameOrSpecialty,
                       hintStyle: TextStyle(color: Colors.grey.shade600, fontSize: 14),
                       border: InputBorder.none,
                     ),
@@ -150,20 +152,20 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                       child: Column(
                         children: [
                           Text('Failed to load midwives', style: TextStyle(color: Colors.red.shade700)),
-                          const SizedBox(height: 10),
+                          SizedBox(height: 10),
                           ElevatedButton(
                             onPressed: _fetchMidwives,
-                            child: const Text('Retry'),
+                            child: Text(AppLocalizations.of(context)!.retry),
                           )
                         ],
                       ),
                     ),
                   )
                 else if (_midwives.isEmpty)
-                  const Center(
+                  Center(
                     child: Padding(
                       padding: EdgeInsets.only(top: 40.0),
-                      child: Text('No midwives available at the moment.'),
+                      child: Text(AppLocalizations.of(context)!.noMidwivesAvailable, style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color)),
                     ),
                   )
                 else
@@ -173,8 +175,9 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                       margin: const EdgeInsets.only(bottom: 16),
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: Theme.of(context).cardColor,
                         borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: Theme.of(context).dividerColor),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.04),
@@ -207,10 +210,10 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                                     children: [
                                       Text(
                                         mw.fullName,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontSize: 16.5,
                                           fontWeight: FontWeight.bold,
-                                          color: AppColors.textDark,
+                                          color: Theme.of(context).textTheme.bodyLarge?.color,
                                         ),
                                       ),
                                       Container(
@@ -225,10 +228,10 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                                             const SizedBox(width: 3),
                                             Text(
                                               mw.ratingAverage.toStringAsFixed(1),
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                 fontSize: 12.5,
                                                 fontWeight: FontWeight.bold,
-                                                color: Colors.black87,
+                                                color: Theme.of(context).textTheme.bodyMedium?.color,
                                               ),
                                             ),
                                           ],
@@ -280,9 +283,9 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                                           shape: BoxShape.circle,
                                         ),
                                       ),
-                                      const SizedBox(width: 6),
+                                      SizedBox(width: 6),
                                       Text(
-                                        'Available today',
+                                        AppLocalizations.of(context)!.availableToday,
                                         style: TextStyle(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w600,
@@ -321,8 +324,8 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                                       borderRadius: BorderRadius.circular(14),
                                     ),
                                   ),
-                                  child: const Text(
-                                    'Message',
+                                  child: Text(
+                                    AppLocalizations.of(context)!.message,
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 14,

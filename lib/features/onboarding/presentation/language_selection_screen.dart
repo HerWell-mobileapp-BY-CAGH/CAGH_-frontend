@@ -1,3 +1,4 @@
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'user_type_selection_screen.dart';
 import 'package:cagh_frontend/core/services/language_service.dart';
@@ -36,7 +37,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    LanguageService.tr(context, 'app_title'),
+                    AppLocalizations.of(context)!.appTitle,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 20,
@@ -59,10 +60,10 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 40),
+                    SizedBox(height: 40),
 
                     Text(
-                      LanguageService.tr(context, 'choose_language'),
+                      AppLocalizations.of(context)!.chooseLanguage,
                       style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w600,
@@ -70,10 +71,10 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                       ),
                     ),
 
-                    const SizedBox(height: 10),
+                    SizedBox(height: 10),
 
                     Text(
-                      LanguageService.tr(context, 'sub_choose_language'),
+                      AppLocalizations.of(context)!.subChooseLanguage,
                       style: TextStyle(
                         fontSize: 15,
                         height: 1.4,
@@ -81,10 +82,10 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                       ),
                     ),
 
-                    const SizedBox(height: 40),
+                    SizedBox(height: 40),
 
                     Text(
-                      LanguageService.tr(context, 'select_language'),
+                      AppLocalizations.of(context)!.selectLanguage,
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
@@ -176,7 +177,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              LanguageService.tr(context, 'continue'),
+                              AppLocalizations.of(context)!.continueBtn,
                               style: const TextStyle(
                                 fontSize: 17,
                                 fontWeight: FontWeight.w600,
@@ -189,11 +190,11 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                       ),
                     ),
 
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
 
                     Center(
                       child: Text(
-                        LanguageService.tr(context, 'change_later'),
+                        AppLocalizations.of(context)!.changeLater,
                         style: TextStyle(
                           fontSize: 13,
                           color: Colors.grey.shade600,

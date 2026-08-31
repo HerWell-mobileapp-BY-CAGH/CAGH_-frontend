@@ -193,8 +193,10 @@ class ConsultHubScreenState extends State<ConsultHubScreen> {
       emptyMessage = 'No past consultations';
     }
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: AppColors.primaryGreen,
         elevation: 0,
@@ -222,15 +224,15 @@ class ConsultHubScreenState extends State<ConsultHubScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(18),
                           decoration: BoxDecoration(
-                            color: AppColors.backgroundMintWhiteAlt,
-                            gradient: const LinearGradient(
+                            color: isDark ? Colors.grey.shade900 : AppColors.backgroundMintWhiteAlt,
+                            gradient: isDark ? null : const LinearGradient(
                               colors: [AppColors.backgroundMintWhiteAlt, AppColors.backgroundMintWhite],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
                             borderRadius: BorderRadius.circular(18),
                             border: Border.all(
-                              color: AppColors.borderGreenGray,
+                              color: isDark ? Colors.grey.shade800 : AppColors.borderGreenGray,
                               width: 1.2,
                             ),
                             boxShadow: [
@@ -285,22 +287,22 @@ class ConsultHubScreenState extends State<ConsultHubScreen> {
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: const [
+                                  children: [
                                     Text(
                                       'Find a Midwife',
                                       style: TextStyle(
                                         fontSize: 16.5,
                                         fontWeight: FontWeight.bold,
-                                        color: AppColors.primaryGreenDarker,
+                                        color: isDark ? Colors.white : AppColors.primaryGreenDarker,
                                         letterSpacing: 0.2,
                                       ),
                                     ),
-                                    SizedBox(height: 3),
+                                    const SizedBox(height: 3),
                                     Text(
                                       'Connect with a certified midwife for a consultation',
                                       style: TextStyle(
                                         fontSize: 13,
-                                        color: AppColors.sageGrey,
+                                        color: isDark ? Colors.grey.shade400 : AppColors.sageGrey,
                                         height: 1.35,
                                       ),
                                     ),
@@ -327,6 +329,7 @@ class ConsultHubScreenState extends State<ConsultHubScreen> {
                       ),
                     ),
                   buildMinimalTabBar(
+                    context: context,
                     selectedIndex: _selectedTab,
                     onTabSelected: (index) => setState(() => _selectedTab = index),
                   ),

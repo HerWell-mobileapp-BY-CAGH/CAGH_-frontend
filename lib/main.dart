@@ -5,6 +5,7 @@ import 'package:cagh_frontend/features/onboarding/presentation/splash_screen.dar
 import 'package:cagh_frontend/core/services/language_service.dart';
 import 'package:cagh_frontend/core/services/appearance_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -16,6 +17,7 @@ import 'package:cagh_frontend/features/consultations/data/services/callkit_servi
 import 'package:cagh_frontend/core/services/fcm_service.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
 import 'package:cagh_frontend/core/utils/app_logger.dart';
+import 'package:cagh_frontend/features/notifications/presentation/providers/notification_provider.dart';
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -88,14 +90,14 @@ void main() async {
   runApp(const ProviderScope(child: MyApp()));
 }
 
-class MyApp extends StatefulWidget {
+class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
 
   @override
-  State<MyApp> createState() => _MyAppState();
+  ConsumerState<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends ConsumerState<MyApp> {
   @override
   void initState() {
     super.initState();
@@ -128,13 +130,14 @@ class _MyAppState extends State<MyApp> {
 
         final consultationId = message.data['consultation_id']?.toString() ?? 'call_${DateTime.now().millisecondsSinceEpoch}';
 
-        // Reuse the same guarded incoming-call path as the WebSocket handler so
-        // the native CallKit screen is shown exactly once (no duplicate UI when
-        // both WS and FCM deliver the offer while the app is in the foreground).
         GlobalCallService.showIncomingCallModal(
           Map<String, dynamic>.from(message.data),
           consultationId,
         );
+      } else {
+        // Refresh notifications for other actions (like messages, consultation updates, etc)
+        AppLogger.d('FCM Foreground: Refreshing notifications');
+        ref.read(notificationProvider.notifier).refreshNotifications();
       }
     });
   }
@@ -153,26 +156,36 @@ class _MyAppState extends State<MyApp> {
                 return MaterialApp(
                   navigatorKey: globalNavigatorKey,
                   locale: Locale(langCode),
-                  supportedLocales: const [
-                    Locale('en', ''),
-                    Locale('am', ''),
-                    Locale('om', ''),
-                    Locale('so', ''),
-                    Locale('ti', ''),
-                  ],
-                  localizationsDelegates: const [
+                  supportedLocales: AppLocalizations.supportedLocales,
+                  localizationsDelegates: [
+                    AppLocalizations.delegate,
                     GlobalMaterialLocalizations.delegate,
                     GlobalWidgetsLocalizations.delegate,
                     GlobalCupertinoLocalizations.delegate,
-                    FallbackMaterialLocalizationsDelegate(),
-                    FallbackCupertinoLocalizationsDelegate(),
+                    const FallbackMaterialLocalizationsDelegate(),
+                    const FallbackCupertinoLocalizationsDelegate(),
                   ],
-                  title: LanguageService.trStatic('app_title'),
+                  // We have to use a static string or an initial translated string for the title since it requires context
+                  title: 'Digital Midwife',
                   debugShowCheckedModeBanner: false,
                   themeMode: themeMode,
                   theme: ThemeData(
                     brightness: Brightness.light,
                     primaryColor: AppColors.primaryGreen,
+                    scaffoldBackgroundColor: Colors.white,
+                    cardColor: Colors.white,
+                    dividerColor: Colors.grey.shade200,
+                    colorScheme: ColorScheme.light(
+                      primary: AppColors.primaryGreen,
+                      secondary: AppColors.accentYellow,
+                      surface: Colors.white,
+                      onSurface: AppColors.textDark,
+                    ),
+                    textTheme: const TextTheme(
+                      bodyLarge: TextStyle(color: AppColors.textDark),
+                      bodyMedium: TextStyle(color: AppColors.textDark),
+                      bodySmall: TextStyle(color: AppColors.textGray),
+                    ),
                     appBarTheme: const AppBarTheme(
                       backgroundColor: AppColors.primaryGreen,
                       foregroundColor: Colors.white,
@@ -184,9 +197,29 @@ class _MyAppState extends State<MyApp> {
                         statusBarBrightness: Brightness.dark,
                       ),
                     ),
-                    scaffoldBackgroundColor: Colors.white,
-                    cardColor: Colors.white,
-                    dividerColor: Colors.grey.shade200,
+                    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+                      backgroundColor: Colors.white,
+                      selectedItemColor: AppColors.primaryGreen,
+                      unselectedItemColor: Colors.grey,
+                      type: BottomNavigationBarType.fixed,
+                    ),
+                    inputDecorationTheme: InputDecorationTheme(
+                      filled: true,
+                      fillColor: Colors.grey.shade100,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: const BorderSide(color: AppColors.mintLight),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: const BorderSide(color: AppColors.mintLight),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: const BorderSide(color: AppColors.primaryGreen),
+                      ),
+                      labelStyle: const TextStyle(color: AppColors.textGray),
+                    ),
                   ),
                   darkTheme: ThemeData(
                     brightness: Brightness.dark,
@@ -194,6 +227,17 @@ class _MyAppState extends State<MyApp> {
                     scaffoldBackgroundColor: AppColors.textDarkAlt,
                     cardColor: AppColors.textNearBlack,
                     dividerColor: Colors.grey.shade800,
+                    colorScheme: ColorScheme.dark(
+                      primary: AppColors.primaryGreen,
+                      secondary: AppColors.accentYellow,
+                      surface: AppColors.textNearBlack,
+                      onSurface: Colors.white,
+                    ),
+                    textTheme: const TextTheme(
+                      bodyLarge: TextStyle(color: Colors.white),
+                      bodyMedium: TextStyle(color: Colors.white),
+                      bodySmall: TextStyle(color: Colors.white70),
+                    ),
                     appBarTheme: const AppBarTheme(
                       backgroundColor: AppColors.textNearBlack,
                       foregroundColor: Colors.white,
@@ -204,6 +248,29 @@ class _MyAppState extends State<MyApp> {
                         statusBarIconBrightness: Brightness.light,
                         statusBarBrightness: Brightness.dark,
                       ),
+                    ),
+                    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+                      backgroundColor: AppColors.textNearBlack,
+                      selectedItemColor: AppColors.primaryGreen,
+                      unselectedItemColor: Colors.white54,
+                      type: BottomNavigationBarType.fixed,
+                    ),
+                    inputDecorationTheme: InputDecorationTheme(
+                      filled: true,
+                      fillColor: AppColors.textDark,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide(color: Colors.grey.shade800),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide(color: Colors.grey.shade800),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: const BorderSide(color: AppColors.primaryGreen),
+                      ),
+                      labelStyle: const TextStyle(color: Colors.white70),
                     ),
                   ),
                   builder: (context, child) {

@@ -39,10 +39,10 @@ class _LearningModuleCardState extends State<LearningModuleCard> {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: _isHovered ? Colors.grey.shade50 : Colors.white,
+            color: _isHovered ? Theme.of(context).cardColor.withValues(alpha: 0.95) : Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: _isHovered ? const Color(0xFF315E26) : Colors.grey.shade300,
+              color: _isHovered ? Theme.of(context).colorScheme.primary : Theme.of(context).dividerColor,
               width: _isHovered ? 1.5 : 1.0,
             ),
             boxShadow: _isHovered
@@ -75,10 +75,10 @@ class _LearningModuleCardState extends State<LearningModuleCard> {
                       padding: const EdgeInsets.only(top: 8.0),
                       child: Text(
                         widget.title,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
-                          color: const Color(0xFF315E26),
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
                           height: 1.3,
                         ),
                       ),
@@ -91,7 +91,7 @@ class _LearningModuleCardState extends State<LearningModuleCard> {
                 widget.subtitle,
                 style: TextStyle(
                   fontSize: 12.5,
-                  color: Colors.grey.shade600,
+                  color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
                   height: 1.4,
                 ),
               ),

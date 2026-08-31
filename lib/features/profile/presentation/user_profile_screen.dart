@@ -1,11 +1,14 @@
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
 import 'package:cagh_frontend/shared/constants/app_constants.dart';
 import 'package:cagh_frontend/core/services/language_service.dart';
-import 'package:cagh_frontend/features/auth/presentation/user/user_login_screen.dart';
+import 'package:cagh_frontend/features/onboarding/presentation/user_type_selection_screen.dart';
 import 'package:cagh_frontend/features/profile/presentation/personal_information_screen.dart';
 import 'package:cagh_frontend/features/profile/presentation/appearance_accessibility_screen.dart';
+import 'package:cagh_frontend/features/consultations/presentation/user/user_inbox_screen.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
+import 'package:cagh_frontend/shared/widgets/app_profile_avatar.dart';
 import 'package:cagh_frontend/core/utils/app_logger.dart';
 
 class UserProfileScreen extends StatefulWidget {
@@ -93,9 +96,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         : 'English (US)';
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundWarmWhite,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.primaryGreen,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.accentYellow),
@@ -108,9 +110,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           },
         ),
         title: Text(
-          fullName.isNotEmpty ? fullName : LanguageService.tr(context, 'profile'),
+          fullName.isNotEmpty ? fullName : AppLocalizations.of(context)!.profile,
           style: const TextStyle(
-            color: Colors.white,
             fontSize: 19,
             fontWeight: FontWeight.w700,
           ),
@@ -146,10 +147,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                                   shape: BoxShape.circle,
                                   color: AppColors.accentYellow,
                                 ),
-                                child: const CircleAvatar(
+                                child: const AppProfileAvatar(
                                   radius: 42,
-                                  backgroundColor: AppColors.lightGreen,
-                                  backgroundImage: NetworkImage(AppConstants.placeholderAvatarUrl),
                                 ),
                               ),
                               Container(
@@ -172,10 +171,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
                         Text(
                           fullName,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
-                            color: AppColors.textDark,
+                            color: Theme.of(context).textTheme.bodyLarge?.color,
                           ),
                         ),
 
@@ -185,7 +184,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           email,
                           style: TextStyle(
                             fontSize: 13.5,
-                            color: Colors.grey.shade600,
+                            color: Theme.of(context).textTheme.bodySmall?.color,
                           ),
                         ),
                       ],
@@ -212,9 +211,16 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     ),
                     _buildDivider(),
                     _buildListTile(
-                      icon: Icons.assignment_outlined,
-                      title: 'Medical Records',
-                      onTap: () {},
+                      icon: Icons.chat_bubble_outline_rounded,
+                      title: AppLocalizations.of(context)!.messages,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const UserInboxScreen(),
+                          ),
+                        );
+                      },
                     ),
                     _buildDivider(),
                     _buildListTile(
@@ -240,12 +246,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     ),
                     _buildDivider(),
                     _buildListTile(
-                      icon: Icons.history_toggle_off_rounded,
-                      title: 'Consultation History',
-                      onTap: () {},
-                    ),
-                    _buildDivider(),
-                    _buildListTile(
                       icon: Icons.bookmark_outline_rounded,
                       title: 'Saved Midwives',
                       onTap: () {},
@@ -256,11 +256,11 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
                   // 2. Settings
                   _buildSectionHeader('Settings'),
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10),
                   _buildGroupedCard([
                     _buildListTile(
                       icon: Icons.palette_outlined,
-                      title: 'Appearance & Accessibility',
+                      title: AppLocalizations.of(context)!.appearanceAccessibility,
                       subtitle: 'Theme and text size',
                       onTap: () {
                         Navigator.push(
@@ -363,7 +363,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           Navigator.pushAndRemoveUntil(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const UserLoginScreen(),
+                              builder: (context) => const UserTypeSelectionScreen(),
                             ),
                             (route) => false,
                           );
@@ -420,10 +420,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         const SizedBox(width: 8),
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w700,
-            color: AppColors.primaryGreen,
+            color: Theme.of(context).colorScheme.primary,
           ),
         ),
       ],
@@ -433,9 +433,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   Widget _buildGroupedCard(List<Widget> children) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200, width: 1),
+        border: Border.all(color: Theme.of(context).dividerColor, width: 1),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.02),
@@ -444,7 +444,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           ),
         ],
       ),
-      child: Column(children: children),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        clipBehavior: Clip.antiAlias,
+        child: Column(children: children),
+      ),
     );
   }
 
@@ -462,16 +467,16 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       leading: Icon(icon, color: AppColors.primaryGreen, size: 22),
       title: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 14.5,
           fontWeight: FontWeight.w600,
-          color: AppColors.textNearBlackAlt,
+          color: Theme.of(context).textTheme.bodyLarge?.color,
         ),
       ),
       subtitle: subtitle != null
           ? Text(
               subtitle,
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+              style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color),
             )
           : null,
       trailing: trailing ??
@@ -479,7 +484,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               if (badge != null) ...[badge, const SizedBox(width: 8)],
-              Icon(Icons.chevron_right, color: Colors.grey.shade400, size: 22),
+              Icon(Icons.chevron_right, color: Theme.of(context).dividerColor, size: 22),
             ],
           ),
     );
@@ -489,7 +494,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     return Divider(
       height: 1,
       thickness: 1,
-      color: Colors.grey.shade100,
+      color: Theme.of(context).dividerColor,
       indent: 16,
       endIndent: 16,
     );

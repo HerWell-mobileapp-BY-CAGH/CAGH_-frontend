@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 class NearbyFilterChips extends StatelessWidget {
   final List<String> categories;
@@ -21,7 +22,7 @@ class NearbyFilterChips extends StatelessWidget {
       child: Row(
         children: categories.map((category) {
           final isSelected = category == selectedCategory;
-          final isEmergency = category == 'Emergency';
+          final isEmergency = category == AppLocalizations.of(context)!.emergency;
           
           return Padding(
             padding: const EdgeInsets.only(right: 8),

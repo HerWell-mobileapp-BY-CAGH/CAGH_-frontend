@@ -1,3 +1,4 @@
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 class HealthcareFacility {
   final String id;
   final String name;

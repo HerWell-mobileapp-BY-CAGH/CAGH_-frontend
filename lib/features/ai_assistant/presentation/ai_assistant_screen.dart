@@ -5,6 +5,7 @@ import 'package:cagh_frontend/features/ai_assistant/presentation/providers/ai_ch
 import 'package:cagh_frontend/features/ai_assistant/presentation/widgets/ai_chat_bubble.dart';
 import 'package:cagh_frontend/features/ai_assistant/presentation/widgets/ai_chat_input_bar.dart';
 import 'package:cagh_frontend/features/virtual_consultation/presentation/emergency_support_screen.dart';
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 class AiAssistantScreen extends ConsumerStatefulWidget {
   const AiAssistantScreen({super.key});
@@ -38,17 +39,16 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
     });
 
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: const Color(0xFF315E26), // App green color
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Digital AI Assistant',
+        title: Text(
+          AppLocalizations.of(context)!.digitalAiAssistant,
           style: const TextStyle(
             color: Colors.white,
             fontWeight: 
@@ -58,8 +58,8 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.warning_amber_rounded, color: Color(0xFFFFD22B)),
-            tooltip: 'Emergency SOS',
+            icon: Icon(Icons.warning_amber_rounded, color: Color(0xFFFFD22B)),
+            tooltip: AppLocalizations.of(context)!.emergencySOS,
             onPressed: () {
               Navigator.push(
                 context,
@@ -77,14 +77,16 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
             // Disclaimer Banner
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              color: const Color(0xFFFFF8E1), // Light yellow warning background
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.orange.withValues(alpha: 0.1)
+                  : const Color(0xFFFFF8E1), // Light yellow warning background
               child: Row(
                 children: [
                   const Icon(Icons.info_outline, color: Color(0xFFF57F17), size: 20),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   Expanded(
-                    child: const Text(
-                      'This AI is for informational purposes only and is not a substitute for professional medical advice. In case of emergency, use the SOS button.',
+                    child: Text(
+                      AppLocalizations.of(context)!.aiDisclaimer,
                       style: const TextStyle(
                         fontSize: 12,
                         color: Color(0xFFF57F17),
@@ -144,7 +146,9 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
                           question,
                           style: const TextStyle(fontSize: 12),
                         ),
-                        backgroundColor: const Color(0xFFF0F0F0),
+                        backgroundColor: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.grey.shade800
+                            : const Color(0xFFF0F0F0),
                         onPressed: state.isLoading ? null : () async {
                           await ref.read(aiChatProvider.notifier).sendMessage(question);
                         },
@@ -178,9 +182,9 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Icon(Icons.psychology, size: 80, color: Color(0xFF315E26)),
-              const SizedBox(height: 16),
-              const Text(
-                'How can I help you today?',
+              SizedBox(height: 16),
+              Text(
+                AppLocalizations.of(context)!.aiHelpPrompt,
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,

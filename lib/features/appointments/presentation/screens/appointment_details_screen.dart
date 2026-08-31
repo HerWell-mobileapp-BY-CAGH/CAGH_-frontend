@@ -4,6 +4,7 @@ import 'package:cagh_frontend/features/appointments/data/services/appointment_ap
 import 'package:cagh_frontend/features/appointments/data/repositories/appointment_repository_impl.dart';
 import 'package:intl/intl.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 class AppointmentDetailsScreen extends StatefulWidget {
   final Appointment appointment;
@@ -32,16 +33,16 @@ class _AppointmentDetailsScreenState extends State<AppointmentDetailsScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Cancel Appointment'),
-        content: const Text('Are you sure you want to cancel this appointment request?'),
+        title: Text(AppLocalizations.of(context)!.cancelAppointment),
+        content: Text(AppLocalizations.of(context)!.areYouSureCancelAppointment),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('No'),
+            child: Text(AppLocalizations.of(context)!.no),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Yes, Cancel', style: TextStyle(color: Colors.red)),
+            child: Text(AppLocalizations.of(context)!.yesCancel, style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -58,7 +59,7 @@ class _AppointmentDetailsScreenState extends State<AppointmentDetailsScreen> {
           _isLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Appointment cancelled successfully.')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.appointmentCancelledSuccessfully)),
         );
       }
     } catch (e) {
@@ -105,7 +106,7 @@ class _AppointmentDetailsScreenState extends State<AppointmentDetailsScreen> {
       backgroundColor: AppColors.backgroundPale,
       appBar: AppBar(
         backgroundColor: AppColors.primaryGreen,
-        title: const Text('Appointment Details', style: TextStyle(color: Colors.white)),
+        title: Text(AppLocalizations.of(context)!.appointmentDetails, style: TextStyle(color: Colors.white)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context, true), // return true to indicate potential change
@@ -187,9 +188,9 @@ class _AppointmentDetailsScreenState extends State<AppointmentDetailsScreen> {
                       height: 50,
                       child: OutlinedButton.icon(
                         onPressed: _cancelAppointment,
-                        icon: const Icon(Icons.cancel_outlined, color: Colors.red),
-                        label: const Text(
-                          'Cancel Appointment',
+                        icon: Icon(Icons.cancel_outlined, color: Colors.red),
+                        label: Text(
+                          AppLocalizations.of(context)!.cancelAppointment,
                           style: TextStyle(color: Colors.red, fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                         style: OutlinedButton.styleFrom(

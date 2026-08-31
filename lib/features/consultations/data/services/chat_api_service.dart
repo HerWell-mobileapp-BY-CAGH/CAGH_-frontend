@@ -6,6 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:mime/mime.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:flutter/foundation.dart';
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 class ChatApiService {
   static Future<Map<String, String>> _getHeaders() async {
@@ -27,9 +28,9 @@ class ChatApiService {
     if (response.statusCode == 200) {
       final decoded = jsonDecode(response.body);
       if (decoded is Map && decoded.containsKey('results')) {
-        return decoded['results'] as List<dynamic>;
+        return List<Map<String, dynamic>>.from(decoded['results']);
       } else if (decoded is List) {
-        return decoded;
+        return List<Map<String, dynamic>>.from(decoded);
       }
       return [];
     } else {
@@ -69,9 +70,9 @@ class ChatApiService {
     if (response.statusCode == 200) {
       final decoded = jsonDecode(response.body);
       if (decoded is Map && decoded.containsKey('results')) {
-        return decoded['results'] as List<dynamic>;
+        return List<Map<String, dynamic>>.from(decoded['results']);
       } else if (decoded is List) {
-        return decoded;
+        return List<Map<String, dynamic>>.from(decoded);
       }
       return [];
     } else {
@@ -107,7 +108,7 @@ class ChatApiService {
   }
 
   static Future<Map<String, dynamic>> uploadAttachment(String roomId, PlatformFile file) async {
-    final url = Uri.parse('${ApiConfig.baseUrl}/chat/rooms/$roomId/attachments/');
+    final url = Uri.parse('${ApiConfig.baseUrl}/chat/rooms/$roomId/messages/');
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
 

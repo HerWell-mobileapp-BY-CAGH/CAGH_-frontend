@@ -1,3 +1,4 @@
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:cagh_frontend/features/auth/presentation/user/user_login_screen.dart';
 import 'package:cagh_frontend/features/auth/presentation/midwife/midwife_login_screen.dart';
@@ -34,11 +35,11 @@ class _UserTypeSelectionScreenState extends State<UserTypeSelectionScreen> {
                   children: [
                     IconButton(
                       onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.arrow_back, color: AppColors.accentYellow),
+                      icon: Icon(Icons.arrow_back, color: AppColors.accentYellow),
                     ),
                     Expanded(
                       child: Text(
-                        LanguageService.tr(context, 'app_title'),
+                        AppLocalizations.of(context)!.appTitle,
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           color: Colors.white,
@@ -84,10 +85,10 @@ class _UserTypeSelectionScreenState extends State<UserTypeSelectionScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 28),
+                  SizedBox(height: 28),
 
                   Text(
-                    LanguageService.tr(context, 'choose_journey'),
+                    AppLocalizations.of(context)!.chooseJourney,
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w700,
@@ -95,10 +96,10 @@ class _UserTypeSelectionScreenState extends State<UserTypeSelectionScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10),
 
                   Text(
-                    LanguageService.tr(context, 'sub_user_type'),
+                    AppLocalizations.of(context)!.subUserType,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 15,
@@ -107,14 +108,14 @@ class _UserTypeSelectionScreenState extends State<UserTypeSelectionScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 36),
+                  SizedBox(height: 36),
 
                   // User Card
                   _RoleCard(
                     icon: Icons.person,
                     iconBgColor: AppColors.accentYellow,
-                    title: LanguageService.tr(context, 'user_title'),
-                    subtitle: LanguageService.tr(context, 'user_subtitle'),
+                    title: AppLocalizations.of(context)!.userTitle,
+                    subtitle: AppLocalizations.of(context)!.userSubtitle,
                     isSelected: selectedRole == 'user',
                     onTap: () {
                       setState(() => selectedRole = 'user');
@@ -122,14 +123,14 @@ class _UserTypeSelectionScreenState extends State<UserTypeSelectionScreen> {
                     },
                   ),
 
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
 
                   // Midwife Card
                   _RoleCard(
                     icon: Icons.medical_services,
                     iconBgColor: AppColors.primaryGreen,
-                    title: LanguageService.tr(context, 'midwife_title'),
-                    subtitle: LanguageService.tr(context, 'midwife_subtitle'),
+                    title: AppLocalizations.of(context)!.midwifeTitle,
+                    subtitle: AppLocalizations.of(context)!.midwifeSubtitle,
                     isSelected: selectedRole == 'midwife',
                     onTap: () {
                       setState(() => selectedRole = 'midwife');
@@ -180,7 +181,7 @@ class _UserTypeSelectionScreenState extends State<UserTypeSelectionScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            LanguageService.tr(context, 'continue'),
+                            AppLocalizations.of(context)!.continueBtn,
                             style: const TextStyle(
                               fontSize: 17,
                               fontWeight: FontWeight.w600,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 class NearbyEmptyState extends StatelessWidget {
   final VoidCallback onExpandRadius;
@@ -31,18 +32,18 @@ class NearbyEmptyState extends StatelessWidget {
                 color: AppColors.primaryGreen,
               ),
             ),
-            const SizedBox(height: 24),
-            const Text(
-              'No healthcare facilities found nearby.',
+            SizedBox(height: 24),
+            Text(
+              AppLocalizations.of(context)!.noHealthcareFacilitiesFound,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Text(
-              'Try increasing your search radius or changing your filters.',
+              AppLocalizations.of(context)!.tryIncreasingSearchRadius,
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey.shade600,
@@ -60,7 +61,7 @@ class NearbyEmptyState extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                child: const Text('Expand Search Radius'),
+                child: Text(AppLocalizations.of(context)!.expandSearchRadius),
               ),
             ),
             const SizedBox(height: 12),
@@ -73,7 +74,7 @@ class NearbyEmptyState extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                child: const Text('Clear Filters'),
+                child: Text(AppLocalizations.of(context)!.clearFilters),
               ),
             ),
           ],

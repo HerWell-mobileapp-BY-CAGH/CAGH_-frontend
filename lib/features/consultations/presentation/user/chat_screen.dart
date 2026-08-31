@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cagh_frontend/shared/models/midwife_profile.dart';
@@ -9,13 +11,24 @@ import 'package:cagh_frontend/shared/constants/app_colors.dart';
 import 'package:cagh_frontend/core/utils/app_logger.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cagh_frontend/features/consultations/presentation/providers/chat_notification_provider.dart';
+import 'package:cagh_frontend/features/notifications/presentation/providers/notification_provider.dart';
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
-  final MidwifeProfile midwife;
+  final MidwifeProfile? midwife;
+  final String? chatRoomId;
+  final String? midwifeId;
+  final String? midwifeName;
   final String? myUserId;
 
-  const ChatScreen({super.key, required this.midwife, this.myUserId});
+  const ChatScreen({
+    super.key,
+    this.midwife,
+    this.chatRoomId,
+    this.midwifeId,
+    this.midwifeName,
+    this.myUserId,
+  });
 
   @override
   ConsumerState<ChatScreen> createState() => _ChatScreenState();
@@ -28,9 +41,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   final List<Map<String, dynamic>> _messages = [];
   bool _isLoading = true;
   String? _roomId;
+  String? _myUserId;
   String? _roomStatus;
   ChatWebSocketService? _wsService;
   bool _isUploadingFile = false;
+  Timer? _pollingTimer;
 
   @override
   void initState() {
@@ -41,25 +56,40 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Future<void> _initializeChat() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      _myUserId = prefs.getInt('user_id')?.toString() ?? prefs.getString('user_id') ?? '';
-      
-      // 1. Fetch all rooms
-      final rooms = await ChatApiService.getChatRooms();
-      
-      // 2. Find room with this midwife
-      Map<String, dynamic>? currentRoom;
-      for (var room in rooms) {
-        String? midwifeId = room['midwife'] is Map ? room['midwife']['id']?.toString() : room['midwife']?.toString();
-        if (midwifeId == widget.midwife.id.toString()) {
-          currentRoom = room;
-          break;
+      final userDataStr = prefs.getString('user_data');
+      if (userDataStr != null && userDataStr.isNotEmpty) {
+        try {
+          final userData = jsonDecode(userDataStr);
+          _myUserId = userData['id']?.toString() ?? userData['user_id']?.toString() ?? '';
+        } catch (e) {
+          _myUserId = '';
+        }
+      } else {
+        _myUserId = '';
+      }
+      if (widget.chatRoomId != null) {
+        _roomId = widget.chatRoomId;
+        _roomStatus = 'ACCEPTED';
+      } else {
+        final targetMidwifeId = widget.midwifeId ?? widget.midwife?.id.toString();
+        if (targetMidwifeId != null) {
+          final rooms = await ChatApiService.getChatRooms();
+          Map<String, dynamic>? currentRoom;
+          for (var room in rooms) {
+            String? mId = room['midwife'] is Map ? room['midwife']['id']?.toString() : room['midwife']?.toString();
+            if (mId == targetMidwifeId) {
+              currentRoom = room;
+              break;
+            }
+          }
+          if (currentRoom != null) {
+            _roomId = currentRoom['id']?.toString();
+            _roomStatus = currentRoom['status'];
+          }
         }
       }
 
-      if (currentRoom != null) {
-        _roomId = currentRoom['id'];
-        _roomStatus = currentRoom['status'];
-
+      if (_roomId != null) {
         // 3. Fetch history
         final history = await ChatApiService.getMessageHistory(_roomId!);
         setState(() {
@@ -78,7 +108,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           debugPrint("markMessagesAsRead failed: $e");
         }
         _wsService?.markRead();
-        ref.read(chatNotificationProvider.notifier).markRoomAsReadLocally(_roomId!, midwifeId: widget.midwife.id.toString());
+        ref.read(notificationProvider.notifier).refreshNotifications();
       }
 
     } catch (e) {
@@ -88,6 +118,36 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         setState(() => _isLoading = false);
         _scrollToBottom();
       }
+      
+      _pollingTimer = Timer.periodic(const Duration(seconds: 2), (timer) async {
+        if (_roomId == null || !mounted) return;
+        try {
+          final history = await ChatApiService.getMessageHistory(_roomId!);
+          if (mounted) {
+            setState(() {
+              for (var msg in history) {
+                final parsedMsg = _parseMessage(msg);
+                
+                // Deduplicate local optimistic messages
+                _messages.removeWhere((m) => 
+                    m['id'].toString().startsWith('local-') && 
+                    m['text'] == parsedMsg['text']);
+
+                if (!_messages.any((m) => m['id'].toString() == parsedMsg['id'].toString())) {
+                  _messages.add(parsedMsg);
+                  if (!parsedMsg['isMe']) {
+                    _wsService?.markRead();
+                  }
+                }
+              }
+            });
+            // Let the user scroll manually if they want, only scroll to bottom if new messages added
+            // but for simplicity here we just sync state.
+          }
+        } catch (e) {
+          // Silent fail for polling
+        }
+      });
     }
   }
 
@@ -158,11 +218,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     bool isMe = false;
     if (senderId != null) {
-      if (widget.myUserId != null) {
+      if (_myUserId != null && _myUserId!.isNotEmpty) {
+        isMe = senderId == _myUserId;
+      } else if (widget.myUserId != null) {
         isMe = senderId == widget.myUserId;
-      } else {
-        // Fallback if myUserId is not provided (should not happen if navigating from ConsultHub)
-        isMe = senderId != widget.midwife.userId.toString() && senderId != widget.midwife.id.toString();
       }
     }
 
@@ -181,6 +240,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   void dispose() {
     _messageController.dispose();
     _scrollController.dispose();
+    _pollingTimer?.cancel();
     _wsService?.disconnect();
     super.dispose();
   }
@@ -193,8 +253,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       // Create new room request
       setState(() => _isLoading = true);
       try {
+        final targetMidwifeId = widget.midwifeId ?? widget.midwife?.id.toString();
+        if (targetMidwifeId == null) throw Exception("No midwife ID");
         final result = await ChatApiService.initiateChat(
-          midwifeId: widget.midwife.id,
+          midwifeId: targetMidwifeId,
           initialMessage: text,
         );
         
@@ -320,14 +382,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundPaleGreen,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(60),
         child: AppBar(
-          backgroundColor: AppColors.primaryGreen,
+          backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: AppColors.accentYellow),
+            icon: Icon(Icons.arrow_back, color: Theme.of(context).appBarTheme.foregroundColor),
             onPressed: () => Navigator.pop(context),
           ),
           title: Row(
@@ -335,8 +397,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               CircleAvatar(
                 radius: 16,
                 backgroundColor: Colors.white,
-                backgroundImage: widget.midwife.avatarUrl != null ? NetworkImage(widget.midwife.avatarUrl!) : null,
-                child: widget.midwife.avatarUrl == null ? const Icon(Icons.person, color: AppColors.primaryGreen, size: 20) : null,
+                backgroundImage: widget.midwife?.avatarUrl != null ? NetworkImage(widget.midwife!.avatarUrl!) : null,
+                child: widget.midwife?.avatarUrl == null ? const Icon(Icons.person, color: AppColors.primaryGreen, size: 20) : null,
               ),
               const SizedBox(width: 12),
               Column(
@@ -344,12 +406,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    widget.midwife.fullName,
-                    style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                    widget.midwifeName ?? widget.midwife?.fullName ?? 'Midwife',
+                    style: TextStyle(color: Theme.of(context).appBarTheme.foregroundColor, fontSize: 16, fontWeight: FontWeight.bold),
                   ),
-                  const Text(
-                    'Online',
-                    style: TextStyle(color: Colors.white70, fontSize: 12),
+                  Text(
+                    AppLocalizations.of(context)!.online,
+                    style: TextStyle(color: Theme.of(context).appBarTheme.foregroundColor?.withOpacity(0.7), fontSize: 12),
                   ),
                 ],
               ),
@@ -357,7 +419,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ),
           actions: [
             IconButton(
-              icon: const Icon(Icons.more_vert, color: AppColors.accentYellow),
+              icon: Icon(Icons.more_vert, color: Theme.of(context).appBarTheme.foregroundColor),
               onPressed: () {},
             ),
           ],
@@ -393,12 +455,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                           decoration: BoxDecoration(
-                            color: Colors.grey.shade200,
+                            color: Theme.of(context).dividerColor,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
-                            'Today',
-                            style: TextStyle(fontSize: 12, color: Colors.grey.shade700, fontWeight: FontWeight.bold),
+                            AppLocalizations.of(context)!.today,
+                            style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color, fontWeight: FontWeight.bold),
                           ),
                         ),
                       ),
@@ -440,105 +502,108 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: Column(
-        crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-        children: [
-          Container(
-            constraints: BoxConstraints(
-              maxWidth: MediaQuery.of(context).size.width * 0.75,
+      child: Container(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.78,
+        ),
+        margin: const EdgeInsets.only(bottom: 4),
+        padding: const EdgeInsets.only(left: 14, right: 14, top: 10, bottom: 8),
+        decoration: BoxDecoration(
+          color: isMe ? Theme.of(context).colorScheme.primary : Theme.of(context).cardColor,
+          borderRadius: BorderRadius.only(
+            topLeft: const Radius.circular(16),
+            topRight: const Radius.circular(16),
+            bottomLeft: Radius.circular(isMe ? 16 : 4),
+            bottomRight: Radius.circular(isMe ? 4 : 16),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 4,
+              offset: const Offset(0, 1),
             ),
-            padding: EdgeInsets.symmetric(
-                horizontal: hasImage ? 4 : 16, vertical: hasImage ? 4 : 12),
-            decoration: BoxDecoration(
-              color: isMe ? AppColors.darkGreen : Colors.white,
-              borderRadius: BorderRadius.only(
-                topLeft: const Radius.circular(20),
-                topRight: const Radius.circular(20),
-                bottomLeft: Radius.circular(isMe ? 20 : 0),
-                bottomRight: Radius.circular(isMe ? 0 : 20),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 5,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (attachment != null) ...[
-                  if (hasImage)
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: Image.network(
-                        attachment['file_url'],
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const Icon(Icons.broken_image, size: 40),
-                      ),
-                    )
-                  else
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.black12,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.insert_drive_file, color: Colors.white70),
-                          const SizedBox(width: 8),
-                          Flexible(
-                            child: Text(
-                              text.isNotEmpty ? text : 'Attachment',
-                              style: TextStyle(
-                                color: isMe ? Colors.white : Colors.black87,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
+          ],
+        ),
+        child: IntrinsicWidth(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (attachment != null) ...[
+                if (hasImage)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(
+                      attachment['file_url'],
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) =>
+                          const Icon(Icons.broken_image, size: 40, color: Colors.grey),
                     ),
-                  if (text.isNotEmpty && !hasImage) const SizedBox(height: 8),
-                ],
-                if (text.isNotEmpty && (!hasImage || attachment == null))
-                  Text(
-                    text,
-                    style: TextStyle(
-                      color: isMe ? Colors.white : Colors.black87,
-                      fontSize: 14,
-                      height: 1.4,
+                  )
+                else
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.black12,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.insert_drive_file, color: isMe ? Colors.white70 : Colors.black54),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            text.isNotEmpty ? text : 'Attachment',
+                            style: TextStyle(
+                              color: isMe ? Colors.white : Colors.black87,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
+                if (text.isNotEmpty && !hasImage) const SizedBox(height: 6),
               ],
-            ),
-          ),
-          const SizedBox(height: 4),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
+              if (text.isNotEmpty && (!hasImage || attachment == null))
                 Text(
-                  time,
-                  style: TextStyle(fontSize: 10, color: Colors.grey.shade600, fontWeight: FontWeight.bold),
+                  text,
+                  style: TextStyle(
+                    color: isMe ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).textTheme.bodyLarge?.color,
+                    fontSize: 15,
+                    height: 1.35,
+                  ),
                 ),
-                const SizedBox(width: 4),
-                Icon(
-                  isRead ? Icons.done_all : Icons.done,
-                  size: 14,
-                  color: isRead ? Colors.blue : Colors.grey.shade600,
+              const SizedBox(height: 4),
+              Align(
+                alignment: Alignment.bottomRight,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      time,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: isMe ? Colors.white70 : Colors.grey.shade500,
+                      ),
+                    ),
+                    if (isMe) ...[
+                      const SizedBox(width: 4),
+                      Icon(
+                        isRead ? Icons.done_all : Icons.done,
+                        size: 14,
+                        color: isRead ? const Color(0xFF64B5F6) : Colors.white70,
+                      ),
+                    ],
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -549,7 +614,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -566,12 +631,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               child: Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
+                  color: Theme.of(context).scaffoldBackgroundColor,
                   shape: BoxShape.circle,
                 ),
                 child: _isUploadingFile 
                     ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))
-                    : Icon(Icons.add, color: disabled ? Colors.grey : AppColors.primaryGreen, size: 24),
+                    : Icon(Icons.add, color: disabled ? Colors.grey : Theme.of(context).colorScheme.primary, size: 24),
               ),
             ),
             const SizedBox(width: 12),
@@ -579,9 +644,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
-                  color: disabled ? Colors.grey.shade100 : Colors.white,
+                  color: disabled ? Theme.of(context).disabledColor.withOpacity(0.1) : Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: Colors.grey.shade300),
+                  border: Border.all(color: Theme.of(context).dividerColor),
                 ),
                 child: Row(
                   children: [
@@ -592,7 +657,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         enabled: !disabled,
                         decoration: InputDecoration(
                           hintText: disabled ? 'Cannot reply yet...' : 'Type your message...',
-                          hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+                          hintStyle: TextStyle(color: Theme.of(context).hintColor, fontSize: 14),
                           border: InputBorder.none,
                           isDense: true,
                           contentPadding: const EdgeInsets.symmetric(vertical: 12),
@@ -609,10 +674,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               child: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: disabled ? Colors.grey.shade400 : AppColors.primaryGreen,
+                  color: disabled ? Theme.of(context).disabledColor : Theme.of(context).colorScheme.primary,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.send, color: Colors.white, size: 20),
+                child: Icon(Icons.send, color: Theme.of(context).colorScheme.onPrimary, size: 20),
               ),
             ),
           ],

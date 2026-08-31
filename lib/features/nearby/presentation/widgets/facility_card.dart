@@ -5,6 +5,7 @@ import '../../domain/entities/healthcare_facility.dart';
 import 'package:cagh_frontend/shared/constants/app_constants.dart';
 import '../screens/facility_details_screen.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 class FacilityCard extends StatelessWidget {
   final HealthcareFacility facility;
@@ -174,13 +175,13 @@ class FacilityCard extends StatelessWidget {
                   return Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
+                      color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade800 : Colors.grey.shade100,
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey.shade300),
+                      border: Border.all(color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade700 : Colors.grey.shade300),
                     ),
                     child: Text(
                       service,
-                      style: TextStyle(fontSize: 11, color: Colors.grey.shade700),
+                      style: TextStyle(fontSize: 11, color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade300 : Colors.grey.shade700),
                     ),
                   );
                 }).toList(),
@@ -189,7 +190,7 @@ class FacilityCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   '+ ${facility.services.length - 3} more services',
-                  style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                  style: TextStyle(fontSize: 11, color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade400 : Colors.grey.shade500),
                 ),
               ],
               const SizedBox(height: 12),
@@ -232,7 +233,7 @@ class FacilityCard extends StatelessWidget {
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       ),
-                      child: const Text('Directions'),
+                      child: Text(AppLocalizations.of(context)!.directions),
                     ),
                   ),
                 ],

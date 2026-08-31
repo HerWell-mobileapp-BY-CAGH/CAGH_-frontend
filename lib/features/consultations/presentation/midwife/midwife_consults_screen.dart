@@ -8,6 +8,9 @@ import 'package:cagh_frontend/features/consultations/presentation/user/consult_h
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
 import 'package:cagh_frontend/core/utils/app_logger.dart';
 
+import 'package:cagh_frontend/features/consultations/presentation/midwife/midwife_chat_screen.dart';
+import 'package:cagh_frontend/l10n/app_localizations.dart';
+
 class MidwifeConsultsScreen extends StatefulWidget {
   const MidwifeConsultsScreen({super.key});
 
@@ -116,38 +119,45 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
         String consultType = apt.appointmentType;
-        if (consultType == 'VIRTUAL_VOICE') consultType = 'Voice Call';
-        if (consultType == 'IN_PERSON') consultType = 'In-person';
+        if (consultType == 'VIRTUAL_VOICE' || consultType == 'VIRTUAL_VIDEO') consultType = 'Voice Call';
+        if (consultType == 'IN_PERSON') consultType = AppLocalizations.of(context)!.inPerson;
 
-        return Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+        return SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: 24,
+              right: 24,
+              top: 24,
+              bottom: 24 + MediaQuery.of(context).viewInsets.bottom,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Consultation Details', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primaryGreen)),
-                  IconButton(icon: const Icon(Icons.close, color: Colors.grey), onPressed: () => Navigator.pop(context)),
+                  Text(AppLocalizations.of(context)!.consultationDetails, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary)),
+                  IconButton(icon: Icon(Icons.close, color: Theme.of(context).iconTheme.color), onPressed: () => Navigator.pop(context)),
                 ],
               ),
               const Divider(),
-              const SizedBox(height: 10),
+              SizedBox(height: 10),
               detailRow('Consultation Type', consultType),
-              detailRow('Patient Name', apt.userFullName ?? 'Patient'),
+              detailRow('Patient Name', apt.userFullName ?? AppLocalizations.of(context)!.patient),
               detailRow('Date & Time', formatAppointmentDateTime(apt.date, apt.startTime)),
               detailRow('Status', apt.status.name.toUpperCase()),
               if (apt.reason != null && apt.reason!.isNotEmpty)
                 detailRow('Reason', apt.reason!),
               const SizedBox(height: 20),
             ],
+          ),
           ),
         );
       },
@@ -180,15 +190,15 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.primaryGreen,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
         automaticallyImplyLeading: false,
-        title: const Text(
+        title: Text(
           'Consultations',
           style: TextStyle(
-            color: Colors.white,
+            color: Theme.of(context).appBarTheme.foregroundColor,
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
@@ -202,6 +212,7 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
               child: Column(
                 children: [
                   buildMinimalTabBar(
+                    context: context,
                     selectedIndex: _selectedTab,
                     onTabSelected: (index) => setState(() => _selectedTab = index),
                   ),
@@ -234,7 +245,7 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
                           )
                         : ListView.builder(
                             physics: const AlwaysScrollableScrollPhysics(),
-                            padding: const EdgeInsets.all(16),
+                            padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 100),
                             itemCount: filteredList.length,
                             itemBuilder: (context, index) {
                               final apt = filteredList[index];
@@ -257,14 +268,14 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
             apt.userFullName!.trim().isNotEmpty &&
             apt.userFullName!.trim().toLowerCase() != 'recipient')
         ? apt.userFullName!.trim()
-        : 'Patient';
+        : AppLocalizations.of(context)!.patient;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+        border: Border.all(color: Theme.of(context).dividerColor, width: 1),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -287,13 +298,13 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
               children: [
                 CircleAvatar(
                   radius: 18,
-                  backgroundColor: const Color(0xFFF1F8E9),
+                  backgroundColor: Theme.of(context).colorScheme.primaryContainer,
                   child: Text(
                     patientDisplayName.isNotEmpty ? patientDisplayName[0].toUpperCase() : 'P',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.primaryGreen,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
                 ),
@@ -302,23 +313,23 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        patientDisplayName,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF0F172A),
+                        Text(
+                          patientDisplayName,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).textTheme.bodyLarge?.color,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 2),
-                      const Text(
-                        'Patient',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF64748B),
+                        SizedBox(height: 2),
+                        Text(
+                          AppLocalizations.of(context)!.patient,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(context).textTheme.bodyMedium?.color,
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ),
@@ -333,10 +344,10 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
                 const SizedBox(width: 6),
                 Text(
                   formattedDateTime,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF334155),
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
                   ),
                 ),
               ],
@@ -355,7 +366,7 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                     ),
-                    child: const Text('Accept', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+                    child: Text(AppLocalizations.of(context)!.accept, style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
                   ),
                   const SizedBox(width: 10),
                   TextButton(
@@ -365,7 +376,7 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                     ),
-                    child: const Text('Decline', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                    child: Text(AppLocalizations.of(context)!.decline, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
                   ),
                 ],
               ),
@@ -383,7 +394,22 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => MidwifeChatScreen(
+                            patientId: apt.userId,
+                            patientName: apt.userFullName ?? AppLocalizations.of(context)!.patient,
+                          ),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.chat_bubble_outline_rounded, color: AppColors.primaryGreen),
+                  ),
+                  const Spacer(),
                   TextButton(
                     onPressed: () => _showMidwifeDetailsModal(context, apt),
                     style: TextButton.styleFrom(

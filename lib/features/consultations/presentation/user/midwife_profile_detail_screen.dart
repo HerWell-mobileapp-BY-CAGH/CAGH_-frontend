@@ -9,6 +9,7 @@ import 'package:cagh_frontend/features/consultations/data/repositories/midwife_r
 import 'package:cagh_frontend/features/appointments/data/services/appointment_api_service.dart';
 import 'package:cagh_frontend/features/appointments/data/repositories/appointment_repository_impl.dart';
 import 'package:cagh_frontend/features/consultations/presentation/user/chat_screen.dart';
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 class MidwifeProfileDetailScreen extends StatefulWidget {
   final MidwifeProfile midwife;
@@ -212,13 +213,13 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
                       color: const Color(0xFF81C784),
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(Icons.check_circle, color: Color(0xFF315E26), size: 14),
                         SizedBox(width: 4),
                         Text(
-                          'Verified Midwife',
+                          AppLocalizations.of(context)!.verifiedMidwife,
                           style: TextStyle(color: Color(0xFF315E26), fontSize: 11, fontWeight: FontWeight.bold),
                         ),
                       ],
@@ -252,9 +253,9 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Icon(Icons.local_hospital_outlined, color: Color(0xFF315E26), size: 24),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 Text(
-                  'HOSPITAL',
+                  AppLocalizations.of(context)!.hospital,
                   style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.5, color: Colors.grey.shade600),
                 ),
                 const SizedBox(height: 4),
@@ -278,9 +279,9 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Icon(Icons.verified_user_outlined, color: Color(0xFF315E26), size: 24),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 Text(
-                  'EXPERIENCE',
+                  AppLocalizations.of(context)!.experience,
                   style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.5, color: Colors.grey.shade600),
                 ),
                 const SizedBox(height: 4),
@@ -302,7 +303,7 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'LANGUAGES',
+          AppLocalizations.of(context)!.languages,
           style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: Colors.grey.shade500),
         ),
         const SizedBox(height: 12),
@@ -333,7 +334,7 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'OFFERED CONSULTATIONS',
+          AppLocalizations.of(context)!.offeredConsultations,
           style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: Colors.grey.shade500),
         ),
         const SizedBox(height: 12),
@@ -367,12 +368,12 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
                     color: const Color(0xFFE8F5E9),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.home_outlined, size: 16, color: Color(0xFF315E26)),
                       SizedBox(width: 6),
-                      Text('In-person', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF315E26))),
+                      Text(AppLocalizations.of(context)!.inPerson, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF315E26))),
                     ],
                   ),
                 ),
@@ -406,12 +407,12 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              'Availability',
+            Text(
+              AppLocalizations.of(context)!.availability,
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF315E26)),
             ),
             Text(
-              'View All',
+              AppLocalizations.of(context)!.viewAll,
               style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF315E26)),
             ),
           ],
@@ -575,8 +576,8 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
                   onPressed: () {
                     Navigator.push(context, MaterialPageRoute(builder: (_) => ChatScreen(midwife: widget.midwife)));
                   },
-                  icon: const Icon(Icons.chat_bubble_outline, color: Color(0xFF315E26), size: 20),
-                  label: const Text('Message', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF315E26))),
+                  icon: Icon(Icons.chat_bubble_outline, color: Color(0xFF315E26), size: 20),
+                  label: Text(AppLocalizations.of(context)!.message, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF315E26))),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: Color(0xFF315E26), width: 1.5),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -599,8 +600,8 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
                       ),
                     );
                   },
-                  icon: const Icon(Icons.calendar_month, color: Colors.white, size: 20),
-                  label: const Text('Book', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  icon: Icon(Icons.calendar_month, color: Colors.white, size: 20),
+                  label: Text(AppLocalizations.of(context)!.book, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF315E26),
                     foregroundColor: Colors.white,

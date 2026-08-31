@@ -10,6 +10,7 @@ import 'package:cagh_frontend/core/services/ringtone_service.dart';
 import 'package:cagh_frontend/shared/utils/name_formatter.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
 import 'package:cagh_frontend/core/utils/app_logger.dart';
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 class VoiceCallScreen extends StatefulWidget {
   final Appointment appointment;
@@ -201,7 +202,7 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> with TickerProviderSt
         // Midwife receiving call from Patient -> Target display MUST be Patient (caller)
         targetParticipantName = callerName.isNotEmpty
             ? callerName
-            : (widget.appointment.userFullName ?? 'Patient');
+            : (widget.appointment.userFullName ?? AppLocalizations.of(context)!.patient);
       }
 
       if (targetParticipantName.isEmpty || targetParticipantName == 'Caller' || targetParticipantName == 'Recipient') {
@@ -548,7 +549,7 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> with TickerProviderSt
           _participantName!.isNotEmpty &&
           _participantName != 'Caller' &&
           _participantName != 'Recipient' &&
-          _participantName != 'Patient' &&
+          _participantName != AppLocalizations.of(context)!.patient &&
           _participantName != 'Midwife') {
         displayName = _participantName!;
       } else {
@@ -556,17 +557,17 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> with TickerProviderSt
       }
     } else {
       // Midwife viewing screen -> ALWAYS display Patient's name to Midwife
-      if (patientName.isNotEmpty && patientName != 'Recipient' && patientName != 'Caller' && patientName != 'Patient') {
+      if (patientName.isNotEmpty && patientName != 'Recipient' && patientName != 'Caller' && patientName != AppLocalizations.of(context)!.patient) {
         displayName = patientName;
       } else if (_participantName != null &&
           _participantName!.isNotEmpty &&
           _participantName != 'Caller' &&
           _participantName != 'Recipient' &&
-          _participantName != 'Patient' &&
+          _participantName != AppLocalizations.of(context)!.patient &&
           _participantName != 'Midwife') {
         displayName = _participantName!;
       } else {
-        displayName = 'Patient';
+        displayName = AppLocalizations.of(context)!.patient;
       }
     }
 
@@ -773,7 +774,7 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> with TickerProviderSt
                           // DECLINE BUTTON (Red)
                           _buildTelegramCallCircleButton(
                             icon: Icons.call_end_rounded,
-                            label: 'Decline',
+                            label: AppLocalizations.of(context)!.decline,
                             color: const Color(0xFFEF4444),
                             onTap: () async {
                               RingtoneService.stopRingtone();
@@ -793,7 +794,7 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> with TickerProviderSt
                           // ACCEPT BUTTON (Green)
                           _buildTelegramCallCircleButton(
                             icon: Icons.call_rounded,
-                            label: 'Accept',
+                            label: AppLocalizations.of(context)!.accept,
                             color: const Color(0xFF22C55E),
                             onTap: () async {
                               RingtoneService.stopRingtone();

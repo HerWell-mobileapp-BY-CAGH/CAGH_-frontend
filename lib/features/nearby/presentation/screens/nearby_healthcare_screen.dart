@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/nearby_provider.dart';
 import 'find_nearby_screen.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 class NearbyHealthcareScreen extends ConsumerStatefulWidget {
   final bool showBackButton;
   const NearbyHealthcareScreen({super.key, this.showBackButton = true});
@@ -41,6 +42,8 @@ class _NearbyHealthcareScreenState extends ConsumerState<NearbyHealthcareScreen>
   }
 
   Widget _buildCategoryChip(String title, IconData icon) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return GestureDetector(
       onTap: () {
         // Map UI category string to API category string if necessary
@@ -57,7 +60,7 @@ class _NearbyHealthcareScreenState extends ConsumerState<NearbyHealthcareScreen>
         margin: const EdgeInsets.only(right: 12),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDark ? Colors.grey.shade800 : Colors.white,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -98,24 +101,26 @@ class _NearbyHealthcareScreenState extends ConsumerState<NearbyHealthcareScreen>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: AppColors.backgroundOffWhite,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: AppColors.primaryGreen,
         elevation: 0,
         centerTitle: true,
         leading: widget.showBackButton ? IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ) : null,
-        title: const Text('Healthcare Near You', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
+        title: Text(AppLocalizations.of(context)!.healthcareNearYou, style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 8.0),
             child: TextButton.icon(
               onPressed: () => _navigateToFindNearby(),
-              icon: const Icon(Icons.location_on, color: Colors.white, size: 16),
-              label: const Text('Find Nearby', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+              icon: Icon(Icons.location_on, color: Colors.white, size: 16),
+              label: Text(AppLocalizations.of(context)!.findNearby, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
               style: TextButton.styleFrom(
                 backgroundColor: AppColors.buttonGreen, // slightly lighter green for the button
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -132,9 +137,9 @@ class _NearbyHealthcareScreenState extends ConsumerState<NearbyHealthcareScreen>
             // Top Section
             Container(
               width: double.infinity,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
+              decoration: BoxDecoration(
+                color: isDark ? Colors.grey.shade900 : Colors.white,
+                borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(24),
                   bottomRight: Radius.circular(24),
                 ),
@@ -144,14 +149,17 @@ class _NearbyHealthcareScreenState extends ConsumerState<NearbyHealthcareScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Find trusted maternal and reproductive healthcare services around you.',
-                    style: TextStyle(color: Colors.grey.shade800, fontSize: 14, height: 1.4),
+                    AppLocalizations.of(context)!.findTrustedMaternal,
+                    style: TextStyle(
+                        color: isDark ? Colors.grey.shade300 : Colors.grey.shade800, 
+                        fontSize: 14, 
+                        height: 1.4),
                   ),
                   const SizedBox(height: 20),
                   // Search Bar
                   Container(
                     decoration: BoxDecoration(
-                      color: AppColors.backgroundTealWhite, // Green like find midwife
+                      color: isDark ? Colors.grey.shade800 : AppColors.backgroundTealWhite,
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
@@ -181,11 +189,14 @@ class _NearbyHealthcareScreenState extends ConsumerState<NearbyHealthcareScreen>
             const SizedBox(height: 8),
 
             // Categories Section
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Text(
-                'Find Care By Type',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                AppLocalizations.of(context)!.findCareByType,
+                style: TextStyle(
+                    fontSize: 16, 
+                    fontWeight: FontWeight.bold, 
+                    color: isDark ? Colors.white : AppColors.textDark),
               ),
             ),
             const SizedBox(height: 12),

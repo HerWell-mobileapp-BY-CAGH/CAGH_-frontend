@@ -8,6 +8,7 @@ import 'package:cagh_frontend/shared/models/blocked_date.dart';
 import 'package:cagh_frontend/shared/models/availability_slot.dart';
 import 'package:cagh_frontend/features/scheduling/presentation/screens/midwife_manage_schedule_screen.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 class MidwifeScheduleScreen extends StatefulWidget {
   const MidwifeScheduleScreen({super.key});
@@ -77,7 +78,7 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
 
     final types = <String>[];
     if (_voiceCall) types.add('Voice Call');
-    if (_inPerson) types.add('In-person');
+    if (_inPerson) types.add(AppLocalizations.of(context)!.inPerson);
 
     try {
       await _repository.updateMyProfile({'offered_consultation_types': types});
@@ -243,10 +244,10 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                     await _fetchData();
                   } catch (e) {
                     setState(() => _isLoading = false);
-                    if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to add leave')));
+                    if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to add leave')));
                   }
                 },
-                child: const Text('Block Date', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                child: Text(AppLocalizations.of(context)!.blockDate, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               )
             ],
           );
@@ -358,7 +359,7 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Set Working Hours', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF2E5B2E))),
+                  Text(AppLocalizations.of(context)!.setWorkingHours, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Color(0xFF2E5B2E))),
                   const SizedBox(height: 4),
                   Text('Every $dayName', style: TextStyle(color: isDark ? Colors.grey.shade400 : Colors.grey.shade600)),
                   const SizedBox(height: 16),
@@ -481,13 +482,13 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'AVAILABILITY MANAGEMENT',
+                    Text(
+                      AppLocalizations.of(context)!.availabilityManagement,
                       style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1.2),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4),
                     Text(
-                      'Your Schedule',
+                      AppLocalizations.of(context)!.yourSchedule,
                       style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF2E5B2E)),
                     ),
                     const SizedBox(height: 8),
@@ -584,7 +585,7 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                                   isDark: isDark,
                                 ),
                                 _buildConsultationChip(
-                                  title: 'In-person',
+                                  title: AppLocalizations.of(context)!.inPerson,
                                   icon: Icons.person_outline,
                                   isSelected: _inPerson,
                                   onSelected: (v) => setState(() => _inPerson = v),
@@ -631,14 +632,14 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text('Blocked Dates', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: isDark ? Colors.white : const Color(0xFF2E5B2E))),
+                              Text(AppLocalizations.of(context)!.blockedDates, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: isDark ? Colors.white : Color(0xFF2E5B2E))),
                               GestureDetector(
                                 onTap: _showAddLeaveModal,
                                 child: Row(
                                   children: [
                                     Icon(Icons.add_circle_outline, color: isDark ? const Color(0xFFB39DDB) : const Color(0xFF6B4B9A), size: 16),
-                                    const SizedBox(width: 4),
-                                    Text('Add Leave', style: TextStyle(color: isDark ? const Color(0xFFB39DDB) : const Color(0xFF6B4B9A), fontSize: 12, fontWeight: FontWeight.bold))
+                                    SizedBox(width: 4),
+                                    Text(AppLocalizations.of(context)!.addLeave, style: TextStyle(color: isDark ? Color(0xFFB39DDB) : Color(0xFF6B4B9A), fontSize: 12, fontWeight: FontWeight.bold))
                                   ],
                                 ),
                               )
@@ -704,13 +705,13 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           if (_availabilities.isEmpty)
-            const Padding(
+            Padding(
               padding: EdgeInsets.symmetric(vertical: 16),
               child: Center(
                 child: Text(
-                  'No recurring schedules configured.',
+                  AppLocalizations.of(context)!.noRecurringSchedules,
                   style: TextStyle(color: Colors.grey),
                 ),
               ),
@@ -852,7 +853,7 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
           ),
           TextButton(
             onPressed: () => _deleteBlockedDate(b.id),
-            child: const Text('Remove', style: TextStyle(color: Colors.redAccent, fontSize: 13, fontWeight: FontWeight.bold)),
+            child: Text(AppLocalizations.of(context)!.remove, style: TextStyle(color: Colors.redAccent, fontSize: 13, fontWeight: FontWeight.bold)),
           ),
         ],
       ),

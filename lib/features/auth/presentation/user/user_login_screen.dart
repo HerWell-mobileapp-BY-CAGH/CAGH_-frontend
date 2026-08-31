@@ -1,3 +1,4 @@
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:cagh_frontend/features/auth/presentation/user/user_registration_screen.dart';
 import 'package:cagh_frontend/features/auth/presentation/forgot_password_screen.dart';
@@ -38,8 +39,8 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
 
     setState(() {
       _apiError = null;
-      _emailError = identifier.isEmpty ? LanguageService.tr(context, 'val_email_phone_req') : null;
-      _passwordError = password.isEmpty ? LanguageService.tr(context, 'val_password_req') : null;
+      _emailError = identifier.isEmpty ? AppLocalizations.of(context)!.valEmailPhoneReq : null;
+      _passwordError = password.isEmpty ? AppLocalizations.of(context)!.valPasswordReq : null;
     });
 
     if (_emailError != null || _passwordError != null) return;
@@ -58,7 +59,7 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
     if (result.success) {
       CustomSnackBar.show(
         context,
-        message: LanguageService.tr(context, 'login_successful'),
+        message: AppLocalizations.of(context)!.loginSuccessful,
         type: SnackBarType.success,
       );
 
@@ -85,7 +86,7 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
     return Scaffold(
       backgroundColor: bgColor,
       appBar: StandardAppBar(
-        title: LanguageService.tr(context, 'login'),
+        title: AppLocalizations.of(context)!.login,
         showLanguagePicker: true,
       ),
       body: SafeArea(
@@ -132,28 +133,28 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
                       ),
                     ),
                     Text(
-                      LanguageService.tr(context, 'welcome_back'),
+                      AppLocalizations.of(context)!.welcomeBack,
                       style: TextStyle(
                         fontSize: 26,
                         fontWeight: FontWeight.w700,
                         color: textColor,
                       ),
                     ),
-                    const SizedBox(height: 28),
+                    SizedBox(height: 28),
 
                     AppTextField(
                       controller: _emailController,
-                      labelText: LanguageService.tr(context, 'email_phone'),
-                      hintText: LanguageService.tr(context, 'enter_contact_details'),
+                      labelText: AppLocalizations.of(context)!.emailPhone,
+                      hintText: AppLocalizations.of(context)!.enterContactDetails,
                       keyboardType: TextInputType.emailAddress,
                       errorText: _emailError,
                     ),
-                    const SizedBox(height: 20),
+                    SizedBox(height: 20),
 
                     AppTextField(
                       controller: _passwordController,
-                      labelText: LanguageService.tr(context, 'password'),
-                      hintText: LanguageService.tr(context, 'enter_password'),
+                      labelText: AppLocalizations.of(context)!.password,
+                      hintText: AppLocalizations.of(context)!.enterPassword,
                       isPassword: true,
                       errorText: _passwordError,
                     ),
@@ -166,12 +167,12 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => const ForgotPasswordScreen(isMidwife: false),
+                              builder: (_) => ForgotPasswordScreen(isMidwife: false),
                             ),
                           );
                         },
                         child: Text(
-                          LanguageService.tr(context, 'forgot_password'),
+                          AppLocalizations.of(context)!.forgotPassword,
                           style: TextStyle(
                             color: Theme.of(context).primaryColor,
                             fontWeight: FontWeight.w500,
@@ -207,22 +208,22 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
                         ),
                       )
                     else
-                      const SizedBox(height: 16),
+                      SizedBox(height: 16),
 
                     PrimaryButton(
-                      text: LanguageService.tr(context, 'login'),
+                      text: AppLocalizations.of(context)!.login,
                       isLoading: _isLoading,
                       onPressed: _handleLogin,
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    LanguageService.tr(context, 'dont_have_account'),
+                    AppLocalizations.of(context)!.dontHaveAccount,
                     style: TextStyle(color: isDark ? Colors.grey.shade400 : Colors.grey.shade800),
                   ),
                   const SizedBox(width: 4),
@@ -231,12 +232,12 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const UserRegistrationScreen(),
+                          builder: (context) => UserRegistrationScreen(),
                         ),
                       );
                     },
                     child: Text(
-                      LanguageService.tr(context, 'register'),
+                      AppLocalizations.of(context)!.register,
                       style: TextStyle(
                         color: Theme.of(context).primaryColor,
                         fontWeight: FontWeight.w700,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'user/user_login_screen.dart';
 import 'midwife/midwife_login_screen.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 class PasswordResetSuccessScreen extends StatelessWidget {
   final bool isMidwife;
@@ -41,9 +42,9 @@ class PasswordResetSuccessScreen extends StatelessWidget {
                   size: 80,
                 ),
               ),
-              const SizedBox(height: 32),
-              const Text(
-                'Password Updated!',
+              SizedBox(height: 32),
+              Text(
+                AppLocalizations.of(context)!.passwordUpdated,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 28,

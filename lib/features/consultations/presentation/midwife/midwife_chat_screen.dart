@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cagh_frontend/shared/models/appointment.dart';
@@ -7,12 +9,21 @@ import 'package:intl/intl.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cagh_frontend/features/consultations/presentation/providers/chat_notification_provider.dart';
+import 'package:cagh_frontend/features/notifications/presentation/providers/notification_provider.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 class MidwifeChatScreen extends ConsumerStatefulWidget {
-  final Appointment appointment;
+  final String? chatRoomId;
+  final String patientId;
+  final String patientName;
 
-  const MidwifeChatScreen({super.key, required this.appointment});
+  const MidwifeChatScreen({
+    super.key,
+    this.chatRoomId,
+    required this.patientId,
+    required this.patientName,
+  });
 
   @override
   ConsumerState<MidwifeChatScreen> createState() => _MidwifeChatScreenState();
@@ -29,6 +40,7 @@ class _MidwifeChatScreenState extends ConsumerState<MidwifeChatScreen> {
   String? _roomStatus;
   ChatWebSocketService? _wsService;
   bool _isUploadingFile = false;
+  Timer? _pollingTimer;
 
   @override
   void initState() {
@@ -44,38 +56,39 @@ class _MidwifeChatScreenState extends ConsumerState<MidwifeChatScreen> {
       final rooms = await ChatApiService.getChatRooms();
       
       Map<String, dynamic>? currentRoom;
-      for (var room in rooms) {
-        String? userId = room['user'] is Map ? room['user']['id']?.toString() : room['user']?.toString();
-        String? patientId = room['patient'] is Map ? room['patient']['id']?.toString() : room['patient']?.toString();
-
-        if (userId == widget.appointment.userId.toString() || patientId == widget.appointment.userId.toString()) {
-          currentRoom = room;
-          break;
-        }
-      }
       
-      if (currentRoom == null && rooms.isNotEmpty) {
-        // Fallback: The backend might have used a strange key name (like 'initiator', 'sender', etc)
-        // Just search the entire room object for the user's ID
+      if (widget.chatRoomId != null) {
+        // If we have a direct room ID from the inbox, find it to get status
         for (var room in rooms) {
-          if (room.toString().contains(widget.appointment.userId.toString())) {
+          if (room['id']?.toString() == widget.chatRoomId) {
+            currentRoom = room;
+            break;
+          }
+        }
+        // If not found in list but we have ID, we can still try to proceed
+        _roomId = widget.chatRoomId;
+      } else {
+        // Fallback for when opened from an Appointment without a room ID
+        for (var room in rooms) {
+          String? userId = room['user'] is Map ? room['user']['id']?.toString() : room['user']?.toString();
+          String? patientId = room['patient'] is Map ? room['patient']['id']?.toString() : room['patient']?.toString();
+
+          if (userId == widget.patientId || patientId == widget.patientId) {
             currentRoom = room;
             break;
           }
         }
       }
-      
-      if (currentRoom == null) {
-        // Still not found? Debug SnackBar so the user can tell me what the backend returned
+
+      if (currentRoom != null) {
+        _roomId = currentRoom['id']?.toString();
+        _roomStatus = currentRoom['status'];
+      } else if (_roomId == null) {
+        // Still not found and no ID provided?
         Future.delayed(Duration.zero, () {
           if (mounted) {
-            String debugMsg = rooms.isEmpty 
-              ? "DEBUG: Rooms list is EMPTY!" 
-              : "DEBUG ROOM: ${rooms.first.toString().length > 200 ? rooms.first.toString().substring(0, 200) : rooms.first.toString()}";
-              
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text("$debugMsg | Appt UserID: ${widget.appointment.userId}"),
-              duration: const Duration(seconds: 15),
+              content: Text("No active chat room found for patient ${widget.patientName}"),
               backgroundColor: Colors.red,
             ));
           }
@@ -103,7 +116,7 @@ class _MidwifeChatScreenState extends ConsumerState<MidwifeChatScreen> {
           debugPrint("markMessagesAsRead failed: $e");
         }
         _wsService?.markRead();
-        ref.read(chatNotificationProvider.notifier).markRoomAsReadLocally(_roomId!, userId: widget.appointment.userId.toString());
+        ref.read(notificationProvider.notifier).refreshNotifications();
       }
     } catch (e) {
       debugPrint("Error initializing chat: $e");
@@ -121,6 +134,34 @@ class _MidwifeChatScreenState extends ConsumerState<MidwifeChatScreen> {
         setState(() => _isLoading = false);
         _scrollToBottom();
       }
+
+      _pollingTimer = Timer.periodic(const Duration(seconds: 2), (timer) async {
+        if (_roomId == null || !mounted) return;
+        try {
+          final history = await ChatApiService.getMessageHistory(_roomId!);
+          if (mounted) {
+            setState(() {
+              for (var msg in history) {
+                final parsedMsg = _parseMessage(msg);
+
+                // Deduplicate local optimistic messages
+                _messages.removeWhere((m) => 
+                    m['id'].toString().startsWith('local-') && 
+                    m['text'] == parsedMsg['text']);
+
+                if (!_messages.any((m) => m['id'].toString() == parsedMsg['id'].toString())) {
+                  _messages.add(parsedMsg);
+                  if (!parsedMsg['isMe']) {
+                    _wsService?.markRead();
+                  }
+                }
+              }
+            });
+          }
+        } catch (e) {
+          // Silent fail for polling
+        }
+      });
     }
   }
 
@@ -187,7 +228,7 @@ class _MidwifeChatScreenState extends ConsumerState<MidwifeChatScreen> {
     if (senderId != null) {
       // In same-browser testing, _myUserId from SharedPreferences can be overwritten. 
       // Safest way is to check if the sender is NOT the patient.
-      isMe = senderId != widget.appointment.userId.toString();
+      isMe = senderId != widget.patientId;
     }
 
     return {
@@ -262,14 +303,14 @@ class _MidwifeChatScreenState extends ConsumerState<MidwifeChatScreen> {
 
     if (_roomId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No active chat found. Patient must initiate.')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.noActiveChatFound)),
       );
       return;
     }
 
     if (_roomStatus == 'REQUESTED') {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please accept the request before sending messages.')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.pleaseAcceptRequest)),
       );
       return;
     }
@@ -345,6 +386,7 @@ class _MidwifeChatScreenState extends ConsumerState<MidwifeChatScreen> {
   void dispose() {
     _messageController.dispose();
     _scrollController.dispose();
+    _pollingTimer?.cancel();
     _wsService?.disconnect();
     super.dispose();
   }
@@ -364,107 +406,108 @@ class _MidwifeChatScreenState extends ConsumerState<MidwifeChatScreen> {
 
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: Column(
-        crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-        children: [
-          Container(
-            constraints: BoxConstraints(
-              maxWidth: MediaQuery.of(context).size.width * 0.75,
+      child: Container(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.78,
+        ),
+        margin: const EdgeInsets.only(bottom: 4),
+        padding: const EdgeInsets.only(left: 14, right: 14, top: 10, bottom: 8),
+        decoration: BoxDecoration(
+          color: isMe ? Theme.of(context).colorScheme.primary : Theme.of(context).cardColor,
+          borderRadius: BorderRadius.only(
+            topLeft: const Radius.circular(16),
+            topRight: const Radius.circular(16),
+            bottomLeft: Radius.circular(isMe ? 16 : 4),
+            bottomRight: Radius.circular(isMe ? 4 : 16),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 4,
+              offset: const Offset(0, 1),
             ),
-            padding: EdgeInsets.symmetric(
-                horizontal: hasImage ? 4 : 16, vertical: hasImage ? 4 : 12),
-            decoration: BoxDecoration(
-              color: isMe ? const Color(0xFF315E26) : Colors.white,
-              borderRadius: BorderRadius.only(
-                topLeft: const Radius.circular(20),
-                topRight: const Radius.circular(20),
-                bottomLeft: Radius.circular(isMe ? 20 : 0),
-                bottomRight: Radius.circular(isMe ? 0 : 20),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 5,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (attachment != null) ...[
-                  if (hasImage)
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: Image.network(
-                        attachment['file_url'],
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const Icon(Icons.broken_image, size: 40),
-                      ),
-                    )
-                  else
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.black12,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.insert_drive_file, color: Colors.white70),
-                          const SizedBox(width: 8),
-                          Flexible(
-                            child: Text(
-                              text.isNotEmpty ? text : 'Attachment',
-                              style: TextStyle(
-                                color: isMe ? Colors.white : Colors.black87,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
-                              ),
-                              overflow: TextOverflow.ellipsis,
+          ],
+        ),
+        child: IntrinsicWidth(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (attachment != null) ...[
+                if (hasImage)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(
+                      attachment['file_url'],
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) =>
+                          const Icon(Icons.broken_image, size: 40, color: Colors.grey),
+                    ),
+                  )
+                else
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.black12,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.insert_drive_file, color: isMe ? Colors.white70 : Colors.black54),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            text.isNotEmpty ? text : 'Attachment',
+                            style: TextStyle(
+                              color: isMe ? Colors.white : Colors.black87,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
                             ),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ],
+                        ),
+                      ],
+                    ),
+                  ),
+                if (text.isNotEmpty && !hasImage) const SizedBox(height: 6),
+              ],
+              if (text.isNotEmpty && (!hasImage || attachment == null))
+                Text(
+                  text,
+                  style: TextStyle(
+                    color: isMe ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).textTheme.bodyLarge?.color,
+                    fontSize: 15,
+                    height: 1.35,
+                  ),
+                ),
+              const SizedBox(height: 4),
+              Align(
+                alignment: Alignment.bottomRight,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      time,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: isMe ? Colors.white70 : Colors.grey.shade500,
                       ),
                     ),
-                  if (text.isNotEmpty && !hasImage) const SizedBox(height: 8),
-                ],
-                if (text.isNotEmpty && (!hasImage || attachment == null))
-                  Text(
-                    text,
-                    style: TextStyle(
-                      color: isMe ? Colors.white : Colors.black87,
-                      fontSize: 14,
-                      height: 1.4,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 4),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  time,
-                  style: TextStyle(fontSize: 10, color: Colors.grey.shade600, fontWeight: FontWeight.bold),
+                    if (isMe) ...[
+                      const SizedBox(width: 4),
+                      Icon(
+                        isRead ? Icons.done_all : Icons.done,
+                        size: 14,
+                        color: isRead ? const Color(0xFF64B5F6) : Colors.white70,
+                      ),
+                    ],
+                  ],
                 ),
-                if (isMe) ...[
-                  const SizedBox(width: 4),
-                  Icon(
-                    isRead ? Icons.done_all : Icons.done,
-                    size: 14,
-                    color: isRead ? Colors.blue : Colors.grey.shade600,
-                  ),
-                ],
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -472,17 +515,17 @@ class _MidwifeChatScreenState extends ConsumerState<MidwifeChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundPale,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.primaryGreen,
-        foregroundColor: Colors.white,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+        foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
         title: Row(
           children: [
             CircleAvatar(
-              backgroundColor: Colors.white24,
+              backgroundColor: Theme.of(context).appBarTheme.foregroundColor?.withOpacity(0.2) ?? Colors.white24,
               child: Text(
-                (widget.appointment.userFullName != null && widget.appointment.userFullName!.isNotEmpty) ? widget.appointment.userFullName![0].toUpperCase() : 'P',
-                style: const TextStyle(color: Colors.white),
+                widget.patientName.isNotEmpty ? widget.patientName[0].toUpperCase() : 'P',
+                style: TextStyle(color: Theme.of(context).appBarTheme.foregroundColor),
               ),
             ),
             const SizedBox(width: 12),
@@ -491,12 +534,12 @@ class _MidwifeChatScreenState extends ConsumerState<MidwifeChatScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    widget.appointment.userFullName ?? 'Patient',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    widget.patientName,
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Theme.of(context).appBarTheme.foregroundColor),
                   ),
                   Text(
-                    _roomStatus == 'ACCEPTED' ? 'Online' : (_roomStatus == 'REQUESTED' ? 'Request Pending' : 'Offline'),
-                    style: const TextStyle(fontSize: 12, color: Colors.white70),
+                    _roomStatus == 'ACCEPTED' ? AppLocalizations.of(context)!.online : (_roomStatus == 'REQUESTED' ? 'Request Pending' : 'Offline'),
+                    style: TextStyle(fontSize: 12, color: Theme.of(context).appBarTheme.foregroundColor?.withOpacity(0.7)),
                   ),
                 ],
               ),
@@ -506,181 +549,138 @@ class _MidwifeChatScreenState extends ConsumerState<MidwifeChatScreen> {
       ),
       body: Column(
         children: [
-          Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(16),
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                final msg = _messages[index];
-                final isMe = msg['isMe'];
-                return Align(
-                  alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    constraints: BoxConstraints(
-                      maxWidth: MediaQuery.of(context).size.width * 0.75,
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: isMe ? AppColors.primaryGreen : Colors.white,
-                      borderRadius: BorderRadius.only(
-                        topLeft: const Radius.circular(16),
-                        topRight: const Radius.circular(16),
-                        bottomLeft: Radius.circular(isMe ? 16 : 0),
-                        bottomRight: Radius.circular(isMe ? 0 : 16),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
-                          blurRadius: 5,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        const Text(
-                          'This patient has requested a chat consultation.',
-                          style: TextStyle(color: Colors.orange, fontWeight: FontWeight.w600),
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            TextButton(
-                              onPressed: _rejectRequest,
-                              child: const Text('Reject', style: TextStyle(color: Colors.red)),
-                            ),
-                            const SizedBox(width: 16),
-                            ElevatedButton(
-                              onPressed: _acceptRequest,
-                              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF315E26)),
-                              child: const Text('Accept', style: TextStyle(color: Colors.white)),
-                            ),
-                          ],
-                        )
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, -5),
-                ),
-              ],
-            ),
-            child: SafeArea(
-              child: Row(
-                children: [
-                  Expanded(
+          if (_roomStatus == 'REQUESTED')
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: 1,
+                itemBuilder: (context, index) {
+                  return Align(
+                    alignment: Alignment.center,
                     child: Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       decoration: BoxDecoration(
-                        color: AppColors.backgroundMintGray,
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                    ),
-                  )
-                else
-                  Expanded(
-                    child: ListView.builder(
-                      controller: _scrollController,
-                      padding: const EdgeInsets.all(16),
-                      itemCount: _messages.length,
-                      itemBuilder: (context, index) {
-                        final msg = _messages[index];
-                        final isMe = msg['isMe'];
-                        final isRead = msg['isRead'] ?? false;
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 16.0),
-                          child: _buildMessageBubble(
-                            text: msg['text'] ?? '',
-                            time: msg['time'],
-                            isMe: isMe,
-                            isRead: isRead,
-                            attachment: msg['type'] == 'FILE' ? msg['attachment'] : null,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                if (_roomStatus != 'REQUESTED' && _roomId != null)
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, -5),
-                        ),
-                      ],
-                    ),
-                    child: SafeArea(
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF4F6F4),
-                                borderRadius: BorderRadius.circular(24),
-                              ),
-                              child: Row(
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.attach_file, color: Colors.grey),
-                                    onPressed: _roomStatus == 'ACCEPTED' && !_isUploadingFile ? _pickAndSendFile : null,
-                                  ),
-                                  Expanded(
-                                    child: TextField(
-                                      controller: _messageController,
-                                      decoration: InputDecoration(
-                                        hintText: _roomStatus == 'ACCEPTED' ? 'Type a message...' : 'Chat is not active',
-                                        border: InputBorder.none,
-                                      ),
-                                      enabled: _roomStatus == 'ACCEPTED',
-                                      onSubmitted: (_) => _sendMessage(),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          CircleAvatar(
-                            radius: 24,
-                            backgroundColor: _roomStatus == 'ACCEPTED' ? const Color(0xFF315E26) : Colors.grey,
-                            child: IconButton(
-                              icon: const Icon(Icons.send, color: Colors.white),
-                              onPressed: _roomStatus == 'ACCEPTED' ? _sendMessage : null,
-                            ),
+                        color: Theme.of(context).cardColor,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 5,
+                            offset: const Offset(0, 2),
                           ),
                         ],
                       ),
+                      child: Column(
+                        children: [
+                          Text(
+                            '${widget.patientName} has requested a chat consultation.',
+                            style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.w600),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              TextButton(
+                                onPressed: _rejectRequest,
+                                child: Text(AppLocalizations.of(context)!.reject, style: TextStyle(color: Colors.red)),
+                              ),
+                              SizedBox(width: 16),
+                              ElevatedButton(
+                                onPressed: _acceptRequest,
+                                style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary),
+                                child: Text(AppLocalizations.of(context)!.accept, style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
+                              ),
+                            ],
+                          )
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  CircleAvatar(
-                    radius: 24,
-                    backgroundColor: AppColors.primaryGreen,
-                    child: IconButton(
-                      icon: const Icon(Icons.send, color: Colors.white),
-                      onPressed: _sendMessage,
+                  );
+                },
+              ),
+            )
+          else
+            Expanded(
+              child: ListView.builder(
+                controller: _scrollController,
+                padding: const EdgeInsets.all(16),
+                itemCount: _messages.length,
+                itemBuilder: (context, index) {
+                  final msg = _messages[index];
+                  final isMe = msg['isMe'];
+                  final isRead = msg['isRead'] ?? false;
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 16.0),
+                    child: _buildMessageBubble(
+                      text: msg['text'] ?? '',
+                      time: msg['time'],
+                      isMe: isMe,
+                      isRead: isRead,
+                      attachment: msg['type'] == 'FILE' ? msg['attachment'] : null,
                     ),
+                  );
+                },
+              ),
+            ),
+          if (_roomStatus != 'REQUESTED' && _roomId != null)
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, -5),
                   ),
                 ],
               ),
+              child: SafeArea(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).inputDecorationTheme.fillColor ?? Theme.of(context).scaffoldBackgroundColor,
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: Row(
+                          children: [
+                            IconButton(
+                              icon: Icon(Icons.attach_file, color: Theme.of(context).hintColor),
+                              onPressed: _roomStatus == 'ACCEPTED' && !_isUploadingFile ? _pickAndSendFile : null,
+                            ),
+                            Expanded(
+                              child: TextField(
+                                controller: _messageController,
+                                decoration: InputDecoration(
+                                  hintText: _roomStatus == 'ACCEPTED' ? 'Type a message...' : 'Chat is not active',
+                                  border: InputBorder.none,
+                                ),
+                                enabled: _roomStatus == 'ACCEPTED',
+                                onSubmitted: (_) => _sendMessage(),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    CircleAvatar(
+                      radius: 24,
+                      backgroundColor: _roomStatus == 'ACCEPTED' ? Theme.of(context).colorScheme.primary : Theme.of(context).disabledColor,
+                      child: IconButton(
+                        icon: Icon(Icons.send, color: Theme.of(context).colorScheme.onPrimary),
+                        onPressed: _roomStatus == 'ACCEPTED' ? _sendMessage : null,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
+        ],
+      ),
     );
   }
 }

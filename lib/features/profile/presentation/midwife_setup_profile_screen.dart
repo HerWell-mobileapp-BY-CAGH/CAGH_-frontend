@@ -3,6 +3,7 @@ import 'package:cagh_frontend/features/consultations/data/repositories/midwife_r
 import 'package:cagh_frontend/features/consultations/data/services/midwife_api_service.dart';
 import 'package:cagh_frontend/features/home/presentation/midwife/midwife_home_screen.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 class MidwifeSetupProfileScreen extends StatefulWidget {
   const MidwifeSetupProfileScreen({super.key});
@@ -117,13 +118,13 @@ class _MidwifeSetupProfileScreenState extends State<MidwifeSetupProfileScreen> {
                 ),
                 validator: (value) => value == null || value.isEmpty ? 'Required field' : null,
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
               
               TextFormField(
                 controller: _experienceController,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Years of Experience',
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.of(context)!.yearsOfExperience,
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.work_history),
                 ),

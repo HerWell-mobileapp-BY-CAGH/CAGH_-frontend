@@ -1,3 +1,4 @@
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'otp_verification_screen.dart';
 import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
@@ -42,11 +43,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   children: [
                     IconButton(
                       onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.arrow_back, color: AppColors.accentYellow),
+                      icon: Icon(Icons.arrow_back, color: AppColors.accentYellow),
                     ),
                     Expanded(
                       child: Text(
-                        LanguageService.tr(context, 'forgot_password'),
+                        AppLocalizations.of(context)!.forgotPassword,
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           color: Colors.white,
@@ -69,7 +70,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    LanguageService.tr(context, 'reset_password'),
+                    AppLocalizations.of(context)!.resetPassword,
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w700,
@@ -87,22 +88,22 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       color: Colors.grey.shade700,
                     ),
                   ),
-                  const SizedBox(height: 36),
+                  SizedBox(height: 36),
 
                   Text(
-                    LanguageService.tr(context, 'email_phone'),
+                    AppLocalizations.of(context)!.emailPhone,
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                       color: AppColors.textGray,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   TextField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
-                      hintText: LanguageService.tr(context, 'enter_contact_details'),
+                      hintText: AppLocalizations.of(context)!.enterContactDetails,
                       hintStyle: TextStyle(color: Colors.grey.shade500),
                       filled: true,
                       fillColor: Colors.white,
@@ -137,7 +138,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               final email = _emailController.text.trim();
                               
                               setState(() {
-                                _emailError = email.isEmpty ? LanguageService.tr(context, 'val_email_phone_req') : null;
+                                _emailError = email.isEmpty ? AppLocalizations.of(context)!.valEmailPhoneReq : null;
                               });
 
                               if (_emailError != null) {
@@ -195,7 +196,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               ),
                             )
                           : Text(
-                              LanguageService.tr(context, 'send_code'),
+                              AppLocalizations.of(context)!.sendCode,
                               style: const TextStyle(
                                 fontSize: 17,
                                 fontWeight: FontWeight.w600,

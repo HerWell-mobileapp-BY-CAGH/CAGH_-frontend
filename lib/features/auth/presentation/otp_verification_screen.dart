@@ -1,3 +1,4 @@
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,6 +9,7 @@ import 'package:cagh_frontend/features/auth/presentation/user/user_login_screen.
 import 'package:cagh_frontend/shared/widgets/custom_snackbar.dart';
 import 'create_new_password_screen.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 class OtpVerificationScreen extends StatefulWidget {
   final String contact;
@@ -114,11 +116,11 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                   children: [
                     IconButton(
                       onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.arrow_back, color: AppColors.accentYellow),
+                      icon: Icon(Icons.arrow_back, color: AppColors.accentYellow),
                     ),
                     Expanded(
                       child: Text(
-                        LanguageService.tr(context, 'verify_code'),
+                        AppLocalizations.of(context)!.verifyCode,
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           color: Colors.white,
@@ -145,9 +147,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                     size: 64,
                     color: AppColors.primaryGreen,
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
                   Text(
-                    LanguageService.tr(context, 'enter_code'),
+                    AppLocalizations.of(context)!.enterCode,
                     style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w700,
@@ -158,7 +160,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
                   // ── OTP Send state feedback ────────────────────────────
                   if (_isSending)
-                    const Padding(
+                    Padding(
                       padding: EdgeInsets.only(bottom: 16),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -171,7 +173,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                             ),
                           ),
                           SizedBox(width: 10),
-                          Text('Sending verification code…',
+                          Text(AppLocalizations.of(context)!.sendingVerificationCode,
                               style: TextStyle(color: AppColors.primaryGreen, fontSize: 13)),
                         ],
                       ),
@@ -189,12 +191,12 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
-                            children: const [
+                            children: [
                               Icon(Icons.info_outline, color: AppColors.deepOrange, size: 18),
                               SizedBox(width: 8),
                               Expanded(
                                 child: Text(
-                                  'Check your email inbox — the code was likely sent.',
+                                  AppLocalizations.of(context)!.checkEmailInbox,
                                   style: TextStyle(
                                     color: AppColors.deepOrange,
                                     fontSize: 13,
@@ -204,9 +206,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 6),
-                          const Text(
-                            'Enter the 6-digit code from your email below. If you did not receive it, tap Resend after the timer expires.',
+                          SizedBox(height: 6),
+                          Text(
+                            AppLocalizations.of(context)!.enter6DigitCode,
                             style: TextStyle(color: AppColors.brownText, fontSize: 12.5),
                           ),
                         ],
@@ -297,7 +299,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                         await _autoSendOtp();
                       },
                       child: Text(
-                        LanguageService.tr(context, 'resend_code'),
+                        AppLocalizations.of(context)!.resendCode,
                         style: const TextStyle(
                           color: AppColors.primaryGreen,
                           fontWeight: FontWeight.w600,
@@ -401,7 +403,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                               ),
                             )
                           : Text(
-                              '${LanguageService.tr(context, 'verify')}  →',
+                              '${AppLocalizations.of(context)!.verify}  →',
                               style: const TextStyle(
                                 fontSize: 17,
                                 fontWeight: FontWeight.w600,

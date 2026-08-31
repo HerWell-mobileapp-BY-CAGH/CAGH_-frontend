@@ -38,6 +38,12 @@ class FloatingGlassNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgContainerColor = isDark ? Colors.grey.shade900.withValues(alpha: 0.85) : Colors.white;
+    final borderColor = isDark ? Colors.grey.shade800 : Colors.grey.shade300;
+    final unselectedIconColor = isDark ? Colors.white70 : Colors.black87;
+    final unselectedTextColor = isDark ? Colors.white70 : Colors.black87;
+
     return SafeArea(
       top: false,
       child: Padding(
@@ -50,10 +56,10 @@ class FloatingGlassNavBar extends StatelessWidget {
               height: 66,
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: bgContainerColor,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: Colors.grey.shade300,
+                  color: borderColor,
                   width: 1.0,
                 ),
                 boxShadow: [
@@ -96,7 +102,7 @@ class FloatingGlassNavBar extends StatelessWidget {
                                   Icon(
                                     isSelected ? (item.activeIcon ?? item.icon) : item.icon,
                                     size: 20,
-                                    color: isSelected ? Colors.white : Colors.black87,
+                                    color: isSelected ? Colors.white : unselectedIconColor,
                                   ),
                                   if (item.showBadge)
                                     Positioned(
@@ -119,7 +125,7 @@ class FloatingGlassNavBar extends StatelessWidget {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
-                                  color: isSelected ? Colors.white : Colors.black87,
+                                  color: isSelected ? Colors.white : unselectedTextColor,
                                   fontSize: 10,
                                   fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                                 ),

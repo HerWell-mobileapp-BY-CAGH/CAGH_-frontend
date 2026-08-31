@@ -11,6 +11,7 @@ import 'package:cagh_frontend/shared/models/appointment.dart';
 import 'package:cagh_frontend/core/services/ringtone_service.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
 import 'package:cagh_frontend/core/utils/app_logger.dart';
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 class CallKitService {
   static final CallKitService _instance = CallKitService._internal();
@@ -204,7 +205,7 @@ class CallKitService {
       type: 0,
       duration: 30000,
       extra: extra,
-      android: const AndroidParams(
+      android: AndroidParams(
         isCustomNotification: false,
         isShowLogo: false,
         ringtonePath: 'system_ringtone_default',

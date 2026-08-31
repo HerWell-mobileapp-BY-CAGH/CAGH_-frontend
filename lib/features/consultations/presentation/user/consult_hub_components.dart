@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cagh_frontend/shared/models/appointment.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 String formatAppointmentDateTime(String dateStr, String startTimeStr) {
   if (dateStr.isEmpty) return '';
@@ -142,9 +143,9 @@ void showRescheduleModal(BuildContext context, Appointment apt) {
                   'With ${apt.midwifeName ?? 'Midwife'}',
                   style: const TextStyle(color: Color(0xFF64748B), fontSize: 14),
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
 
-                const Text('Select Date', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                Text(AppLocalizations.of(context)!.selectDate, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                 const SizedBox(height: 8),
                 GestureDetector(
                   onTap: () async {
@@ -181,9 +182,9 @@ void showRescheduleModal(BuildContext context, Appointment apt) {
                   ),
                 ),
 
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
 
-                const Text('Select Time Slot', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                Text(AppLocalizations.of(context)!.selectTimeSlot, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                 const SizedBox(height: 10),
                 Wrap(
                   spacing: 10,
@@ -228,7 +229,7 @@ void showRescheduleModal(BuildContext context, Appointment apt) {
                       backgroundColor: AppColors.primaryGreen,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                     ),
-                    child: const Text('Confirm Reschedule', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                    child: Text(AppLocalizations.of(context)!.confirmReschedule, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
                   ),
                 ),
               ],
@@ -256,19 +257,25 @@ void showDetailsModal(
     builder: (context) {
       final isCancelable = apt.status == AppointmentStatus.pending || apt.status == AppointmentStatus.confirmed;
       String consultType = apt.appointmentType;
-      if (consultType == 'VIRTUAL_VOICE') consultType = 'Voice Call';
-      if (consultType == 'IN_PERSON') consultType = 'In-person';
+      if (consultType == 'VIRTUAL_VOICE' || consultType == 'VIRTUAL_VIDEO') consultType = 'Voice Call';
+      if (consultType == 'IN_PERSON') consultType = AppLocalizations.of(context)!.inPerson;
 
-      return Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+      return SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.only(
+            left: 24,
+            right: 24,
+            top: 24,
+            bottom: 24 + MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Consultation Details', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primaryGreen)),
+                Text(AppLocalizations.of(context)!.consultationDetails, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primaryGreen)),
                 IconButton(icon: const Icon(Icons.close, color: Colors.grey), onPressed: () => Navigator.pop(context)),
               ],
             ),
@@ -315,7 +322,7 @@ void showDetailsModal(
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                           padding: const EdgeInsets.symmetric(vertical: 10),
                         ),
-                        child: const Text('Cancel Request', style: TextStyle(color: AppColors.errorRed, fontWeight: FontWeight.bold)),
+                        child: Text(AppLocalizations.of(context)!.cancelRequest, style: TextStyle(color: AppColors.errorRed, fontWeight: FontWeight.bold)),
                       ),
                     ),
                 ],
@@ -323,6 +330,7 @@ void showDetailsModal(
               const SizedBox(height: 10),
             ],
           ],
+        ),
         ),
       );
     },
@@ -336,17 +344,17 @@ void showCancelConfirmDialog(BuildContext context, Appointment apt, VoidCallback
       return AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
-          children: const [
+          children: [
             Icon(Icons.warning_amber_rounded, color: AppColors.errorRed, size: 24),
             SizedBox(width: 10),
-            Text('Cancel Appointment', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+            Text(AppLocalizations.of(context)!.cancelAppointment, style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
           ],
         ),
-        content: const Text('Are you sure you want to cancel this appointment?'),
+        content: Text('Are you sure you want to cancel this appointment?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Keep Appointment', style: TextStyle(color: AppColors.primaryGreen)),
+            child: Text(AppLocalizations.of(context)!.keepAppointment, style: TextStyle(color: AppColors.primaryGreen)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -357,7 +365,7 @@ void showCancelConfirmDialog(BuildContext context, Appointment apt, VoidCallback
               backgroundColor: AppColors.errorRed,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
             ),
-            child: const Text('Yes, Cancel', style: TextStyle(color: Colors.white)),
+            child: Text(AppLocalizations.of(context)!.yesCancel, style: TextStyle(color: Colors.white)),
           ),
         ],
       );
@@ -366,14 +374,17 @@ void showCancelConfirmDialog(BuildContext context, Appointment apt, VoidCallback
 }
 
 Widget buildMinimalTabBar({
+  required BuildContext context,
   required int selectedIndex,
   required ValueChanged<int> onTabSelected,
 }) {
   final tabs = ['Requests', 'Upcoming', 'Past'];
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+  
   return Container(
-    decoration: const BoxDecoration(
+    decoration: BoxDecoration(
       border: Border(
-        bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1),
+        bottom: BorderSide(color: isDark ? Colors.grey.shade800 : const Color(0xFFE2E8F0), width: 1),
       ),
     ),
     child: Row(
@@ -399,7 +410,7 @@ Widget buildMinimalTabBar({
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                  color: isSelected ? AppColors.primaryGreen : const Color(0xFF64748B),
+                  color: isSelected ? AppColors.primaryGreen : (isDark ? Colors.grey.shade400 : const Color(0xFF64748B)),
                 ),
               ),
             ),
@@ -429,12 +440,14 @@ Widget buildAppointmentCard(
       ? apt.midwifeName!.trim()
       : 'Midwife';
 
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+
   return Container(
     margin: const EdgeInsets.only(bottom: 12),
     decoration: BoxDecoration(
-      color: Colors.white,
+      color: isDark ? Colors.grey.shade900 : Colors.white,
       borderRadius: BorderRadius.circular(16),
-      border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+      border: Border.all(color: isDark ? Colors.grey.shade800 : const Color(0xFFE2E8F0), width: 1),
       boxShadow: [
         BoxShadow(
           color: Colors.black.withValues(alpha: 0.03),
@@ -474,16 +487,16 @@ Widget buildAppointmentCard(
                   children: [
                     Text(
                       midwifeDisplayName,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF0F172A),
+                        color: isDark ? Colors.white : const Color(0xFF0F172A),
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 2),
-                    const Text(
-                      'Certified Midwife',
+                    SizedBox(height: 2),
+                    Text(
+                      AppLocalizations.of(context)!.certifiedMidwife,
                       style: TextStyle(
                         fontSize: 12,
                         color: Color(0xFF64748B),
@@ -503,10 +516,10 @@ Widget buildAppointmentCard(
               const SizedBox(width: 6),
               Text(
                 formattedDateTime,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF334155),
+                  color: isDark ? Colors.grey.shade300 : const Color(0xFF334155),
                 ),
               ),
             ],

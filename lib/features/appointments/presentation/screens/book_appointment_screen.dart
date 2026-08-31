@@ -5,6 +5,7 @@ import 'package:cagh_frontend/shared/models/midwife_profile.dart';
 import 'package:cagh_frontend/shared/models/time_slots_response.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 class BookAppointmentScreen extends StatefulWidget {
   final MidwifeProfile midwife;
@@ -40,7 +41,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
     if (widget.midwife.supportsVoiceCall) {
       _consultationType = 'Voice Call';
     } else if (widget.midwife.supportsInPerson) {
-      _consultationType = 'In-person';
+      _consultationType = AppLocalizations.of(context)!.inPerson;
     } else {
       _consultationType = 'Voice Call';
     }
@@ -85,7 +86,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
   Future<void> _confirmBooking() async {
     if (_selectedSlotId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a time slot first.')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.selectTimeSlotFirst)),
       );
       return;
     }
@@ -101,10 +102,10 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
       final slot = [...?_timeSlots?.morningSlots, ...?_timeSlots?.afternoonSlots, ...?_timeSlots?.eveningSlots]
           .firstWhere((s) => s.startTime == _selectedSlotTime, orElse: () => throw Exception('Slot not found'));
           
-      String apptType = 'VIRTUAL_VIDEO';
+      String apptType = 'VIRTUAL_VOICE';
       if (_consultationType == 'Voice Call') {
         apptType = 'VIRTUAL_VOICE';
-      } else if (_consultationType == 'In-person') {
+      } else if (_consultationType == AppLocalizations.of(context)!.inPerson) {
         apptType = 'IN_PERSON';
       }
 
@@ -178,10 +179,10 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                     Navigator.popUntil(context, (route) => route.isFirst);
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF315E26),
+                    backgroundColor: Color(0xFF315E26),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
                   ),
-                  child: const Text('Return to Dashboard', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  child: Text(AppLocalizations.of(context)!.returnToDashboard, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
@@ -231,7 +232,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
           children: [
             // CONSULTATION TYPE Section
             Text(
-              'CONSULTATION TYPE',
+              AppLocalizations.of(context)!.consultationType,
               style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: Colors.grey.shade600),
             ),
             const SizedBox(height: 12),
@@ -262,9 +263,9 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                   if (widget.midwife.supportsVoiceCall)
                     _buildConsultationTypeCard('Voice Call', Icons.call),
                   if (widget.midwife.supportsVoiceCall && widget.midwife.supportsInPerson)
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12),
                   if (widget.midwife.supportsInPerson)
-                    _buildConsultationTypeCard('In-person', Icons.home_outlined),
+                    _buildConsultationTypeCard(AppLocalizations.of(context)!.inPerson, Icons.home_outlined),
                 ],
               ),
             const SizedBox(height: 24),
@@ -318,11 +319,11 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
 
             // AVAILABLE TIMES Section
             Text(
-              'AVAILABLE TIMES',
+              AppLocalizations.of(context)!.availableTimes,
               style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: Colors.grey.shade600),
             ),
             const SizedBox(height: 16),
@@ -344,11 +345,11 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
               )
             else ...[
               if (morningSlots.isNotEmpty) ...[
-                const Row(
+                Row(
                   children: [
                     Icon(Icons.wb_sunny_outlined, color: Color(0xFF315E26), size: 16),
                     SizedBox(width: 6),
-                    Text('Morning', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF315E26))),
+                    Text(AppLocalizations.of(context)!.morning, style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF315E26))),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -357,14 +358,14 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                   runSpacing: 12,
                   children: morningSlots.map((slot) => _buildSlotChip(slot.id, slot.startTime, slot.displayTime, slot.isAvailable)).toList(),
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
               ],
               if (afternoonSlots.isNotEmpty) ...[
-                const Row(
+                Row(
                   children: [
                     Icon(Icons.wb_sunny_outlined, color: Color(0xFF315E26), size: 16),
                     SizedBox(width: 6),
-                    Text('Afternoon', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF315E26))),
+                    Text(AppLocalizations.of(context)!.afternoon, style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF315E26))),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -373,14 +374,14 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                   runSpacing: 12,
                   children: afternoonSlots.map((slot) => _buildSlotChip(slot.id, slot.startTime, slot.displayTime, slot.isAvailable)).toList(),
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
               ],
               if (eveningSlots.isNotEmpty) ...[
-                const Row(
+                Row(
                   children: [
                     Icon(Icons.nights_stay_outlined, color: Color(0xFF315E26), size: 16),
                     SizedBox(width: 6),
-                    Text('Evening', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF315E26))),
+                    Text(AppLocalizations.of(context)!.evening, style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF315E26))),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -394,17 +395,17 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
             ],
 
             // Patient Notes Section
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Text(
-              'REASON FOR VISIT',
+              AppLocalizations.of(context)!.reasonForVisit,
               style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: Colors.grey.shade600),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             TextField(
               controller: _reasonController,
               maxLines: 3,
               decoration: InputDecoration(
-                hintText: 'Describe your symptoms or reason for the consultation...',
+                hintText: AppLocalizations.of(context)!.describeSymptoms,
                 hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
                 filled: true,
                 fillColor: Colors.white,
@@ -432,14 +433,14 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: Offset(0, 4)),
                 ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Booking Summary',
+                  Text(
+                    AppLocalizations.of(context)!.bookingSummary,
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A)),
                   ),
                   const SizedBox(height: 16),
@@ -456,12 +457,12 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                           backgroundColor: const Color(0xFFE8F5E9),
                           backgroundImage: widget.midwife.avatarUrl != null ? NetworkImage(widget.midwife.avatarUrl!) : null,
                         ),
-                        const SizedBox(width: 12),
+                        SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Your Midwife', style: TextStyle(fontSize: 10, color: Colors.grey.shade600, fontWeight: FontWeight.bold)),
+                              Text(AppLocalizations.of(context)!.yourMidwife, style: TextStyle(fontSize: 10, color: Colors.grey.shade600, fontWeight: FontWeight.bold)),
                               Text(widget.midwife.fullName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
                               Text(widget.midwife.specialty, style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
                             ],
@@ -470,30 +471,30 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Consultation Fee', style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+                      Text(AppLocalizations.of(context)!.consultationFee, style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
                       Text(widget.midwife.consultationFee, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Service Type', style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+                      Text(AppLocalizations.of(context)!.serviceType, style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
                       Text(_consultationType, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                     ],
                   ),
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.symmetric(vertical: 12.0),
                     child: Divider(),
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Total Amount', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                      Text(AppLocalizations.of(context)!.totalAmount, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
                       Text(
                         widget.midwife.consultationFee,
                         style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF315E26)),
@@ -506,8 +507,8 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                     height: 52,
                     child: ElevatedButton.icon(
                       onPressed: _confirmBooking,
-                      icon: const Icon(Icons.calendar_today, color: Colors.white, size: 18),
-                      label: const Text('Confirm Booking', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
+                      icon: Icon(Icons.calendar_today, color: Colors.white, size: 18),
+                      label: Text(AppLocalizations.of(context)!.confirmBooking, style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF315E26),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),

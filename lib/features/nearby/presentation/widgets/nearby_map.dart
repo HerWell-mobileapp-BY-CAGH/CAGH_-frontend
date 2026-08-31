@@ -3,6 +3,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../domain/entities/healthcare_facility.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 class NearbyMap extends StatefulWidget {
   final Position userLocation;
@@ -48,7 +49,7 @@ class _NearbyMapState extends State<NearbyMap> {
     for (var facility in widget.facilities) {
       // Choose hue based on type (simple approximation since custom icons require async loading)
       double hue;
-      if (facility.type == 'Emergency') {
+      if (facility.type == AppLocalizations.of(context)!.emergency) {
         hue = BitmapDescriptor.hueRed;
       } else if (facility.type == 'Hospital') {
         hue = BitmapDescriptor.hueAzure;

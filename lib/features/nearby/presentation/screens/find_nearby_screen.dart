@@ -7,6 +7,7 @@ import '../widgets/facility_card.dart';
 import '../widgets/location_permission_view.dart';
 import '../widgets/nearby_empty_state.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 class FindNearbyScreen extends ConsumerStatefulWidget {
   final String initialCategory;
@@ -46,8 +47,8 @@ class _FindNearbyScreenState extends ConsumerState<FindNearbyScreen> {
         apiType = 'Midwife';
       } else if (_currentUiCategory == 'Pharmacies') {
         apiType = 'Pharmacy';
-      } else if (_currentUiCategory == 'Emergency') {
-        apiType = 'Emergency';
+      } else if (_currentUiCategory == AppLocalizations.of(context)!.emergency) {
+        apiType = AppLocalizations.of(context)!.emergency;
       }
     }
     ref.read(nearbyStateProvider.notifier).fetchNearbyFacilities(type: apiType ?? 'All');
@@ -79,8 +80,8 @@ class _FindNearbyScreenState extends ConsumerState<FindNearbyScreen> {
         apiType = 'Midwife';
       } else if (category == 'Pharmacies') {
         apiType = 'Pharmacy';
-      } else if (category == 'Emergency') {
-        apiType = 'Emergency';
+      } else if (category == AppLocalizations.of(context)!.emergency) {
+        apiType = AppLocalizations.of(context)!.emergency;
       }
     }
     ref.read(nearbyStateProvider.notifier).updateFilters(type: apiType ?? 'All');
@@ -91,11 +92,11 @@ class _FindNearbyScreenState extends ConsumerState<FindNearbyScreen> {
     final state = ref.watch(nearbyStateProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundOffWhite,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: AppColors.primaryGreen,
         elevation: 0,
-        title: const Text('Find Nearby', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Text(AppLocalizations.of(context)!.findNearby, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
@@ -161,10 +162,10 @@ class _FindNearbyScreenState extends ConsumerState<FindNearbyScreen> {
             const Icon(Icons.error_outline, size: 48, color: Colors.red),
             const SizedBox(height: 16),
             Text(state.message, textAlign: TextAlign.center, style: const TextStyle(color: Colors.red)),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             ElevatedButton(
               onPressed: () => ref.read(nearbyStateProvider.notifier).fetchNearbyFacilities(),
-              child: const Text('Retry'),
+              child: Text(AppLocalizations.of(context)!.retry),
             )
           ],
         ),
@@ -188,8 +189,8 @@ class _FindNearbyScreenState extends ConsumerState<FindNearbyScreen> {
       uiCategory = 'Midwives';
     } else if (type == 'Pharmacy') {
       uiCategory = 'Pharmacies';
-    } else if (type == 'Emergency') {
-      uiCategory = 'Emergency';
+    } else if (type == AppLocalizations.of(context)!.emergency) {
+      uiCategory = AppLocalizations.of(context)!.emergency;
     }
 
     return Column(

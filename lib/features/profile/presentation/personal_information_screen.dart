@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 class PersonalInformationScreen extends StatefulWidget {
   const PersonalInformationScreen({super.key});
@@ -14,7 +15,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
   String _dateOfBirth = 'Loading...';
   String _phoneNumber = 'Loading...';
   String _emailAddress = 'Loading...';
-  final String _memberSince = 'Bloom Member since 2026';
+  String _memberSince = '';
 
   int _selectedAvatarIndex = 0;
   final List<Map<String, dynamic>> _avatarOptions = [
@@ -59,7 +60,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
   void _showChangePhotoModal() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
@@ -109,8 +110,8 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                               ),
                             );
                           },
-                          icon: const Icon(Icons.camera_alt_outlined, color: AppColors.primaryGreen),
-                          label: const Text('Take Photo', style: TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.bold)),
+                          icon: Icon(Icons.camera_alt_outlined, color: AppColors.primaryGreen),
+                          label: Text(AppLocalizations.of(context)!.takePhoto, style: TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.bold)),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             side: const BorderSide(color: AppColors.primaryGreen),
@@ -134,8 +135,8 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                               ),
                             );
                           },
-                          icon: const Icon(Icons.photo_library_outlined, color: AppColors.primaryGreen),
-                          label: const Text('From Gallery', style: TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.bold)),
+                          icon: Icon(Icons.photo_library_outlined, color: AppColors.primaryGreen),
+                          label: Text(AppLocalizations.of(context)!.fromGallery, style: TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.bold)),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             side: const BorderSide(color: AppColors.primaryGreen),
@@ -146,10 +147,10 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                     ],
                   ),
 
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
 
-                  const Text(
-                    'CHOOSE AVATAR STYLE',
+                  Text(
+                    AppLocalizations.of(context)!.chooseAvatarStyle,
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
@@ -246,6 +247,13 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
         final u = localData['user'] is Map ? localData['user'] : localData;
         final profile = u['profile'] is Map ? u['profile'] : (localData['profile'] is Map ? localData['profile'] : {});
         
+        if (u['date_joined'] != null) {
+          try {
+            final date = DateTime.parse(u['date_joined'].toString());
+            _memberSince = 'Bloom Member since ${date.year}';
+          } catch (_) {}
+        }
+        
         final fName = profile['first_name']?.toString() ?? u['first_name']?.toString() ?? localData['first_name']?.toString() ?? '';
         final lName = profile['last_name']?.toString() ?? u['last_name']?.toString() ?? localData['last_name']?.toString() ?? '';
         final cFullName = profile['full_name']?.toString() ?? u['full_name']?.toString() ?? localData['full_name']?.toString() ?? '';
@@ -312,6 +320,12 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
         } else if (_dateOfBirth == 'Loading...') {
           _dateOfBirth = 'Not provided';
         }
+        if (u['date_joined'] != null) {
+          try {
+            final date = DateTime.parse(u['date_joined'].toString());
+            _memberSince = 'Bloom Member since ${date.year}';
+          } catch (_) {}
+        }
       });
     }
   }
@@ -325,7 +339,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
@@ -347,8 +361,8 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          'Edit Personal Profile',
+                        Text(
+                          AppLocalizations.of(context)!.editPersonalProfile,
                           style: TextStyle(
                             fontSize: 19,
                             fontWeight: FontWeight.bold,
@@ -366,13 +380,11 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                     // Full Name Field
                     TextField(
                       controller: nameController,
-                      readOnly: true,
                       decoration: InputDecoration(
                         labelText: 'Full Name',
                         prefixIcon: const Icon(Icons.badge_outlined, color: AppColors.primaryGreen),
-                        suffixIcon: const Icon(Icons.lock_outline, size: 18, color: Colors.grey),
                         filled: true,
-                        fillColor: Colors.grey.shade100,
+                        fillColor: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade800 : Colors.grey.shade100,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
                           borderSide: const BorderSide(color: AppColors.mintLight),
@@ -420,7 +432,9 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                         decoration: BoxDecoration(
-                          color: AppColors.backgroundSoftMintAlt,
+                          color: Theme.of(context).brightness == Brightness.dark 
+                              ? Colors.grey.shade800 
+                              : AppColors.backgroundSoftMintAlt,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(color: Colors.grey.shade300),
                         ),
@@ -433,15 +447,15 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                               children: [
                                 Text(
                                   'Date of Birth',
-                                  style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                                  style: TextStyle(fontSize: 11, color: Theme.of(context).textTheme.bodySmall?.color),
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
                                   selectedDob,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 14.5,
                                     fontWeight: FontWeight.bold,
-                                    color: AppColors.textDark,
+                                    color: Theme.of(context).textTheme.bodyLarge?.color,
                                   ),
                                 ),
                               ],
@@ -457,13 +471,11 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                     TextField(
                       controller: phoneController,
                       keyboardType: TextInputType.phone,
-                      readOnly: true,
                       decoration: InputDecoration(
                         labelText: 'Phone Number',
                         prefixIcon: const Icon(Icons.phone_outlined, color: AppColors.primaryGreen),
-                        suffixIcon: const Icon(Icons.lock_outline, size: 18, color: Colors.grey),
                         filled: true,
-                        fillColor: Colors.grey.shade100,
+                        fillColor: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade800 : Colors.grey.shade100,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
                           borderSide: const BorderSide(color: AppColors.mintLight),
@@ -487,7 +499,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                         prefixIcon: const Icon(Icons.email_outlined, color: AppColors.primaryGreen),
                         suffixIcon: const Icon(Icons.lock_outline, size: 18, color: Colors.grey),
                         filled: true,
-                        fillColor: Colors.grey.shade100,
+                        fillColor: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade800 : Colors.grey.shade100,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
                           borderSide: const BorderSide(color: AppColors.mintLight),
@@ -506,26 +518,18 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                       width: double.infinity,
                       height: 50,
                       child: ElevatedButton(
-                        onPressed: () {
+                        onPressed: () async {
                           final updatedName = nameController.text.trim();
                           final updatedPhone = phoneController.text.trim();
                           final updatedEmail = emailController.text.trim();
 
                           if (updatedName.isNotEmpty) {
-                            setState(() {
-                              _fullName = updatedName;
-                              _phoneNumber = updatedPhone;
-                              _emailAddress = updatedEmail;
-                              _dateOfBirth = selectedDob;
-                            });
-
                             final nameParts = updatedName.trim().split(' ');
                             final firstName = nameParts.first;
                             final lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
 
-                            AuthService.updateUserProfile({
+                            final res = await AuthService.updateUserProfile({
                               'phone_number': updatedPhone,
-                              'email': updatedEmail,
                               'profile': {
                                 'first_name': firstName,
                                 'last_name': lastName,
@@ -533,14 +537,30 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                               }
                             });
 
-                            Navigator.pop(context);
-
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Personal profile updated successfully!'),
-                                backgroundColor: AppColors.primaryGreen,
-                              ),
-                            );
+                            if (mounted) {
+                              Navigator.pop(context);
+                              if (res.success) {
+                                setState(() {
+                                  _fullName = updatedName;
+                                  _phoneNumber = updatedPhone;
+                                  _dateOfBirth = selectedDob;
+                                });
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Personal profile updated successfully!'),
+                                    backgroundColor: AppColors.primaryGreen,
+                                  ),
+                                );
+                                _loadUserData(); // refresh to get true source
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(res.message ?? 'Failed to update profile'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                            }
                           }
                         },
                         style: ElevatedButton.styleFrom(
@@ -573,7 +593,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: AppColors.primaryGreen,
         elevation: 0,
@@ -664,16 +684,16 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 4),
-
-                  // Subtitle Member since
-                  Text(
-                    _memberSince,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade600,
+                  if (_memberSince.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      _memberSince,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Theme.of(context).textTheme.bodySmall?.color,
+                      ),
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),
@@ -765,9 +785,9 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: Colors.grey.shade200),
+          border: Border.all(color: Theme.of(context).dividerColor),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.03),
@@ -804,13 +824,18 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                       color: Colors.grey.shade600,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 12),
+                  if (_memberSince.isNotEmpty)
+                    Text(
+                      _memberSince,
+                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                    ),
                   Text(
                     value,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.textDark,
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                     ),
                   ),
                 ],

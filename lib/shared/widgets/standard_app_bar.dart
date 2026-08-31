@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cagh_frontend/shared/widgets/globe_language_picker.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
+import 'package:cagh_frontend/features/onboarding/presentation/user_type_selection_screen.dart';
 
 class StandardAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -8,6 +9,7 @@ class StandardAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool showLanguagePicker;
   final List<Widget>? actions;
   final Color? backgroundColor;
+  final VoidCallback? onBack;
 
   const StandardAppBar({
     super.key,
@@ -16,6 +18,7 @@ class StandardAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.showLanguagePicker = false,
     this.actions,
     this.backgroundColor,
+    this.onBack,
   });
 
   @override
@@ -31,7 +34,20 @@ class StandardAppBar extends StatelessWidget implements PreferredSizeWidget {
       leading: showBackButton
           ? IconButton(
               icon: Icon(Icons.arrow_back, color: iconColor),
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () {
+                if (onBack != null) {
+                  onBack!();
+                } else if (Navigator.canPop(context)) {
+                  Navigator.of(context).pop();
+                } else {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const UserTypeSelectionScreen(),
+                    ),
+                  );
+                }
+              },
             )
           : null,
       title: Text(

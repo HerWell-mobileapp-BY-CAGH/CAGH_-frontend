@@ -4,11 +4,12 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../domain/entities/healthcare_facility.dart';
 import 'package:cagh_frontend/shared/constants/app_constants.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 class FacilityDetailsScreen extends StatelessWidget {
   final HealthcareFacility facility;
 
-  const FacilityDetailsScreen({super.key, required this.facility});
+  FacilityDetailsScreen({super.key, required this.facility});
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +18,7 @@ class FacilityDetailsScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: AppColors.primaryGreen,
         elevation: 0,
-        title: const Text('Facility Details', style: TextStyle(color: Colors.white)),
+        title: Text(AppLocalizations.of(context)!.facilityDetails, style: TextStyle(color: Colors.white)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
@@ -73,11 +74,11 @@ class FacilityDetailsScreen extends StatelessWidget {
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: Colors.blue.shade200),
                           ),
-                          child: const Row(
+                          child: Row(
                             children: [
                               Icon(Icons.verified, color: Colors.blue, size: 14),
                               SizedBox(width: 4),
-                              Text('Verified', style: TextStyle(color: Colors.blue, fontSize: 12, fontWeight: FontWeight.bold)),
+                              Text(AppLocalizations.of(context)!.verified, style: TextStyle(color: Colors.blue, fontSize: 12, fontWeight: FontWeight.bold)),
                             ],
                           ),
                         ),
@@ -131,13 +132,13 @@ class FacilityDetailsScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: Colors.red.shade200),
                       ),
-                      child: const Row(
+                      child: Row(
                         children: [
                           Icon(Icons.emergency, color: Colors.red),
                           SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              '24/7 Emergency Services Available',
+                              AppLocalizations.of(context)!.emergencyServicesAvailable,
                               style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
                             ),
                           ),
@@ -146,8 +147,8 @@ class FacilityDetailsScreen extends StatelessWidget {
                     ),
                   ],
 
-                  const SizedBox(height: 24),
-                  const Text('Services', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  SizedBox(height: 24),
+                  Text(AppLocalizations.of(context)!.services, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 12),
                   Wrap(
                     spacing: 8,
@@ -180,8 +181,8 @@ class FacilityDetailsScreen extends StatelessWidget {
                         final uri = Uri.parse(urlToLaunch);
                         launchUrl(uri, mode: LaunchMode.externalApplication);
                       },
-                      icon: const Icon(Icons.directions, color: Colors.white),
-                      label: const Text('Get Directions', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                      icon: Icon(Icons.directions, color: Colors.white),
+                      label: Text(AppLocalizations.of(context)!.getDirections, style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primaryGreen,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -199,8 +200,8 @@ class FacilityDetailsScreen extends StatelessWidget {
                           final uri = Uri.parse(phoneUrl);
                           launchUrl(uri);
                         },
-                        icon: const Icon(Icons.call, color: AppColors.primaryGreen),
-                        label: const Text('Call Facility', style: TextStyle(color: AppColors.primaryGreen, fontSize: 16, fontWeight: FontWeight.bold)),
+                        icon: Icon(Icons.call, color: AppColors.primaryGreen),
+                        label: Text(AppLocalizations.of(context)!.callFacility, style: TextStyle(color: AppColors.primaryGreen, fontSize: 16, fontWeight: FontWeight.bold)),
                         style: OutlinedButton.styleFrom(
                           side: const BorderSide(color: AppColors.primaryGreen),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

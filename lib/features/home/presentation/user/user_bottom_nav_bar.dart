@@ -1,3 +1,4 @@
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:cagh_frontend/core/services/language_service.dart';
 import 'package:cagh_frontend/shared/widgets/floating_glass_nav_bar.dart';
@@ -6,7 +7,7 @@ class UserBottomNavBar extends StatelessWidget {
   final int selectedIndex;
   final Function(int index)? onTabSelected;
 
-  const UserBottomNavBar({
+  UserBottomNavBar({
     super.key,
     this.selectedIndex = 1, // Default to Consult tab (1)
     this.onTabSelected,
@@ -18,27 +19,27 @@ class UserBottomNavBar extends StatelessWidget {
       FloatingNavBarItem(
         icon: Icons.home_outlined,
         activeIcon: Icons.home_rounded,
-        label: LanguageService.tr(context, 'home'),
+        label: AppLocalizations.of(context)!.home,
       ),
       FloatingNavBarItem(
         icon: Icons.medical_services_outlined,
         activeIcon: Icons.medical_services_rounded,
-        label: LanguageService.tr(context, 'consult'),
+        label: AppLocalizations.of(context)!.consult,
       ),
       FloatingNavBarItem(
         icon: Icons.menu_book_outlined,
         activeIcon: Icons.menu_book_rounded,
-        label: LanguageService.tr(context, 'learn'),
+        label: AppLocalizations.of(context)!.learn,
       ),
       FloatingNavBarItem(
         icon: Icons.location_on_outlined,
         activeIcon: Icons.location_on_rounded,
-        label: LanguageService.tr(context, 'ai_nearby'),
+        label: AppLocalizations.of(context)!.aiNearby,
       ),
       FloatingNavBarItem(
         icon: Icons.person_outline_rounded,
         activeIcon: Icons.person_rounded,
-        label: LanguageService.tr(context, 'profile'),
+        label: AppLocalizations.of(context)!.profile,
       ),
     ];
 

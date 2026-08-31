@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cagh_frontend/features/consultations/data/services/consultation_api_service.dart';
 import 'package:cagh_frontend/shared/models/appointment.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 class ConsultationSessionScreen extends StatefulWidget {
   final Map<String, dynamic> sessionData;
@@ -68,7 +69,7 @@ class _ConsultationSessionScreenState extends State<ConsultationSessionScreen> {
   Future<void> _completeSession() async {
     if (_summaryController.text.isEmpty || _diagnosisController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Summary and Diagnosis are required.'), backgroundColor: Colors.red),
+        SnackBar(content: Text(AppLocalizations.of(context)!.summaryAndDiagnosisRequired), backgroundColor: Colors.red),
       );
       return;
     }
@@ -97,7 +98,7 @@ class _ConsultationSessionScreenState extends State<ConsultationSessionScreen> {
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Consultation completed successfully!'), backgroundColor: Colors.green),
+          SnackBar(content: Text(AppLocalizations.of(context)!.consultationCompletedSuccessfully), backgroundColor: Colors.green),
         );
         Navigator.pop(context, true); // Return true to signal refresh
       }
@@ -128,7 +129,7 @@ class _ConsultationSessionScreenState extends State<ConsultationSessionScreen> {
         backgroundColor: AppColors.primaryGreen,
         title: Row(
           children: [
-            const Text('Consultation Session', style: TextStyle(color: Colors.white, fontSize: 18)),
+            Text(AppLocalizations.of(context)!.consultationSession, style: TextStyle(color: Colors.white, fontSize: 18)),
             const SizedBox(width: 12),
             if (_isSessionActive)
               Container(
@@ -165,13 +166,13 @@ class _ConsultationSessionScreenState extends State<ConsultationSessionScreen> {
                     backgroundColor: AppColors.lightGreen,
                     child: Icon(Icons.person, color: AppColors.primaryGreen, size: 34),
                   ),
-                  const SizedBox(width: 16),
+                  SizedBox(width: 16),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          widget.appointment.userFullName ?? 'Patient',
+                          widget.appointment.userFullName ?? AppLocalizations.of(context)!.patient,
                           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
                         ),
                         const SizedBox(height: 4),
@@ -185,13 +186,13 @@ class _ConsultationSessionScreenState extends State<ConsultationSessionScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
 
 
 
             // Completion Form
-            const Text(
-              'Consultation Report',
+            Text(
+              AppLocalizations.of(context)!.consultationReport,
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textDark),
             ),
             const SizedBox(height: 16),
@@ -229,7 +230,7 @@ class _ConsultationSessionScreenState extends State<ConsultationSessionScreen> {
                           });
                         },
                       ),
-                      const Text('Follow-up Required', style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text(AppLocalizations.of(context)!.followUpRequired, style: TextStyle(fontWeight: FontWeight.bold)),
                     ],
                   ),
                   if (_followUpRequired) ...[
@@ -279,9 +280,9 @@ class _ConsultationSessionScreenState extends State<ConsultationSessionScreen> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                 ),
                 child: _isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text(
-                        'Complete Consultation',
+                    ? CircularProgressIndicator(color: Colors.white)
+                    : Text(
+                        AppLocalizations.of(context)!.completeConsultation,
                         style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                       ),
               ),

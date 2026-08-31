@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../domain/entities/healthcare_facility.dart';
 import 'facility_card.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 class FacilityBottomSheet extends StatefulWidget {
   final List<HealthcareFacility> facilities;
@@ -75,8 +76,8 @@ class _FacilityBottomSheetState extends State<FacilityBottomSheet> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Nearby Facilities',
+                  Text(
+                    AppLocalizations.of(context)!.nearbyFacilities,
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,

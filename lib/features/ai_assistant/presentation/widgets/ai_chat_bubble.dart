@@ -13,6 +13,7 @@ class AiChatBubble extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isUser = message.sender == SenderType.user;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
@@ -23,7 +24,7 @@ class AiChatBubble extends ConsumerWidget {
           maxWidth: MediaQuery.of(context).size.width * 0.75,
         ),
         decoration: BoxDecoration(
-          color: isUser ? const Color(0xFF315E26) : const Color(0xFFF0F0F0),
+          color: isUser ? const Color(0xFF315E26) : (isDark ? Colors.grey.shade800 : const Color(0xFFF0F0F0)),
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(16),
             topRight: const Radius.circular(16),
@@ -43,7 +44,7 @@ class AiChatBubble extends ConsumerWidget {
                     Icon(
                       Icons.attach_file,
                       size: 16,
-                      color: isUser ? Colors.white70 : Colors.black54,
+                      color: isUser ? Colors.white70 : (isDark ? Colors.white70 : Colors.black54),
                     ),
                     const SizedBox(width: 4),
                     Flexible(
@@ -51,7 +52,7 @@ class AiChatBubble extends ConsumerWidget {
                         message.attachmentPath!.split('/').last,
                         style: TextStyle(
                           fontSize: 12,
-                          color: isUser ? Colors.white : Colors.black87,
+                          color: isUser ? Colors.white : (isDark ? Colors.white : Colors.black87),
                           fontStyle: FontStyle.italic,
                         ),
                         overflow: TextOverflow.ellipsis,
@@ -72,9 +73,9 @@ class AiChatBubble extends ConsumerWidget {
                 : MarkdownBody(
                     data: message.text,
                     styleSheet: MarkdownStyleSheet(
-                      p: const TextStyle(
+                      p: TextStyle(
                         fontSize: 15,
-                        color: Colors.black87,
+                        color: isDark ? Colors.white : Colors.black87,
                       ),
                     ),
                   ),
@@ -87,7 +88,7 @@ class AiChatBubble extends ConsumerWidget {
                   DateFormat('h:mm a').format(message.timestamp),
                   style: TextStyle(
                     fontSize: 10,
-                    color: isUser ? Colors.white70 : Colors.black54,
+                    color: isUser ? Colors.white70 : (isDark ? Colors.white70 : Colors.black54),
                   ),
                 ),
                 if (!isUser) ...[

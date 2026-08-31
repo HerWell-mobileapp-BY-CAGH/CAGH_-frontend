@@ -1,650 +1,362 @@
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
-import 'package:cagh_frontend/shared/widgets/globe_language_picker.dart';
-import 'package:cagh_frontend/features/auth/presentation/midwife/midwife_login_screen.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
+import 'package:cagh_frontend/shared/constants/app_constants.dart';
 import 'package:cagh_frontend/core/services/language_service.dart';
+import 'package:cagh_frontend/features/auth/presentation/midwife/midwife_login_screen.dart';
+import 'package:cagh_frontend/features/onboarding/presentation/user_type_selection_screen.dart';
+import 'package:cagh_frontend/features/profile/presentation/midwife_personal_information_screen.dart';
+import 'package:cagh_frontend/features/profile/presentation/midwife_notification_settings_screen.dart';
+import 'package:cagh_frontend/features/profile/presentation/appearance_accessibility_screen.dart';
+import 'package:cagh_frontend/features/consultations/presentation/midwife/midwife_inbox_screen.dart';
 import 'package:cagh_frontend/features/consultations/data/repositories/midwife_repository_impl.dart';
 import 'package:cagh_frontend/features/consultations/data/services/midwife_api_service.dart';
 import 'package:cagh_frontend/shared/models/midwife_profile.dart';
+import 'package:cagh_frontend/shared/widgets/app_profile_avatar.dart';
+import 'package:cagh_frontend/core/utils/app_logger.dart';
 
 class MidwifeProfileScreen extends StatefulWidget {
-  const MidwifeProfileScreen({super.key});
+  final VoidCallback? onBackTap;
+  const MidwifeProfileScreen({super.key, this.onBackTap});
 
   @override
   State<MidwifeProfileScreen> createState() => _MidwifeProfileScreenState();
 }
 
 class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
-
   bool isLoading = true;
-  String? errorMessage;
-  MidwifeProfile? profile;
-  
-  // Editable fields bound to the UI modal
-  String name = '';
-  String title = '';
+  String fullName = '';
+  String email = '';
   String status = 'PENDING';
-  String bio = '';
-  int experienceYears = 0;
-  List<Map<String, String>> languages = [];
-  List<Map<String, String>> qualifications = [];
+  String title = 'Certified Midwife';
   
   final _repository = MidwifeRepositoryImpl(MidwifeApiService());
 
   @override
   void initState() {
     super.initState();
-    _loadProfile();
+    _fetchProfile();
   }
 
-  Future<void> _loadProfile() async {
-    setState(() {
-      isLoading = true;
-      errorMessage = null;
-    });
-
+  Future<void> _fetchProfile() async {
     try {
+      final localData = await AuthService.getUserData();
+      if (mounted) {
+        setState(() {
+          final u = localData['user'] is Map ? localData['user'] : localData;
+          final p = u['profile'] is Map ? u['profile'] : (localData['profile'] is Map ? localData['profile'] : {});
+          
+          final fName = p['first_name']?.toString() ?? u['first_name']?.toString() ?? localData['first_name']?.toString() ?? '';
+          final lName = p['last_name']?.toString() ?? u['last_name']?.toString() ?? localData['last_name']?.toString() ?? '';
+          if (fName.isNotEmpty || lName.isNotEmpty) {
+            fullName = '$fName $lName'.trim();
+          }
+          final emailVal = localData['email']?.toString() ?? u['email']?.toString() ?? '';
+          if (emailVal.isNotEmpty) {
+            email = emailVal;
+          } else {
+            final phone = localData['phone_number']?.toString() ?? u['phone_number']?.toString() ?? '';
+            if (phone.isNotEmpty) email = phone;
+          }
+        });
+      }
+
       final p = await _repository.getMyProfile();
       if (mounted) {
         setState(() {
-          profile = p;
           if (p != null) {
-            name = p.fullName;
-            title = p.specialty;
+            if (p.fullName.isNotEmpty) fullName = p.fullName;
+            if (p.specialty.isNotEmpty) title = p.specialty;
             status = p.verificationStatus.toUpperCase() == 'APPROVED' ? 'VERIFIED' : 'PENDING';
-            bio = p.bio;
-            experienceYears = p.experienceYears;
-            
-            // Converting from List<String> to UI maps (mock format for now until full UI rewrite)
-            languages = p.languages.map((l) => {'lang': l, 'level': 'Fluent'}).toList();
-            if (languages.isEmpty) languages = [{'lang': 'English', 'level': 'Fluent'}];
-            
-            qualifications = [
-              {'title': 'Certified Midwife', 'institution': 'National Board'}
-            ];
-            
-            if (qualifications.isEmpty || qualifications.first['title']!.isEmpty) {
-              qualifications = [
-                {'title': 'Certified Midwife', 'institution': 'National Board'}
-              ];
-            }
           }
-          
-          isLoading = false;
         });
       }
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          isLoading = false;
-          errorMessage = 'Failed to load profile. Please check your connection and try again.\n\nDetails: $e';
-        });
-      }
+      AppLogger.d('MidwifeProfileScreen: Error parsing profile data: $e');
     }
-  }
-
-  void _showEditModal() {
-    final firstNameController = TextEditingController(text: profile?.firstName ?? name.split(' ').first);
-    final lastNameController = TextEditingController(text: profile?.lastName ?? (name.split(' ').length > 1 ? name.split(' ').sublist(1).join(' ') : ''));
-    final titleController = TextEditingController(text: title);
-    final bioController = TextEditingController(text: bio);
-    final experienceController = TextEditingController(text: experienceYears.toString());
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Padding(
-              padding: EdgeInsets.only(
-                top: 24,
-                left: 24,
-                right: 24,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-              ),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Edit Profile Details',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF315E26),
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () => Navigator.pop(context),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-
-                    // First Name & Last Name Row
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text('First Name', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
-                              const SizedBox(height: 6),
-                              TextField(
-                                controller: firstNameController,
-                                readOnly: true,
-                                decoration: InputDecoration(
-                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                                  suffixIcon: const Icon(Icons.lock_outline, size: 16, color: Colors.grey),
-                                  filled: true,
-                                  fillColor: Colors.grey.shade100,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text('Last Name', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
-                              const SizedBox(height: 6),
-                              TextField(
-                                controller: lastNameController,
-                                readOnly: true,
-                                decoration: InputDecoration(
-                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                                  suffixIcon: const Icon(Icons.lock_outline, size: 16, color: Colors.grey),
-                                  filled: true,
-                                  fillColor: Colors.grey.shade100,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Title
-                    const Text('Professional Title', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
-                    const SizedBox(height: 6),
-                    TextField(
-                      controller: titleController,
-                      readOnly: true,
-                      decoration: InputDecoration(
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                        suffixIcon: const Icon(Icons.lock_outline, size: 16, color: Colors.grey),
-                        filled: true,
-                        fillColor: Colors.grey.shade100,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // About Me Bio
-                    const Text('About Me (Bio)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
-                    const SizedBox(height: 6),
-                    TextField(
-                      controller: bioController,
-                      maxLines: 3,
-                      decoration: InputDecoration(
-                        hintText: 'Tell patients about your midwifery experience...',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Years of Experience
-                    const Text('Years of Experience', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: experienceController,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        hintText: 'e.g., 5',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-
-                    const SizedBox(height: 24),
-
-                    // Save Button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: () async {
-                          final newFirstName = firstNameController.text.trim();
-                          final newLastName = lastNameController.text.trim();
-                          final newTitle = titleController.text.trim();
-                          final newBio = bioController.text.trim();
-
-                          setState(() {
-                            if (newFirstName.isNotEmpty) name = '$newFirstName $newLastName'.trim();
-                            if (newTitle.isNotEmpty) title = newTitle;
-                            if (newBio.isNotEmpty) bio = newBio;
-                            if (experienceController.text.isNotEmpty) {
-                              experienceYears = int.tryParse(experienceController.text) ?? experienceYears;
-                            }
-                          });
-
-                          await Future.wait([
-                            AuthService.updateUserProfile({
-                              'first_name': newFirstName,
-                              'last_name': newLastName,
-                              'profile': {
-                                'first_name': newFirstName,
-                                'last_name': newLastName,
-                              },
-                              'user': {
-                                'first_name': newFirstName,
-                                'last_name': newLastName,
-                              }
-                            }),
-                            AuthService.updateMidwifeProfile({
-                              'title': newTitle,
-                              'bio': newBio,
-                              'experience_years': experienceYears,
-                              'first_name': newFirstName,
-                              'last_name': newLastName,
-                              'user': {
-                                'first_name': newFirstName,
-                                'last_name': newLastName,
-                              }
-                            }),
-                          ]);
-
-                          if (mounted) Navigator.pop(context);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Profile updated successfully!'),
-                              backgroundColor: Color(0xFF315E26),
-                            ),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF315E26),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
-                        ),
-                        child: const Text(
-                          'Save Changes',
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
+    if (mounted) {
+      setState(() {
+         isLoading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isVerified = status == 'APPROVED';
+    final activeLang = LanguageService.currentLanguage.value == 'am'
+        ? 'Amharic (አማርኛ)'
+        : 'English (US)';
+    final isVerified = status == 'VERIFIED';
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FBF7),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF315E26),
         elevation: 0,
-        automaticallyImplyLeading: false,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+        automaticallyImplyLeading: widget.onBackTap != null,
+        leading: widget.onBackTap != null ? IconButton(
+          icon: Icon(Icons.arrow_back, color: AppColors.accentYellow),
+          onPressed: () {
+            if (widget.onBackTap != null) {
+              widget.onBackTap!();
+            }
+          },
+        ) : null,
         title: Text(
-          name.isNotEmpty ? name : LanguageService.tr(context, 'profile'),
+          fullName.isNotEmpty ? fullName : AppLocalizations.of(context)!.profile,
           style: const TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
+            fontSize: 19,
+            fontWeight: FontWeight.w700,
           ),
         ),
-        actions: [
-          const GlobeLanguagePicker(iconColor: Color(0xFFFFD22B)),
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined, color: Colors.white),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('No new notifications')),
-              );
-            },
-          ),
-          const SizedBox(width: 8),
-        ],
       ),
       body: isLoading
           ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFF315E26)),
+              child: CircularProgressIndicator(color: AppColors.primaryGreen),
             )
-          : errorMessage != null
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.error_outline, size: 64, color: Colors.redAccent),
-                        const SizedBox(height: 16),
-                        Text(
-                          errorMessage!,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 16),
-                        ),
-                        const SizedBox(height: 24),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            ElevatedButton(
-                              onPressed: _loadProfile,
-                              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF315E26)),
-                              child: const Text('Retry', style: TextStyle(color: Colors.white)),
-                            ),
-                            const SizedBox(width: 16),
-                            OutlinedButton(
-                              onPressed: () async {
-                                await AuthService.logout();
-                                if (mounted) {
-                                  Navigator.of(context).pushAndRemoveUntil(
-                                    MaterialPageRoute(builder: (_) => const MidwifeLoginScreen()),
-                                    (route) => false,
-                                  );
-                                }
-                              },
-                              style: OutlinedButton.styleFrom(
-                                side: const BorderSide(color: Colors.red),
-                              ),
-                              child: const Text('Log Out', style: TextStyle(color: Colors.red)),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-              : SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+          : SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
               child: Column(
                 children: [
-                  // Top Profile Summary Card (Matching Screenshot input_file_0.png)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(22),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.04),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
+                  // Avatar Header
+                  Center(
                     child: Column(
                       children: [
-                        Stack(
-                          alignment: Alignment.bottomCenter,
-                          children: [
-                            Container(
-                              margin: const EdgeInsets.only(bottom: 12),
-                              width: 96,
-                              height: 96,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: const Color(0xFFE8F5E9),
-                                border: Border.all(color: const Color(0xFFA5D6A7), width: 2),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const MidwifePersonalInformationScreen(),
                               ),
-                              child: ClipOval(
-                                child: Image.asset(
-                                  'assets/images/home_illustration.png',
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) => const Icon(
-                                    Icons.person,
-                                    size: 64,
-                                    color: Color(0xFF315E26),
-                                  ),
+                            ).then((_) => _fetchProfile());
+                          },
+                          child: Stack(
+                            alignment: Alignment.bottomRight,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(3),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: isVerified ? AppColors.accentPurpleStrong : Colors.orange,
+                                ),
+                                child: const AppProfileAvatar(
+                                  radius: 42,
                                 ),
                               ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: status == 'VERIFIED'
-                                    ? const Color(0xFF5B4075) // Deep purple badge matching screenshot
-                                    : Colors.orange.shade700,
-                                borderRadius: BorderRadius.circular(14),
+                              Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: isVerified ? AppColors.accentPurpleStrong : Colors.orange,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: Colors.white, width: 2),
+                                ),
+                                child: Icon(
+                                  isVerified ? Icons.verified : Icons.hourglass_top,
+                                  size: 14,
+                                  color: Colors.white,
+                                ),
                               ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    status == 'VERIFIED'
-                                        ? Icons.check_circle_rounded
-                                        : Icons.hourglass_top,
-                                    color: Colors.white,
-                                    size: 13,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    status == 'VERIFIED' ? 'Verified' : 'Pending',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-
-                        const SizedBox(height: 14),
+                        const SizedBox(height: 12),
 
                         Text(
-                          name,
-                          style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF1A1A1A),
+                          fullName,
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: Theme.of(context).textTheme.bodyLarge?.color,
                           ),
                         ),
 
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 3),
 
                         Text(
                           title,
-                          textAlign: TextAlign.center,
                           style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey.shade600,
+                            fontSize: 13.5,
+                            color: Theme.of(context).textTheme.bodySmall?.color,
                           ),
                         ),
-
-                        const SizedBox(height: 18),
-
-                        // Edit Profile Button (Dark Green Pill Button matching screenshot)
+                        const SizedBox(height: 16),
+                        
                         SizedBox(
-                          width: 170,
-                          height: 42,
-                          child: ElevatedButton.icon(
-                            onPressed: _showEditModal,
-                            icon: const Icon(Icons.edit_outlined, size: 16, color: Colors.white),
-                            label: const Text(
-                              'Edit Profile',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
+                          width: 140,
+                          height: 36,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const MidwifePersonalInformationScreen(),
+                                ),
+                              ).then((_) => _fetchProfile());
+                            },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF315E26),
+                              backgroundColor: AppColors.primaryGreen,
                               elevation: 0,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(22),
                               ),
                             ),
+                            child: const Text(
+                              'Edit Profile',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            ),
                           ),
                         ),
                       ],
                     ),
                   ),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
 
-                  // About Me Section (Purple Title & Purple Icon matching screenshot)
-                  _buildCardSection(
-                    icon: Icons.person_outline,
-                    title: 'About Me',
-                    child: Text(
-                      bio,
-                      style: TextStyle(
-                        fontSize: 14,
-                        height: 1.45,
-                        color: Colors.grey.shade700,
-                      ),
+                  // 1. Account & Records
+                  _buildSectionHeader('Account & Records'),
+                  const SizedBox(height: 10),
+                  _buildGroupedCard([
+                    _buildListTile(
+                      icon: Icons.person_outline,
+                      title: 'Personal Information',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => MidwifePersonalInformationScreen(),
+                          ),
+                        ).then((_) => _fetchProfile());
+                      },
                     ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Experience Section
-                  _buildCardSection(
-                    icon: Icons.work_history_outlined,
-                    title: 'Experience',
-                    child: Text(
-                      '$experienceYears+ Years of Midwifery Experience',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF315E26),
-                      ),
+                    _buildDivider(),
+                    _buildListTile(
+                      icon: Icons.chat_bubble_outline,
+                      title: AppLocalizations.of(context)!.myMessages,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const MidwifeInboxScreen()),
+                        );
+                      },
                     ),
-                  ),
+                  ]),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
 
-                  // Spoken Languages Section (Matching Screenshot)
-                  _buildCardSection(
-                    icon: Icons.translate,
-                    title: 'Languages',
-                    child: Column(
-                      children: languages.map((langItem) {
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 5),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                langItem['lang']!,
-                                style: const TextStyle(
-                                  fontSize: 14.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF333333),
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFEFEFEF),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
+                  // 2. Settings
+                  _buildSectionHeader('Settings'),
+                  SizedBox(height: 10),
+                  _buildGroupedCard([
+                    _buildListTile(
+                      icon: Icons.palette_outlined,
+                      title: AppLocalizations.of(context)!.appearanceAccessibility,
+                      subtitle: 'Theme and text size',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const AppearanceAccessibilityScreen(),
+                          ),
+                        ).then((_) {
+                          if (mounted) setState(() {});
+                        });
+                      },
+                    ),
+                    _buildDivider(),
+                    _buildListTile(
+                      icon: Icons.language_rounded,
+                      title: 'Language',
+                      subtitle: activeLang,
+                      trailing: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.lightGreen,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.mint),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: LanguageService.currentLanguage.value,
+                            isDense: true,
+                            icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.primaryGreen, size: 20),
+                            borderRadius: BorderRadius.circular(12),
+                            items: LanguageService.supportedLanguages.map((lang) {
+                              return DropdownMenuItem<String>(
+                                value: lang.code,
                                 child: Text(
-                                  langItem['level']!,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.grey.shade700,
-                                  ),
+                                  '${lang.flag} ${lang.nativeName}',
+                                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
                                 ),
-                              ),
-                            ],
+                              );
+                            }).toList(),
+                            onChanged: (String? code) async {
+                              if (code != null) {
+                                await LanguageService.setLanguage(code);
+                                if (mounted) setState(() {});
+                              }
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                    _buildDivider(),
+                    _buildListTile(
+                      icon: Icons.notifications_none_rounded,
+                      title: 'Notifications',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const MidwifeNotificationSettingsScreen(),
                           ),
                         );
-                      }).toList(),
+                      },
                     ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Qualifications Section (Matching Screenshot Purple Timeline Dots)
-                  _buildCardSection(
-                    icon: Icons.school_outlined,
-                    title: 'Qualifications',
-                    child: Column(
-                      children: qualifications.map((q) {
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 14),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                margin: const EdgeInsets.only(top: 5, right: 12),
-                                width: 9,
-                                height: 9,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFF5B4075), // Purple dot matching screenshot
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      q['title']!,
-                                      style: const TextStyle(
-                                        fontSize: 14.5,
-                                        fontWeight: FontWeight.bold,
-                                        color: Color(0xFF1A1A1A),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      q['institution']!,
-                                      style: TextStyle(
-                                        fontSize: 12.5,
-                                        color: Colors.grey.shade600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }).toList(),
+                    _buildDivider(),
+                    _buildListTile(
+                      icon: Icons.shield_outlined,
+                      title: 'Privacy & Security',
+                      onTap: () {},
                     ),
-                  ),
+                  ]),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
 
-                  const SizedBox(height: 12),
+                  // 3. Support & Info
+                  _buildSectionHeader('App Information'),
+                  const SizedBox(height: 10),
+                  _buildGroupedCard([
+                    _buildListTile(
+                      icon: Icons.help_outline_rounded,
+                      title: 'Help & Support',
+                      onTap: () {},
+                    ),
+                    _buildDivider(),
+                    _buildListTile(
+                      icon: Icons.description_outlined,
+                      title: 'Terms & Conditions',
+                      onTap: () {},
+                    ),
+                    _buildDivider(),
+                    _buildListTile(
+                      icon: Icons.policy_outlined,
+                      title: 'Privacy Policy',
+                      onTap: () {},
+                    ),
+                  ]),
 
-                  // Logout Button (Light Pink/Red Outlined Pill matching screenshot)
+                  const SizedBox(height: 28),
+
+                  // Logout Button
                   SizedBox(
                     width: double.infinity,
-                    height: 52,
+                    height: 50,
                     child: OutlinedButton.icon(
                       onPressed: () async {
                         await AuthService.logout();
@@ -652,86 +364,133 @@ class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
                           Navigator.pushAndRemoveUntil(
                             context,
                             MaterialPageRoute(
-                              builder: (context) =>
-                                  const MidwifeLoginScreen(),
+                              builder: (context) => const UserTypeSelectionScreen(),
                             ),
                             (route) => false,
                           );
                         }
                       },
-                      icon: const Icon(Icons.logout_rounded, color: Color(0xFFD32F2F)),
+                      icon: const Icon(Icons.logout, color: Colors.red),
                       label: const Text(
                         'Logout',
                         style: TextStyle(
-                          color: Color(0xFFD32F2F),
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
+                          color: Colors.red,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
                         ),
                       ),
                       style: OutlinedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFFF0F0),
-                        side: const BorderSide(color: Color(0xFFFFCDD2)),
+                        side: const BorderSide(color: AppColors.borderRedSoft, width: 1.5),
+                        backgroundColor: AppColors.backgroundPinkWhite,
+                        elevation: 0,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(28),
+                          borderRadius: BorderRadius.circular(30),
                         ),
                       ),
                     ),
                   ),
 
-                  const SizedBox(height: 120), // Extra padding for floating nav bar
+                  const SizedBox(height: 12),
+
+                  Text(
+                    'Version 2.4.1 (Build 890)',
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      color: Colors.grey.shade500,
+                    ),
+                  ),
+
+                  const SizedBox(height: 100), // Spacing for floating navbar
                 ],
               ),
             ),
     );
   }
 
-  Widget _buildCardSection({
-    required IconData icon,
-    required String title,
-    required Widget child,
-    Widget? trailingIcon,
-  }) {
+  Widget _buildSectionHeader(String title) {
+    return Row(
+      children: [
+        Container(
+          width: 3.5,
+          height: 16,
+          decoration: BoxDecoration(
+            color: AppColors.accentYellow,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGroupedCard(List<Widget> children) {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Theme.of(context).dividerColor, width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Icon(icon, color: const Color(0xFF5B4075), size: 22),
-                  const SizedBox(width: 8),
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF5B4075),
-                    ),
-                  ),
-                ],
-              ),
-              if (trailingIcon != null) trailingIcon,
-            ],
-          ),
-          const SizedBox(height: 14),
-          child,
-        ],
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        clipBehavior: Clip.antiAlias,
+        child: Column(children: children),
       ),
+    );
+  }
+
+  Widget _buildListTile({
+    required IconData icon,
+    required String title,
+    String? subtitle,
+    Widget? trailing,
+    VoidCallback? onTap,
+  }) {
+    return ListTile(
+      onTap: onTap,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      leading: Icon(icon, color: AppColors.primaryGreen, size: 22),
+      title: Text(
+        title,
+        style: TextStyle(
+          fontSize: 14.5,
+          fontWeight: FontWeight.w600,
+          color: Theme.of(context).textTheme.bodyLarge?.color,
+        ),
+      ),
+      subtitle: subtitle != null
+          ? Text(
+              subtitle,
+              style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color),
+            )
+          : null,
+      trailing: trailing ??
+          Icon(Icons.chevron_right, color: Theme.of(context).dividerColor, size: 22),
+    );
+  }
+
+  Widget _buildDivider() {
+    return Divider(
+      height: 1,
+      thickness: 1,
+      color: Theme.of(context).dividerColor,
+      indent: 16,
+      endIndent: 16,
     );
   }
 }

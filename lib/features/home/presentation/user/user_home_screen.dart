@@ -1,3 +1,4 @@
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 import 'package:cagh_frontend/core/services/global_call_service.dart';
 import 'package:cagh_frontend/features/appointments/data/services/appointment_api_service.dart';
 import 'package:flutter/material.dart';
@@ -12,7 +13,8 @@ import 'package:cagh_frontend/features/ai_assistant/presentation/ai_assistant_sc
 import 'package:cagh_frontend/shared/widgets/hotline_fab.dart';
 import 'package:cagh_frontend/shared/widgets/learning_module_card.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cagh_frontend/features/consultations/presentation/providers/chat_notification_provider.dart';
+import 'package:cagh_frontend/features/notifications/presentation/widgets/notification_bell.dart';
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 class UserHomeScreen extends StatefulWidget {
   const UserHomeScreen({super.key});
@@ -47,77 +49,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
     }
   }
 
-  void _showNotificationsModal() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        return Container(
-          height: MediaQuery.of(context).size.height * 0.7,
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Row(
-                    children: [
-                      Icon(Icons.notifications_active, color: Color(0xFF315E26)),
-                      SizedBox(width: 8),
-                      Text(
-                        'Notifications',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-              const Divider(),
-              Expanded(
-                child: ListView(
-                  children: const [
-                    _NotificationTile(
-                      title: 'Appointment Reminder',
-                      body: 'Your Voice consultation with your assigned midwife is tomorrow at 10:00 AM.',
-                      time: '10 mins ago',
-                      isUnread: true,
-                      type: 'APPOINTMENT',
-                    ),
-                    _NotificationTile(
-                      title: 'Chat Request Accepted',
-                      body: 'Sr. Martha T. accepted your direct message request. You can now chat freely.',
-                      time: '2 hours ago',
-                      isUnread: true,
-                      type: 'CHAT',
-                    ),
-                    _NotificationTile(
-                      title: 'New Educational Content',
-                      body: 'New article added: "Trimester 2 Nutrition & Essential Vitamins".',
-                      time: '1 day ago',
-                      isUnread: false,
-                      type: 'LEARNING',
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+  // Replaced by NotificationsScreen
 
 // Review modal has been moved to user_chat_room_screen.dart
   Widget _buildFloatingButtons() {
@@ -159,7 +91,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
 
     return Scaffold(
       extendBody: true,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -167,73 +99,20 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             if (_currentIndex == 0)
               Container(
                 width: double.infinity,
-                color: const Color(0xFF315E26),
+                color: Theme.of(context).appBarTheme.backgroundColor,
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
+                    Text(
                       'Home',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: Theme.of(context).appBarTheme.foregroundColor,
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    Row(
-                      children: [
-                        IconButton(
-                          onPressed: _showNotificationsModal,
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                          icon: Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              const Icon(
-                                Icons.notifications_none_rounded,
-                                color: Color(0xFFFFD22B),
-                                size: 26,
-                              ),
-                                Consumer(
-                                  builder: (context, ref, child) {
-                                    final unreadMap = ref.watch(chatNotificationProvider);
-                                    int totalUnread = 0;
-                                    unreadMap.forEach((k, v) {
-                                      // only sum the raw room IDs to avoid double counting
-                                      if (!k.startsWith('user_') && !k.startsWith('midwife_')) {
-                                        totalUnread += v;
-                                      }
-                                    });
-                                    
-                                    if (totalUnread == 0) return const SizedBox.shrink();
-                                    
-                                    return Positioned(
-                                      right: -4,
-                                      top: -4,
-                                      child: Container(
-                                        padding: const EdgeInsets.all(3),
-                                        decoration: const BoxDecoration(
-                                          color: Colors.red,
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: Text(
-                                          totalUnread > 9 ? '9+' : '$totalUnread',
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 9,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+                    const NotificationBell(iconColor: Color(0xFFFFD22B)),
                   ],
                 ),
               )
@@ -241,7 +120,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             else if (_currentIndex == 2)
               Container(
                 width: double.infinity,
-                color: const Color(0xFF315E26),
+                color: Theme.of(context).appBarTheme.backgroundColor,
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -252,11 +131,11 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                           icon: const Icon(Icons.arrow_back, color: Color(0xFFFFD22B)),
                           onPressed: () => setState(() => _currentIndex = 0),
                         ),
-                        const SizedBox(width: 8),
-                        const Text(
-                          'Learning module',
+                        SizedBox(width: 8),
+                        Text(
+                          AppLocalizations.of(context)!.learningModule,
                           style: TextStyle(
-                            color: Colors.white,
+                            color: Theme.of(context).appBarTheme.foregroundColor,
                             fontSize: 19,
                             fontWeight: FontWeight.bold,
                           ),
@@ -320,12 +199,12 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                     child: const Icon(Icons.phone_in_talk, color: Colors.white, size: 20),
                   ),
                   const SizedBox(width: 14),
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Virtual Voice Consultation',
+                          AppLocalizations.of(context)!.virtualVoiceConsultation,
                           style: TextStyle(
                             fontSize: 14.5,
                             fontWeight: FontWeight.w700,
@@ -342,7 +221,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                   ),
                   TextButton(
                     onPressed: () {},
-                    child: const Text('Join', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF315E26))),
+                    child: Text(AppLocalizations.of(context)!.join, style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF315E26))),
                   ),
                 ],
               ),
@@ -370,7 +249,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             style: TextStyle(
               fontSize: 14,
               height: 1.5,
-              color: Colors.grey.shade700,
+              color: Theme.of(context).textTheme.bodyMedium?.color,
             ),
           ),
 
@@ -391,10 +270,10 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             ),
           ),
 
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
 
-          const Text(
-            'Our Focus Areas',
+          Text(
+            AppLocalizations.of(context)!.ourFocusAreas,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -482,6 +361,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             title: 'Adolescent Girls Health & Nutrition',
             subtitle: 'Puberty, menstrual health, nutrition & healthy lifestyle, life skills & well-being.',
             arrowBgColor: const Color(0xFFF1F8E9),
+            onTap: () {},
           ),
           const SizedBox(height: 14),
           _buildLearningModuleCard(
@@ -530,9 +410,9 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
       child: Container(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+          border: Border.all(color: Theme.of(context).dividerColor, width: 1),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.03),
@@ -562,19 +442,19 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                     children: [
                       Text(
                         title,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF315E26),
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
                           height: 1.3,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         subtitle,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12.5,
-                          color: Color(0xFF64748B),
+                          color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
                           height: 1.4,
                         ),
                       ),
@@ -604,7 +484,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
 
   // TAB 3: NEARBY FACILITY
   Widget _buildNearbyTab() {
-    return const NearbyHealthcareScreen(showBackButton: false);
+    return NearbyHealthcareScreen(showBackButton: false);
   }
 
   Widget _buildBottomNav() {
@@ -612,27 +492,27 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
       FloatingNavBarItem(
         icon: Icons.home_outlined,
         activeIcon: Icons.home_rounded,
-        label: LanguageService.tr(context, 'home'),
+        label: AppLocalizations.of(context)!.home,
       ),
       FloatingNavBarItem(
-        icon: Icons.medical_services_outlined,
-        activeIcon: Icons.medical_services_rounded,
-        label: LanguageService.tr(context, 'consult'),
+        icon: Icons.chat_bubble_outline_rounded,
+        activeIcon: Icons.chat_bubble_rounded,
+        label: AppLocalizations.of(context)!.consult,
       ),
       FloatingNavBarItem(
         icon: Icons.menu_book_outlined,
         activeIcon: Icons.menu_book_rounded,
-        label: LanguageService.tr(context, 'learn'),
+        label: AppLocalizations.of(context)!.learn,
       ),
       FloatingNavBarItem(
         icon: Icons.location_on_outlined,
         activeIcon: Icons.location_on_rounded,
-        label: LanguageService.tr(context, 'nearby'),
+        label: AppLocalizations.of(context)!.aiNearby,
       ),
       FloatingNavBarItem(
         icon: Icons.person_outline_rounded,
         activeIcon: Icons.person_rounded,
-        label: LanguageService.tr(context, 'profile'),
+        label: AppLocalizations.of(context)!.profile,
       ),
     ];
 
@@ -673,9 +553,9 @@ class _NotificationTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isUnread ? const Color(0xFFF1F8E9) : Colors.white,
+        color: isUnread ? Theme.of(context).colorScheme.primaryContainer : Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: Theme.of(context).dividerColor),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -694,11 +574,11 @@ class _NotificationTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
+                Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5, color: Theme.of(context).textTheme.bodyLarge?.color)),
                 const SizedBox(height: 2),
-                Text(body, style: TextStyle(color: Colors.grey.shade700, fontSize: 12.5)),
+                Text(body, style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color, fontSize: 12.5)),
                 const SizedBox(height: 4),
-                Text(time, style: TextStyle(color: Colors.grey.shade500, fontSize: 11)),
+                Text(time, style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color, fontSize: 11)),
               ],
             ),
           ),

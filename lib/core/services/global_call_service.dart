@@ -14,6 +14,7 @@ import 'package:cagh_frontend/features/consultations/presentation/common/voice_c
 import 'package:cagh_frontend/features/consultations/presentation/user/voice_consultation_screen.dart';
 import 'package:cagh_frontend/shared/models/appointment.dart';
 import 'package:cagh_frontend/core/utils/app_logger.dart';
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 enum CallSignalType {
   callOffer,
@@ -586,11 +587,11 @@ class _IncomingCallOverlayCardWidgetState extends State<_IncomingCallOverlayCard
                   ),
                 ),
 
-                const SizedBox(height: 4),
+                SizedBox(height: 4),
 
                 // Status Line
-                const Text(
-                  'Incoming voice call',
+                Text(
+                  AppLocalizations.of(context)!.incomingVoiceCall,
                   style: TextStyle(
                     color: Color(0xFF64748B),
                     fontSize: 14,
@@ -607,13 +608,13 @@ class _IncomingCallOverlayCardWidgetState extends State<_IncomingCallOverlayCard
                     color: const Color(0xFFF1F5F9),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.shield_outlined, size: 13, color: Color(0xFF315E26)),
                       SizedBox(width: 4),
                       Text(
-                        'Encrypted Call',
+                        AppLocalizations.of(context)!.encryptedCall,
                         style: TextStyle(
                           color: Color(0xFF475569),
                           fontSize: 11,
@@ -652,9 +653,9 @@ class _IncomingCallOverlayCardWidgetState extends State<_IncomingCallOverlayCard
                             ),
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Decline',
+                        SizedBox(height: 8),
+                        Text(
+                          AppLocalizations.of(context)!.decline,
                           style: TextStyle(
                             color: Color(0xFF475569),
                             fontSize: 13,
@@ -686,9 +687,9 @@ class _IncomingCallOverlayCardWidgetState extends State<_IncomingCallOverlayCard
                             ),
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Accept',
+                        SizedBox(height: 8),
+                        Text(
+                          AppLocalizations.of(context)!.accept,
                           style: TextStyle(
                             color: Color(0xFF315E26),
                             fontSize: 13,
