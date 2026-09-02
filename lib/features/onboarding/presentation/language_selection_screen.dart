@@ -14,201 +14,232 @@ class LanguageSelectionScreen extends StatefulWidget {
 class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
   late String selectedCode;
 
+  // Curated languages with native greeting and language name
+  static const List<Map<String, String>> languageOptions = [
+    {
+      'code': 'en',
+      'name': 'English',
+      'nativeName': 'English',
+      'greeting': 'Hello',
+    },
+    {
+      'code': 'am',
+      'name': 'Amharic',
+      'nativeName': 'አማርኛ',
+      'greeting': 'ሰላም',
+    },
+    {
+      'code': 'om',
+      'name': 'Afaan Oromoo',
+      'nativeName': 'Afaan Oromoo',
+      'greeting': 'Akkam',
+    },
+    {
+      'code': 'so',
+      'name': 'Somali',
+      'nativeName': 'Soomaali',
+      'greeting': 'Nabad',
+    },
+    {
+      'code': 'ti',
+      'name': 'Tigrinya',
+      'nativeName': 'ትግርኛ',
+      'greeting': 'ሰላም',
+    },
+  ];
+
   @override
   void initState() {
     super.initState();
     selectedCode = LanguageService.currentLanguage.value;
   }
 
+  Future<void> _handleLanguageSelect(String code) async {
+    setState(() {
+      selectedCode = code;
+    });
+    await LanguageService.setLanguage(code);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF121212) : Colors.white;
+
     return Scaffold(
-      backgroundColor: AppColors.backgroundSoftMint,
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Green App Bar
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      backgroundColor: bgColor,
+      body: Column(
+        children: [
+          // Header with curved bottom container
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + 28,
+              bottom: 32,
+              left: 24,
+              right: 24,
+            ),
+            decoration: const BoxDecoration(
               color: AppColors.primaryGreen,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    AppLocalizations.of(context)!.appTitle,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(32),
+                bottomRight: Radius.circular(32),
+              ),
+            ),
+            child: Column(
+              children: [
+                Text(
+                  AppLocalizations.of(context)!.chooseLanguage,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  AppLocalizations.of(context)!.subChooseLanguage,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Language Cards List
+          Expanded(
+            child: ListView.separated(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+              itemCount: languageOptions.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 14),
+              itemBuilder: (context, index) {
+                final lang = languageOptions[index];
+                final isSelected = lang['code'] == selectedCode;
+
+                return GestureDetector(
+                  onTap: () => _handleLanguageSelect(lang['code']!),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeInOut,
+                    height: 60,
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? AppColors.primaryGreen
+                          : (isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF7F8F9)),
+                      borderRadius: BorderRadius.circular(30),
+                      border: Border.all(
+                        color: isSelected
+                            ? AppColors.primaryGreen
+                            : (isDark ? Colors.white12 : const Color(0xFFEBECEF)),
+                        width: 1.5,
+                      ),
+                      boxShadow: isSelected
+                          ? [
+                              BoxShadow(
+                                color: AppColors.primaryGreen.withValues(alpha: 0.28),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ]
+                          : [],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Left: Language Name
+                        Text(
+                          lang['nativeName']!,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                            color: isSelected
+                                ? Colors.white
+                                : (isDark ? Colors.white : const Color(0xFF2C3E50)),
+                          ),
+                        ),
+                        // Right: Greeting (e.g. Hello, ሰላም)
+                        Text(
+                          lang['greeting']!,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                            color: isSelected
+                                ? Colors.white.withValues(alpha: 0.9)
+                                : (isDark ? Colors.white60 : const Color(0xFF8A94A6)),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  Icon(
-                    Icons.language,
-                    color: Colors.yellow.shade600,
-                    size: 26,
+                );
+              },
+            ),
+          ),
+
+          // Bottom Action Section
+          SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    height: 54,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const UserTypeSelectionScreen(),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primaryGreen,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            AppLocalizations.of(context)!.continueBtn,
+                            style: const TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Icon(Icons.arrow_forward, size: 20),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    AppLocalizations.of(context)!.changeLater,
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      color: isDark ? Colors.white54 : Colors.grey.shade600,
+                    ),
                   ),
                 ],
               ),
             ),
-
-            // Content
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(height: 40),
-
-                    Text(
-                      AppLocalizations.of(context)!.chooseLanguage,
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textDark,
-                      ),
-                    ),
-
-                    SizedBox(height: 10),
-
-                    Text(
-                      AppLocalizations.of(context)!.subChooseLanguage,
-                      style: TextStyle(
-                        fontSize: 15,
-                        height: 1.4,
-                        color: Colors.grey.shade700,
-                      ),
-                    ),
-
-                    SizedBox(height: 40),
-
-                    Text(
-                      AppLocalizations.of(context)!.selectLanguage,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.textGray,
-                      ),
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    // Language Dropdown
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: AppColors.primaryGreen,
-                          width: 1.5,
-                        ),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: selectedCode,
-                          isExpanded: true,
-                          icon: const Padding(
-                            padding: EdgeInsets.only(right: 12),
-                            child: Icon(
-                              Icons.keyboard_arrow_down,
-                              color: AppColors.primaryGreen,
-                              size: 24,
-                            ),
-                          ),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                          borderRadius: BorderRadius.circular(12),
-                          items: LanguageService.supportedLanguages.map((lang) {
-                            return DropdownMenuItem<String>(
-                              value: lang.code,
-                              child: Row(
-                                children: [
-                                  Text(lang.flag, style: const TextStyle(fontSize: 18)),
-                                  const SizedBox(width: 12),
-                                  Text(
-                                    '${lang.nativeName} (${lang.name})',
-                                    style: const TextStyle(
-                                      fontSize: 15,
-                                      color: AppColors.textDark,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }).toList(),
-                          onChanged: (code) async {
-                            if (code != null) {
-                              setState(() {
-                                selectedCode = code;
-                              });
-                              await LanguageService.setLanguage(code);
-                            }
-                          },
-                        ),
-                      ),
-                    ),
-
-                    const Spacer(),
-
-                    // Continue Button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 54,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const UserTypeSelectionScreen(),
-                            ),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primaryGreen,
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              AppLocalizations.of(context)!.continueBtn,
-                              style: const TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            const Icon(Icons.arrow_forward, size: 20),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(height: 16),
-
-                    Center(
-                      child: Text(
-                        AppLocalizations.of(context)!.changeLater,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 30),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
