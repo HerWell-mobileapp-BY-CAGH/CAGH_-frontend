@@ -75,14 +75,14 @@ class MidwifeProfile {
       hospitalAddress: hospital['address'] ?? '',
 
       specialty: json['specialty'] ?? '',
-      experienceYears: json['years_of_experience'] ?? json['experience_years'] ?? userProfile['years_of_experience'] ?? userProfile['experience_years'] ?? 0,
+      experienceYears: int.tryParse((json['years_of_experience'] ?? json['experience_years'] ?? userProfile['years_of_experience'] ?? userProfile['experience_years'])?.toString() ?? '') ?? 0,
       languages: (json['languages'] as String?)?.split(',').map((e) => e.trim()).toList() ?? [],
       bio: json['bio'] ?? '',
       offeredConsultationTypes: json['offered_consultation_types'] != null 
           ? List<String>.from(json['offered_consultation_types']) 
           : [],
       ratingAverage: double.tryParse(json['rating_average']?.toString() ?? '0') ?? 0.0,
-      ratingCount: json['rating_count'] ?? 0,
+      ratingCount: int.tryParse(json['rating_count']?.toString() ?? '') ?? 0,
       isFavorite: json['is_favorite'] ?? false,
       isAcceptingBookings: json['is_accepting_bookings'] ?? false,
       consultationFee: json['consultation_fee'] ?? '0.00',

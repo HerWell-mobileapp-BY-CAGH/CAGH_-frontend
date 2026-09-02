@@ -107,9 +107,20 @@ class GlobalCallWebSocketManager {
           final eventType = (data['type'] ?? data['action'] ?? data['event'] ?? '').toString();
           if (eventType == 'pong' || eventType.toLowerCase() == 'ping') return;
 
-          GlobalCallService.sendCallEvent(data);
-
           final typeLower = eventType.toLowerCase();
+          final isTerminalSignal = typeLower.contains('ended') ||
+              typeLower.contains('cancelled') ||
+              typeLower.contains('declined');
+
+          // For terminal signals (ended/cancelled/declined) we do NOT emit via
+          // sendCallEvent here — teardownCall() will emit the single canonical
+          // 'call_ended' event internally.  Emitting twice caused
+          // VoiceCallScreen._callEventSub to fire twice producing duplicate
+          // teardown attempts and duplicate log entries.
+          if (!isTerminalSignal) {
+            GlobalCallService.sendCallEvent(data);
+          }
+
           if (typeLower.contains('incoming') ||
               typeLower.contains('offer') ||
               typeLower.contains('initiated') ||
@@ -123,7 +134,7 @@ class GlobalCallWebSocketManager {
             }
             final event = IncomingCallEvent.fromMap(data, defaultConsultationId: data['consultation_id']?.toString() ?? '');
             PresentationCoordinator.present(event);
-          } else if (typeLower.contains('ended') || typeLower.contains('cancelled') || typeLower.contains('declined')) {
+          } else if (isTerminalSignal) {
             final consultationId = (data['consultation_id'] ?? data['appointment_id'] ?? '').toString();
             final callId = (data['call_id'] ?? consultationId).toString();
             GlobalCallService.teardownCall(
@@ -134,7 +145,11 @@ class GlobalCallWebSocketManager {
                   : typeLower.contains('cancelled')
                       ? CallTerminalReason.cancel
                       : CallTerminalReason.hangup,
+              source: 'websocket_call_ended',
             );
+          } else {
+            // For non-terminal signal types (e.g. call_accepted, ping/pong)
+            // the frame has already been forwarded via sendCallEvent above.
           }
         } catch (e) {
           AppLogger.d('[GLOBAL_WS] Message parse error (Gen $gen): $e');

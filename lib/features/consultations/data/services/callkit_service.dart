@@ -7,6 +7,13 @@ import 'package:cagh_frontend/shared/constants/app_colors.dart';
 import 'package:cagh_frontend/core/utils/app_logger.dart';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
 
+enum CallKitPresentationOperation {
+  none,
+  dismissingAfterAccept,
+  dismissingAfterDecline,
+  dismissingAfterEnd,
+}
+
 class CallKitService {
   static final CallKitService _instance = CallKitService._internal();
 
@@ -19,6 +26,25 @@ class CallKitService {
   static String? _activeConsultationId;
   static Map<String, dynamic> _activeExtra = {};
   static String _activeCallerName = 'Care Provider';
+  static CallKitPresentationOperation _presentationOperation = CallKitPresentationOperation.none;
+  static int _dismissalWindowTimestamp = 0;
+
+  CallKitPresentationOperation get presentationOperation => _presentationOperation;
+  set presentationOperation(CallKitPresentationOperation op) {
+    _presentationOperation = op;
+    if (op != CallKitPresentationOperation.none) {
+      _dismissalWindowTimestamp = DateTime.now().millisecondsSinceEpoch;
+      Future.delayed(const Duration(milliseconds: 3500), () {
+        if (_presentationOperation == op) {
+          _presentationOperation = CallKitPresentationOperation.none;
+        }
+      });
+    }
+  }
+
+  void recordDismissalWindow() {
+    _dismissalWindowTimestamp = DateTime.now().millisecondsSinceEpoch;
+  }
 
   Map<String, dynamic> _parseCallData(dynamic call) {
     if (call == null) return {};
@@ -83,13 +109,33 @@ class CallKitService {
         String callerName = 'Care Provider';
 
         try {
-          final dynamic dynEvent = event;
-          final bodyMap = (dynEvent.body is Map) ? Map<String, dynamic>.from(dynEvent.body) : <String, dynamic>{};
-          
-          final params = dynEvent.callKitParams;
+          CallKitParams? params;
+          Map<String, dynamic> bodyMap = {};
+          String? eventId;
+
+          if (event is CallEventActionCallIncoming) {
+            params = event.callKitParams;
+          } else if (event is CallEventActionCallStart) {
+            params = event.callKitParams;
+          } else if (event is CallEventActionCallAccept) {
+            params = event.callKitParams;
+          } else if (event is CallEventActionCallDecline) {
+            params = event.callKitParams;
+          } else if (event is CallEventActionCallEnded) {
+            params = event.callKitParams;
+          } else if (event is CallEventActionCallCustom) {
+            bodyMap = Map<String, dynamic>.from(event.body);
+          } else if (event is CallEventActionCallTimeout) {
+            eventId = event.id;
+          } else if (event is CallEventActionCallConnected) {
+            eventId = event.id;
+          } else if (event is CallEventActionCallCallback) {
+            eventId = event.id;
+          }
+
           if (params != null) {
             if (params.extra != null && params.extra is Map) {
-              extra.addAll(Map<String, dynamic>.from(params.extra));
+              extra.addAll(Map<String, dynamic>.from(params.extra!));
             }
             consultationId = (extra['consultation_id'] ?? extra['call_id'] ?? params.id ?? '').toString();
             final name = (extra['caller_name'] ?? extra['sender_name'] ?? params.nameCaller ?? '').toString();
@@ -108,6 +154,10 @@ class CallKitService {
               if (name.isNotEmpty) callerName = NameFormatter.format(name);
             }
           }
+
+          if ((consultationId.isEmpty || consultationId == 'null') && eventId != null && eventId.isNotEmpty) {
+            consultationId = eventId;
+          }
         } catch (e) {
           AppLogger.d('CallKitService: Error parsing call event params: $e');
         }
@@ -123,35 +173,57 @@ class CallKitService {
           callerName = _activeCallerName;
         }
 
-        AppLogger.d('[CALL][$consultationId][CALLKIT_EVENT_RECEIVED] event=${event.eventName}');
+        final currentState = GlobalCallService.stateMachine.state;
+        AppLogger.d('[CALLKIT-LIFECYCLE] event=${event.eventName} callId=$consultationId state=$currentState presentationOperation=$_presentationOperation');
 
         switch (event.eventName) {
+          case CallEventConstants.actionCallIncoming:
           case 'ACTION_CALL_INCOMING':
+            AppLogger.d('[CALL-ACTION-FE] surface=CALLKIT action=INCOMING event=NATIVE_ACTION_RECEIVED call_id=$consultationId');
             break;
+          case CallEventConstants.actionCallStart:
           case 'ACTION_CALL_START':
+            AppLogger.d('[CALL-ACTION-FE] surface=CALLKIT action=START event=NATIVE_ACTION_RECEIVED call_id=$consultationId');
             break;
+          case CallEventConstants.actionCallAccept:
           case 'ACTION_CALL_ACCEPT':
-            AppLogger.d('[CALL][$consultationId][DISPATCH_ACCEPT_ENTER] Direct Accept action received');
+            AppLogger.d('[CALL-ACTION-FE] surface=CALLKIT action=ACCEPT event=NATIVE_ACTION_RECEIVED call_id=$consultationId');
+            AppLogger.d('[CALL-ACTION-FE] surface=CALLKIT action=ACCEPT event=ROUTING_TO_DISPATCHER call_id=$consultationId');
             final mapExtra = Map<String, dynamic>.from(extra);
-            await IncomingCallActionDispatcher.dispatchAccept(consultationId, consultationId, mapExtra);
+            await IncomingCallActionDispatcher.dispatchAccept(consultationId, consultationId, mapExtra, source: 'CALLKIT_USER_ACCEPT');
             break;
+          case CallEventConstants.actionCallDecline:
           case 'ACTION_CALL_DECLINE':
-            AppLogger.d('[CALL][$consultationId][DISPATCH_DECLINE_ENTER] Direct Decline action received');
+            AppLogger.d('[CALL-ACTION-FE] surface=CALLKIT action=DECLINE event=NATIVE_ACTION_RECEIVED call_id=$consultationId');
             await IncomingCallActionDispatcher.dispatchDecline(consultationId, consultationId);
             break;
+          case CallEventConstants.actionCallEnded:
           case 'ACTION_CALL_ENDED':
-            AppLogger.d('[CALL][$consultationId][DISPATCH_END_ENTER] Direct End action received');
+            final now = DateTime.now().millisecondsSinceEpoch;
+            final isWithinWindow = _dismissalWindowTimestamp > 0 && (now - _dismissalWindowTimestamp) < 3500;
+            final isDismissingAccept = isWithinWindow && _presentationOperation != CallKitPresentationOperation.none;
+
+            AppLogger.d('[CALLKIT-LIFECYCLE] event=ACTION_CALL_ENDED callId=$consultationId state=$currentState presentationOperation=$_presentationOperation withinWindow=$isWithinWindow source=${isDismissingAccept ? "NATIVE_DISMISSAL_ECHO" : "GENUINE_NATIVE_END"}');
+
+            if (isDismissingAccept) {
+              AppLogger.d('[CALLKIT] Ignored ACTION_CALL_ENDED generated by presentation dismissal echo (call_id=$consultationId)');
+              break;
+            }
+            AppLogger.d('[CALL-ACTION-FE] surface=CALLKIT action=END event=NATIVE_ACTION_RECEIVED call_id=$consultationId');
             await IncomingCallActionDispatcher.dispatchEnd(consultationId, consultationId);
             break;
+          case CallEventConstants.actionCallTimeout:
           case 'ACTION_CALL_TIMEOUT':
-            AppLogger.d('[CALL][$consultationId][TIMEOUT] Timeout received');
-            await GlobalCallService.teardownCall(callId: consultationId, consultationId: consultationId, reason: CallTerminalReason.timeout);
-            await dismissIncomingCallKitPresentation();
+            AppLogger.d('[CALL-ACTION-FE] surface=CALLKIT action=TIMEOUT event=NATIVE_ACTION_RECEIVED call_id=$consultationId');
+            await GlobalCallService.teardownCall(callId: consultationId, consultationId: consultationId, reason: CallTerminalReason.timeout, source: 'callkit_timeout');
+            await dismissIncomingCallKitPresentation(operation: CallKitPresentationOperation.dismissingAfterEnd);
             break;
+          case CallEventConstants.actionCallCallback:
+          case CallEventConstants.actionCallCustom:
           case 'ACTION_CALL_CALLBACK':
           case 'ACTION_CALL_TOGGLE_DPO_WITH_DISPLAY':
           case 'ACTION_CALL_CUSTOM':
-            AppLogger.d('[CALL][$consultationId][NOTIFICATION_BODY_TAP] CallKit notification body tapped');
+            AppLogger.d('[CALL-ACTION-FE] surface=CALLKIT action=CUSTOM event=NATIVE_ACTION_RECEIVED call_id=$consultationId');
             if (consultationId.isNotEmpty && !GlobalCallService.isCallActive) {
               final mapExtra = Map<String, dynamic>.from(extra);
               // Body tap opens native full-screen CallKit UI while keeping call ringing
@@ -164,6 +236,7 @@ class CallKitService {
             }
             break;
           default:
+            AppLogger.d('[CALL-ACTION-FE] surface=CALLKIT action=UNKNOWN event=ACTION_NOT_ROUTED call_id=$consultationId raw_event=${event.eventName}');
             break;
         }
       } catch (e) {
@@ -225,16 +298,26 @@ class CallKitService {
 
   /// Dismisses the native CallKit notification UI presentation on Android/iOS.
   /// Note: This only clears the local notification banner UI and does NOT terminate the backend voice call session.
-  Future<void> dismissIncomingCallKitPresentation() async {
+  Future<void> dismissIncomingCallKitPresentation({
+    CallKitPresentationOperation operation = CallKitPresentationOperation.dismissingAfterAccept,
+  }) async {
+    _presentationOperation = operation;
+    _dismissalWindowTimestamp = DateTime.now().millisecondsSinceEpoch;
     _activeConsultationId = null;
     _activeExtra = {};
     try {
       await FlutterCallkitIncoming.endAllCalls();
     } catch (e) {
       AppLogger.d('CallKitService dismissIncomingCallKitPresentation notice: $e');
+    } finally {
+      Future.delayed(const Duration(milliseconds: 3000), () {
+        if (_presentationOperation == operation) {
+          _presentationOperation = CallKitPresentationOperation.none;
+        }
+      });
     }
   }
 
   /// Alias for backward compatibility
-  Future<void> endAllCalls() => dismissIncomingCallKitPresentation();
+  Future<void> endAllCalls() => dismissIncomingCallKitPresentation(operation: CallKitPresentationOperation.dismissingAfterEnd);
 }

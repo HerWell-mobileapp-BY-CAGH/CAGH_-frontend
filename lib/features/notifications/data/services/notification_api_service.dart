@@ -49,7 +49,7 @@ class NotificationApiService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return data['unread_count'] ?? 0;
+        return int.tryParse(data['unread_count']?.toString() ?? '') ?? 0;
       }
     } catch (e, stack) {
       AppLogger.e('NotificationApiService', 'Error fetching unread count', stack);

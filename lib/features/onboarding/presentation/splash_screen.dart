@@ -1,6 +1,9 @@
+import 'dart:async';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:cagh_frontend/core/services/language_service.dart';
+import 'package:cagh_frontend/core/services/global_call_service.dart';
+import 'package:cagh_frontend/core/utils/app_logger.dart';
 import 'language_selection_screen.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
@@ -12,17 +15,42 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  Timer? _timer;
+
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(milliseconds: 3600), () {
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const LanguageSelectionScreen()),
-        );
-      }
-    });
+    _startSplashTimer();
+  }
+
+  void _startSplashTimer() {
+    _timer?.cancel();
+    _timer = Timer(const Duration(milliseconds: 3600), _onTimerFired);
+  }
+
+  void _onTimerFired() {
+    if (!mounted) return;
+
+    final isCallActiveOrPending = CallNavigationCoordinator.hasCallNavigationActiveOrPending;
+    final isCurrentRoute = ModalRoute.of(context)?.isCurrent ?? true;
+
+    if (isCallActiveOrPending || !isCurrentRoute) {
+      AppLogger.d('[SPLASH] Delaying/Aborting splash navigation: callActiveOrPending=$isCallActiveOrPending isCurrentRoute=$isCurrentRoute');
+      _timer = Timer(const Duration(milliseconds: 1000), _onTimerFired);
+      return;
+    }
+
+    AppLogger.d('[SPLASH] Proceeding to main application destination (LanguageSelectionScreen)');
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const LanguageSelectionScreen()),
+    );
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -36,36 +64,26 @@ class _SplashScreenState extends State<SplashScreen> {
 
             // Logo circle
             Container(
-              width: 180,
-              height: 180,
+              width: 140,
+              height: 140,
               decoration: BoxDecoration(
-                color: AppColors.creamAlt,
+                color: Colors.white,
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
+                    color: Colors.black.withValues(alpha: 0.04),
                     blurRadius: 20,
-                    offset: const Offset(0, 8),
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
               child: Center(
-                child: Container(
-                  width: 110,
-                  height: 110,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: ClipOval(
-                      child: Image.asset(
-                        'assets/images/logo.png',
-                        width: 110,
-                        height: 110,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
+                child: ClipOval(
+                  child: Image.asset(
+                    'assets/images/logo.png',
+                    width: 120,
+                    height: 120,
+                    fit: BoxFit.cover,
                   ),
                 ),
               ),

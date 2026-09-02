@@ -64,6 +64,11 @@ class _MidwifeInboxScreenState extends State<MidwifeInboxScreen> {
     }
   }
 
+  dynamic _mapPath(String key, dynamic holder) {
+    if (holder is Map) return holder[key];
+    return null;
+  }
+
   String _extractUserName(Map<String, dynamic> room) {
     final dynamic uData = room['user_detail'] ?? room['user'] ?? room['patient'];
 
@@ -176,16 +181,20 @@ class _MidwifeInboxScreenState extends State<MidwifeInboxScreen> {
                         String timeText = '';
                         
                         if (room['latest_message'] != null) {
-                          lastMessageText = room['latest_message']['text'] ?? lastMessageText;
-                          if (room['latest_message']['created_at'] != null) {
-                            try {
-                              final dt = DateTime.parse(room['latest_message']['created_at']).toLocal();
-                              timeText = DateFormat('h:mm a').format(dt);
-                            } catch (e) {
-                              timeText = '';
+                          final latestMsg = room['latest_message'];
+                          if (latestMsg is Map) {
+                            lastMessageText = (latestMsg['text'] is String ? latestMsg['text'] : (latestMsg['content'] is String ? latestMsg['content'] : lastMessageText));
+                            final lmCreated = latestMsg['created_at'] is String ? latestMsg['created_at'] : (latestMsg['sent_at'] is String ? latestMsg['sent_at'] : null);
+                            if (lmCreated != null) {
+                              try {
+                                final dt = DateTime.parse(lmCreated).toLocal();
+                                timeText = DateFormat('h:mm a').format(dt);
+                              } catch (e) {
+                                timeText = '';
+                              }
                             }
                           }
-                        } else if (room['created_at'] != null) {
+                        } else if (room['created_at'] is String) {
                           try {
                             final dt = DateTime.parse(room['created_at']).toLocal();
                             timeText = DateFormat('MMM d, h:mm a').format(dt);
@@ -194,14 +203,14 @@ class _MidwifeInboxScreenState extends State<MidwifeInboxScreen> {
                           }
                         }
 
-                        int unreadCount = room['unread_count'] ?? 0;
+                        int unreadCount = int.tryParse(room['unread_count']?.toString() ?? '') ?? 0;
                         bool hasUnread = unreadCount > 0;
 
                         return ListTile(
                           contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           leading: AppProfileAvatar(
                             radius: 26,
-                            imageUrl: room['user_detail']?['avatar_url'] ?? room['user']?['avatar_url'] ?? room['patient']?['avatar_url'],
+                            imageUrl: _mapPath('avatar_url', room['user_detail']) ?? _mapPath('avatar_url', room['user']) ?? _mapPath('avatar_url', room['patient']),
                             name: patientName,
                           ),
                           title: Row(
@@ -215,11 +224,22 @@ class _MidwifeInboxScreenState extends State<MidwifeInboxScreen> {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-                              if (timeText.isNotEmpty)
+                              if (timeText.isNotEmpty) ...[
+                                  Icon(
+                                    isRequested ? Icons.access_time : (hasUnread ? Icons.done : Icons.done_all),
+                                    size: 13,
+                                    color: isRequested ? Colors.orange.shade700 : (hasUnread ? Theme.of(context).colorScheme.primary : Colors.grey.shade500),
+                                  ),
+                                  const SizedBox(width: 3),
                                   Text(
                                     timeText,
-                                    style: TextStyle(fontSize: 12, color: hasUnread ? Theme.of(context).colorScheme.primary : Theme.of(context).textTheme.bodySmall?.color),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: hasUnread ? Theme.of(context).colorScheme.primary : Theme.of(context).textTheme.bodySmall?.color,
+                                      fontWeight: hasUnread ? FontWeight.bold : FontWeight.normal,
+                                    ),
                                   ),
+                                ],
                             ],
                           ),
                           subtitle: Padding(

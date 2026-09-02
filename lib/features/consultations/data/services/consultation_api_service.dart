@@ -157,6 +157,10 @@ class ConsultationApiService {
         primaryUrl,
         headers: await _getHeaders(),
       ).timeout(const Duration(seconds: 4));
+      // 410 Gone means the session is terminal — definitively inactive.
+      if (response.statusCode == 410) {
+        return false;
+      }
       if (response.statusCode == 200 || response.statusCode == 201) {
         final body = jsonDecode(response.body);
         final status = (body['status'] ?? body['voice_session']?['status'] ?? '').toString().toLowerCase();
@@ -180,6 +184,12 @@ class ConsultationApiService {
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       return jsonDecode(response.body);
+    } else if (response.statusCode == 410) {
+      // The backend returns 410 Gone when the voice session has ended, been
+      // declined, cancelled, or missed. Throw a user-friendly exception so
+      // VoiceCallScreen can surface "call is no longer active" rather than
+      // attempting joinChannel with an empty token.
+      throw Exception('Voice session is no longer active. The call may have ended.');
     } else {
       throw Exception('Failed to get Agora token. Status: ${response.statusCode}');
     }
@@ -189,21 +199,26 @@ class ConsultationApiService {
     final headers = await _getHeaders();
     final primaryUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}$consultationId/voice-session/accept/');
     final fallbackUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}$consultationId/voice-session/');
+    final reqId = 'HTTP-${DateTime.now().millisecondsSinceEpoch.toRadixString(16).toUpperCase()}';
     
-    AppLogger.d('[CALL][$consultationId][API_ACCEPT_REQUEST] POST $primaryUrl');
+    AppLogger.d('[CALL-ACCEPT-DIAG] req_id=$reqId endpoint=PRIMARY POST $primaryUrl');
+    AppLogger.d('[CALL][$consultationId][API_ACCEPT_REQUEST] req_id=$reqId POST $primaryUrl');
     try {
       final response = await http.post(
         primaryUrl,
         headers: headers,
       ).timeout(AppDurations.apiRequestTimeout);
-      AppLogger.d('[CALL][$consultationId][API_ACCEPT_RESPONSE] status=${response.statusCode}, body=${response.body}');
+      AppLogger.d('[CALL-ACCEPT-DIAG] req_id=$reqId endpoint=PRIMARY_RESPONSE status=${response.statusCode} body=${response.body}');
+      AppLogger.d('[CALL][$consultationId][API_ACCEPT_RESPONSE] req_id=$reqId status=${response.statusCode}, body=${response.body}');
       if (response.statusCode == 200 || response.statusCode == 201 || response.statusCode == 409 || response.statusCode == 401) {
         return response.statusCode;
       }
     } catch (e) {
+      AppLogger.d('[CALL-ACCEPT-DIAG] req_id=$reqId endpoint=PRIMARY_ERROR error=$e');
       AppLogger.d('[CALL][$consultationId][API_ACCEPT_ERROR] Primary endpoint failed: $e');
     }
 
+    AppLogger.d('[CALL-ACCEPT-DIAG] req_id=$reqId endpoint=FALLBACK POST $fallbackUrl');
     AppLogger.d('[CALL][$consultationId][API_ACCEPT_FALLBACK] POST $fallbackUrl');
     try {
       final response = await http.post(
@@ -211,9 +226,11 @@ class ConsultationApiService {
         headers: headers,
         body: jsonEncode({'action': 'ACCEPT'}),
       ).timeout(AppDurations.apiRequestTimeout);
+      AppLogger.d('[CALL-ACCEPT-DIAG] req_id=$reqId endpoint=FALLBACK_RESPONSE status=${response.statusCode} body=${response.body}');
       AppLogger.d('[CALL][$consultationId][API_ACCEPT_FALLBACK_RESPONSE] status=${response.statusCode}, body=${response.body}');
       return response.statusCode;
     } catch (e) {
+      AppLogger.d('[CALL-ACCEPT-DIAG] req_id=$reqId endpoint=FALLBACK_ERROR error=$e');
       AppLogger.d('[CALL][$consultationId][API_ACCEPT_ERROR] Fallback endpoint failed: $e');
       return 500;
     }

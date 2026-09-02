@@ -85,7 +85,7 @@ class FcmService {
       AppLogger.d('====================================================');
 
       final url = Uri.parse('${ApiConfig.baseUrl}/notifications/register-device/');
-      final response = await http.post(
+      var response = await http.post(
         url,
         headers: {
           'Content-Type': 'application/json',
@@ -96,6 +96,25 @@ class FcmService {
           'platform': defaultTargetPlatform == TargetPlatform.iOS ? 'IOS' : 'ANDROID',
         }),
       ).timeout(AppDurations.apiRequestTimeout);
+
+      if (response.statusCode == 401) {
+        AppLogger.d('[FCM SERVICE] Token expired (401). Attempting JWT refresh & retry...');
+        final refreshed = await AuthService.forceTokenRefresh();
+        if (refreshed) {
+          final freshToken = (await AuthService.getAccessToken() ?? '').trim();
+          response = await http.post(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $freshToken',
+            },
+            body: jsonEncode({
+              'token': fcmToken,
+              'platform': defaultTargetPlatform == TargetPlatform.iOS ? 'IOS' : 'ANDROID',
+            }),
+          ).timeout(AppDurations.apiRequestTimeout);
+        }
+      }
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         await prefs.setString(prefKey, fcmToken);

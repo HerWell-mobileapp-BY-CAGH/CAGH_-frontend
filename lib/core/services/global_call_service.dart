@@ -10,7 +10,6 @@ import 'package:cagh_frontend/core/services/ringtone_service.dart';
 import 'package:cagh_frontend/shared/utils/name_formatter.dart';
 import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
 import 'package:cagh_frontend/features/consultations/presentation/common/voice_call_screen.dart';
-import 'package:cagh_frontend/features/consultations/presentation/user/voice_consultation_screen.dart';
 import 'package:cagh_frontend/shared/models/appointment.dart';
 import 'package:cagh_frontend/core/utils/app_logger.dart';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
@@ -148,9 +147,19 @@ class PendingCallAction {
       final consultationId = (map['consultation_id'] ?? '').toString();
       final extra = Map<String, dynamic>.from(map['extra'] ?? {});
 
+      final effectiveId = consultationId.isNotEmpty ? consultationId : callId;
+      if (IncomingCallActionDispatcher.hasBeenAccepted(effectiveId) ||
+          GlobalCallService.isCallActive ||
+          GlobalCallService.stateMachine.state == CallState.connecting ||
+          GlobalCallService.stateMachine.state == CallState.connected) {
+        AppLogger.d('[PENDING ACTION] Call $effectiveId already accepted or active, discarding pending $typeStr action');
+        await prefs.remove(_prefKey);
+        return;
+      }
+
       AppLogger.d('[PENDING ACTION] Replaying queued $typeStr action for call $callId');
       if (typeStr == 'accept') {
-        await IncomingCallActionDispatcher.dispatchAccept(callId, consultationId, extra);
+        await IncomingCallActionDispatcher.dispatchAccept(callId, consultationId, extra, source: 'RESTORE_PENDING_CALL');
       } else if (typeStr == 'decline') {
         await IncomingCallActionDispatcher.dispatchDecline(callId, consultationId);
       }
@@ -164,6 +173,13 @@ class PendingCallAction {
 class CallNavigationCoordinator {
   static bool _isNavigating = false;
   static Map<String, dynamic>? _pendingAcceptedCallMap;
+
+  static bool get hasCallNavigationActiveOrPending =>
+      _isNavigating ||
+      _pendingAcceptedCallMap != null ||
+      GlobalCallService.isCallActive ||
+      GlobalCallService.stateMachine.state == CallState.connecting ||
+      GlobalCallService.stateMachine.state == CallState.connected;
 
   static void checkAndNavigatePendingCall() {
     if (_pendingAcceptedCallMap != null && globalNavigatorKey.currentContext != null) {
@@ -240,7 +256,7 @@ class CallNavigationCoordinator {
 
 class IncomingCallActionDispatcher {
   static final Map<String, int> _actionTimestamps = {};
-  static const int _dedupTtlMs = 10000;
+  static const int _dedupTtlMs = 1500;
 
   static bool _isDuplicate(String key) {
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -252,107 +268,147 @@ class IncomingCallActionDispatcher {
     return false;
   }
 
+  static final Set<String> _acceptedConsultationIds = {};
   static bool _acceptInProgress = false;
 
-  static Future<void> dispatchAccept(String callId, String consultationId, Map<String, dynamic> extra) async {
+  static bool hasBeenAccepted(String id) {
+    if (id.isEmpty || id == 'null') return false;
+    return _acceptedConsultationIds.contains(id);
+  }
+
+  static Future<void> dispatchAccept(
+    String callId,
+    String consultationId,
+    Map<String, dynamic> extra, {
+    required String source,
+  }) async {
     final effectiveConsultationId = (consultationId.isNotEmpty && consultationId != 'null')
         ? consultationId
         : (callId.isNotEmpty && callId != 'null' ? callId : (GlobalCallService.activeConsultationId ?? ''));
 
+    final currentState = GlobalCallService.stateMachine.state;
+    AppLogger.d('[CALL-LIFECYCLE] ACCEPTED source=$source call_id=$effectiveConsultationId');
+    AppLogger.d('[CALL ACCEPT TRACE] source=$source call_id=$effectiveConsultationId state=$currentState');
+
+    // Strict Source Authorization Requirement:
+    // Only explicit user button taps or native CallKit user answer actions are permitted to invoke accept.
+    if (source != 'VOICE_SCREEN_ACCEPT_BUTTON' &&
+        source != 'CALLKIT_USER_ACCEPT' &&
+        source != 'RESTORE_PENDING_CALL') {
+      AppLogger.d('[CALL ACCEPT TRACE][REJECTED] source=$source reason=unauthorized_accept_source call_id=$effectiveConsultationId');
+      return;
+    }
+
     if (effectiveConsultationId.isEmpty) {
-      AppLogger.d('[CALL][UNKNOWN][ACCEPT_ABORTED] reason=missing_consultation_id');
+      AppLogger.d('[CALL ACCEPT TRACE][ABORTED] source=$source reason=missing_consultation_id');
       return;
     }
 
-    if (_acceptInProgress ||
-        GlobalCallService.stateMachine.state == CallState.connecting ||
-        GlobalCallService.stateMachine.state == CallState.connected) {
-      AppLogger.d('[CALL][$effectiveConsultationId][ACCEPT_ABORTED] reason=already_processing_or_connected');
+    if (_acceptedConsultationIds.contains(effectiveConsultationId)) {
+      AppLogger.d('[CALL ACCEPT TRACE][ABORTED] source=$source reason=already_accepted call_id=$effectiveConsultationId');
       return;
     }
+
+    if (_acceptInProgress) {
+      AppLogger.d('[CALL ACCEPT TRACE][ABORTED] source=$source reason=accept_in_progress call_id=$effectiveConsultationId state=$currentState');
+      return;
+    }
+
+    if (currentState == CallState.connected || currentState == CallState.connecting) {
+      AppLogger.d('[CALL ACCEPT TRACE][ABORTED] source=$source reason=already_in_call_state state=$currentState call_id=$effectiveConsultationId');
+      return;
+    }
+
+    _acceptedConsultationIds.add(effectiveConsultationId);
     _acceptInProgress = true;
-
-    final key = 'accept_$effectiveConsultationId';
-    if (_isDuplicate(key)) {
-      AppLogger.d('[CALL][$effectiveConsultationId][ACCEPT_ABORTED] reason=already_processing');
-      _acceptInProgress = false;
-      return;
-    }
-
-    AppLogger.d('[CALL][$effectiveConsultationId][DISPATCH_ACCEPT_ENTER] Starting accept action execution');
-    RingtoneService.stopRingtone();
-
-    // 1. Non-blocking credentials check / restore attempt
-    AppLogger.d('[CALL][$effectiveConsultationId][ACCEPT_AUTH_START] Validating stored credentials');
-    final isAuthValid = await AuthService.trySilentAuthRestore();
-    AppLogger.d('[CALL][$effectiveConsultationId][ACCEPT_AUTH_CHECK] result=$isAuthValid');
-
-    // 2. Execute Backend ACCEPT Operation
-    AppLogger.d('[CALL][$effectiveConsultationId][ACCEPT_API_START] POST /voice-session/accept/');
-    int statusCode = await ConsultationApiService().acceptVoiceSessionDetailed(effectiveConsultationId);
-    AppLogger.d('[CALL][$effectiveConsultationId][ACCEPT_API_RESPONSE] status=$statusCode');
-    
-    // HTTP 401 Unauthorized -> Refresh token once & retry ACCEPT once
-    if (statusCode == 401) {
-      AppLogger.d('[CALL][$effectiveConsultationId][ACCEPT_API_START] Retrying after auth refresh');
-      final refreshed = await AuthService.trySilentAuthRestore();
-      if (refreshed) {
-        statusCode = await ConsultationApiService().acceptVoiceSessionDetailed(effectiveConsultationId);
-        AppLogger.d('[CALL][$effectiveConsultationId][ACCEPT_API_RESPONSE] status=$statusCode');
-      }
-    }
-
-    // Handle Status Code Cases (200, 201, 409 = success or already active)
-    if (statusCode == 409) {
-      AppLogger.d('[CALL][$effectiveConsultationId][ACCEPT_NOTICE] Session already accepted or active (409). Proceeding to ongoing VoiceCallScreen.');
-    } else if (statusCode == 401) {
-      AppLogger.d('[CALL][$effectiveConsultationId][ACCEPT_ABORTED] reason=auth_failure_401');
-      _acceptInProgress = false;
-      await GlobalCallService.teardownCall(callId: effectiveConsultationId, consultationId: effectiveConsultationId, reason: CallTerminalReason.authFailure);
-      CallKitService().dismissIncomingCallKitPresentation();
-      return;
-    } else if (statusCode != 200 && statusCode != 201) {
-      AppLogger.d('[CALL][$effectiveConsultationId][ACCEPT_ABORTED] reason=api_failure_$statusCode');
-      _acceptInProgress = false;
-      await GlobalCallService.teardownCall(callId: effectiveConsultationId, consultationId: effectiveConsultationId, reason: CallTerminalReason.authFailure);
-      CallKitService().dismissIncomingCallKitPresentation();
-      return;
-    }
-
-    AppLogger.d('[CALL][$effectiveConsultationId][ACCEPT_BACKEND_SUCCESS] Backend ACCEPT confirmed');
-
-    // 3. Broadcast WebSocket signal to remote caller + local event
-    AppLogger.d('[CALL][$effectiveConsultationId][ACCEPT_WS_START] Broadcasting call_accepted WS signal');
-    await GlobalCallService.broadcastWsSignal(effectiveConsultationId, 'call_accepted');
-    AppLogger.d('[CALL][$effectiveConsultationId][ACCEPT_WS_SUCCESS] WS signal dispatched');
-
-    GlobalCallService.sendCallEvent({
-      'action': 'call_accepted',
-      'type': 'call_accepted',
-      'consultation_id': effectiveConsultationId,
-    });
     GlobalCallService.stateMachine.transitionTo(CallState.connecting, callId: effectiveConsultationId, consultationId: effectiveConsultationId);
 
-    // 4. Dismiss native notification after backend ACCEPT and WS signaling complete
-    CallKitService().dismissIncomingCallKitPresentation();
+    try {
+      final key = 'accept_$effectiveConsultationId';
+      if (_isDuplicate(key)) {
+        AppLogger.d('[CALL-ACTION-FE] action=ACCEPT event=IDEMPOTENCY_BLOCKED call_id=$effectiveConsultationId state=${GlobalCallService.stateMachine.state}');
+        AppLogger.d('[CALL][$effectiveConsultationId][ACCEPT_ABORTED] reason=already_processing');
+        return;
+      }
 
-    // 5. Navigate to VoiceCallScreen
-    final callerId = GlobalCallService.extractId(extra['caller_id'] ?? extra['sender_id'] ?? extra['caller']);
-    final receiverId = GlobalCallService.extractId(extra['receiver_id'] ?? extra['recipient_id'] ?? extra['receiver']);
-    final callerName = NameFormatter.format((extra['caller_name'] ?? extra['sender_name'] ?? 'Care Provider').toString());
-    final receiverName = GlobalCallService.extractPersonName(extra, isSender: false);
+      final reqId = 'ACCE-${DateTime.now().millisecondsSinceEpoch.toRadixString(16).toUpperCase()}';
+      AppLogger.d('[CALL-ACCEPT-DIAG] req_id=$reqId source=$source consultation_id=$effectiveConsultationId state=$currentState accept_in_progress=$_acceptInProgress accepted_ids=$_acceptedConsultationIds');
+      AppLogger.d('[CALL][$effectiveConsultationId][DISPATCH_ACCEPT_ENTER] req_id=$reqId Starting accept action execution');
+      RingtoneService.stopRingtone();
 
-    AppLogger.d('[CALL][$effectiveConsultationId][ACCEPT_NAVIGATION_START] Navigating to VoiceCallScreen');
-    CallNavigationCoordinator.navigateToVoiceCallScreen(
-      consultationId: effectiveConsultationId,
-      callId: effectiveConsultationId,
-      callerName: callerName,
-      receiverName: receiverName,
-      callerId: callerId,
-      receiverId: receiverId,
-    );
-    _acceptInProgress = false;
-    AppLogger.d('[CALL][$effectiveConsultationId][DISPATCH_ACCEPT_COMPLETE] Accept flow complete');
+      // 1. Non-blocking credentials check / restore attempt
+      AppLogger.d('[CALL][$effectiveConsultationId][ACCEPT_AUTH_START] req_id=$reqId Validating stored credentials');
+      final isAuthValid = await AuthService.trySilentAuthRestore();
+      AppLogger.d('[CALL][$effectiveConsultationId][ACCEPT_AUTH_CHECK] req_id=$reqId result=$isAuthValid');
+
+      // 2. Execute Backend ACCEPT Operation
+      AppLogger.d('[CALL-ACTION-FE] surface=DISPATCHER action=ACCEPT req_id=$reqId event=BACKEND_REQUEST_START call_id=$effectiveConsultationId');
+      AppLogger.d('[CALL][$effectiveConsultationId][ACCEPT_API_START] req_id=$reqId POST /voice-session/accept/');
+      int statusCode = await ConsultationApiService().acceptVoiceSessionDetailed(effectiveConsultationId);
+      AppLogger.d('[CALL][$effectiveConsultationId][ACCEPT_API_RESPONSE] req_id=$reqId status=$statusCode');
+      
+      // Handle Status Code Cases (200, 201, 409 = success or already active)
+      if (statusCode == 409) {
+        AppLogger.d('[CALL-ACCEPT] req_id=$reqId surface=DISPATCHER action=ACCEPT event=BACKEND_REQUEST_SUCCESS call_id=$effectiveConsultationId notice=already_active_409');
+        AppLogger.d('[CALL][$effectiveConsultationId][ACCEPT_NOTICE] req_id=$reqId Session already accepted or active (409). Proceeding to ongoing VoiceCallScreen.');
+      } else if (statusCode != 200 && statusCode != 201) {
+        _acceptedConsultationIds.remove(effectiveConsultationId);
+        AppLogger.d('[CALL-ACCEPT] req_id=$reqId surface=DISPATCHER action=ACCEPT event=BACKEND_REQUEST_FAILED status=$statusCode call_id=$effectiveConsultationId');
+        AppLogger.d('[CALL][$effectiveConsultationId][ACCEPT_FAILED] req_id=$reqId ACCEPT request failed with status=$statusCode. Cleanly tearing down call.');
+        await GlobalCallService.teardownCall(callId: effectiveConsultationId, consultationId: effectiveConsultationId, reason: CallTerminalReason.authFailure, source: 'accept_failed');
+        CallKitService().dismissIncomingCallKitPresentation();
+        return;
+      }
+
+      AppLogger.d('[CALL-ACTION-FE] surface=DISPATCHER action=ACCEPT event=BACKEND_REQUEST_SUCCESS call_id=$effectiveConsultationId');
+      AppLogger.d('[CALL][$effectiveConsultationId][ACCEPT_BACKEND_SUCCESS] Backend ACCEPT confirmed');
+
+      // 3. Broadcast WebSocket signal to remote caller + local event
+      AppLogger.d('[CALL][$effectiveConsultationId][ACCEPT_WS_START] Broadcasting call_accepted WS signal');
+      await GlobalCallService.broadcastWsSignal(effectiveConsultationId, 'call_accepted');
+      AppLogger.d('[CALL][$effectiveConsultationId][ACCEPT_WS_SUCCESS] WS signal dispatched');
+
+      GlobalCallService.sendCallEvent({
+        'action': 'call_accepted',
+        'type': 'call_accepted',
+        'consultation_id': effectiveConsultationId,
+      });
+
+      AppLogger.d('[CALL-ACTION-FE] surface=DISPATCHER action=ACCEPT event=STATE_CONNECTING call_id=$effectiveConsultationId');
+      GlobalCallService.stateMachine.transitionTo(CallState.connecting, callId: effectiveConsultationId, consultationId: effectiveConsultationId);
+
+      // 4. Dismiss native notification after backend ACCEPT and WS signaling complete
+      if (source == 'CALLKIT_USER_ACCEPT') {
+        CallKitService().presentationOperation = CallKitPresentationOperation.dismissingAfterAccept;
+        CallKitService().recordDismissalWindow();
+      } else {
+        CallKitService().dismissIncomingCallKitPresentation(operation: CallKitPresentationOperation.dismissingAfterAccept);
+      }
+
+      // 5. Navigate to VoiceCallScreen
+      final callerId = GlobalCallService.extractId(extra['caller_id'] ?? extra['sender_id'] ?? extra['caller']);
+      final receiverId = GlobalCallService.extractId(extra['receiver_id'] ?? extra['recipient_id'] ?? extra['receiver'] ?? GlobalCallService.currentUserId);
+      final callerName = NameFormatter.format((extra['caller_name'] ?? extra['sender_name'] ?? 'Care Provider').toString());
+      final receiverName = GlobalCallService.extractPersonName(extra, isSender: false);
+
+      AppLogger.d('[CALL-ACTION-FE] surface=DISPATCHER action=ACCEPT event=AGORA_INITIALIZATION_START call_id=$effectiveConsultationId');
+      AppLogger.d('[CALL-ACTION-FE] surface=DISPATCHER action=ACCEPT event=NAVIGATION_START call_id=$effectiveConsultationId');
+      AppLogger.d('[CALL][$effectiveConsultationId][ACCEPT_NAVIGATION_START] Navigating to VoiceCallScreen');
+      CallNavigationCoordinator.navigateToVoiceCallScreen(
+        consultationId: effectiveConsultationId,
+        callId: effectiveConsultationId,
+        callerName: callerName,
+        receiverName: receiverName,
+        callerId: callerId,
+        receiverId: receiverId,
+      );
+      AppLogger.d('[CALL][$effectiveConsultationId][DISPATCH_ACCEPT_COMPLETE] Accept flow complete');
+    } catch (e) {
+      AppLogger.d('[CALL-ACTION-FE] surface=DISPATCHER action=ACCEPT event=EXCEPTION error_type=${e.runtimeType} call_id=$effectiveConsultationId');
+      rethrow;
+    } finally {
+      _acceptInProgress = false;
+    }
   }
 
   static Future<void> dispatchDecline(String callId, String consultationId) async {
@@ -360,13 +416,17 @@ class IncomingCallActionDispatcher {
         ? consultationId
         : (callId.isNotEmpty && callId != 'null' ? callId : (GlobalCallService.activeConsultationId ?? ''));
 
+    AppLogger.d('[CALL-ACTION-FE] surface=DISPATCHER action=DECLINE event=ENTERED call_id=$effectiveConsultationId');
+
     if (effectiveConsultationId.isEmpty) {
+      AppLogger.d('[CALL-ACTION-FE] surface=DISPATCHER action=DECLINE event=EARLY_RETURN reason=missing_consultation_id call_id=unknown');
       AppLogger.d('[CALL][UNKNOWN][DECLINE_ABORTED] reason=missing_consultation_id');
       return;
     }
 
     final key = 'decline_$effectiveConsultationId';
     if (_isDuplicate(key)) {
+      AppLogger.d('[CALL-ACTION-FE] action=DECLINE event=IDEMPOTENCY_BLOCKED call_id=$effectiveConsultationId state=${GlobalCallService.stateMachine.state}');
       AppLogger.d('[CALL][$effectiveConsultationId][DECLINE_ABORTED] reason=already_processing');
       return;
     }
@@ -374,8 +434,10 @@ class IncomingCallActionDispatcher {
     AppLogger.d('[CALL][$effectiveConsultationId][DISPATCH_DECLINE_ENTER] Starting decline action execution');
     RingtoneService.stopRingtone();
 
+    AppLogger.d('[CALL-ACTION-FE] surface=DISPATCHER action=DECLINE event=BACKEND_REQUEST_START call_id=$effectiveConsultationId');
     AppLogger.d('[CALL][$effectiveConsultationId][DECLINE_API_START] POST /voice-session/decline/');
     final ok = await ConsultationApiService().declineVoiceSession(effectiveConsultationId);
+    AppLogger.d('[CALL-ACTION-FE] surface=DISPATCHER action=DECLINE event=BACKEND_REQUEST_SUCCESS call_id=$effectiveConsultationId');
     AppLogger.d('[CALL][$effectiveConsultationId][DECLINE_API_RESPONSE] status=${ok ? 200 : 500}');
     AppLogger.d('[CALL][$effectiveConsultationId][DECLINE_BACKEND_SUCCESS] Backend DECLINE confirmed');
 
@@ -387,6 +449,7 @@ class IncomingCallActionDispatcher {
       callId: effectiveConsultationId,
       consultationId: effectiveConsultationId,
       reason: CallTerminalReason.decline,
+      source: 'local_decline',
     );
 
     CallKitService().dismissIncomingCallKitPresentation();
@@ -425,6 +488,7 @@ class IncomingCallActionDispatcher {
       callId: effectiveConsultationId,
       consultationId: effectiveConsultationId,
       reason: CallTerminalReason.hangup,
+      source: 'local_hangup',
     );
 
     CallKitService().dismissIncomingCallKitPresentation();
@@ -443,7 +507,11 @@ class PresentationCoordinator {
 
     if (isForeground && context != null) {
       AppLogger.d('[PRESENTATION] Single Owner -> Flutter Canonical Bottom-Sheet Overlay');
-      GlobalCallService.showIncomingCallModal(event.rawData, event.consultationId);
+      GlobalCallService.showIncomingCallModal(
+        event.rawData,
+        defaultAppointmentId: event.consultationId,
+        defaultConsultationId: event.consultationId,
+      );
     } else {
       AppLogger.d('[PRESENTATION] Single Owner -> Android CallKit System Notification with Full-Screen Intent');
       await CallKitService().showCallkitIncoming(
@@ -473,7 +541,9 @@ class CallStateMachine {
     bool isValid = false;
     switch (_state) {
       case CallState.idle:
-        if (newState == CallState.incomingRinging || newState == CallState.outgoingRinging) {
+        if (newState == CallState.incomingRinging ||
+            newState == CallState.outgoingRinging ||
+            newState == CallState.connecting) {
           isValid = true;
         }
         break;
@@ -500,6 +570,7 @@ class CallStateMachine {
         if (newState == CallState.connected ||
             newState == CallState.ended ||
             newState == CallState.cancelled ||
+            newState == CallState.declined ||
             newState == CallState.idle) {
           isValid = true;
         }
@@ -524,6 +595,8 @@ class CallStateMachine {
       return false;
     }
 
+    final effectiveId = consultationId ?? callId ?? _activeConsultationId ?? 'unknown';
+    AppLogger.d('[CALL][$effectiveId][STATE] $newState');
     AppLogger.d('[CALL STATE MACHINE] Transition: $_state -> $newState (callId: $callId, consultationId: $consultationId)');
     _state = newState;
     if (callId != null) _activeCallId = callId;
@@ -567,19 +640,62 @@ class GlobalCallService {
   static final StreamController<Map<String, dynamic>> _callEventController = StreamController<Map<String, dynamic>>.broadcast();
   static Stream<Map<String, dynamic>> get onCallEvent => _callEventController.stream;
 
+  static bool isTerminalCallRecentlySeen(String id) {
+    if (id.isEmpty || id == 'null') return false;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final ts = _terminalCallTtlCache[id];
+    if (ts != null && (now - ts) < _terminalTtlMs) {
+      return true;
+    }
+    return false;
+  }
+
   static Future<void> teardownCall({
     required String callId,
     required String consultationId,
     required CallTerminalReason reason,
+    String source = 'unknown',
   }) async {
-    AppLogger.d('[TEARDOWN] Executing teardown for call $callId (reason: $reason)');
-    _terminalCallTtlCache[callId] = DateTime.now().millisecondsSinceEpoch;
+    final effectiveConsultationId = (consultationId.isNotEmpty && consultationId != 'null')
+        ? consultationId
+        : (callId.isNotEmpty && callId != 'null' ? callId : (stateMachine.activeConsultationId ?? ''));
+    final effectiveCallId = (callId.isNotEmpty && callId != 'null') ? callId : effectiveConsultationId;
+    final displayId = effectiveConsultationId.isNotEmpty ? effectiveConsultationId : effectiveCallId;
+
+    AppLogger.d('[CALL-LIFECYCLE] ENDING source=$source reason=$reason call_id=$displayId');
+    AppLogger.d('[CALL][consultation=$effectiveConsultationId][session=$effectiveCallId][TERMINAL_EVENT] source=$source reason=$reason');
+
+    if (isTerminalCallRecentlySeen(effectiveConsultationId) || isTerminalCallRecentlySeen(effectiveCallId)) {
+      AppLogger.d('[CALL-LIFECYCLE] ENDED (already_terminal) source=$source call_id=$displayId');
+      AppLogger.d('[CALL][$displayId][TERMINAL_IGNORED] source=$source reason=already_terminal');
+      return;
+    }
+
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (effectiveConsultationId.isNotEmpty && effectiveConsultationId != 'null') {
+      _terminalCallTtlCache[effectiveConsultationId] = now;
+    }
+    if (effectiveCallId.isNotEmpty && effectiveCallId != 'null') {
+      _terminalCallTtlCache[effectiveCallId] = now;
+    }
+
+    AppLogger.d('[CALL][$displayId][TERMINAL_ACCEPTED] source=$source reason=$reason');
+    AppLogger.d('[TEARDOWN] Executing teardown for call $displayId (source: $source, reason: $reason)');
 
     RingtoneService.stopRingtone();
-    stateMachine.transitionTo(CallState.ended, callId: callId, consultationId: consultationId);
+    stateMachine.transitionTo(CallState.ended, callId: effectiveCallId, consultationId: effectiveConsultationId);
+
+    // Emit ONE normalized local terminal event for subscribers (like VoiceCallScreen)
+    sendCallEvent({
+      'action': 'call_ended',
+      'type': 'call_ended',
+      'consultation_id': effectiveConsultationId,
+      'reason': reason.toString(),
+      'source': source,
+    });
 
     try {
-      await FlutterCallkitIncoming.endAllCalls();
+      CallKitService().dismissIncomingCallKitPresentation();
     } catch (_) {}
 
     isCallActive = false;
@@ -588,19 +704,18 @@ class GlobalCallService {
     await Future.delayed(const Duration(milliseconds: 300));
     stateMachine.transitionTo(CallState.idle);
 
-    final now = DateTime.now().millisecondsSinceEpoch;
-    _terminalCallTtlCache.removeWhere((id, timestamp) => (now - timestamp) > _terminalTtlMs);
-    _processedCallIds.remove(callId);
-  }
+    AppLogger.d('[CALL-LIFECYCLE] ENDED complete call_id=$displayId source=$source');
 
-  static bool isTerminalCallRecentlySeen(String callId) {
-    if (callId.isEmpty) return false;
-    final now = DateTime.now().millisecondsSinceEpoch;
-    final ts = _terminalCallTtlCache[callId];
-    if (ts != null && (now - ts) < _terminalTtlMs) {
-      return true;
+    final cleanNow = DateTime.now().millisecondsSinceEpoch;
+    _terminalCallTtlCache.removeWhere((id, timestamp) => (cleanNow - timestamp) > _terminalTtlMs);
+    if (effectiveConsultationId.isNotEmpty) {
+      _processedCallIds.remove(effectiveConsultationId);
+      IncomingCallActionDispatcher._acceptedConsultationIds.remove(effectiveConsultationId);
     }
-    return false;
+    if (effectiveCallId.isNotEmpty) {
+      _processedCallIds.remove(effectiveCallId);
+      IncomingCallActionDispatcher._acceptedConsultationIds.remove(effectiveCallId);
+    }
   }
 
   static String? get activeConsultationId => stateMachine.activeConsultationId;
@@ -768,8 +883,16 @@ class GlobalCallService {
     return true;
   }
 
-  static void showIncomingCallModal(Map<String, dynamic> data, String defaultAppointmentId) {
-    final event = IncomingCallEvent.fromMap(data, defaultAppointmentId: defaultAppointmentId);
+  static void showIncomingCallModal(
+    Map<String, dynamic> data,
+    {String defaultAppointmentId = '',
+    String defaultConsultationId = ''}
+  ) {
+    final event = IncomingCallEvent.fromMap(
+      data,
+      defaultAppointmentId: defaultAppointmentId,
+      defaultConsultationId: defaultConsultationId,
+    );
     handleIncomingCallEvent(event);
   }
 

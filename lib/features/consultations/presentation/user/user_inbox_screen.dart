@@ -128,25 +128,23 @@ class _UserInboxScreenState extends State<UserInboxScreen> with SingleTickerProv
 
   String _extractMidwifeName(Map<String, dynamic> room) {
     final dynamic mwData = room['midwife_detail'] ?? room['midwife'];
+    final dynamic mwUser = _mapPath('user', mwData);
+    final dynamic mwProfile = _mapPath('profile', mwUser);
 
-    if (mwData is Map) {
-      if (mwData['user'] is Map && mwData['user']['profile'] is Map) {
-        final profile = mwData['user']['profile'];
-        final fName = profile['first_name']?.toString() ?? '';
-        final lName = profile['last_name']?.toString() ?? '';
-        if (fName.isNotEmpty || lName.isNotEmpty) {
-          return '$fName $lName'.trim();
-        }
-      } else if (mwData['user'] is Map) {
-        final u = mwData['user'];
-        if (u['first_name'] != null && u['first_name'].toString().isNotEmpty) {
-          return u['first_name'];
-        }
+    if (mwProfile is Map) {
+      final fName = mwProfile['first_name']?.toString() ?? '';
+      final lName = mwProfile['last_name']?.toString() ?? '';
+      if (fName.isNotEmpty || lName.isNotEmpty) {
+        return '$fName $lName'.trim();
       }
+    } else if (mwUser is Map) {
+      if (mwUser['first_name'] != null && mwUser['first_name'].toString().isNotEmpty) {
+        return mwUser['first_name'];
+      }
+    }
 
-      if (mwData['full_name'] != null && mwData['full_name'].toString().isNotEmpty) {
-        return mwData['full_name'];
-      }
+    if (mwData is Map && mwData['full_name'] != null && mwData['full_name'].toString().isNotEmpty) {
+      return mwData['full_name'];
     }
 
     final mwId = _extractMidwifeId(room);
@@ -155,6 +153,11 @@ class _UserInboxScreenState extends State<UserInboxScreen> with SingleTickerProv
     }
 
     return 'Midwife';
+  }
+
+  dynamic _mapPath(String key, dynamic holder) {
+    if (holder is Map) return holder[key];
+    return null;
   }
 
   String _extractMidwifeId(Map<String, dynamic> room) {
@@ -331,22 +334,25 @@ class _UserInboxScreenState extends State<UserInboxScreen> with SingleTickerProv
           String lastMessageText = isRequested ? 'Consultation requested' : 'Tap to open chat';
           String timeText = '';
 
-          if (room['latest_message'] != null) {
-            lastMessageText = room['latest_message']['text'] ?? lastMessageText;
-            if (room['latest_message']['created_at'] != null) {
+          final latestMsg = room['latest_message'];
+          if (latestMsg is Map) {
+            final lmText = latestMsg['text'] ?? latestMsg['content'];
+            if (lmText is String) lastMessageText = lmText;
+            final lmCreated = latestMsg['created_at'] ?? latestMsg['sent_at'];
+            if (lmCreated is String) {
               try {
-                final dt = DateTime.parse(room['latest_message']['created_at']).toLocal();
+                final dt = DateTime.parse(lmCreated).toLocal();
                 timeText = DateFormat('h:mm a').format(dt);
               } catch (_) {}
             }
-          } else if (room['created_at'] != null) {
+          } else if (room['created_at'] is String) {
             try {
               final dt = DateTime.parse(room['created_at']).toLocal();
               timeText = DateFormat('MMM d, h:mm a').format(dt);
             } catch (_) {}
           }
 
-          final int unreadCount = room['unread_count'] ?? 0;
+          final int unreadCount = int.tryParse(room['unread_count']?.toString() ?? '') ?? 0;
           final bool hasUnread = unreadCount > 0;
 
           return Container(
@@ -360,7 +366,7 @@ class _UserInboxScreenState extends State<UserInboxScreen> with SingleTickerProv
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               leading: AppProfileAvatar(
                 radius: 26,
-                imageUrl: room['midwife_detail']?['avatar_url'] ?? room['midwife']?['avatar_url'],
+                imageUrl: _mapPath('#avatar_url', room['midwife_detail']) ?? _mapPath('#avatar_url', room['midwife']),
                 name: midwifeName,
               ),
               title: Row(
@@ -378,7 +384,15 @@ class _UserInboxScreenState extends State<UserInboxScreen> with SingleTickerProv
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  if (timeText.isNotEmpty)
+                  if (timeText.isNotEmpty) ...[
+                    Icon(
+                      isRequested ? Icons.access_time : (hasUnread ? Icons.done : Icons.done_all),
+                      size: 13,
+                      color: isRequested
+                          ? Colors.orange.shade700
+                          : (hasUnread ? AppColors.primaryGreen : Colors.grey.shade500),
+                    ),
+                    const SizedBox(width: 3),
                     Text(
                       timeText,
                       style: TextStyle(
@@ -387,6 +401,7 @@ class _UserInboxScreenState extends State<UserInboxScreen> with SingleTickerProv
                         fontWeight: hasUnread ? FontWeight.bold : FontWeight.normal,
                       ),
                     ),
+                  ],
                 ],
               ),
               subtitle: Padding(

@@ -728,6 +728,34 @@ class AuthService {
     return prefs.getString(_accessTokenKey);
   }
 
+  static Future<bool> forceTokenRefresh() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final refreshToken = prefs.getString(_refreshTokenKey) ?? prefs.getString('refresh_token');
+      if (refreshToken != null && refreshToken.trim().isNotEmpty) {
+        final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.tokenRefresh}');
+        final response = await http.post(
+          url,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'refresh': refreshToken.trim()}),
+        ).timeout(const Duration(seconds: 6));
+
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          final newAccess = (data['access'] ?? data['access_token'] ?? '').toString().trim();
+          if (newAccess.isNotEmpty) {
+            await prefs.setString(_accessTokenKey, newAccess);
+            AppLogger.d('[AUTH] JWT token refresh successful');
+            return true;
+          }
+        }
+      }
+    } catch (e) {
+      AppLogger.d('[AUTH] forceTokenRefresh error: $e');
+    }
+    return false;
+  }
+
   static Future<bool> trySilentAuthRestore() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -735,29 +763,7 @@ class AuthService {
       if (token != null && token.trim().isNotEmpty) {
         return true;
       }
-      final refreshToken = prefs.getString(_refreshTokenKey) ?? prefs.getString('refresh_token');
-      if (refreshToken != null && refreshToken.trim().isNotEmpty) {
-        try {
-          final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.tokenRefresh}');
-          final response = await http.post(
-            url,
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({'refresh': refreshToken.trim()}),
-          ).timeout(const Duration(seconds: 6));
-
-          if (response.statusCode == 200) {
-            final data = jsonDecode(response.body);
-            final newAccess = (data['access'] ?? data['access_token'] ?? '').toString().trim();
-            if (newAccess.isNotEmpty) {
-              await prefs.setString(_accessTokenKey, newAccess);
-              AppLogger.d('[AUTH] Silent JWT refresh successful');
-              return true;
-            }
-          }
-        } catch (e) {
-          AppLogger.d('[AUTH] Silent JWT refresh request notice: $e');
-        }
-      }
+      return await forceTokenRefresh();
     } catch (e) {
       AppLogger.d('[AUTH] trySilentAuthRestore error: $e');
     }

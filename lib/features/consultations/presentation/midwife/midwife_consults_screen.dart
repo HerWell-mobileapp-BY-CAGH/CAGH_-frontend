@@ -445,7 +445,7 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
 
       if (userId == apt.userId.toString() || patientId == apt.userId.toString() || room.toString().contains(apt.userId.toString())) {
         if (room['status'] == 'REQUESTED') return true;
-        if (room['unread_count'] != null && (room['unread_count'] as num) > 0) return true;
+        if (room['unread_count'] != null && (int.tryParse(room['unread_count'].toString()) ?? 0) > 0) return true;
       }
     }
     return false;

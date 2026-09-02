@@ -218,7 +218,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                       height: 80,
                       margin: const EdgeInsets.only(bottom: 16),
                       decoration: const BoxDecoration(
-                        color: AppColors.creamAlt,
+                        color: Colors.white,
                         shape: BoxShape.circle,
                       ),
                       child: Center(

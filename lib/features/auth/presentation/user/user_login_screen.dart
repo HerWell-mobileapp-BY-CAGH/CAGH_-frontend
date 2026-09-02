@@ -116,8 +116,8 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
                         width: 80,
                         height: 80,
                         margin: const EdgeInsets.only(bottom: 16),
-                        decoration: BoxDecoration(
-                          color: AppColors.creamAlt,
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
                           shape: BoxShape.circle,
                         ),
                         child: Center(
