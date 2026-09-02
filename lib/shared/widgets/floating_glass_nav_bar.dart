@@ -39,33 +39,32 @@ class FloatingGlassNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgContainerColor = isDark ? Colors.grey.shade900.withValues(alpha: 0.85) : Colors.white;
-    final borderColor = isDark ? Colors.grey.shade800 : Colors.grey.shade300;
-    final unselectedIconColor = isDark ? Colors.white70 : Colors.black87;
-    final unselectedTextColor = isDark ? Colors.white70 : Colors.black87;
+    final bgContainerColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final borderColor = isDark ? Colors.white10 : const Color(0xFFE8ECEF);
+    final unselectedColor = isDark ? const Color(0xFF9E9E9E) : const Color(0xFF6B7280);
+    final activeColor = AppColors.primaryGreen;
 
     return SafeArea(
       top: false,
       child: Padding(
         padding: const EdgeInsets.only(left: 16, right: 16, bottom: 12),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(40),
+          borderRadius: BorderRadius.circular(24),
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
             child: Container(
-              height: 66,
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              height: 64,
               decoration: BoxDecoration(
-                color: bgContainerColor,
-                borderRadius: BorderRadius.circular(16),
+                color: bgContainerColor.withValues(alpha: isDark ? 0.95 : 0.98),
+                borderRadius: BorderRadius.circular(24),
                 border: Border.all(
                   color: borderColor,
                   width: 1.0,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 10,
+                    color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.08),
+                    blurRadius: 16,
                     offset: const Offset(0, 4),
                   ),
                 ],
@@ -80,59 +79,68 @@ class FloatingGlassNavBar extends StatelessWidget {
                     child: GestureDetector(
                       onTap: () => onTabSelected(index),
                       behavior: HitTestBehavior.opaque,
-                      child: Center(
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 240),
-                          curve: Curves.easeOutCubic,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 4,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isSelected ? AppColors.primaryGreen : Colors.transparent,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            mainAxisAlignment: MainAxisAlignment.center,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const SizedBox(height: 6),
+                          // Icon + optional Badge
+                          Stack(
+                            clipBehavior: Clip.none,
+                            alignment: Alignment.center,
                             children: [
-                              Stack(
-                                clipBehavior: Clip.none,
-                                children: [
-                                  Icon(
-                                    isSelected ? (item.activeIcon ?? item.icon) : item.icon,
-                                    size: 20,
-                                    color: isSelected ? Colors.white : unselectedIconColor,
-                                  ),
-                                  if (item.showBadge)
-                                    Positioned(
-                                      right: -3,
-                                      top: -3,
-                                      child: Container(
-                                        width: 8,
-                                        height: 8,
-                                        decoration: const BoxDecoration(
-                                          color: AppColors.accentYellow,
-                                          shape: BoxShape.circle,
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                item.label,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  color: isSelected ? Colors.white : unselectedTextColor,
-                                  fontSize: 10,
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                              AnimatedScale(
+                                scale: isSelected ? 1.08 : 1.0,
+                                duration: const Duration(milliseconds: 200),
+                                curve: Curves.easeOutCubic,
+                                child: Icon(
+                                  isSelected ? (item.activeIcon ?? item.icon) : item.icon,
+                                  size: 22,
+                                  color: isSelected ? activeColor : unselectedColor,
                                 ),
                               ),
+                              if (item.showBadge)
+                                Positioned(
+                                  right: -4,
+                                  top: -2,
+                                  child: Container(
+                                    width: 7,
+                                    height: 7,
+                                    decoration: const BoxDecoration(
+                                      color: AppColors.accentYellow,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                ),
                             ],
                           ),
-                        ),
+                          const SizedBox(height: 3),
+                          // Label
+                          Text(
+                            item.label,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: isSelected ? activeColor : unselectedColor,
+                              fontSize: 11,
+                              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                              letterSpacing: -0.1,
+                            ),
+                          ),
+                          // Bottom indicator line (active state)
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 220),
+                            curve: Curves.easeOutCubic,
+                            height: 3,
+                            width: isSelected ? 24 : 0,
+                            decoration: BoxDecoration(
+                              color: isSelected ? activeColor : Colors.transparent,
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(3),
+                                topRight: Radius.circular(3),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   );
