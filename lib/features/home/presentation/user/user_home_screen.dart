@@ -275,7 +275,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             color: const Color(0xFFFFD22B),
           ),
 
-          LearningModuleCard(
+          _buildLearningModuleCard(
             icon: Icons.menu_book_rounded,
             iconBgColor: const Color(0xFFE8F5E9),
             iconColor: const Color(0xFF315E26),
@@ -342,7 +342,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          LearningModuleCard(
+          _buildLearningModuleCard(
             icon: Icons.menu_book_rounded,
             iconBgColor: const Color(0xFFE8F5E9),
             iconColor: const Color(0xFF315E26),
