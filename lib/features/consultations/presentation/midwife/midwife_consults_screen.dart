@@ -19,7 +19,8 @@ class MidwifeConsultsScreen extends StatefulWidget {
 }
 
 class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
-  int _selectedTab = 0; // 0=Requests(PENDING), 1=Upcoming(CONFIRMED), 2=Past
+  int _selectedTab = 1; // 0=Requests(PENDING), 1=Upcoming(CONFIRMED), 2=Past
+
   
   final _appointmentRepository = AppointmentRepositoryImpl(AppointmentApiService());
   List<Appointment> _appointments = [];
@@ -289,8 +290,55 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Status Indicator
-            buildStatusIndicator(apt.status),
+            // 1. Status Indicator & More Menu
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                buildStatusIndicator(apt.status),
+                if (isUpcoming)
+                  PopupMenuButton<String>(
+                    icon: Icon(Icons.more_vert, color: Theme.of(context).iconTheme.color ?? const Color(0xFF64748B), size: 20),
+                    tooltip: 'More options',
+                    onSelected: (value) {
+                      if (value == 'reschedule') {
+                        showRescheduleModal(
+                          context,
+                          apt,
+                          onSuccess: _fetchAppointments,
+                        );
+                      } else if (value == 'cancel') {
+                        showCancelConfirmDialog(
+                          context,
+                          apt,
+                          () async => _updateStatus(apt.appointmentId, AppointmentStatus.cancelled),
+                        );
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      const PopupMenuItem<String>(
+                        value: 'reschedule',
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit_calendar_outlined, size: 18, color: AppColors.primaryGreen),
+                            SizedBox(width: 10),
+                            Text('Reschedule', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem<String>(
+                        value: 'cancel',
+                        child: Row(
+                          children: [
+                            Icon(Icons.cancel_outlined, size: 18, color: AppColors.errorRed),
+                            SizedBox(width: 10),
+                            Text('Cancel', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.errorRed)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
             const SizedBox(height: 14),
 
             // 2. Person Info (Patient Name & Role)

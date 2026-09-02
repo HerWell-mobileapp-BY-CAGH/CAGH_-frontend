@@ -21,6 +21,15 @@ abstract class AppointmentRepository {
 
   /// Cancel an upcoming appointment
   Future<Appointment> cancelAppointment(String appointmentId);
+
+  /// Reschedule an upcoming appointment to a new date and time
+  Future<Appointment> rescheduleAppointment({
+    required String appointmentId,
+    required String scheduledDate,
+    required String startTime,
+    required String endTime,
+  });
+
   
   /// Get specific appointment details
   Future<Appointment> getAppointmentDetails(String appointmentId);

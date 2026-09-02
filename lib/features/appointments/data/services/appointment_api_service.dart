@@ -137,12 +137,48 @@ class AppointmentApiService {
       headers: await _getHeaders(),
     ).timeout(AppDurations.apiRequestTimeout);
 
-    if (response.statusCode == 200) {
+    if (response.statusCode == 200 || response.statusCode == 201) {
       return jsonDecode(response.body);
     } else {
-      throw Exception('Failed to cancel appointment.');
+      String msg = 'Failed to cancel appointment.';
+      try {
+        final body = jsonDecode(response.body);
+        msg = body['message'] ?? body['detail'] ?? body['error'] ?? msg;
+      } catch (_) {}
+      throw Exception(msg);
     }
   }
+
+  Future<Map<String, dynamic>> rescheduleAppointment({
+    required String appointmentId,
+    required String scheduledDate,
+    required String startTime,
+    required String endTime,
+  }) async {
+    final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.appointments}$appointmentId/reschedule/');
+    
+    final response = await http.post(
+      url,
+      headers: await _getHeaders(),
+      body: jsonEncode({
+        'scheduled_date': scheduledDate,
+        'start_time': startTime,
+        'end_time': endTime,
+      }),
+    ).timeout(AppDurations.apiRequestTimeout);
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return jsonDecode(response.body);
+    } else {
+      String msg = 'Failed to reschedule appointment.';
+      try {
+        final body = jsonDecode(response.body);
+        msg = body['message'] ?? body['detail'] ?? body['error'] ?? msg;
+      } catch (_) {}
+      throw Exception(msg);
+    }
+  }
+
   
   Future<Map<String, dynamic>> getAppointmentDetails(String appointmentId) async {
     final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.appointments}$appointmentId/');

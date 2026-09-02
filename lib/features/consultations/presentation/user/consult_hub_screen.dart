@@ -25,7 +25,8 @@ class ConsultHubScreen extends StatefulWidget {
 }
 
 class ConsultHubScreenState extends State<ConsultHubScreen> {
-  int _selectedTab = 0; // 0=Requests(PENDING), 1=Upcoming(CONFIRMED), 2=Past
+  int _selectedTab = 1; // 0=Requests(PENDING), 1=Upcoming(CONFIRMED), 2=Past
+
 
   final _appointmentRepository = AppointmentRepositoryImpl(AppointmentApiService());
   List<Appointment> _appointments = [];
@@ -371,11 +372,15 @@ class ConsultHubScreenState extends State<ConsultHubScreen> {
                                 apt,
                                 onCardTap: () => _fetchAndShowDetails(apt),
                                 onJoinCall: () => _startPatientConsultation(context, apt),
-                                onReschedule: () => showRescheduleModal(context, apt),
+                                onReschedule: () => showRescheduleModal(
+                                  context,
+                                  apt,
+                                  onSuccess: _fetchAppointments,
+                                ),
                                 onCancel: () => showCancelConfirmDialog(
                                   context,
                                   apt,
-                                  () => _updateStatus(apt.appointmentId, AppointmentStatus.cancelled),
+                                  () async => _updateStatus(apt.appointmentId, AppointmentStatus.cancelled),
                                 ),
                                 onViewDetails: () => _fetchAndShowDetails(apt),
                               );

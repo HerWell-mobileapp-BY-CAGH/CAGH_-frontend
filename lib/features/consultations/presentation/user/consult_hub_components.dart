@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:cagh_frontend/shared/models/appointment.dart';
+import 'package:cagh_frontend/shared/models/time_slot.dart';
+import 'package:cagh_frontend/features/appointments/data/services/appointment_api_service.dart';
+import 'package:cagh_frontend/features/appointments/data/repositories/appointment_repository_impl.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
 
@@ -100,139 +104,281 @@ Widget detailRow(String label, String val) {
   );
 }
 
-void showRescheduleModal(BuildContext context, Appointment apt) {
-  String selectedDate = apt.date;
-  String selectedTime = apt.startTime;
-  final timeSlots = ['09:00 AM', '10:30 AM', '02:00 PM', '04:00 PM'];
+void showRescheduleModal(
+  BuildContext context,
+  Appointment apt, {
+  VoidCallback? onSuccess,
+}) {
+  DateTime selectedDate;
+  try {
+    selectedDate = DateTime.parse(apt.date);
+    if (selectedDate.isBefore(DateTime.now())) {
+      selectedDate = DateTime.now().add(const Duration(days: 1));
+    }
+  } catch (_) {
+    selectedDate = DateTime.now().add(const Duration(days: 1));
+  }
+
+  String? selectedStartTime;
+  String? selectedEndTime;
+  bool isLoadingSlots = true;
+  bool isSubmitting = false;
+  String? errorMessage;
+  List<TimeSlot> availableSlots = [];
+  bool hasFetchedInitial = false;
 
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
-    backgroundColor: Colors.white,
+    backgroundColor: Theme.of(context).colorScheme.surface,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
     builder: (context) {
       return StatefulBuilder(
         builder: (context, setModalState) {
+          Future<void> fetchSlots(DateTime date) async {
+            setModalState(() {
+              isLoadingSlots = true;
+              errorMessage = null;
+              selectedStartTime = null;
+              selectedEndTime = null;
+            });
+            try {
+              final dateStr = DateFormat('yyyy-MM-dd').format(date);
+              final repo = AppointmentRepositoryImpl(AppointmentApiService());
+              final slotsResp = await repo.getTimeSlots(apt.midwifeId, dateStr);
+              final allSlots = [
+                ...slotsResp.morningSlots,
+                ...slotsResp.afternoonSlots,
+                ...slotsResp.eveningSlots,
+              ].where((s) => s.isAvailable).toList();
+
+              setModalState(() {
+                availableSlots = allSlots;
+                isLoadingSlots = false;
+              });
+            } catch (e) {
+              setModalState(() {
+                isLoadingSlots = false;
+                errorMessage = 'Failed to load time slots. Please try another date.';
+              });
+            }
+          }
+
+          if (!hasFetchedInitial) {
+            hasFetchedInitial = true;
+            fetchSlots(selectedDate);
+          }
+
+          Future<void> handleConfirm() async {
+            if (selectedStartTime == null) {
+              setModalState(() {
+                errorMessage = 'Please select a new time slot.';
+              });
+              return;
+            }
+            if (isSubmitting) return;
+
+            setModalState(() {
+              isSubmitting = true;
+              errorMessage = null;
+            });
+
+            try {
+              final dateStr = DateFormat('yyyy-MM-dd').format(selectedDate);
+              final startT = selectedStartTime!.length == 5 ? '$selectedStartTime:00' : selectedStartTime!;
+              final endT = selectedEndTime != null && selectedEndTime!.isNotEmpty
+                  ? (selectedEndTime!.length == 5 ? '$selectedEndTime:00' : selectedEndTime!)
+                  : startT;
+
+              final repo = AppointmentRepositoryImpl(AppointmentApiService());
+              await repo.rescheduleAppointment(
+                appointmentId: apt.appointmentId,
+                scheduledDate: dateStr,
+                startTime: startT,
+                endTime: endT,
+              );
+
+              if (context.mounted) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Appointment rescheduled to ${DateFormat('MMM dd, yyyy').format(selectedDate)} at $selectedStartTime'),
+                    backgroundColor: AppColors.primaryGreen,
+                  ),
+                );
+                onSuccess?.call();
+              }
+            } catch (e) {
+              final cleanMsg = '$e'.replaceAll('Exception: ', '');
+              setModalState(() {
+                isSubmitting = false;
+                errorMessage = cleanMsg.isNotEmpty ? cleanMsg : 'Rescheduling failed. Please try again.';
+              });
+            }
+          }
+
+          final dateDisplay = DateFormat('EEE, MMM d, yyyy').format(selectedDate);
+
           return Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Reschedule Appointment',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primaryGreen,
+            padding: EdgeInsets.only(
+              left: 24,
+              right: 24,
+              top: 24,
+              bottom: 24 + MediaQuery.of(context).viewInsets.bottom,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Reschedule Appointment',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: Colors.grey),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'With ${apt.midwifeName ?? 'Midwife'}',
+                    style: const TextStyle(color: Color(0xFF64748B), fontSize: 14),
+                  ),
+                  const SizedBox(height: 16),
+
+                  Text(
+                    AppLocalizations.of(context)!.selectDate,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
+                  const SizedBox(height: 8),
+                  GestureDetector(
+                    onTap: isSubmitting ? null : () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: selectedDate,
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime.now().add(const Duration(days: 90)),
+                      );
+                      if (picked != null) {
+                        setModalState(() {
+                          selectedDate = picked;
+                        });
+                        fetchSlots(picked);
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Theme.of(context).dividerColor),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.calendar_today_outlined, color: AppColors.primaryGreen, size: 20),
+                          const SizedBox(width: 12),
+                          Text(dateDisplay, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                          const Spacer(),
+                          const Icon(Icons.arrow_drop_down, color: Colors.grey),
+                        ],
                       ),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Colors.grey),
-                      onPressed: () => Navigator.pop(context),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  Text(
+                    AppLocalizations.of(context)!.selectTimeSlot,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
+                  const SizedBox(height: 10),
+
+                  if (isLoadingSlots)
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(20),
+                        child: CircularProgressIndicator(color: AppColors.primaryGreen),
+                      ),
+                    )
+                  else if (availableSlots.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: Text(
+                        'No available time slots for this date.',
+                        style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                      ),
+                    )
+                  else
+                    Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
+                      children: availableSlots.map((slot) {
+                        final isSel = selectedStartTime == slot.startTime;
+                        return ChoiceChip(
+                          label: Text(slot.displayTime.isNotEmpty ? slot.displayTime : slot.startTime),
+                          selected: isSel,
+                          selectedColor: AppColors.primaryGreen,
+                          labelStyle: TextStyle(
+                            color: isSel ? Colors.white : AppColors.primaryGreen,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          onSelected: isSubmitting ? null : (sel) {
+                            if (sel) {
+                              setModalState(() {
+                                selectedStartTime = slot.startTime;
+                                selectedEndTime = slot.endTime;
+                              });
+                            }
+                          },
+                        );
+                      }).toList(),
+                    ),
+
+                  if (errorMessage != null) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      errorMessage!,
+                      style: const TextStyle(color: AppColors.errorRed, fontSize: 13, fontWeight: FontWeight.bold),
                     ),
                   ],
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'With ${apt.midwifeName ?? 'Midwife'}',
-                  style: const TextStyle(color: Color(0xFF64748B), fontSize: 14),
-                ),
-                SizedBox(height: 20),
 
-                Text(AppLocalizations.of(context)!.selectDate, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                const SizedBox(height: 8),
-                GestureDetector(
-                  onTap: () async {
-                    final picked = await showDatePicker(
-                      context: context,
-                      initialDate: DateTime.now().add(const Duration(days: 1)),
-                      firstDate: DateTime.now(),
-                      lastDate: DateTime.now().add(const Duration(days: 90)),
-                    );
-                    if (picked != null) {
-                      final months = [
-                        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-                      ];
-                      setModalState(() {
-                        selectedDate = '${months[picked.month - 1]} ${picked.day}, ${picked.year}';
-                      });
-                    }
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.calendar_today_outlined, color: AppColors.primaryGreen, size: 20),
-                        const SizedBox(width: 12),
-                        Text(selectedDate, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                      ],
-                    ),
-                  ),
-                ),
+                  const SizedBox(height: 24),
 
-                SizedBox(height: 20),
-
-                Text(AppLocalizations.of(context)!.selectTimeSlot, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: timeSlots.map((slot) {
-                    final isSel = selectedTime == slot;
-                    return ChoiceChip(
-                      label: Text(slot),
-                      selected: isSel,
-                      selectedColor: AppColors.primaryGreen,
-                      labelStyle: TextStyle(
-                        color: isSel ? Colors.white : AppColors.primaryGreen,
-                        fontWeight: FontWeight.bold,
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: (isSubmitting || selectedStartTime == null) ? null : handleConfirm,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primaryGreen,
+                        disabledBackgroundColor: Colors.grey.shade300,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                       ),
-                      onSelected: (sel) {
-                        if (sel) {
-                          setModalState(() {
-                            selectedTime = slot;
-                          });
-                        }
-                      },
-                    );
-                  }).toList(),
-                ),
-
-                const SizedBox(height: 28),
-
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Rescheduled to $selectedDate $selectedTime'),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryGreen,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                      child: isSubmitting
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                            )
+                          : Text(
+                              AppLocalizations.of(context)!.confirmReschedule,
+                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                            ),
                     ),
-                    child: Text(AppLocalizations.of(context)!.confirmReschedule, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         },
@@ -240,6 +386,7 @@ void showRescheduleModal(BuildContext context, Appointment apt) {
     },
   );
 }
+
 
 void showDetailsModal(
   BuildContext context,
@@ -337,37 +484,93 @@ void showDetailsModal(
   );
 }
 
-void showCancelConfirmDialog(BuildContext context, Appointment apt, VoidCallback onConfirmed) {
+void showCancelConfirmDialog(
+  BuildContext context,
+  Appointment apt,
+  Future<void> Function() onConfirmed,
+) {
+  bool isCancelling = false;
+  String? cancelError;
+
   showDialog(
     context: context,
+    barrierDismissible: !isCancelling,
     builder: (dialogContext) {
-      return AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            Icon(Icons.warning_amber_rounded, color: AppColors.errorRed, size: 24),
-            SizedBox(width: 10),
-            Text(AppLocalizations.of(context)!.cancelAppointment, style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
-          ],
-        ),
-        content: Text('Are you sure you want to cancel this appointment?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(AppLocalizations.of(context)!.keepAppointment, style: TextStyle(color: AppColors.primaryGreen)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              onConfirmed();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.errorRed,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      return StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: Row(
+              children: [
+                const Icon(Icons.warning_amber_rounded, color: AppColors.errorRed, size: 24),
+                const SizedBox(width: 10),
+                Text(
+                  AppLocalizations.of(context)!.cancelAppointment,
+                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                ),
+              ],
             ),
-            child: Text(AppLocalizations.of(context)!.yesCancel, style: TextStyle(color: Colors.white)),
-          ),
-        ],
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Are you sure you want to cancel this appointment?'),
+                if (cancelError != null) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    cancelError!,
+                    style: const TextStyle(color: AppColors.errorRed, fontSize: 13, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: isCancelling ? null : () => Navigator.pop(dialogContext),
+                child: Text(
+                  AppLocalizations.of(context)!.keepAppointment,
+                  style: const TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.bold),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: isCancelling
+                    ? null
+                    : () async {
+                        setDialogState(() {
+                          isCancelling = true;
+                          cancelError = null;
+                        });
+                        try {
+                          await onConfirmed();
+                          if (dialogContext.mounted) {
+                            Navigator.pop(dialogContext);
+                          }
+                        } catch (e) {
+                          final clean = '$e'.replaceAll('Exception: ', '');
+                          setDialogState(() {
+                            isCancelling = false;
+                            cancelError = clean.isNotEmpty ? clean : 'Failed to cancel appointment.';
+                          });
+                        }
+                      },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.errorRed,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                ),
+                child: isCancelling
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                      )
+                    : Text(
+                        AppLocalizations.of(context)!.cancelRequest,
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+              ),
+            ],
+          );
+        },
       );
     },
   );
@@ -461,9 +664,49 @@ Widget buildAppointmentCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. Status Indicator
-          buildStatusIndicator(apt.status),
+          // 1. Status Indicator & More Menu
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              buildStatusIndicator(apt.status),
+              if (isUpcoming)
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert, color: Color(0xFF64748B), size: 20),
+                  tooltip: 'More options',
+                  onSelected: (value) {
+                    if (value == 'reschedule') {
+                      onReschedule();
+                    } else if (value == 'cancel') {
+                      onCancel();
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem<String>(
+                      value: 'reschedule',
+                      child: Row(
+                        children: [
+                          Icon(Icons.edit_calendar_outlined, size: 18, color: AppColors.primaryGreen),
+                          SizedBox(width: 10),
+                          Text('Reschedule', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem<String>(
+                      value: 'cancel',
+                      child: Row(
+                        children: [
+                          Icon(Icons.cancel_outlined, size: 18, color: AppColors.errorRed),
+                          SizedBox(width: 10),
+                          Text('Cancel', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.errorRed)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+            ],
+          ),
           const SizedBox(height: 14),
+
 
           // 2. Person Info (Midwife Name & Role)
           Row(

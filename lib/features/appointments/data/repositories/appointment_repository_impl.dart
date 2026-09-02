@@ -57,11 +57,38 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
   Future<Appointment> cancelAppointment(String appointmentId) async {
     try {
       final data = await _apiService.cancelAppointment(appointmentId);
-      return Appointment.fromJson(data);
+      final apptData = data.containsKey('appointment') && data['appointment'] is Map
+          ? data['appointment']
+          : data;
+      return Appointment.fromJson(Map<String, dynamic>.from(apptData));
     } catch (e) {
-      throw Exception('Failed to cancel appointment: $e');
+      throw Exception('$e'.replaceAll('Exception: ', ''));
     }
   }
+
+  @override
+  Future<Appointment> rescheduleAppointment({
+    required String appointmentId,
+    required String scheduledDate,
+    required String startTime,
+    required String endTime,
+  }) async {
+    try {
+      final data = await _apiService.rescheduleAppointment(
+        appointmentId: appointmentId,
+        scheduledDate: scheduledDate,
+        startTime: startTime,
+        endTime: endTime,
+      );
+      final apptData = data.containsKey('appointment') && data['appointment'] is Map
+          ? data['appointment']
+          : data;
+      return Appointment.fromJson(Map<String, dynamic>.from(apptData));
+    } catch (e) {
+      throw Exception('$e'.replaceAll('Exception: ', ''));
+    }
+  }
+
 
   @override
   Future<Appointment> getAppointmentDetails(String appointmentId) async {
