@@ -134,7 +134,7 @@ class _MyAppState extends ConsumerState<MyApp> {
 
         GlobalCallService.showIncomingCallModal(
           Map<String, dynamic>.from(message.data),
-          defaultConsultationId: consultationId,
+          consultationId,
         );
       } else {
         // Refresh notifications for other actions (like messages, consultation updates, etc)

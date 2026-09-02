@@ -45,23 +45,6 @@ flutter {
     source = "../.."
 }
 
-subprojects {
-    afterEvaluate {
-        if (project.hasProperty("android")) {
-            project.extensions.findByName("android")?.let { android ->
-                try {
-                    val compileSdkMethod = android.javaClass.getMethod("setCompileSdk", Int::class.javaPrimitiveType)
-                    compileSdkMethod.invoke(android, 36)
-                } catch (e: Exception) {
-                    try {
-                        val compileSdkVersionMethod = android.javaClass.getMethod("compileSdkVersion", Int::class.javaPrimitiveType)
-                        compileSdkVersionMethod.invoke(android, 36)
-                    } catch (e2: Exception) {}
-                }
-            }
-        }
-    }
-}
 
 configurations.all {
     resolutionStrategy {

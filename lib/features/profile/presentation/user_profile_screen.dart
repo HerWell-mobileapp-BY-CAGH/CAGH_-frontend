@@ -194,12 +194,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   const SizedBox(height: 24),
 
                   // 1. Account & Records
-                  _buildSectionHeader('Account & Records'),
+                  _buildSectionHeader(AppLocalizations.of(context)!.accountAndRecords),
                   const SizedBox(height: 10),
                   _buildGroupedCard([
                     _buildListTile(
                       icon: Icons.person_outline,
-                      title: 'Personal Information',
+                      title: AppLocalizations.of(context)!.personalInformation,
                       onTap: () {
                         Navigator.push(
                           context,
@@ -225,7 +225,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     _buildDivider(),
                     _buildListTile(
                       icon: Icons.calendar_today_outlined,
-                      title: 'Appointments',
+                      title: AppLocalizations.of(context)!.myAppointments,
                       badge: Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 3),
@@ -233,9 +233,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           color: AppColors.accentYellow,
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Text(
-                          '1 UPCOMING',
-                          style: TextStyle(
+                        child: Text(
+                          AppLocalizations.of(context)!.oneUpcoming,
+                          style: const TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
                             color: AppColors.primaryGreen,
@@ -247,7 +247,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     _buildDivider(),
                     _buildListTile(
                       icon: Icons.bookmark_outline_rounded,
-                      title: 'Saved Midwives',
+                      title: AppLocalizations.of(context)!.savedMidwives,
                       onTap: () {},
                     ),
                   ]),
@@ -255,13 +255,13 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   const SizedBox(height: 24),
 
                   // 2. Settings
-                  _buildSectionHeader('Settings'),
-                  SizedBox(height: 10),
+                  _buildSectionHeader(AppLocalizations.of(context)!.settings),
+                  const SizedBox(height: 10),
                   _buildGroupedCard([
                     _buildListTile(
                       icon: Icons.palette_outlined,
                       title: AppLocalizations.of(context)!.appearanceAccessibility,
-                      subtitle: 'Theme and text size',
+                      subtitle: AppLocalizations.of(context)!.themeAndTextSize,
                       onTap: () {
                         Navigator.push(
                           context,
@@ -277,7 +277,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     _buildDivider(),
                     _buildListTile(
                       icon: Icons.language_rounded,
-                      title: 'Language',
+                      title: AppLocalizations.of(context)!.languageSettings,
                       subtitle: activeLang,
                       trailing: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
@@ -314,7 +314,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     _buildDivider(),
                     _buildListTile(
                       icon: Icons.notifications_none_rounded,
-                      title: 'Notifications',
+                      title: AppLocalizations.of(context)!.notifications,
                       trailing: Switch(
                         value: notificationsEnabled,
                         activeThumbColor: AppColors.primaryGreen,
@@ -326,13 +326,13 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     _buildDivider(),
                     _buildListTile(
                       icon: Icons.shield_outlined,
-                      title: 'Privacy & Security',
+                      title: AppLocalizations.of(context)!.privacySecurity,
                       onTap: () {},
                     ),
                     _buildDivider(),
                     _buildListTile(
                       icon: Icons.contact_phone_outlined,
-                      title: 'Emergency Contacts',
+                      title: AppLocalizations.of(context)!.emergencyContactsList,
                       onTap: () {},
                     ),
                   ]),
@@ -340,12 +340,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   const SizedBox(height: 24),
 
                   // 3. Support
-                  _buildSectionHeader('Support'),
+                  _buildSectionHeader(AppLocalizations.of(context)!.support),
                   const SizedBox(height: 10),
                   _buildGroupedCard([
                     _buildListTile(
                       icon: Icons.help_outline_rounded,
-                      title: 'Help & Support',
+                      title: AppLocalizations.of(context)!.helpSupport,
                       onTap: () {},
                     ),
                   ]),
@@ -370,9 +370,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         }
                       },
                       icon: const Icon(Icons.logout, color: Colors.red),
-                      label: const Text(
-                        'Logout',
-                        style: TextStyle(
+                      label: Text(
+                        AppLocalizations.of(context)!.logout,
+                        style: const TextStyle(
                           color: Colors.red,
                           fontWeight: FontWeight.w600,
                           fontSize: 16,
@@ -392,7 +392,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   const SizedBox(height: 12),
 
                   Text(
-                    'Version 2.4.1 (Build 890)',
+                    AppLocalizations.of(context)!.appVersion,
                     style: TextStyle(
                       fontSize: 11.5,
                       color: Colors.grey.shade500,
