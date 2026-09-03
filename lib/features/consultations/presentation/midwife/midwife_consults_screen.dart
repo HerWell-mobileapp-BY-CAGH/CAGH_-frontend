@@ -60,7 +60,7 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to update status'), backgroundColor: Colors.red),
+          SnackBar(content: Text(AppLocalizations.of(context)!.failedToUpdateStatus), backgroundColor: Colors.red),
         );
       }
     }
@@ -105,8 +105,8 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
       if (context.mounted) Navigator.pop(context);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Unable to connect to consultation. Please try again.'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.unableToConnectConsultation),
             backgroundColor: Colors.red,
           ),
         );
@@ -294,11 +294,11 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                buildStatusIndicator(apt.status),
+                buildStatusIndicator(context, apt.status),
                 if (isUpcoming)
                   PopupMenuButton<String>(
                     icon: Icon(Icons.more_vert, color: Theme.of(context).iconTheme.color ?? const Color(0xFF64748B), size: 20),
-                    tooltip: 'More options',
+                    tooltip: AppLocalizations.of(context)!.moreOptions,
                     onSelected: (value) {
                       if (value == 'reschedule') {
                         showRescheduleModal(
@@ -315,23 +315,23 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
                       }
                     },
                     itemBuilder: (context) => [
-                      const PopupMenuItem<String>(
+                      PopupMenuItem<String>(
                         value: 'reschedule',
                         child: Row(
                           children: [
-                            Icon(Icons.edit_calendar_outlined, size: 18, color: AppColors.primaryGreen),
-                            SizedBox(width: 10),
-                            Text('Reschedule', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                            const Icon(Icons.edit_calendar_outlined, size: 18, color: AppColors.primaryGreen),
+                            const SizedBox(width: 10),
+                            Text(AppLocalizations.of(context)!.reschedule, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
                           ],
                         ),
                       ),
-                      const PopupMenuItem<String>(
+                      PopupMenuItem<String>(
                         value: 'cancel',
                         child: Row(
                           children: [
-                            Icon(Icons.cancel_outlined, size: 18, color: AppColors.errorRed),
-                            SizedBox(width: 10),
-                            Text('Cancel', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.errorRed)),
+                            const Icon(Icons.cancel_outlined, size: 18, color: AppColors.errorRed),
+                            const SizedBox(width: 10),
+                            Text(AppLocalizations.of(context)!.cancel, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.errorRed)),
                           ],
                         ),
                       ),
@@ -434,7 +434,7 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
                   ElevatedButton.icon(
                     onPressed: () => _startConsultation(context, apt),
                     icon: const Icon(Icons.call_outlined, color: Colors.white, size: 15),
-                    label: const Text('Start Call', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+                    label: Text(AppLocalizations.of(context)!.startCall, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primaryGreen,
                       elevation: 0,
@@ -465,7 +465,7 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                     ),
-                    child: const Text('Details', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                    child: Text(AppLocalizations.of(context)!.details, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
                   ),
                 ],
               ),
@@ -477,7 +477,7 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                 ),
-                child: const Text('View Details', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                child: Text(AppLocalizations.of(context)!.viewDetails, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
               ),
             ],
           ],

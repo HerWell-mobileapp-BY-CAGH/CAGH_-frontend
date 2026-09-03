@@ -39,8 +39,8 @@ class _MidwifeSetupProfileScreenState extends State<MidwifeSetupProfileScreen> {
       if (!mounted) return;
       
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Profile created successfully!'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.profileCreatedSuccess),
           backgroundColor: Colors.green,
         ),
       );
@@ -54,7 +54,7 @@ class _MidwifeSetupProfileScreenState extends State<MidwifeSetupProfileScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to create profile: $e'),
+          content: Text('${AppLocalizations.of(context)!.failedToUpdateStatus}: $e'),
           backgroundColor: Colors.red,
         ),
       );
@@ -76,7 +76,7 @@ class _MidwifeSetupProfileScreenState extends State<MidwifeSetupProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Complete Your Profile'),
+        title: Text(AppLocalizations.of(context)!.completeYourProfile),
         backgroundColor: AppColors.primaryGreen,
         foregroundColor: Colors.white,
       ),
@@ -87,57 +87,57 @@ class _MidwifeSetupProfileScreenState extends State<MidwifeSetupProfileScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Welcome!',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              Text(
+                AppLocalizations.of(context)!.completeYourProfile,
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
-              const Text(
-                'Please complete your midwife profile before accessing the dashboard.',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
+              Text(
+                AppLocalizations.of(context)!.createAccountSubtitle,
+                style: const TextStyle(fontSize: 16, color: Colors.grey),
               ),
               const SizedBox(height: 32),
               
               TextFormField(
                 controller: _licenseController,
-                decoration: const InputDecoration(
-                  labelText: 'License Number',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.badge),
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.of(context)!.licenseNumber,
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.badge),
                 ),
-                validator: (value) => value == null || value.isEmpty ? 'Required field' : null,
+                validator: (value) => value == null || value.isEmpty ? AppLocalizations.of(context)!.valNameReq : null,
               ),
               const SizedBox(height: 16),
               
               TextFormField(
                 controller: _specialtyController,
-                decoration: const InputDecoration(
-                  labelText: 'Specialty',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.medical_services),
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.of(context)!.specialty,
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.medical_services),
                 ),
-                validator: (value) => value == null || value.isEmpty ? 'Required field' : null,
+                validator: (value) => value == null || value.isEmpty ? AppLocalizations.of(context)!.valNameReq : null,
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               
               TextFormField(
                 controller: _experienceController,
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(
                   labelText: AppLocalizations.of(context)!.yearsOfExperience,
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.work_history),
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.work_history),
                 ),
-                validator: (value) => value == null || value.isEmpty ? 'Required field' : null,
+                validator: (value) => value == null || value.isEmpty ? AppLocalizations.of(context)!.valNameReq : null,
               ),
               const SizedBox(height: 16),
               
               TextFormField(
                 controller: _hospitalController,
-                decoration: const InputDecoration(
-                  labelText: 'Hospital Affiliation (Optional)',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.local_hospital),
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.of(context)!.hospitalAffiliationOptional,
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.local_hospital),
                 ),
               ),
               const SizedBox(height: 32),
@@ -156,7 +156,7 @@ class _MidwifeSetupProfileScreenState extends State<MidwifeSetupProfileScreen> {
                   ),
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('Complete Setup', style: TextStyle(fontSize: 16)),
+                      : Text(AppLocalizations.of(context)!.completeSetup, style: const TextStyle(fontSize: 16)),
                 ),
               ),
             ],

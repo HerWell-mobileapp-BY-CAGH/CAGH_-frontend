@@ -153,7 +153,7 @@ class _MidwifePersonalInformationScreenState extends State<MidwifePersonalInform
                           child: TextField(
                             controller: firstNameController,
                             decoration: InputDecoration(
-                              labelText: 'First Name',
+                              labelText: AppLocalizations.of(context)!.firstName,
                               filled: true,
                               fillColor: Colors.grey.shade100,
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
@@ -165,7 +165,7 @@ class _MidwifePersonalInformationScreenState extends State<MidwifePersonalInform
                           child: TextField(
                             controller: lastNameController,
                             decoration: InputDecoration(
-                              labelText: 'Last Name',
+                              labelText: AppLocalizations.of(context)!.lastName,
                               filled: true,
                               fillColor: Colors.grey.shade100,
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
@@ -180,7 +180,7 @@ class _MidwifePersonalInformationScreenState extends State<MidwifePersonalInform
                     TextField(
                       controller: titleController,
                       decoration: InputDecoration(
-                        labelText: 'Professional Title',
+                        labelText: AppLocalizations.of(context)!.professionalTitle,
                         filled: true,
                         fillColor: Colors.grey.shade100,
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
@@ -207,7 +207,7 @@ class _MidwifePersonalInformationScreenState extends State<MidwifePersonalInform
                       maxLines: 4,
                       maxLength: 500,
                       decoration: InputDecoration(
-                        labelText: 'About Me',
+                        labelText: AppLocalizations.of(context)!.aboutUs,
                         alignLabelWithHint: true,
                         filled: true,
                         fillColor: Colors.grey.shade100,
@@ -253,8 +253,8 @@ class _MidwifePersonalInformationScreenState extends State<MidwifePersonalInform
                                 _experienceYears = exp;
                               });
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Profile updated successfully!'),
+                                SnackBar(
+                                  content: Text(AppLocalizations.of(context)!.profileUpdatedSuccess),
                                   backgroundColor: AppColors.primaryGreen,
                                 ),
                               );
@@ -269,9 +269,9 @@ class _MidwifePersonalInformationScreenState extends State<MidwifePersonalInform
                             borderRadius: BorderRadius.circular(28),
                           ),
                         ),
-                        child: const Text(
-                          'Save Changes',
-                          style: TextStyle(
+                        child: Text(
+                          AppLocalizations.of(context)!.saveChanges,
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -300,9 +300,9 @@ class _MidwifePersonalInformationScreenState extends State<MidwifePersonalInform
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Personal Information',
-          style: TextStyle(
+        title: Text(
+          AppLocalizations.of(context)!.personalInformation,
+          style: const TextStyle(
             color: Colors.white,
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -362,7 +362,7 @@ class _MidwifePersonalInformationScreenState extends State<MidwifePersonalInform
             // Card 1: FULL NAME
             _buildInfoCard(
               icon: Icons.badge_outlined,
-              label: 'FULL NAME',
+              label: AppLocalizations.of(context)!.fullName,
               value: _fullName,
               onTap: _showEditProfileModal,
             ),
@@ -389,7 +389,7 @@ class _MidwifePersonalInformationScreenState extends State<MidwifePersonalInform
             // Card 4: PHONE
             _buildInfoCard(
               icon: Icons.phone_outlined,
-              label: 'PHONE NUMBER',
+              label: AppLocalizations.of(context)!.phoneNumber,
               value: _phoneNumber,
               onTap: _showEditProfileModal,
             ),
@@ -398,7 +398,7 @@ class _MidwifePersonalInformationScreenState extends State<MidwifePersonalInform
             // Card 5: EMAIL
             _buildInfoCard(
               icon: Icons.mail_outline,
-              label: 'EMAIL ADDRESS',
+              label: AppLocalizations.of(context)!.emailAddress,
               value: _emailAddress,
               onTap: _showEditProfileModal,
             ),

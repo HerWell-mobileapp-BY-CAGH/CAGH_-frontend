@@ -104,14 +104,14 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                             });
                             AuthService.updateUserProfile({'avatar_index': 1});
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Camera photo captured and profile updated!'),
+                              SnackBar(
+                                content: Text(AppLocalizations.of(context)!.cameraPhotoUpdated),
                                 backgroundColor: AppColors.primaryGreen,
                               ),
                             );
                           },
-                          icon: Icon(Icons.camera_alt_outlined, color: AppColors.primaryGreen),
-                          label: Text(AppLocalizations.of(context)!.takePhoto, style: TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.bold)),
+                          icon: const Icon(Icons.camera_alt_outlined, color: AppColors.primaryGreen),
+                          label: Text(AppLocalizations.of(context)!.takePhoto, style: const TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.bold)),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             side: const BorderSide(color: AppColors.primaryGreen),
@@ -129,14 +129,14 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                             });
                             AuthService.updateUserProfile({'avatar_index': 2});
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Gallery photo uploaded successfully!'),
+                              SnackBar(
+                                content: Text(AppLocalizations.of(context)!.galleryPhotoUpdated),
                                 backgroundColor: AppColors.primaryGreen,
                               ),
                             );
                           },
-                          icon: Icon(Icons.photo_library_outlined, color: AppColors.primaryGreen),
-                          label: Text(AppLocalizations.of(context)!.fromGallery, style: TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.bold)),
+                          icon: const Icon(Icons.photo_library_outlined, color: AppColors.primaryGreen),
+                          label: Text(AppLocalizations.of(context)!.fromGallery, style: const TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.bold)),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             side: const BorderSide(color: AppColors.primaryGreen),
@@ -147,11 +147,11 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                     ],
                   ),
 
-                  SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
                   Text(
                     AppLocalizations.of(context)!.chooseAvatarStyle,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.8,
@@ -381,7 +381,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                     TextField(
                       controller: nameController,
                       decoration: InputDecoration(
-                        labelText: 'Full Name',
+                        labelText: AppLocalizations.of(context)!.fullName,
                         prefixIcon: const Icon(Icons.badge_outlined, color: AppColors.primaryGreen),
                         filled: true,
                         fillColor: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade800 : Colors.grey.shade100,
@@ -472,7 +472,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                       controller: phoneController,
                       keyboardType: TextInputType.phone,
                       decoration: InputDecoration(
-                        labelText: 'Phone Number',
+                        labelText: AppLocalizations.of(context)!.phoneNumber,
                         prefixIcon: const Icon(Icons.phone_outlined, color: AppColors.primaryGreen),
                         filled: true,
                         fillColor: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade800 : Colors.grey.shade100,
@@ -495,7 +495,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                       keyboardType: TextInputType.emailAddress,
                       readOnly: true,
                       decoration: InputDecoration(
-                        labelText: 'Email Address',
+                        labelText: AppLocalizations.of(context)!.emailAddress,
                         prefixIcon: const Icon(Icons.email_outlined, color: AppColors.primaryGreen),
                         suffixIcon: const Icon(Icons.lock_outline, size: 18, color: Colors.grey),
                         filled: true,
@@ -546,8 +546,8 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                                   _dateOfBirth = selectedDob;
                                 });
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Personal profile updated successfully!'),
+                                  SnackBar(
+                                    content: Text(AppLocalizations.of(context)!.profileUpdatedSuccess),
                                     backgroundColor: AppColors.primaryGreen,
                                   ),
                                 );
@@ -555,7 +555,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                               } else {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text(res.message ?? 'Failed to update profile'),
+                                    content: Text(res.message ?? AppLocalizations.of(context)!.failedToUpdateStatus),
                                     backgroundColor: Colors.red,
                                   ),
                                 );
@@ -570,9 +570,9 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                             borderRadius: BorderRadius.circular(28),
                           ),
                         ),
-                        child: const Text(
-                          'Save Changes',
-                          style: TextStyle(
+                        child: Text(
+                          AppLocalizations.of(context)!.saveChanges,
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -703,7 +703,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
             // Card 1: FULL NAME
             _buildInfoCard(
               icon: Icons.badge_outlined,
-              label: 'FULL NAME',
+              label: AppLocalizations.of(context)!.fullName,
               value: _fullName,
               onTap: _showEditProfileModal,
             ),
@@ -713,7 +713,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
             // Card 2: DATE OF BIRTH
             _buildInfoCard(
               icon: Icons.calendar_today_outlined,
-              label: 'DATE OF BIRTH',
+              label: AppLocalizations.of(context)!.dateOfBirth,
               value: _dateOfBirth,
               onTap: _showEditProfileModal,
             ),
@@ -723,7 +723,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
             // Card 3: PHONE NUMBER
             _buildInfoCard(
               icon: Icons.phone_outlined,
-              label: 'PHONE NUMBER',
+              label: AppLocalizations.of(context)!.phoneNumber,
               value: _phoneNumber,
               onTap: _showEditProfileModal,
             ),
@@ -733,7 +733,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
             // Card 4: EMAIL ADDRESS
             _buildInfoCard(
               icon: Icons.mail_outline,
-              label: 'EMAIL ADDRESS',
+              label: AppLocalizations.of(context)!.emailAddress,
               value: _emailAddress,
               onTap: _showEditProfileModal,
             ),

@@ -50,7 +50,7 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not launch dialer')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.couldNotLaunchDialer)),
         );
       }
     }
@@ -59,7 +59,7 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
   void _showHotlinesModal() {
     if (_sosData == null || _sosData!.hotlines.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No hotlines available')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.noHotlinesAvailable)),
       );
       return;
     }
@@ -76,38 +76,22 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Text(
-                  AppLocalizations.of(context)!.emergencyHotlines,
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF900000),
-                  ),
+                  AppLocalizations.of(context)!.hotlines,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: ListView.separated(
-                  itemCount: _sosData!.hotlines.length,
-                  separatorBuilder: (context, index) => const Divider(),
-                  itemBuilder: (context, index) {
-                    final hotline = _sosData!.hotlines[index];
-                    return ListTile(
-                      leading: const CircleAvatar(
-                        backgroundColor: Color(0xFFFFE5E5),
-                        child: Icon(Icons.phone, color: Color(0xFFC62828)),
-                      ),
-                      title: Text(hotline.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                      subtitle: Text(hotline.number),
-                      onTap: () {
-                        Navigator.pop(context);
-                        _callHotline(hotline.callUrl);
-                      },
-                    );
-                  },
-                ),
-              ),
+              const SizedBox(height: 12),
+              ...(_sosData!.hotlines.map((h) => ListTile(
+                    leading: const Icon(Icons.phone, color: AppColors.errorRedMaroon),
+                    title: Text(h.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+                    subtitle: Text(h.number),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _callHotline(h.callUrl);
+                    },
+                  ))),
             ],
           ),
         );
@@ -124,15 +108,15 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
     try {
       final response = await _apiService.triggerSosAlert(latitude: lat, longitude: lng);
       if (mounted) {
-        final count = response.notifiedContactsCount ?? response.savedContactsCount;
+        final count = (response.notifiedContactsCount ?? response.savedContactsCount ?? 0).toString();
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('SOS Alert Triggered! Notified $count contacts.')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.sosAlertTriggered(count))),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to trigger SOS alert. Please call a hotline directly.')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.failedToTriggerSos)),
         );
       }
     }
@@ -150,8 +134,8 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
         leading: TextButton(
           onPressed: () => Navigator.pop(context),
           child: Text(
-            'close',
-            style: TextStyle(
+            AppLocalizations.of(context)!.cancel,
+            style: const TextStyle(
               color: AppColors.errorRedMaroon,
               fontWeight: FontWeight.bold,
               fontSize: 16,
@@ -160,7 +144,7 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
         ),
         title: Text(
           AppLocalizations.of(context)!.emergency,
-          style: TextStyle(
+          style: const TextStyle(
             color: AppColors.errorRedMaroon,
             fontWeight: FontWeight.bold,
             fontSize: 16,
@@ -174,20 +158,20 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
             child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              SizedBox(height: 40),
+              const SizedBox(height: 40),
               Text(
                 AppLocalizations.of(context)!.areYouOkay,
-                style: TextStyle(
+                style: const TextStyle(
                   color: AppColors.errorRedDeep,
                   fontSize: 26,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 12),
-              const Text(
-                'If this is a life-threatening medical\nemergency, tap SOS immediately.',
+              Text(
+                AppLocalizations.of(context)!.lifeThreateningEmergency,
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   color: AppColors.errorRedDark,
                   fontSize: 15,
                   height: 1.4,
@@ -203,7 +187,7 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
                   height: 220,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: const Color(0xFFE53935).withOpacity(0.5), // Outer ring
+                    color: const Color(0xFFE53935).withValues(alpha: 0.5), // Outer ring
                   ),
                   child: Center(
                     child: Container(
@@ -216,15 +200,15 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.warning_amber_rounded,
                             color: Colors.white,
                             size: 48,
                           ),
-                          SizedBox(height: 8),
+                          const SizedBox(height: 8),
                           Text(
                             AppLocalizations.of(context)!.sos,
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 28,
                               fontWeight: FontWeight.bold,
@@ -244,10 +228,10 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
                 icon: Icons.phone,
                 iconBgColor: AppColors.backgroundSoftPink,
                 iconColor: AppColors.errorRedDark,
-                title: 'Call Emergency\nServices',
+                title: AppLocalizations.of(context)!.emergencyHotline,
                 subtitle: _sosData != null && _sosData!.primaryHotlineNumber.isNotEmpty
                     ? 'Primary: ${_sosData!.primaryHotlineNumber}'
-                    : 'Dial 911 immediately',
+                    : AppLocalizations.of(context)!.callAmbulance,
                 onTap: _showHotlinesModal,
               ),
               
@@ -258,10 +242,10 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
                 icon: Icons.group,
                 iconBgColor: AppColors.lightGreen,
                 iconColor: AppColors.accentGreenDark,
-                title: 'Notify Contacts',
+                title: AppLocalizations.of(context)!.emergencyContactsList,
                 subtitle: _sosData != null 
                     ? 'Send alert to ${_sosData!.savedContactsCount} contacts'
-                    : 'Send alert to emergency contacts',
+                    : AppLocalizations.of(context)!.useSosButton,
                 onTap: () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text(AppLocalizations.of(context)!.useSosButton)),

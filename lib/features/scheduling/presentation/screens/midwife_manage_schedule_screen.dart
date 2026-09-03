@@ -81,12 +81,12 @@ class _MidwifeManageScheduleScreenState extends State<MidwifeManageScheduleScree
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Added working hours successfully!'), backgroundColor: Colors.green),
+        SnackBar(content: Text(AppLocalizations.of(context)!.addedWorkingHoursSuccessfully), backgroundColor: Colors.green),
       );
       _fetchData();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to add working hours: $e'), backgroundColor: Colors.red),
+        SnackBar(content: Text('${AppLocalizations.of(context)!.failedToAddWorkingHours}: $e'), backgroundColor: Colors.red),
       );
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -96,7 +96,7 @@ class _MidwifeManageScheduleScreenState extends State<MidwifeManageScheduleScree
   Future<void> _addBlockedDateAction() async {
     if (_blockedDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a date to block.'), backgroundColor: Colors.red),
+        SnackBar(content: Text(AppLocalizations.of(context)!.selectDateToBlock), backgroundColor: Colors.red),
       );
       return;
     }
@@ -107,14 +107,14 @@ class _MidwifeManageScheduleScreenState extends State<MidwifeManageScheduleScree
       await _midwifeRepository.addBlockedDate(dateStr, _blockReasonController.text);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Blocked date added successfully!'), backgroundColor: Colors.green),
+        SnackBar(content: Text(AppLocalizations.of(context)!.preferencesSaved), backgroundColor: Colors.green),
       );
       _blockedDate = null;
       _blockReasonController.clear();
       _fetchData();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to add blocked date: $e'), backgroundColor: Colors.red),
+        SnackBar(content: Text('${AppLocalizations.of(context)!.failedToUpdateStatus}: $e'), backgroundColor: Colors.red),
       );
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -130,232 +130,218 @@ class _MidwifeManageScheduleScreenState extends State<MidwifeManageScheduleScree
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAF8),
       appBar: AppBar(
-        backgroundColor: Color(0xFF315E26),
-        elevation: 0,
-        title: Text(AppLocalizations.of(context)!.manageSchedule, style: TextStyle(color: Colors.white, fontSize: 18)),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
+        title: Text(AppLocalizations.of(context)!.manageSchedule),
+        backgroundColor: const Color(0xFF315E26),
+        foregroundColor: Colors.white,
       ),
-      body: _isLoading 
-        ? const Center(child: CircularProgressIndicator(color: Color(0xFF315E26)))
-        : SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  AppLocalizations.of(context)!.setWorkingHours,
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A)),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  AppLocalizations.of(context)!.defineRegularWorkingHours,
-                  style: TextStyle(fontSize: 14, color: Colors.grey.shade700, height: 1.4),
-                ),
-                const SizedBox(height: 24),
-                
-                // Add new Working Hours Form
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.grey.shade200),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(AppLocalizations.of(context)!.addAvailability, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                      const SizedBox(height: 16),
-                      DropdownButtonFormField<int>(
-                        value: _selectedDayOfWeek,
-                        decoration: const InputDecoration(
-                          labelText: 'Day of Week',
-                          border: OutlineInputBorder(),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: Color(0xFF315E26)))
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Form 1: Add Recurring Availability
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withValues(alpha: 0.1),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
                         ),
-                        items: List.generate(7, (index) {
-                          return DropdownMenuItem(
-                            value: index,
-                            child: Text(_daysOfWeek[index]),
-                          );
-                        }),
-                        onChanged: (val) {
-                          if (val != null) setState(() => _selectedDayOfWeek = val);
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: InkWell(
-                              onTap: () async {
-                                final time = await showTimePicker(context: context, initialTime: _startTime);
-                                if (time != null) setState(() => _startTime = time);
-                              },
-                              child: InputDecorator(
-                                decoration: const InputDecoration(
-                                  labelText: 'Start Time',
-                                  border: OutlineInputBorder(),
-                                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(AppLocalizations.of(context)!.addAvailability, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        const SizedBox(height: 16),
+                        DropdownButtonFormField<int>(
+                          value: _selectedDayOfWeek,
+                          decoration: InputDecoration(
+                            labelText: AppLocalizations.of(context)!.dayOfWeek,
+                            border: const OutlineInputBorder(),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          ),
+                          items: List.generate(7, (index) {
+                            return DropdownMenuItem(
+                              value: index,
+                              child: Text(_daysOfWeek[index]),
+                            );
+                          }),
+                          onChanged: (val) {
+                            if (val != null) setState(() => _selectedDayOfWeek = val);
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: InkWell(
+                                onTap: () async {
+                                  final time = await showTimePicker(context: context, initialTime: _startTime);
+                                  if (time != null) setState(() => _startTime = time);
+                                },
+                                child: InputDecorator(
+                                  decoration: InputDecoration(
+                                    labelText: AppLocalizations.of(context)!.startTime,
+                                    border: const OutlineInputBorder(),
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  ),
+                                  child: Text(_startTime.format(context)),
                                 ),
-                                child: Text(_startTime.format(context)),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: InkWell(
-                              onTap: () async {
-                                final time = await showTimePicker(context: context, initialTime: _endTime);
-                                if (time != null) setState(() => _endTime = time);
-                              },
-                              child: InputDecorator(
-                                decoration: const InputDecoration(
-                                  labelText: 'End Time',
-                                  border: OutlineInputBorder(),
-                                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: InkWell(
+                                onTap: () async {
+                                  final time = await showTimePicker(context: context, initialTime: _endTime);
+                                  if (time != null) setState(() => _endTime = time);
+                                },
+                                child: InputDecorator(
+                                  decoration: InputDecoration(
+                                    labelText: AppLocalizations.of(context)!.endTime,
+                                    border: const OutlineInputBorder(),
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  ),
+                                  child: Text(_endTime.format(context)),
                                 ),
-                                child: Text(_endTime.format(context)),
                               ),
                             ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _isSaving ? null : _addWorkingHours,
+                            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF315E26)),
+                            child: Text(AppLocalizations.of(context)!.addTimeRange, style: const TextStyle(color: Colors.white)),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _isSaving ? null : _addWorkingHours,
-                          style: ElevatedButton.styleFrom(backgroundColor: Color(0xFF315E26)),
-                          child: Text(AppLocalizations.of(context)!.addTimeRange, style: TextStyle(color: Colors.white)),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
 
-                SizedBox(height: 32),
-                
-                Text(
-                  AppLocalizations.of(context)!.currentAvailabilities,
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A)),
-                ),
-                const SizedBox(height: 12),
-                if (_availabilities.isEmpty)
-                  const Text('No working hours configured yet.', style: TextStyle(color: Colors.grey))
-                else
-                  ..._availabilities.map((avail) {
-                    final dayName = avail.date ?? (avail.dayOfWeek != null ? ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][avail.dayOfWeek!.clamp(0, 6)] : 'Unknown');
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        leading: const Icon(Icons.access_time, color: Color(0xFF315E26)),
-                        title: Text(dayName, style: const TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: Text('${avail.startTime} - ${avail.endTime}'),
-                        trailing: Icon(
-                          avail.isActive ? Icons.check_circle : Icons.cancel,
-                          color: avail.isActive ? Colors.green : Colors.grey,
+                  const SizedBox(height: 32),
+                  
+                  Text(
+                    AppLocalizations.of(context)!.currentAvailabilities,
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A)),
+                  ),
+                  const SizedBox(height: 12),
+                  if (_availabilities.isEmpty)
+                    Text(AppLocalizations.of(context)!.noWorkingHoursConfigured, style: const TextStyle(color: Colors.grey))
+                  else
+                    ..._availabilities.map((avail) {
+                      final dayName = avail.date ?? (avail.dayOfWeek != null ? ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][avail.dayOfWeek!.clamp(0, 6)] : 'Unknown');
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: ListTile(
+                          leading: const Icon(Icons.access_time, color: Color(0xFF315E26)),
+                          title: Text(dayName, style: const TextStyle(fontWeight: FontWeight.bold)),
+                          subtitle: Text('${avail.startTime} - ${avail.endTime}'),
+                          trailing: const Icon(
+                            Icons.check_circle,
+                            color: Colors.green,
+                          ),
                         ),
-                      ),
-                    );
-                  }),
+                      );
+                    }),
 
-                SizedBox(height: 32),
-                Text(
-                  AppLocalizations.of(context)!.manageBlockedDates,
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A)),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Block out specific dates (e.g. holidays, conferences, or leave) so patients cannot book them.',
-                  style: TextStyle(fontSize: 14, color: Colors.grey.shade700, height: 1.4),
-                ),
-                const SizedBox(height: 16),
+                  const SizedBox(height: 32),
 
-                // Add Blocked Date Form
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.grey.shade200),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(AppLocalizations.of(context)!.addBlockedDate, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: InkWell(
-                              onTap: () async {
-                                final date = await showDatePicker(
-                                  context: context,
-                                  initialDate: DateTime.now(),
-                                  firstDate: DateTime.now(),
-                                  lastDate: DateTime.now().add(const Duration(days: 365)),
-                                );
-                                if (date != null) setState(() => _blockedDate = date);
-                              },
-                              child: InputDecorator(
-                                decoration: InputDecoration(
-                                  labelText: AppLocalizations.of(context)!.selectDate,
-                                  border: OutlineInputBorder(),
-                                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  // Form 2: Block Specific Dates
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withValues(alpha: 0.1),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(AppLocalizations.of(context)!.addBlockedDate, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: InkWell(
+                                onTap: () async {
+                                  final date = await showDatePicker(
+                                    context: context,
+                                    initialDate: DateTime.now(),
+                                    firstDate: DateTime.now(),
+                                    lastDate: DateTime.now().add(const Duration(days: 365)),
+                                  );
+                                  if (date != null) setState(() => _blockedDate = date);
+                                },
+                                child: InputDecorator(
+                                  decoration: InputDecoration(
+                                    labelText: AppLocalizations.of(context)!.selectDate,
+                                    border: const OutlineInputBorder(),
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  ),
+                                  child: Text(_blockedDate == null ? 'Not selected' : '${_blockedDate!.year}-${_blockedDate!.month}-${_blockedDate!.day}'),
                                 ),
-                                child: Text(_blockedDate == null ? 'Not selected' : '${_blockedDate!.year}-${_blockedDate!.month}-${_blockedDate!.day}'),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: _blockReasonController,
-                        decoration: const InputDecoration(
-                          labelText: 'Reason (Optional)',
-                          hintText: 'e.g. Annual Leave, Holiday',
-                          border: OutlineInputBorder(),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          ],
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _isSaving ? null : _addBlockedDateAction,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red.shade700,
-                            foregroundColor: Colors.white,
+                        const SizedBox(height: 16),
+                        TextField(
+                          controller: _blockReasonController,
+                          decoration: InputDecoration(
+                            labelText: AppLocalizations.of(context)!.reasonOptional,
+                            hintText: 'e.g. Annual Leave, Holiday',
+                            border: const OutlineInputBorder(),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                           ),
-                          child: Text(AppLocalizations.of(context)!.blockDate),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _isSaving ? null : _addBlockedDateAction,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red.shade700,
+                              foregroundColor: Colors.white,
+                            ),
+                            child: Text(AppLocalizations.of(context)!.blockDate),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
 
-                const SizedBox(height: 24),
-                
-                if (_blockedDates.isEmpty)
-                  const Text('No blocked dates.', style: TextStyle(color: Colors.grey))
-                else
-                  ..._blockedDates.map((block) {
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        leading: const Icon(Icons.block, color: Colors.red),
-                        title: Text(block.date, style: const TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: Text(block.reason ?? 'No reason provided'),
-                      ),
-                    );
-                  }),
+                  const SizedBox(height: 24),
+                  
+                  if (_blockedDates.isEmpty)
+                    Text(AppLocalizations.of(context)!.noBlockedDates, style: const TextStyle(color: Colors.grey))
+                  else
+                    ..._blockedDates.map((block) {
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: ListTile(
+                          leading: const Icon(Icons.block, color: Colors.red),
+                          title: Text(block.date, style: const TextStyle(fontWeight: FontWeight.bold)),
+                          subtitle: Text(block.reason ?? ''),
+                        ),
+                      );
+                    }),
                 const SizedBox(height: 40),
               ],
             ),

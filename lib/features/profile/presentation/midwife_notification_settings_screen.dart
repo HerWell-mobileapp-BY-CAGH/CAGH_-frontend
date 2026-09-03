@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 class MidwifeNotificationSettingsScreen extends StatefulWidget {
   const MidwifeNotificationSettingsScreen({super.key});
@@ -17,6 +18,7 @@ class _MidwifeNotificationSettingsScreenState extends State<MidwifeNotificationS
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
@@ -26,9 +28,9 @@ class _MidwifeNotificationSettingsScreenState extends State<MidwifeNotificationS
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Notifications',
-          style: TextStyle(
+        title: Text(
+          l10n.notifications,
+          style: const TextStyle(
             color: Colors.white,
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -40,50 +42,50 @@ class _MidwifeNotificationSettingsScreenState extends State<MidwifeNotificationS
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSectionHeader('General Notifications'),
+            _buildSectionHeader(l10n.generalNotifications),
             const SizedBox(height: 12),
             _buildSettingsCard([
               _buildSwitchRow(
-                'Push Notifications',
+                l10n.pushNotifications,
                 pushNotifications,
                 (val) => setState(() => pushNotifications = val),
               ),
             ]),
             const SizedBox(height: 24),
 
-            _buildSectionHeader('Messages'),
+            _buildSectionHeader(l10n.messages),
             const SizedBox(height: 12),
             _buildSettingsCard([
               _buildSwitchRow(
-                'New Messages',
+                l10n.newMessages,
                 newMessages,
                 (val) => setState(() => newMessages = val),
               ),
             ]),
             const SizedBox(height: 24),
 
-            _buildSectionHeader('Consultations'),
+            _buildSectionHeader(l10n.consultations),
             const SizedBox(height: 12),
             _buildSettingsCard([
               _buildSwitchRow(
-                'Consultation Requests',
+                l10n.consultationRequests,
                 consultationRequests,
                 (val) => setState(() => consultationRequests = val),
               ),
               _buildDivider(),
               _buildSwitchRow(
-                'Upcoming Consultation',
+                l10n.upcomingConsultation,
                 upcomingConsultations,
                 (val) => setState(() => upcomingConsultations = val),
               ),
             ]),
             const SizedBox(height: 24),
 
-            _buildSectionHeader('Schedule'),
+            _buildSectionHeader(l10n.schedule),
             const SizedBox(height: 12),
             _buildSettingsCard([
               _buildSwitchRow(
-                'Schedule Reminders',
+                l10n.scheduleReminders,
                 scheduleReminders,
                 (val) => setState(() => scheduleReminders = val),
               ),

@@ -49,7 +49,7 @@ class _AiChatInputBarState extends State<AiChatInputBar> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to pick file: $e')),
+          SnackBar(content: Text('${AppLocalizations.of(context)!.failedToUploadFile}: $e')),
         );
       }
     }

@@ -786,7 +786,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get support => 'Support';
 
   @override
-  String get appVersion => 'Version 2.4.1 (Build 890)';
+  String appVersion(String version, String build) {
+    return 'Version $version (Build $build)';
+  }
 
   @override
   String get adolescentGirlsHealthAndNutrition =>
@@ -846,4 +848,466 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get messages => 'Messages';
+
+  @override
+  String get personalDetails => 'Personal Details';
+
+  @override
+  String get credentials => 'Credentials';
+
+  @override
+  String get professionalCv => 'Professional CV';
+
+  @override
+  String get remoteConnectionInterrupted =>
+      'Remote connection interrupted. Reconnecting...';
+
+  @override
+  String get callConnectionFailed => 'Call connection failed';
+
+  @override
+  String get callFailed => 'Call failed';
+
+  @override
+  String get multiPartyAvailable =>
+      'Multi-party consultation available in group mode.';
+
+  @override
+  String get failedToPickFile => 'Failed to pick file';
+
+  @override
+  String get failedToCancel => 'Failed to cancel';
+
+  @override
+  String get available => 'Available';
+
+  @override
+  String get booked => 'BOOKED';
+
+  @override
+  String get generateSlots => 'Generate Slots';
+
+  @override
+  String get noSlotsFound => 'No slots found for this date';
+
+  @override
+  String get addSlot => 'Add Slot';
+
+  @override
+  String get deleteSlot => 'Delete Slot';
+
+  @override
+  String get selectTime => 'Select Time';
+
+  @override
+  String get durationMinutes => 'Duration (minutes)';
+
+  @override
+  String get sessionFee => 'Session Fee';
+
+  @override
+  String get emergencyHotline => 'Emergency Hotlines';
+
+  @override
+  String get callAmbulance => 'Call Ambulance (907)';
+
+  @override
+  String get callPolice => 'Call Police (991)';
+
+  @override
+  String get callRedCross => 'Call Red Cross (922)';
+
+  @override
+  String get emergencySupportDesc =>
+      'If you are experiencing an acute medical emergency, please call one of the national hotlines immediately.';
+
+  @override
+  String get findNearbyHelp => 'Find Nearby Health Facility';
+
+  @override
+  String get pendingRequests => 'Pending Requests';
+
+  @override
+  String get confirmedAppointments => 'Confirmed Appointments';
+
+  @override
+  String get acceptedConsultations => 'Accepted Consultations';
+
+  @override
+  String get patientNotes => 'Patient Notes';
+
+  @override
+  String get saveNotes => 'Save Notes';
+
+  @override
+  String get typingPlaceholder => 'Type a message...';
+
+  @override
+  String get sendMessage => 'Send';
+
+  @override
+  String get audioCall => 'Audio Call';
+
+  @override
+  String get endCall => 'End Call';
+
+  @override
+  String get muteMic => 'Mute';
+
+  @override
+  String get unmuteMic => 'Unmute';
+
+  @override
+  String get speaker => 'Speaker';
+
+  @override
+  String get earpiece => 'Earpiece';
+
+  @override
+  String get digitalMidwife => 'Digital Midwife';
+
+  @override
+  String get systemDefault => 'System Default';
+
+  @override
+  String get lightMode => 'Light Mode';
+
+  @override
+  String get darkMode => 'Dark Mode';
+
+  @override
+  String get termsAndConditions => 'Terms & Conditions';
+
+  @override
+  String get privacyPolicy => 'Privacy Policy';
+
+  @override
+  String get blockADate => 'Block a Date';
+
+  @override
+  String get selectDateToBlock =>
+      'Select the date you want to take off or block from bookings.';
+
+  @override
+  String get reasonOptional => 'Reason (Optional)';
+
+  @override
+  String get reasonLeavePlaceholder => 'Reason (e.g., Sick leave, Vacation)';
+
+  @override
+  String get noBlockedDates => 'No blocked dates.';
+
+  @override
+  String get dateAlreadyBlocked => 'This date is already blocked.';
+
+  @override
+  String get startCall => 'Start Call';
+
+  @override
+  String get details => 'Details';
+
+  @override
+  String get moreOptions => 'More options';
+
+  @override
+  String get licenseNumber => 'License Number';
+
+  @override
+  String get specialty => 'Specialty';
+
+  @override
+  String get hospitalAffiliationOptional => 'Hospital Affiliation (Optional)';
+
+  @override
+  String get completeYourProfile => 'Complete Your Profile';
+
+  @override
+  String get completeSetup => 'Complete Setup';
+
+  @override
+  String get profileCreatedSuccess => 'Profile created successfully!';
+
+  @override
+  String get profileUpdatedSuccess => 'Profile updated successfully!';
+
+  @override
+  String get cameraPhotoUpdated => 'Camera photo captured and profile updated!';
+
+  @override
+  String get galleryPhotoUpdated => 'Gallery photo uploaded successfully!';
+
+  @override
+  String get noWorkingHoursConfigured => 'No working hours configured yet.';
+
+  @override
+  String get addedWorkingHoursSuccessfully =>
+      'Added working hours successfully!';
+
+  @override
+  String get failedToAddWorkingHours => 'Failed to add working hours';
+
+  @override
+  String get dayOfWeek => 'Day of Week';
+
+  @override
+  String get startTime => 'Start Time';
+
+  @override
+  String get endTime => 'End Time';
+
+  @override
+  String get preferencesSaved => 'Preferences saved successfully!';
+
+  @override
+  String get blockedDateRemoved => 'Blocked date removed.';
+
+  @override
+  String get noSlotsAvailableForDay => 'No slots available for this day.';
+
+  @override
+  String get noConsultationOptionsOffered =>
+      'No consultation options currently offered.';
+
+  @override
+  String get selectDayToSetRecurring =>
+      'Select a day of the week to set recurring hours';
+
+  @override
+  String get mySchedules => 'My Schedules';
+
+  @override
+  String activeCount(String count) {
+    return '$count active';
+  }
+
+  @override
+  String saveSelectedSlots(int count) {
+    return 'Save Selected Slots ($count)';
+  }
+
+  @override
+  String get saving => 'Saving...';
+
+  @override
+  String get savePreferences => 'Save Preferences';
+
+  @override
+  String get noHotlinesAvailable => 'No hotlines available';
+
+  @override
+  String get couldNotLaunchDialer => 'Could not launch dialer';
+
+  @override
+  String sosAlertTriggered(String count) {
+    return 'SOS Alert Triggered! Notified $count contacts.';
+  }
+
+  @override
+  String get failedToTriggerSos =>
+      'Failed to trigger SOS alert. Please call a hotline directly.';
+
+  @override
+  String get failedToLoadNotifications => 'Failed to load notifications';
+
+  @override
+  String get failedToLoadMidwives => 'Failed to load midwives';
+
+  @override
+  String get unableToConnectConsultation =>
+      'Unable to connect to consultation. Please try again.';
+
+  @override
+  String get failedToUpdateStatus => 'Failed to update status';
+
+  @override
+  String get failedToSendRequest => 'Failed to send request. Try again.';
+
+  @override
+  String get waitForMidwifeAccept =>
+      'Waiting for midwife to accept request before sending more messages.';
+
+  @override
+  String get waitForChatConnected => 'Wait for the chat to be connected.';
+
+  @override
+  String get failedToUploadFile => 'Failed to upload file';
+
+  @override
+  String get failedToAcceptChat => 'Failed to accept chat';
+
+  @override
+  String get failedToRejectChat => 'Failed to reject chat';
+
+  @override
+  String get failedToInitializeSession => 'Failed to initialize session';
+
+  @override
+  String get live => 'LIVE';
+
+  @override
+  String dateLabel(String date) {
+    return 'Date: $date';
+  }
+
+  @override
+  String get voiceCall => 'Voice Call';
+
+  @override
+  String get hotlines => 'Hotlines';
+
+  @override
+  String get qualification => 'Primary Qualification';
+
+  @override
+  String get viewProfile => 'View Profile';
+
+  @override
+  String conversationsCount(int count) {
+    return 'Conversations ($count)';
+  }
+
+  @override
+  String midwivesCount(int count) {
+    return 'Midwives ($count)';
+  }
+
+  @override
+  String get newMessage => 'New Message';
+
+  @override
+  String get connectAndMessageDirectly =>
+      'Connect and message directly with our verified healthcare midwives.';
+
+  @override
+  String get startChatWithMidwife => 'Start Chat with a Midwife';
+
+  @override
+  String get upcomingConsultation => 'Upcoming Consultation';
+
+  @override
+  String get consultationAccepted => 'Consultation Accepted';
+
+  @override
+  String get consultationCancelled => 'Consultation Cancelled';
+
+  @override
+  String get consultationDeclined => 'Consultation Declined';
+
+  @override
+  String get newConsultationRequest => 'New Consultation Request';
+
+  @override
+  String get newChatMessage => 'New Message';
+
+  @override
+  String yearsExp(int years) {
+    return '$years yrs exp';
+  }
+
+  @override
+  String ratingsCount(int count) {
+    return '$count ratings';
+  }
+
+  @override
+  String upcomingBadge(int count) {
+    return '$count UPCOMING';
+  }
+
+  @override
+  String welcomeUser(String name) {
+    return 'Welcome $name';
+  }
+
+  @override
+  String get welcome => 'Welcome';
+
+  @override
+  String patientConsultationBookingsPending(int count) {
+    return 'You have $count patient consultation bookings pending.';
+  }
+
+  @override
+  String get patientBookingsWillAppearHere =>
+      'Your patient bookings will appear here.';
+
+  @override
+  String totalCount(int count) {
+    return '$count Total';
+  }
+
+  @override
+  String get confirmed => 'CONFIRMED';
+
+  @override
+  String get generalNotifications => 'General Notifications';
+
+  @override
+  String get pushNotifications => 'Push Notifications';
+
+  @override
+  String get consultationRequests => 'Consultation Requests';
+
+  @override
+  String get scheduleReminders => 'Schedule Reminders';
+
+  @override
+  String get mon => 'Mon';
+
+  @override
+  String get tue => 'Tue';
+
+  @override
+  String get wed => 'Wed';
+
+  @override
+  String get thu => 'Thu';
+
+  @override
+  String get fri => 'Fri';
+
+  @override
+  String get sat => 'Sat';
+
+  @override
+  String get sun => 'Sun';
+
+  @override
+  String get monday => 'Monday';
+
+  @override
+  String get tuesday => 'Tuesday';
+
+  @override
+  String get wednesday => 'Wednesday';
+
+  @override
+  String get thursday => 'Thursday';
+
+  @override
+  String get friday => 'Friday';
+
+  @override
+  String get saturday => 'Saturday';
+
+  @override
+  String get sunday => 'Sunday';
+
+  @override
+  String get scheduledDay => 'Scheduled Day';
+
+  @override
+  String get statusPending => 'PENDING';
+
+  @override
+  String get statusConfirmed => 'CONFIRMED';
+
+  @override
+  String get statusCompleted => 'COMPLETED';
+
+  @override
+  String get statusCancelled => 'CANCELLED';
+
+  @override
+  String get statusDeclined => 'DECLINED';
 }

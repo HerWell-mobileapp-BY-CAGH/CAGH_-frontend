@@ -1,5 +1,6 @@
 import 'package:cagh_frontend/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
 import 'package:cagh_frontend/shared/constants/app_constants.dart';
@@ -12,19 +13,20 @@ import 'package:cagh_frontend/features/profile/presentation/appearance_accessibi
 import 'package:cagh_frontend/features/consultations/presentation/midwife/midwife_inbox_screen.dart';
 import 'package:cagh_frontend/features/consultations/data/repositories/midwife_repository_impl.dart';
 import 'package:cagh_frontend/features/consultations/data/services/midwife_api_service.dart';
+import 'package:cagh_frontend/features/notifications/presentation/providers/notification_provider.dart';
 import 'package:cagh_frontend/shared/models/midwife_profile.dart';
 import 'package:cagh_frontend/shared/widgets/app_profile_avatar.dart';
 import 'package:cagh_frontend/core/utils/app_logger.dart';
 
-class MidwifeProfileScreen extends StatefulWidget {
+class MidwifeProfileScreen extends ConsumerStatefulWidget {
   final VoidCallback? onBackTap;
   const MidwifeProfileScreen({super.key, this.onBackTap});
 
   @override
-  State<MidwifeProfileScreen> createState() => _MidwifeProfileScreenState();
+  ConsumerState<MidwifeProfileScreen> createState() => _MidwifeProfileScreenState();
 }
 
-class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
+class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
   bool isLoading = true;
   String fullName = '';
   String email = '';
@@ -219,12 +221,12 @@ class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
                   const SizedBox(height: 24),
 
                   // 1. Account & Records
-                  _buildSectionHeader('Account & Records'),
+                  _buildSectionHeader(AppLocalizations.of(context)!.accountAndRecords),
                   const SizedBox(height: 10),
                   _buildGroupedCard([
                     _buildListTile(
                       icon: Icons.person_outline,
-                      title: 'Personal Information',
+                      title: AppLocalizations.of(context)!.personalInformation,
                       onTap: () {
                         Navigator.push(
                           context,
@@ -238,11 +240,30 @@ class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
                     _buildListTile(
                       icon: Icons.chat_bubble_outline,
                       title: AppLocalizations.of(context)!.myMessages,
+                      badge: ref.watch(notificationProvider).unreadMessagesCount > 0
+                          ? Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                              decoration: const BoxDecoration(
+                                color: AppColors.primaryGreen,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Text(
+                                ref.watch(notificationProvider).unreadMessagesCount.toString(),
+                                style: const TextStyle(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            )
+                          : null,
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(builder: (context) => const MidwifeInboxScreen()),
-                        );
+                        ).then((_) {
+                          ref.read(notificationProvider.notifier).refreshNotifications();
+                        });
                       },
                     ),
                   ]),
@@ -250,13 +271,13 @@ class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
                   const SizedBox(height: 24),
 
                   // 2. Settings
-                  _buildSectionHeader('Settings'),
-                  SizedBox(height: 10),
+                  _buildSectionHeader(AppLocalizations.of(context)!.settings),
+                  const SizedBox(height: 10),
                   _buildGroupedCard([
                     _buildListTile(
                       icon: Icons.palette_outlined,
                       title: AppLocalizations.of(context)!.appearanceAccessibility,
-                      subtitle: 'Theme and text size',
+                      subtitle: AppLocalizations.of(context)!.themeAndTextSize,
                       onTap: () {
                         Navigator.push(
                           context,
@@ -271,7 +292,7 @@ class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
                     _buildDivider(),
                     _buildListTile(
                       icon: Icons.language_rounded,
-                      title: 'Language',
+                      title: AppLocalizations.of(context)!.languageSettings,
                       subtitle: activeLang,
                       trailing: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
@@ -283,32 +304,33 @@ class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<String>(
                             value: LanguageService.currentLanguage.value,
-                            isDense: true,
-                            icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.primaryGreen, size: 20),
-                            borderRadius: BorderRadius.circular(12),
-                            items: LanguageService.supportedLanguages.map((lang) {
-                              return DropdownMenuItem<String>(
-                                value: lang.code,
-                                child: Text(
-                                  '${lang.flag} ${lang.nativeName}',
-                                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
-                                ),
-                              );
-                            }).toList(),
-                            onChanged: (String? code) async {
-                              if (code != null) {
-                                await LanguageService.setLanguage(code);
-                                if (mounted) setState(() {});
+                            icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: AppColors.primaryGreen),
+                            style: const TextStyle(
+                              color: AppColors.primaryGreen,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            items: const [
+                              DropdownMenuItem(value: 'en', child: Text('English')),
+                              DropdownMenuItem(value: 'am', child: Text('አማርኛ')),
+                              DropdownMenuItem(value: 'om', child: Text('Afaan Oromoo')),
+                              DropdownMenuItem(value: 'so', child: Text('Somali')),
+                            ],
+                            onChanged: (lang) {
+                              if (lang != null) {
+                                LanguageService.setLanguage(lang);
+                                setState(() {});
                               }
                             },
                           ),
                         ),
                       ),
+                      onTap: () {},
                     ),
                     _buildDivider(),
                     _buildListTile(
                       icon: Icons.notifications_none_rounded,
-                      title: 'Notifications',
+                      title: AppLocalizations.of(context)!.notifications,
                       onTap: () {
                         Navigator.push(
                           context,
@@ -321,7 +343,7 @@ class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
                     _buildDivider(),
                     _buildListTile(
                       icon: Icons.shield_outlined,
-                      title: 'Privacy & Security',
+                      title: AppLocalizations.of(context)!.privacySecurity,
                       onTap: () {},
                     ),
                   ]),
@@ -329,24 +351,24 @@ class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
                   const SizedBox(height: 24),
 
                   // 3. Support & Info
-                  _buildSectionHeader('App Information'),
+                  _buildSectionHeader(AppLocalizations.of(context)!.support),
                   const SizedBox(height: 10),
                   _buildGroupedCard([
                     _buildListTile(
                       icon: Icons.help_outline_rounded,
-                      title: 'Help & Support',
+                      title: AppLocalizations.of(context)!.helpSupport,
                       onTap: () {},
                     ),
                     _buildDivider(),
                     _buildListTile(
                       icon: Icons.description_outlined,
-                      title: 'Terms & Conditions',
+                      title: AppLocalizations.of(context)!.termsAndConditions,
                       onTap: () {},
                     ),
                     _buildDivider(),
                     _buildListTile(
                       icon: Icons.policy_outlined,
-                      title: 'Privacy Policy',
+                      title: AppLocalizations.of(context)!.privacyPolicy,
                       onTap: () {},
                     ),
                   ]),
@@ -371,9 +393,9 @@ class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
                         }
                       },
                       icon: const Icon(Icons.logout, color: Colors.red),
-                      label: const Text(
-                        'Logout',
-                        style: TextStyle(
+                      label: Text(
+                        AppLocalizations.of(context)!.logout,
+                        style: const TextStyle(
                           color: Colors.red,
                           fontWeight: FontWeight.w600,
                           fontSize: 16,
@@ -393,7 +415,7 @@ class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
                   const SizedBox(height: 12),
 
                   Text(
-                    'Version 2.4.1 (Build 890)',
+                    AppLocalizations.of(context)!.appVersion('2.4.1', '890'),
                     style: TextStyle(
                       fontSize: 11.5,
                       color: Colors.grey.shade500,
@@ -458,6 +480,7 @@ class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
     required IconData icon,
     required String title,
     String? subtitle,
+    Widget? badge,
     Widget? trailing,
     VoidCallback? onTap,
   }) {
@@ -480,7 +503,14 @@ class _MidwifeProfileScreenState extends State<MidwifeProfileScreen> {
             )
           : null,
       trailing: trailing ??
-          Icon(Icons.chevron_right, color: Theme.of(context).dividerColor, size: 22),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (badge != null) badge,
+              if (badge != null) const SizedBox(width: 8),
+              Icon(Icons.chevron_right, color: Theme.of(context).dividerColor, size: 22),
+            ],
+          ),
     );
   }
 

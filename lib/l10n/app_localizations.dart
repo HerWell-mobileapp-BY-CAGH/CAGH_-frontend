@@ -1589,8 +1589,8 @@ abstract class AppLocalizations {
   /// No description provided for @appVersion.
   ///
   /// In en, this message translates to:
-  /// **'Version 2.4.1 (Build 890)'**
-  String get appVersion;
+  /// **'Version {version} (Build {build})'**
+  String appVersion(String version, String build);
 
   /// No description provided for @adolescentGirlsHealthAndNutrition.
   ///
@@ -1693,6 +1693,858 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Messages'**
   String get messages;
+
+  /// No description provided for @personalDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal Details'**
+  String get personalDetails;
+
+  /// No description provided for @credentials.
+  ///
+  /// In en, this message translates to:
+  /// **'Credentials'**
+  String get credentials;
+
+  /// No description provided for @professionalCv.
+  ///
+  /// In en, this message translates to:
+  /// **'Professional CV'**
+  String get professionalCv;
+
+  /// No description provided for @remoteConnectionInterrupted.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote connection interrupted. Reconnecting...'**
+  String get remoteConnectionInterrupted;
+
+  /// No description provided for @callConnectionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Call connection failed'**
+  String get callConnectionFailed;
+
+  /// No description provided for @callFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Call failed'**
+  String get callFailed;
+
+  /// No description provided for @multiPartyAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Multi-party consultation available in group mode.'**
+  String get multiPartyAvailable;
+
+  /// No description provided for @failedToPickFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to pick file'**
+  String get failedToPickFile;
+
+  /// No description provided for @failedToCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to cancel'**
+  String get failedToCancel;
+
+  /// No description provided for @available.
+  ///
+  /// In en, this message translates to:
+  /// **'Available'**
+  String get available;
+
+  /// No description provided for @booked.
+  ///
+  /// In en, this message translates to:
+  /// **'BOOKED'**
+  String get booked;
+
+  /// No description provided for @generateSlots.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate Slots'**
+  String get generateSlots;
+
+  /// No description provided for @noSlotsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No slots found for this date'**
+  String get noSlotsFound;
+
+  /// No description provided for @addSlot.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Slot'**
+  String get addSlot;
+
+  /// No description provided for @deleteSlot.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Slot'**
+  String get deleteSlot;
+
+  /// No description provided for @selectTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Time'**
+  String get selectTime;
+
+  /// No description provided for @durationMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration (minutes)'**
+  String get durationMinutes;
+
+  /// No description provided for @sessionFee.
+  ///
+  /// In en, this message translates to:
+  /// **'Session Fee'**
+  String get sessionFee;
+
+  /// No description provided for @emergencyHotline.
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency Hotlines'**
+  String get emergencyHotline;
+
+  /// No description provided for @callAmbulance.
+  ///
+  /// In en, this message translates to:
+  /// **'Call Ambulance (907)'**
+  String get callAmbulance;
+
+  /// No description provided for @callPolice.
+  ///
+  /// In en, this message translates to:
+  /// **'Call Police (991)'**
+  String get callPolice;
+
+  /// No description provided for @callRedCross.
+  ///
+  /// In en, this message translates to:
+  /// **'Call Red Cross (922)'**
+  String get callRedCross;
+
+  /// No description provided for @emergencySupportDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'If you are experiencing an acute medical emergency, please call one of the national hotlines immediately.'**
+  String get emergencySupportDesc;
+
+  /// No description provided for @findNearbyHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Find Nearby Health Facility'**
+  String get findNearbyHelp;
+
+  /// No description provided for @pendingRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending Requests'**
+  String get pendingRequests;
+
+  /// No description provided for @confirmedAppointments.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed Appointments'**
+  String get confirmedAppointments;
+
+  /// No description provided for @acceptedConsultations.
+  ///
+  /// In en, this message translates to:
+  /// **'Accepted Consultations'**
+  String get acceptedConsultations;
+
+  /// No description provided for @patientNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Patient Notes'**
+  String get patientNotes;
+
+  /// No description provided for @saveNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Notes'**
+  String get saveNotes;
+
+  /// No description provided for @typingPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Type a message...'**
+  String get typingPlaceholder;
+
+  /// No description provided for @sendMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get sendMessage;
+
+  /// No description provided for @audioCall.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio Call'**
+  String get audioCall;
+
+  /// No description provided for @endCall.
+  ///
+  /// In en, this message translates to:
+  /// **'End Call'**
+  String get endCall;
+
+  /// No description provided for @muteMic.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute'**
+  String get muteMic;
+
+  /// No description provided for @unmuteMic.
+  ///
+  /// In en, this message translates to:
+  /// **'Unmute'**
+  String get unmuteMic;
+
+  /// No description provided for @speaker.
+  ///
+  /// In en, this message translates to:
+  /// **'Speaker'**
+  String get speaker;
+
+  /// No description provided for @earpiece.
+  ///
+  /// In en, this message translates to:
+  /// **'Earpiece'**
+  String get earpiece;
+
+  /// No description provided for @digitalMidwife.
+  ///
+  /// In en, this message translates to:
+  /// **'Digital Midwife'**
+  String get digitalMidwife;
+
+  /// No description provided for @systemDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'System Default'**
+  String get systemDefault;
+
+  /// No description provided for @lightMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Light Mode'**
+  String get lightMode;
+
+  /// No description provided for @darkMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark Mode'**
+  String get darkMode;
+
+  /// No description provided for @termsAndConditions.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms & Conditions'**
+  String get termsAndConditions;
+
+  /// No description provided for @privacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacyPolicy;
+
+  /// No description provided for @blockADate.
+  ///
+  /// In en, this message translates to:
+  /// **'Block a Date'**
+  String get blockADate;
+
+  /// No description provided for @selectDateToBlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Select the date you want to take off or block from bookings.'**
+  String get selectDateToBlock;
+
+  /// No description provided for @reasonOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason (Optional)'**
+  String get reasonOptional;
+
+  /// No description provided for @reasonLeavePlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason (e.g., Sick leave, Vacation)'**
+  String get reasonLeavePlaceholder;
+
+  /// No description provided for @noBlockedDates.
+  ///
+  /// In en, this message translates to:
+  /// **'No blocked dates.'**
+  String get noBlockedDates;
+
+  /// No description provided for @dateAlreadyBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'This date is already blocked.'**
+  String get dateAlreadyBlocked;
+
+  /// No description provided for @startCall.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Call'**
+  String get startCall;
+
+  /// No description provided for @details.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get details;
+
+  /// No description provided for @moreOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'More options'**
+  String get moreOptions;
+
+  /// No description provided for @licenseNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'License Number'**
+  String get licenseNumber;
+
+  /// No description provided for @specialty.
+  ///
+  /// In en, this message translates to:
+  /// **'Specialty'**
+  String get specialty;
+
+  /// No description provided for @hospitalAffiliationOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Hospital Affiliation (Optional)'**
+  String get hospitalAffiliationOptional;
+
+  /// No description provided for @completeYourProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete Your Profile'**
+  String get completeYourProfile;
+
+  /// No description provided for @completeSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete Setup'**
+  String get completeSetup;
+
+  /// No description provided for @profileCreatedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile created successfully!'**
+  String get profileCreatedSuccess;
+
+  /// No description provided for @profileUpdatedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile updated successfully!'**
+  String get profileUpdatedSuccess;
+
+  /// No description provided for @cameraPhotoUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera photo captured and profile updated!'**
+  String get cameraPhotoUpdated;
+
+  /// No description provided for @galleryPhotoUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Gallery photo uploaded successfully!'**
+  String get galleryPhotoUpdated;
+
+  /// No description provided for @noWorkingHoursConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'No working hours configured yet.'**
+  String get noWorkingHoursConfigured;
+
+  /// No description provided for @addedWorkingHoursSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Added working hours successfully!'**
+  String get addedWorkingHoursSuccessfully;
+
+  /// No description provided for @failedToAddWorkingHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to add working hours'**
+  String get failedToAddWorkingHours;
+
+  /// No description provided for @dayOfWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Day of Week'**
+  String get dayOfWeek;
+
+  /// No description provided for @startTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Time'**
+  String get startTime;
+
+  /// No description provided for @endTime.
+  ///
+  /// In en, this message translates to:
+  /// **'End Time'**
+  String get endTime;
+
+  /// No description provided for @preferencesSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferences saved successfully!'**
+  String get preferencesSaved;
+
+  /// No description provided for @blockedDateRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked date removed.'**
+  String get blockedDateRemoved;
+
+  /// No description provided for @noSlotsAvailableForDay.
+  ///
+  /// In en, this message translates to:
+  /// **'No slots available for this day.'**
+  String get noSlotsAvailableForDay;
+
+  /// No description provided for @noConsultationOptionsOffered.
+  ///
+  /// In en, this message translates to:
+  /// **'No consultation options currently offered.'**
+  String get noConsultationOptionsOffered;
+
+  /// No description provided for @selectDayToSetRecurring.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a day of the week to set recurring hours'**
+  String get selectDayToSetRecurring;
+
+  /// No description provided for @mySchedules.
+  ///
+  /// In en, this message translates to:
+  /// **'My Schedules'**
+  String get mySchedules;
+
+  /// No description provided for @activeCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} active'**
+  String activeCount(String count);
+
+  /// No description provided for @saveSelectedSlots.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Selected Slots ({count})'**
+  String saveSelectedSlots(int count);
+
+  /// No description provided for @saving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving...'**
+  String get saving;
+
+  /// No description provided for @savePreferences.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Preferences'**
+  String get savePreferences;
+
+  /// No description provided for @noHotlinesAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No hotlines available'**
+  String get noHotlinesAvailable;
+
+  /// No description provided for @couldNotLaunchDialer.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not launch dialer'**
+  String get couldNotLaunchDialer;
+
+  /// No description provided for @sosAlertTriggered.
+  ///
+  /// In en, this message translates to:
+  /// **'SOS Alert Triggered! Notified {count} contacts.'**
+  String sosAlertTriggered(String count);
+
+  /// No description provided for @failedToTriggerSos.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to trigger SOS alert. Please call a hotline directly.'**
+  String get failedToTriggerSos;
+
+  /// No description provided for @failedToLoadNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load notifications'**
+  String get failedToLoadNotifications;
+
+  /// No description provided for @failedToLoadMidwives.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load midwives'**
+  String get failedToLoadMidwives;
+
+  /// No description provided for @unableToConnectConsultation.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to connect to consultation. Please try again.'**
+  String get unableToConnectConsultation;
+
+  /// No description provided for @failedToUpdateStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update status'**
+  String get failedToUpdateStatus;
+
+  /// No description provided for @failedToSendRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to send request. Try again.'**
+  String get failedToSendRequest;
+
+  /// No description provided for @waitForMidwifeAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for midwife to accept request before sending more messages.'**
+  String get waitForMidwifeAccept;
+
+  /// No description provided for @waitForChatConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Wait for the chat to be connected.'**
+  String get waitForChatConnected;
+
+  /// No description provided for @failedToUploadFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to upload file'**
+  String get failedToUploadFile;
+
+  /// No description provided for @failedToAcceptChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to accept chat'**
+  String get failedToAcceptChat;
+
+  /// No description provided for @failedToRejectChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to reject chat'**
+  String get failedToRejectChat;
+
+  /// No description provided for @failedToInitializeSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to initialize session'**
+  String get failedToInitializeSession;
+
+  /// No description provided for @live.
+  ///
+  /// In en, this message translates to:
+  /// **'LIVE'**
+  String get live;
+
+  /// No description provided for @dateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Date: {date}'**
+  String dateLabel(String date);
+
+  /// No description provided for @voiceCall.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice Call'**
+  String get voiceCall;
+
+  /// No description provided for @hotlines.
+  ///
+  /// In en, this message translates to:
+  /// **'Hotlines'**
+  String get hotlines;
+
+  /// No description provided for @qualification.
+  ///
+  /// In en, this message translates to:
+  /// **'Primary Qualification'**
+  String get qualification;
+
+  /// No description provided for @viewProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'View Profile'**
+  String get viewProfile;
+
+  /// No description provided for @conversationsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Conversations ({count})'**
+  String conversationsCount(int count);
+
+  /// No description provided for @midwivesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Midwives ({count})'**
+  String midwivesCount(int count);
+
+  /// No description provided for @newMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'New Message'**
+  String get newMessage;
+
+  /// No description provided for @connectAndMessageDirectly.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect and message directly with our verified healthcare midwives.'**
+  String get connectAndMessageDirectly;
+
+  /// No description provided for @startChatWithMidwife.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Chat with a Midwife'**
+  String get startChatWithMidwife;
+
+  /// No description provided for @upcomingConsultation.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming Consultation'**
+  String get upcomingConsultation;
+
+  /// No description provided for @consultationAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Consultation Accepted'**
+  String get consultationAccepted;
+
+  /// No description provided for @consultationCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Consultation Cancelled'**
+  String get consultationCancelled;
+
+  /// No description provided for @consultationDeclined.
+  ///
+  /// In en, this message translates to:
+  /// **'Consultation Declined'**
+  String get consultationDeclined;
+
+  /// No description provided for @newConsultationRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'New Consultation Request'**
+  String get newConsultationRequest;
+
+  /// No description provided for @newChatMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'New Message'**
+  String get newChatMessage;
+
+  /// No description provided for @yearsExp.
+  ///
+  /// In en, this message translates to:
+  /// **'{years} yrs exp'**
+  String yearsExp(int years);
+
+  /// No description provided for @ratingsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} ratings'**
+  String ratingsCount(int count);
+
+  /// No description provided for @upcomingBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} UPCOMING'**
+  String upcomingBadge(int count);
+
+  /// No description provided for @welcomeUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome {name}'**
+  String welcomeUser(String name);
+
+  /// No description provided for @welcome.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome'**
+  String get welcome;
+
+  /// No description provided for @patientConsultationBookingsPending.
+  ///
+  /// In en, this message translates to:
+  /// **'You have {count} patient consultation bookings pending.'**
+  String patientConsultationBookingsPending(int count);
+
+  /// No description provided for @patientBookingsWillAppearHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Your patient bookings will appear here.'**
+  String get patientBookingsWillAppearHere;
+
+  /// No description provided for @totalCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} Total'**
+  String totalCount(int count);
+
+  /// No description provided for @confirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'CONFIRMED'**
+  String get confirmed;
+
+  /// No description provided for @generalNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'General Notifications'**
+  String get generalNotifications;
+
+  /// No description provided for @pushNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Push Notifications'**
+  String get pushNotifications;
+
+  /// No description provided for @consultationRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Consultation Requests'**
+  String get consultationRequests;
+
+  /// No description provided for @scheduleReminders.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule Reminders'**
+  String get scheduleReminders;
+
+  /// No description provided for @mon.
+  ///
+  /// In en, this message translates to:
+  /// **'Mon'**
+  String get mon;
+
+  /// No description provided for @tue.
+  ///
+  /// In en, this message translates to:
+  /// **'Tue'**
+  String get tue;
+
+  /// No description provided for @wed.
+  ///
+  /// In en, this message translates to:
+  /// **'Wed'**
+  String get wed;
+
+  /// No description provided for @thu.
+  ///
+  /// In en, this message translates to:
+  /// **'Thu'**
+  String get thu;
+
+  /// No description provided for @fri.
+  ///
+  /// In en, this message translates to:
+  /// **'Fri'**
+  String get fri;
+
+  /// No description provided for @sat.
+  ///
+  /// In en, this message translates to:
+  /// **'Sat'**
+  String get sat;
+
+  /// No description provided for @sun.
+  ///
+  /// In en, this message translates to:
+  /// **'Sun'**
+  String get sun;
+
+  /// No description provided for @monday.
+  ///
+  /// In en, this message translates to:
+  /// **'Monday'**
+  String get monday;
+
+  /// No description provided for @tuesday.
+  ///
+  /// In en, this message translates to:
+  /// **'Tuesday'**
+  String get tuesday;
+
+  /// No description provided for @wednesday.
+  ///
+  /// In en, this message translates to:
+  /// **'Wednesday'**
+  String get wednesday;
+
+  /// No description provided for @thursday.
+  ///
+  /// In en, this message translates to:
+  /// **'Thursday'**
+  String get thursday;
+
+  /// No description provided for @friday.
+  ///
+  /// In en, this message translates to:
+  /// **'Friday'**
+  String get friday;
+
+  /// No description provided for @saturday.
+  ///
+  /// In en, this message translates to:
+  /// **'Saturday'**
+  String get saturday;
+
+  /// No description provided for @sunday.
+  ///
+  /// In en, this message translates to:
+  /// **'Sunday'**
+  String get sunday;
+
+  /// No description provided for @scheduledDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Scheduled Day'**
+  String get scheduledDay;
+
+  /// No description provided for @statusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'PENDING'**
+  String get statusPending;
+
+  /// No description provided for @statusConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'CONFIRMED'**
+  String get statusConfirmed;
+
+  /// No description provided for @statusCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'COMPLETED'**
+  String get statusCompleted;
+
+  /// No description provided for @statusCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'CANCELLED'**
+  String get statusCancelled;
+
+  /// No description provided for @statusDeclined.
+  ///
+  /// In en, this message translates to:
+  /// **'DECLINED'**
+  String get statusDeclined;
 }
 
 class _AppLocalizationsDelegate

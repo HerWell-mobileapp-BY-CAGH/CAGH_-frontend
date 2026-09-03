@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:async';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
 import 'package:cagh_frontend/features/consultations/data/services/chat_api_service.dart';
@@ -7,17 +8,18 @@ import 'package:cagh_frontend/features/consultations/data/repositories/midwife_r
 import 'package:cagh_frontend/shared/models/midwife_profile.dart';
 import 'package:cagh_frontend/features/consultations/presentation/user/chat_screen.dart';
 import 'package:cagh_frontend/shared/widgets/app_profile_avatar.dart';
+import 'package:cagh_frontend/features/notifications/presentation/providers/notification_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
 
-class UserInboxScreen extends StatefulWidget {
+class UserInboxScreen extends ConsumerStatefulWidget {
   const UserInboxScreen({super.key});
 
   @override
-  State<UserInboxScreen> createState() => _UserInboxScreenState();
+  ConsumerState<UserInboxScreen> createState() => _UserInboxScreenState();
 }
 
-class _UserInboxScreenState extends State<UserInboxScreen> with SingleTickerProviderStateMixin {
+class _UserInboxScreenState extends ConsumerState<UserInboxScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
   final MidwifeRepositoryImpl _midwifeRepository = MidwifeRepositoryImpl(MidwifeApiService());
@@ -94,10 +96,10 @@ class _UserInboxScreenState extends State<UserInboxScreen> with SingleTickerProv
         setState(() {
           _rooms = uniqueRooms.values.toList();
         });
+        ref.read(notificationProvider.notifier).refreshNotifications();
       }
     } catch (e) {
       debugPrint("Error loading chat rooms in inbox: $e");
-      // Gracefully set empty rooms if backend returns an error so user can still message midwives
       if (mounted) {
         setState(() {
           _rooms = [];
@@ -138,52 +140,64 @@ class _UserInboxScreenState extends State<UserInboxScreen> with SingleTickerProv
         return '$fName $lName'.trim();
       }
     } else if (mwUser is Map) {
-      if (mwUser['first_name'] != null && mwUser['first_name'].toString().isNotEmpty) {
-        return mwUser['first_name'];
+      final fName = mwUser['first_name']?.toString() ?? '';
+      final lName = mwUser['last_name']?.toString() ?? '';
+      if (fName.isNotEmpty || lName.isNotEmpty) {
+        return '$fName $lName'.trim();
       }
+      final name = mwUser['name']?.toString() ?? '';
+      if (name.isNotEmpty) return name;
+    } else if (mwData is Map) {
+      final name = mwData['name'] ?? mwData['full_name'];
+      if (name is String && name.isNotEmpty) return name;
     }
 
-    if (mwData is Map && mwData['full_name'] != null && mwData['full_name'].toString().isNotEmpty) {
-      return mwData['full_name'];
-    }
-
-    final mwId = _extractMidwifeId(room);
-    if (_midwifeNames.containsKey(mwId)) {
-      return _midwifeNames[mwId]!;
+    final midwifeId = _extractMidwifeId(room);
+    if (_midwifeNames.containsKey(midwifeId)) {
+      return _midwifeNames[midwifeId]!;
     }
 
     return 'Midwife';
   }
 
-  dynamic _mapPath(String key, dynamic holder) {
-    if (holder is Map) return holder[key];
-    return null;
-  }
-
   String _extractMidwifeId(Map<String, dynamic> room) {
     final dynamic mwData = room['midwife_detail'] ?? room['midwife'];
-
-    if (mwData is Map && mwData['id'] != null) {
-      return mwData['id'].toString();
-    }
-    if (mwData != null && mwData is! Map) {
+    if (mwData is Map) {
+      final id = mwData['id'] ?? mwData['user_id'];
+      if (id != null) return id.toString();
+    } else if (mwData is String || mwData is int) {
       return mwData.toString();
     }
-    return '0';
+    return room['midwife_id']?.toString() ?? '';
+  }
+
+  dynamic _mapPath(String path, dynamic root) {
+    if (root == null || root is! Map) return null;
+    if (path.startsWith('#')) {
+      final key = path.substring(1);
+      return root[key] ?? _mapPath(key, root['user']) ?? _mapPath(key, root['profile']);
+    }
+    return root[path];
   }
 
   void _openChatWithMidwife(MidwifeProfile mw) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ChatScreen(midwife: mw),
+        builder: (context) => ChatScreen(
+          midwifeId: mw.id.toString(),
+          midwifeName: mw.fullName,
+        ),
       ),
-    ).then((_) => _loadData());
+    ).then((_) {
+      _loadData();
+      ref.read(notificationProvider.notifier).refreshNotifications();
+    });
   }
 
   void _openChatWithRoom(Map<String, dynamic> room) {
-    final midwifeName = _extractMidwifeName(room);
     final midwifeId = _extractMidwifeId(room);
+    final midwifeName = _extractMidwifeName(room);
 
     Navigator.push(
       context,
@@ -194,7 +208,10 @@ class _UserInboxScreenState extends State<UserInboxScreen> with SingleTickerProv
           midwifeName: midwifeName,
         ),
       ),
-    ).then((_) => _loadData());
+    ).then((_) {
+      _loadData();
+      ref.read(notificationProvider.notifier).refreshNotifications();
+    });
   }
 
   @override
@@ -222,11 +239,11 @@ class _UserInboxScreenState extends State<UserInboxScreen> with SingleTickerProv
           tabs: [
             Tab(
               icon: const Icon(Icons.forum_outlined, size: 20),
-              text: 'Conversations (${_rooms.length})',
+              text: AppLocalizations.of(context)!.conversationsCount(_rooms.length),
             ),
             Tab(
               icon: const Icon(Icons.people_outline, size: 20),
-              text: 'Midwives (${_midwives.length})',
+              text: AppLocalizations.of(context)!.midwivesCount(_midwives.length),
             ),
           ],
         ),
@@ -237,9 +254,9 @@ class _UserInboxScreenState extends State<UserInboxScreen> with SingleTickerProv
         },
         backgroundColor: AppColors.primaryGreen,
         icon: const Icon(Icons.add_comment_rounded, color: Colors.white),
-        label: const Text(
-          'New Message',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        label: Text(
+          AppLocalizations.of(context)!.newMessage,
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
       ),
       body: _isLoading
@@ -288,7 +305,7 @@ class _UserInboxScreenState extends State<UserInboxScreen> with SingleTickerProv
               ),
               const SizedBox(height: 8),
               Text(
-                'Connect and message directly with our verified healthcare midwives.',
+                AppLocalizations.of(context)!.connectAndMessageDirectly,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
@@ -301,9 +318,9 @@ class _UserInboxScreenState extends State<UserInboxScreen> with SingleTickerProv
                   _tabController.animateTo(1);
                 },
                 icon: const Icon(Icons.person_search_rounded, color: Colors.white),
-                label: const Text(
-                  'Start Chat with a Midwife',
-                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 15),
+                label: Text(
+                  AppLocalizations.of(context)!.startChatWithMidwife,
+                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 15),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryGreen,

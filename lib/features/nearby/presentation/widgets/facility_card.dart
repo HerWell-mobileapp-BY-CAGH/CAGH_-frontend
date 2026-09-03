@@ -210,7 +210,7 @@ class FacilityCard extends StatelessWidget {
                         foregroundColor: AppColors.primaryGreen, side: const BorderSide(color: AppColors.primaryGreen),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       ),
-                      child: const Text('Details'),
+                      child: Text(AppLocalizations.of(context)!.details),
                     ),
                   ),
                   const SizedBox(width: 12),

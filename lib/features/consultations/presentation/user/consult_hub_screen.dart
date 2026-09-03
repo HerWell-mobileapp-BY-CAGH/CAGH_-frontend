@@ -1,3 +1,4 @@
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 import 'package:cagh_frontend/core/services/global_call_service.dart';
 import 'package:flutter/material.dart';
 import 'package:cagh_frontend/features/appointments/data/services/appointment_api_service.dart';
@@ -122,8 +123,8 @@ class ConsultHubScreenState extends State<ConsultHubScreen> {
       if (context.mounted) Navigator.pop(context);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Unable to connect to consultation. Please try again.'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.unableToConnectConsultation),
             backgroundColor: Colors.red,
           ),
         );
@@ -142,7 +143,7 @@ class ConsultHubScreenState extends State<ConsultHubScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to update status'), backgroundColor: Colors.red),
+          SnackBar(content: Text(AppLocalizations.of(context)!.failedToUpdateStatus), backgroundColor: Colors.red),
         );
       }
     }
@@ -187,11 +188,11 @@ class ConsultHubScreenState extends State<ConsultHubScreen> {
 
     String emptyMessage;
     if (_selectedTab == 0) {
-      emptyMessage = 'No consultation requests yet';
+      emptyMessage = AppLocalizations.of(context)!.noConsultationRequestsYet;
     } else if (_selectedTab == 1) {
-      emptyMessage = 'No upcoming consultations';
+      emptyMessage = AppLocalizations.of(context)!.noUpcomingConsultations;
     } else {
-      emptyMessage = 'No past consultations';
+      emptyMessage = AppLocalizations.of(context)!.noPastConsultations;
     }
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -201,9 +202,9 @@ class ConsultHubScreenState extends State<ConsultHubScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.primaryGreen,
         elevation: 0,
-        title: const Text(
-          'Consultations',
-          style: TextStyle(
+        title: Text(
+          AppLocalizations.of(context)!.consultations,
+          style: const TextStyle(
             color: Colors.white,
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -290,7 +291,7 @@ class ConsultHubScreenState extends State<ConsultHubScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Find a Midwife',
+                                      AppLocalizations.of(context)!.findAMidwife,
                                       style: TextStyle(
                                         fontSize: 16.5,
                                         fontWeight: FontWeight.bold,
@@ -300,7 +301,7 @@ class ConsultHubScreenState extends State<ConsultHubScreen> {
                                     ),
                                     const SizedBox(height: 3),
                                     Text(
-                                      'Connect with a certified midwife for a consultation',
+                                      AppLocalizations.of(context)!.connectWithCertifiedMidwife,
                                       style: TextStyle(
                                         fontSize: 13,
                                         color: isDark ? Colors.grey.shade400 : AppColors.sageGrey,

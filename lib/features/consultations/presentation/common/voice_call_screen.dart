@@ -266,9 +266,9 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> with TickerProviderSt
           if (mounted) {
             ScaffoldMessenger.of(context).hideCurrentSnackBar();
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Remote connection interrupted. Reconnecting...'),
-                duration: Duration(seconds: 4),
+              SnackBar(
+                content: Text(AppLocalizations.of(context)!.remoteConnectionInterrupted),
+                duration: const Duration(seconds: 4),
               ),
             );
           }
@@ -284,7 +284,7 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> with TickerProviderSt
             ScaffoldMessenger.of(context).hideCurrentSnackBar();
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Call connection failed: $err'),
+                content: Text('${AppLocalizations.of(context)!.callConnectionFailed}: $err'),
                 backgroundColor: Colors.red,
                 duration: const Duration(seconds: 4),
               ),
@@ -342,7 +342,7 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> with TickerProviderSt
       AppLogger.d("Failed to initialize call: $e");
       if (mounted && !_isEndingCall) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Call failed: $e'), backgroundColor: Colors.red, duration: const Duration(seconds: 8)),
+          SnackBar(content: Text('${AppLocalizations.of(context)!.callFailed}: $e'), backgroundColor: Colors.red, duration: const Duration(seconds: 8)),
         );
       }
     }
@@ -600,9 +600,9 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> with TickerProviderSt
                       onPressed: () {
                         ScaffoldMessenger.of(context).hideCurrentSnackBar();
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Multi-party consultation available in group mode.'),
-                            duration: Duration(seconds: 2),
+                          SnackBar(
+                            content: Text(AppLocalizations.of(context)!.multiPartyAvailable),
+                            duration: const Duration(seconds: 2),
                           ),
                         );
                       },
@@ -827,7 +827,7 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> with TickerProviderSt
                           // 1. Speaker
                           _buildTelegramActionButton(
                             icon: _isSpeakerOn ? Icons.volume_up_rounded : Icons.volume_down_rounded,
-                            label: 'Speaker',
+                            label: AppLocalizations.of(context)!.speaker,
                             isActive: _isSpeakerOn,
                             onTap: () {
                               _toggleSpeaker();

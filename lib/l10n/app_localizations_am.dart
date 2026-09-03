@@ -176,7 +176,7 @@ class AppLocalizationsAm extends AppLocalizations {
   String get consult => 'ምክር';
 
   @override
-  String get consults => 'Consults';
+  String get consults => 'ምክክሮች';
 
   @override
   String get learn => 'ትምህርት';
@@ -272,40 +272,40 @@ class AppLocalizationsAm extends AppLocalizations {
   String get onlineVerifiedMidwife => 'ኦንላይን • የተረጋገጠ አዋላጅ';
 
   @override
-  String get valEmailPhoneReq => 'Email or phone number is required.';
+  String get valEmailPhoneReq => 'ኢሜይል ወይም ስልክ ቁጥር ያስፈልጋል።';
 
   @override
-  String get valEmailReq => 'Email address is required.';
+  String get valEmailReq => 'የኢሜይል አድራሻ ያስፈልጋል።';
 
   @override
-  String get valPhoneReq => 'Phone number is required.';
+  String get valPhoneReq => 'የስልክ ቁጥር ያስፈልጋል።';
 
   @override
-  String get valInvalidEmail => 'Please enter a valid email address.';
+  String get valInvalidEmail => 'እባክዎ ትክክለኛ የኢሜይል አድራሻ ያስገቡ።';
 
   @override
-  String get valInvalidPhone => 'Please enter a valid phone number.';
+  String get valInvalidPhone => 'እባክዎ ትክክለኛ የስልክ ቁጥር ያስገቡ።';
 
   @override
-  String get valPasswordReq => 'Password is required.';
+  String get valPasswordReq => 'የይለፍ ቃል ያስፈልጋል።';
 
   @override
-  String get valPasswordFormat => 'Password must meet the required format.';
+  String get valPasswordFormat => 'የይለፍ ቃል የተፈለገውን ቅርጸት ማሟላት አለበት።';
 
   @override
-  String get valPasswordConfirmReq => 'Please confirm your password.';
+  String get valPasswordConfirmReq => 'እባክዎ የይለፍ ቃልዎን ያረጋግጡ።';
 
   @override
-  String get valPasswordMismatch => 'Passwords do not match.';
+  String get valPasswordMismatch => 'የይለፍ ቃሎች አይዛመዱም።';
 
   @override
-  String get valNameReq => 'Full name is required.';
+  String get valNameReq => 'ሙሉ ስም ያስፈልጋል።';
 
   @override
-  String get valCodeReq => 'Verification code is required.';
+  String get valCodeReq => 'የማረጋገጫ ኮድ ያስፈልጋል።';
 
   @override
-  String get valFileReq => 'File selection is required.';
+  String get valFileReq => 'ፋይል መምረጥ ያስፈልጋል።';
 
   @override
   String get secureConnection => 'ደህንነቱ የተጠበቀ እና የግል ግንኙነት';
@@ -560,7 +560,7 @@ class AppLocalizationsAm extends AppLocalizations {
   String get hospital => 'ሆስፒታል';
 
   @override
-  String get experience => 'ልምድ';
+  String get experience => 'የሥራ ልምድ';
 
   @override
   String get availability => 'መገኘት';
@@ -698,7 +698,7 @@ class AppLocalizationsAm extends AppLocalizations {
       'መደበኛ የስራ ሰዓቶችዎን ይግለጹ። ይህ ለታካሚዎች የ30 ደቂቃ መያዝ የሚችሉ ክፍለ ጊዜዎችን በራስ-ሰር ያመነጫል።';
 
   @override
-  String get manageSchedule => 'የጊዜ ሰሌዳ ያስተዳድሩ';
+  String get manageSchedule => 'የጊዜ ሰሌዳ አስተዳድር';
 
   @override
   String get blockDate => 'ቀን ዝጋ';
@@ -767,7 +767,9 @@ class AppLocalizationsAm extends AppLocalizations {
   String get support => 'ድጋፍ';
 
   @override
-  String get appVersion => 'ስሪት 2.4.1 (ግንባታ 890)';
+  String appVersion(String version, String build) {
+    return 'ሥሪት $version (ቢልድ $build)';
+  }
 
   @override
   String get adolescentGirlsHealthAndNutrition => 'የአዳጊ ልጃገረዶች ጤና እና ስነ-ምግብ';
@@ -823,4 +825,460 @@ class AppLocalizationsAm extends AppLocalizations {
 
   @override
   String get messages => 'መልእክቶች';
+
+  @override
+  String get personalDetails => 'የግል መረጃ';
+
+  @override
+  String get credentials => 'የሙያ ማስረጃዎች';
+
+  @override
+  String get professionalCv => 'የሙያ ሲቪ (CV)';
+
+  @override
+  String get remoteConnectionInterrupted =>
+      'የርቀት ግንኙነት ተቋርጧል። እንደገና በመገናኘት ላይ...';
+
+  @override
+  String get callConnectionFailed => 'የጥሪ ግንኙነት አልተሳካም';
+
+  @override
+  String get callFailed => 'ጥሪው አልተሳካም';
+
+  @override
+  String get multiPartyAvailable => 'ባለብዙ ወገን ምክክር በቡድን ሁነታ ይገኛል።';
+
+  @override
+  String get failedToPickFile => 'ፋይል መምረጥ አልተሳካም';
+
+  @override
+  String get failedToCancel => 'መሰረዝ አልተሳካም';
+
+  @override
+  String get available => 'ክፍት';
+
+  @override
+  String get booked => 'ተይዟል';
+
+  @override
+  String get generateSlots => 'የቀጠሮ ክፍለ-ጊዜዎችን ፍጠር';
+
+  @override
+  String get noSlotsFound => 'ምንም የቀጠሮ ክፍለ-ጊዜ አልተገኘም';
+
+  @override
+  String get addSlot => 'ክፍለ-ጊዜ አክል';
+
+  @override
+  String get deleteSlot => 'ክፍለ-ጊዜ ሰርዝ';
+
+  @override
+  String get selectTime => 'ሰዓት ይምረጡ';
+
+  @override
+  String get durationMinutes => 'ቆይታ (ደቂቃዎች)';
+
+  @override
+  String get sessionFee => 'የምክክር ክፍያ';
+
+  @override
+  String get emergencyHotline => 'የአደጋ ጊዜ ስልክ መስመር';
+
+  @override
+  String get callAmbulance => 'አምቡላንስ ይደውሉ (907)';
+
+  @override
+  String get callPolice => 'ፖሊስ ይደውሉ (991)';
+
+  @override
+  String get callRedCross => 'ቀይ መስቀል ይደውሉ (922)';
+
+  @override
+  String get emergencySupportDesc =>
+      'አስቸኳይ የሕክምና እርዳታ የሚያስፈልግዎት ከሆነ ወዲያውኑ ወደ ድንገተኛ አደጋ መስመሮች ይደውሉ።';
+
+  @override
+  String get findNearbyHelp => 'አቅራቢያ የሚገኝ የጤና ተቋም ፈልግ';
+
+  @override
+  String get pendingRequests => 'የሚጠባበቁ ጥያቄዎች';
+
+  @override
+  String get confirmedAppointments => 'የተረጋገጡ ቀጠሮዎች';
+
+  @override
+  String get acceptedConsultations => 'ተቀባይነት ያገኙ ምክክሮች';
+
+  @override
+  String get patientNotes => 'የሕመምተኛ ማስታወሻዎች';
+
+  @override
+  String get saveNotes => 'ማስታወሻ አስቀምጥ';
+
+  @override
+  String get typingPlaceholder => 'መልእክት ይጻፉ...';
+
+  @override
+  String get sendMessage => 'ላክ';
+
+  @override
+  String get audioCall => 'የድምፅ ጥሪ';
+
+  @override
+  String get endCall => 'ጥሪ ጨርስ';
+
+  @override
+  String get muteMic => 'ድምፅ ዝጋ';
+
+  @override
+  String get unmuteMic => 'ድምፅ ክፈት';
+
+  @override
+  String get speaker => 'ስፒከር';
+
+  @override
+  String get earpiece => 'ኢርፒስ';
+
+  @override
+  String get digitalMidwife => 'ዲጂታል አዋላጅ';
+
+  @override
+  String get systemDefault => 'የስርዓቱ ነባሪ';
+
+  @override
+  String get lightMode => 'ነጭ ገጽታ (Light)';
+
+  @override
+  String get darkMode => 'ጨለማ ገጽታ (Dark)';
+
+  @override
+  String get termsAndConditions => 'የአገልግሎት ውሎች እና ደንቦች';
+
+  @override
+  String get privacyPolicy => 'የግላዊነት ፖሊሲ';
+
+  @override
+  String get blockADate => 'ቀን ይዝጉ';
+
+  @override
+  String get selectDateToBlock => 'ከቀጠሮዎች ነፃ ማድረግ ወይም መዝጋት የሚፈልጉትን ቀን ይምረጡ።';
+
+  @override
+  String get reasonOptional => 'ምክንያት (አማራጭ)';
+
+  @override
+  String get reasonLeavePlaceholder => 'ምክንያት (ለምሳሌ፡ የህመም ፈቃድ፣ ዕረፍት)';
+
+  @override
+  String get noBlockedDates => 'ምንም የተዘጉ ቀናት የሉም።';
+
+  @override
+  String get dateAlreadyBlocked => 'ይህ ቀን ቀደም ሲል ተዘግቷል።';
+
+  @override
+  String get startCall => 'ጥሪ ጀምር';
+
+  @override
+  String get details => 'ዝርዝሮች';
+
+  @override
+  String get moreOptions => 'ተጨማሪ አማራጮች';
+
+  @override
+  String get licenseNumber => 'የሙያ ፈቃድ ቁጥር';
+
+  @override
+  String get specialty => 'የሙያ መስክ';
+
+  @override
+  String get hospitalAffiliationOptional => 'የጤና ተቋም ትስስር (አማራጭ)';
+
+  @override
+  String get completeYourProfile => 'መገለጫዎን ያጠናቅቁ';
+
+  @override
+  String get completeSetup => 'ምዝገባውን አጠናቅቅ';
+
+  @override
+  String get profileCreatedSuccess => 'መገለጫዎ በተሳካ ሁኔታ ተፈጥሯል!';
+
+  @override
+  String get profileUpdatedSuccess => 'መገለጫዎ በተሳካ ሁኔታ ተሻሽሏል!';
+
+  @override
+  String get cameraPhotoUpdated => 'ፎቶ ተነስቶ መገለጫው ተሻሽሏል!';
+
+  @override
+  String get galleryPhotoUpdated => 'ፎቶ ከጋለሪ በተሳካ ሁኔታ ተጭኗል!';
+
+  @override
+  String get noWorkingHoursConfigured => 'እስካሁን ምንም የስራ ሰዓት አልተዘጋጀም።';
+
+  @override
+  String get addedWorkingHoursSuccessfully => 'የስራ ሰዓት በተሳካ ሁኔታ ታክሏል!';
+
+  @override
+  String get failedToAddWorkingHours => 'የስራ ሰዓት ማከል አልተሳካም';
+
+  @override
+  String get dayOfWeek => 'የሳምንቱ ቀን';
+
+  @override
+  String get startTime => 'የመጀመሪያ ሰዓት';
+
+  @override
+  String get endTime => 'የመጨረሻ ሰዓት';
+
+  @override
+  String get preferencesSaved => 'ምርጫዎች በተሳካ ሁኔታ ተቀምጠዋል!';
+
+  @override
+  String get blockedDateRemoved => 'የተዘጋው ቀን ተሰርዟል።';
+
+  @override
+  String get noSlotsAvailableForDay => 'ለዚህ ቀን ምንም ክፍት ሰዓት የለም።';
+
+  @override
+  String get noConsultationOptionsOffered => 'በአሁኑ ጊዜ የቀረበ የምክክር አማራጭ የለም።';
+
+  @override
+  String get selectDayToSetRecurring => 'መደበኛ የስራ ሰዓቶችን ለማዘጋጀት የሳምንቱን ቀን ይምረጡ';
+
+  @override
+  String get mySchedules => 'የእኔ የጊዜ ሰሌዳዎች';
+
+  @override
+  String activeCount(String count) {
+    return '$count ገባሪ';
+  }
+
+  @override
+  String saveSelectedSlots(int count) {
+    return 'የተመረጡትን ክፍለ-ጊዜዎች መዝግብ ($count)';
+  }
+
+  @override
+  String get saving => 'በማስቀመጥ ላይ...';
+
+  @override
+  String get savePreferences => 'ምርጫዎችን አስቀምጥ';
+
+  @override
+  String get noHotlinesAvailable => 'ምንም የአደጋ ጊዜ ስልክ አልተገኘም';
+
+  @override
+  String get couldNotLaunchDialer => 'የመደወያ ገጹን መክፈት አልተቻለም';
+
+  @override
+  String sosAlertTriggered(String count) {
+    return 'የአደጋ ጊዜ ጥሪ ተልኳል! $count እውቂያዎች ተነግሯቸዋል።';
+  }
+
+  @override
+  String get failedToTriggerSos =>
+      'የአደጋ ጊዜ ጥሪ መላክ አልተሳካም። እባክዎ በቀጥታ ወደ ስልክ መስመሮቹ ይደውሉ።';
+
+  @override
+  String get failedToLoadNotifications => 'ማሳወቂያዎችን መጫን አልተሳካም';
+
+  @override
+  String get failedToLoadMidwives => 'አዋላጆችን መጫን አልተሳካም';
+
+  @override
+  String get unableToConnectConsultation =>
+      'ወደ ምክክሩ መገናኘት አልተቻለም። እባክዎ እንደገና ይሞክሩ።';
+
+  @override
+  String get failedToUpdateStatus => 'ሁኔታውን ማሻሻል አልተሳካም';
+
+  @override
+  String get failedToSendRequest => 'ጥያቄውን መላክ አልተሳካም። እንደገና ይሞክሩ።';
+
+  @override
+  String get waitForMidwifeAccept =>
+      'ተጨማሪ መልእክት ከመላክዎ በፊት አዋላጇ ጥያቄውን እስክታረጋግጥ ይጠብቁ።';
+
+  @override
+  String get waitForChatConnected => 'ውይይቱ እስኪገናኝ ይጠብቁ።';
+
+  @override
+  String get failedToUploadFile => 'ፋይል መጫን አልተሳካም';
+
+  @override
+  String get failedToAcceptChat => 'ውይይቱን መቀበል አልተሳካም';
+
+  @override
+  String get failedToRejectChat => 'ውይይቱን አለመቀበል አልተሳካም';
+
+  @override
+  String get failedToInitializeSession => 'ክፍለ-ጊዜውን ማስጀመር አልተሳካም';
+
+  @override
+  String get live => 'ቀጥታ ስርጭት';
+
+  @override
+  String dateLabel(String date) {
+    return 'ቀን: $date';
+  }
+
+  @override
+  String get voiceCall => 'የድምጽ ጥሪ';
+
+  @override
+  String get hotlines => 'የአደጋ ጊዜ ስልኮች';
+
+  @override
+  String get qualification => 'ዋና የሙያ ማረጋገጫ';
+
+  @override
+  String get viewProfile => 'መገለጫ ይመልከቱ';
+
+  @override
+  String conversationsCount(int count) {
+    return 'ውይይቶች ($count)';
+  }
+
+  @override
+  String midwivesCount(int count) {
+    return 'የማህፀን ባለሙያዎች ($count)';
+  }
+
+  @override
+  String get newMessage => 'አዲስ መልእክት';
+
+  @override
+  String get connectAndMessageDirectly =>
+      'ከተረጋገጡ የጤና አጠባበቅ አዋላጆቻችን ጋር በቀጥታ ይገናኙ እና ይወያዩ።';
+
+  @override
+  String get startChatWithMidwife => 'ከአዋላጅ ጋር ውይይት ጀምር';
+
+  @override
+  String get upcomingConsultation => 'የሚመጣ ምክክር';
+
+  @override
+  String get consultationAccepted => 'ምክክሩ ተቀባይነት አግኝቷል';
+
+  @override
+  String get consultationCancelled => 'ምክክሩ ተሰርዟል';
+
+  @override
+  String get consultationDeclined => 'ምክክሩ ውድቅ ተደርጓል';
+
+  @override
+  String get newConsultationRequest => 'አዲስ የምክክር ጥያቄ';
+
+  @override
+  String get newChatMessage => 'አዲስ መልእክት';
+
+  @override
+  String yearsExp(int years) {
+    return '$years ዓመት ልምድ';
+  }
+
+  @override
+  String ratingsCount(int count) {
+    return '$count ግምገማዎች';
+  }
+
+  @override
+  String upcomingBadge(int count) {
+    return '$count የሚመጣ';
+  }
+
+  @override
+  String welcomeUser(String name) {
+    return 'እንኳን ደህና መጡ $name';
+  }
+
+  @override
+  String get welcome => 'እንኳን ደህና መጡ';
+
+  @override
+  String patientConsultationBookingsPending(int count) {
+    return '$count በመጠባበቅ ላይ ያሉ የታካሚ ቀጠሮዎች አሉዎት።';
+  }
+
+  @override
+  String get patientBookingsWillAppearHere => 'የታካሚዎችዎ ቀጠሮዎች እዚህ ይታያሉ።';
+
+  @override
+  String totalCount(int count) {
+    return '$count ጠቅላላ';
+  }
+
+  @override
+  String get confirmed => 'ተረጋግጧል';
+
+  @override
+  String get generalNotifications => 'አጠቃላይ ማሳወቂያዎች';
+
+  @override
+  String get pushNotifications => 'ፈጣን ማሳወቂያዎች';
+
+  @override
+  String get consultationRequests => 'የምክክር ጥያቄዎች';
+
+  @override
+  String get scheduleReminders => 'የጊዜ ሰሌዳ ማስታወሻዎች';
+
+  @override
+  String get mon => 'ሰኞ';
+
+  @override
+  String get tue => 'ማክሰኞ';
+
+  @override
+  String get wed => 'ረቡዕ';
+
+  @override
+  String get thu => 'ሐሙስ';
+
+  @override
+  String get fri => 'አርብ';
+
+  @override
+  String get sat => 'ቅዳሜ';
+
+  @override
+  String get sun => 'እሑድ';
+
+  @override
+  String get monday => 'ሰኞ';
+
+  @override
+  String get tuesday => 'ማክሰኞ';
+
+  @override
+  String get wednesday => 'ረቡዕ';
+
+  @override
+  String get thursday => 'ሐሙስ';
+
+  @override
+  String get friday => 'አርብ';
+
+  @override
+  String get saturday => 'ቅዳሜ';
+
+  @override
+  String get sunday => 'እሑድ';
+
+  @override
+  String get scheduledDay => 'የተያዘበት ቀን';
+
+  @override
+  String get statusPending => 'በመጠባበቅ ላይ';
+
+  @override
+  String get statusConfirmed => 'ተረጋግጧል';
+
+  @override
+  String get statusCompleted => 'ተጠናቋል';
+
+  @override
+  String get statusCancelled => 'ተሰርዟል';
+
+  @override
+  String get statusDeclined => 'ተቀባይነት አላገኘም';
 }

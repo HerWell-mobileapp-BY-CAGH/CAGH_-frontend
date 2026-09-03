@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 class NearbySearchBar extends StatelessWidget {
   final TextEditingController controller;
@@ -31,7 +32,7 @@ class NearbySearchBar extends StatelessWidget {
         controller: controller,
         onChanged: onChanged,
         decoration: InputDecoration(
-          hintText: 'Search hospitals, health centers, midwives...',
+          hintText: AppLocalizations.of(context)!.searchHospitalsClinicsMidwives,
           hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 14),
           prefixIcon: const Icon(Icons.search, color: AppColors.primaryGreen),
           suffixIcon: controller.text.isNotEmpty

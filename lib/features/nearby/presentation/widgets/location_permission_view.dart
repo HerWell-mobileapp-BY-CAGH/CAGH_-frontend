@@ -1,3 +1,4 @@
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';

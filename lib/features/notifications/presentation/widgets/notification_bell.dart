@@ -15,33 +15,44 @@ class NotificationBell extends ConsumerWidget {
 
     return Stack(
       alignment: Alignment.center,
+      clipBehavior: Clip.none,
       children: [
         IconButton(
-          icon: Icon(Icons.notifications_none_rounded, color: iconColor ?? Colors.white),
+          icon: Icon(
+            unreadCount > 0 ? Icons.notifications_active_rounded : Icons.notifications_none_rounded,
+            color: iconColor ?? Colors.white,
+            size: 26,
+          ),
           onPressed: () {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const NotificationsScreen()),
             ).then((_) {
-              // Refresh when coming back in case read state changed
               ref.read(notificationProvider.notifier).refreshNotifications();
             });
           },
         ),
         if (unreadCount > 0)
           Positioned(
-            right: 8,
-            top: 8,
+            right: 6,
+            top: 6,
             child: Container(
-              padding: const EdgeInsets.all(2),
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
               decoration: BoxDecoration(
-                color: Colors.red,
+                color: Colors.red.shade600,
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Theme.of(context).primaryColor, width: 1.5),
+                border: Border.all(color: Colors.white, width: 1.5),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               constraints: const BoxConstraints(
-                minWidth: 16,
-                minHeight: 16,
+                minWidth: 18,
+                minHeight: 18,
               ),
               child: Text(
                 unreadCount > 99 ? '99+' : unreadCount.toString(),
@@ -49,6 +60,7 @@ class NotificationBell extends ConsumerWidget {
                   color: Colors.white,
                   fontSize: 10,
                   fontWeight: FontWeight.bold,
+                  height: 1.1,
                 ),
                 textAlign: TextAlign.center,
               ),

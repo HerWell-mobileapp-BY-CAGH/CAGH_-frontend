@@ -60,7 +60,7 @@ class _ConsultationSessionScreenState extends State<ConsultationSessionScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to initialize session: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('${AppLocalizations.of(context)!.failedToInitializeSession}: $e'), backgroundColor: Colors.red),
         );
       }
     }
@@ -105,7 +105,7 @@ class _ConsultationSessionScreenState extends State<ConsultationSessionScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('${AppLocalizations.of(context)!.failedToUpdateStatus}: $e'), backgroundColor: Colors.red),
         );
         setState(() => _isLoading = false);
       }
@@ -129,13 +129,13 @@ class _ConsultationSessionScreenState extends State<ConsultationSessionScreen> {
         backgroundColor: AppColors.primaryGreen,
         title: Row(
           children: [
-            Text(AppLocalizations.of(context)!.consultationSession, style: TextStyle(color: Colors.white, fontSize: 18)),
+            Text(AppLocalizations.of(context)!.consultationSession, style: const TextStyle(color: Colors.white, fontSize: 18)),
             const SizedBox(width: 12),
             if (_isSessionActive)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(12)),
-                child: const Text('LIVE', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                child: Text(AppLocalizations.of(context)!.live, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
               ),
           ],
         ),

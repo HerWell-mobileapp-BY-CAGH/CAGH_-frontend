@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
 import 'package:cagh_frontend/core/services/global_call_service.dart';
 import 'package:cagh_frontend/features/appointments/data/services/appointment_api_service.dart';
@@ -16,14 +17,14 @@ import 'package:cagh_frontend/features/notifications/presentation/widgets/notifi
 import 'package:cagh_frontend/core/services/language_service.dart';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
 
-class MidwifeHomeScreen extends StatefulWidget {
+class MidwifeHomeScreen extends ConsumerStatefulWidget {
   const MidwifeHomeScreen({super.key});
 
   @override
-  State<MidwifeHomeScreen> createState() => _MidwifeHomeScreenState();
+  ConsumerState<MidwifeHomeScreen> createState() => _MidwifeHomeScreenState();
 }
 
-class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
+class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
   String midwifeName = '';
   bool isLoadingProfile = true;
   int selectedIndex = 0;
@@ -190,8 +191,8 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
                         children: [
                           Text(
                             _getFirstName(midwifeName).isEmpty
-                                ? 'Welcome'
-                                : 'Welcome ${_getFirstName(midwifeName)}',
+                                ? AppLocalizations.of(context)!.welcome
+                                : AppLocalizations.of(context)!.welcomeUser(_getFirstName(midwifeName)),
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 22,
@@ -201,8 +202,8 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
                           const SizedBox(height: 6),
                           Text(
                             upcomingApts.isEmpty
-                                ? 'Your patient bookings will appear here.'
-                                : 'You have ${upcomingApts.length} patient consultation bookings pending.',
+                                ? AppLocalizations.of(context)!.patientBookingsWillAppearHere
+                                : AppLocalizations.of(context)!.patientConsultationBookingsPending(upcomingApts.length),
                             style: TextStyle(
                               color: Colors.white.withValues(alpha: 0.87),
                               fontSize: 13,
@@ -227,7 +228,7 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
                   ),
                   if (upcomingApts.isNotEmpty)
                     Text(
-                      '${upcomingApts.length} Total',
+                      AppLocalizations.of(context)!.totalCount(upcomingApts.length),
                       style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color, fontSize: 12.5),
                     ),
                 ],
@@ -290,7 +291,7 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
                 ...upcomingApts.map((apt) {
                   String displayType = apt.appointmentType;
                   if (displayType == 'VIRTUAL_VIDEO' || displayType == 'VIRTUAL_VOICE') {
-                    displayType = 'Voice Call';
+                    displayType = AppLocalizations.of(context)!.voiceCall;
                   } else if (displayType == 'IN_PERSON') {
                     displayType = AppLocalizations.of(context)!.inPerson;
                   }
@@ -300,8 +301,8 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
                     child: _buildScheduleItem(
                       time: apt.startTime,
                       title: '${apt.userFullName ?? AppLocalizations.of(context)!.patient} - $displayType',
-                      subtitle: 'Date: ${apt.date}',
-                      badgeLabel: 'BOOKED',
+                      subtitle: AppLocalizations.of(context)!.dateLabel(apt.date),
+                      badgeLabel: AppLocalizations.of(context)!.booked,
                       badgeColor: const Color(0xFFC8E6C9),
                       badgeTextColor: const Color(0xFF315E26),
                     ),
@@ -327,8 +328,8 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
             icon: Icons.menu_book_rounded,
             iconBgColor: const Color(0xFFE8F5E9),
             iconColor: const Color(0xFF315E26),
-            title: 'Adolescent Girls Health & Nutrition',
-            subtitle: 'Puberty, menstrual health, nutrition & healthy lifestyle, life skills & well-being.',
+            title: AppLocalizations.of(context)!.adolescentGirlsHealthAndNutrition,
+            subtitle: AppLocalizations.of(context)!.adolescentGirlsHealthAndNutritionDesc,
             arrowBgColor: const Color(0xFFF1F8E9),
             onTap: () {},
           ),
@@ -337,8 +338,8 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
             icon: Icons.shield_outlined,
             iconBgColor: const Color(0xFFFFF8E1),
             iconColor: const Color(0xFFFFD22B),
-            title: 'Prevention and Awareness',
-            subtitle: 'STI/HIV prevention, HPV & cervical cancer awareness, healthy relationships.',
+            title: AppLocalizations.of(context)!.preventionAndAwareness,
+            subtitle: AppLocalizations.of(context)!.preventionAndAwarenessDesc,
             arrowBgColor: const Color(0xFFFFF8E1),
           ),
           const SizedBox(height: 14),
@@ -346,8 +347,8 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
             icon: Icons.favorite_border_rounded,
             iconBgColor: const Color(0xFFFFF8E1),
             iconColor: const Color(0xFFFFD22B),
-            title: 'Psychosocial Support & Protection',
-            subtitle: 'Mental health, GBV support, counseling services, and emergency help.',
+            title: AppLocalizations.of(context)!.psychosocialSupportAndProtection,
+            subtitle: AppLocalizations.of(context)!.psychosocialSupportAndProtectionDesc,
             arrowBgColor: const Color(0xFFFFF8E1),
           ),
           const SizedBox(height: 14),
@@ -355,8 +356,8 @@ class _MidwifeHomeScreenState extends State<MidwifeHomeScreen> {
             icon: Icons.female,
             iconBgColor: const Color(0xFFE8F5E9),
             iconColor: const Color(0xFF315E26),
-            title: 'Reproductive Health & Care',
-            subtitle: 'Pregnancy prevention, maternal care, ANC, newborn care, and checkups.',
+            title: AppLocalizations.of(context)!.reproductiveHealthAndCare,
+            subtitle: AppLocalizations.of(context)!.reproductiveHealthAndCareDesc,
             arrowBgColor: const Color(0xFFF1F8E9),
           ),
           const SizedBox(height: 80),

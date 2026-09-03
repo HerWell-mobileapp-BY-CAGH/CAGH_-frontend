@@ -69,7 +69,7 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${AppLocalizations.of(context)!.failedToUpdateStatus}: $e')));
         setState(() => _isLoadingSlots = false);
       }
     }
@@ -339,7 +339,7 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
         ),
         const SizedBox(height: 12),
         if (!widget.midwife.supportsVoiceCall && !widget.midwife.supportsInPerson)
-          Text('No consultation options currently offered.', style: TextStyle(fontSize: 13, color: Colors.grey.shade600))
+          Text(AppLocalizations.of(context)!.noConsultationOptionsOffered, style: TextStyle(fontSize: 13, color: Colors.grey.shade600))
         else
           Wrap(
             spacing: 8,
@@ -352,12 +352,12 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
                     color: const Color(0xFFE8F5E9),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.call, size: 16, color: Color(0xFF315E26)),
-                      SizedBox(width: 6),
-                      Text('Voice Call', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF315E26))),
+                      const Icon(Icons.call, size: 16, color: Color(0xFF315E26)),
+                      const SizedBox(width: 6),
+                      Text(AppLocalizations.of(context)!.voiceCall, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF315E26))),
                     ],
                   ),
                 ),
@@ -371,9 +371,9 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.home_outlined, size: 16, color: Color(0xFF315E26)),
-                      SizedBox(width: 6),
-                      Text(AppLocalizations.of(context)!.inPerson, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF315E26))),
+                      const Icon(Icons.home_outlined, size: 16, color: Color(0xFF315E26)),
+                      const SizedBox(width: 6),
+                      Text(AppLocalizations.of(context)!.inPerson, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF315E26))),
                     ],
                   ),
                 ),
@@ -388,7 +388,7 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'About ${widget.midwife.fullName.split(' ').first}',
+          '${AppLocalizations.of(context)!.aboutUs} ${widget.midwife.fullName.split(' ').first}',
           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF315E26)),
         ),
         const SizedBox(height: 12),
@@ -409,11 +409,11 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
           children: [
             Text(
               AppLocalizations.of(context)!.availability,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF315E26)),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF315E26)),
             ),
             Text(
               AppLocalizations.of(context)!.viewAll,
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF315E26)),
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF315E26)),
             ),
           ],
         ),
@@ -492,10 +492,10 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
         if (_isLoadingSlots)
           const Center(child: Padding(padding: EdgeInsets.symmetric(vertical: 30), child: CircularProgressIndicator(color: Color(0xFF315E26))))
         else if (_timeSlots == null || (_timeSlots!.morningSlots.isEmpty && _timeSlots!.afternoonSlots.isEmpty && _timeSlots!.eveningSlots.isEmpty))
-          const Center(
+          Center(
             child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 20.0),
-              child: Text('No slots available for this day.', style: TextStyle(color: Colors.grey)),
+              padding: const EdgeInsets.symmetric(vertical: 20.0),
+              child: Text(AppLocalizations.of(context)!.noSlotsAvailableForDay, style: const TextStyle(color: Colors.grey)),
             ),
           )
         else

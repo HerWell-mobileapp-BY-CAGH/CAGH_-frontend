@@ -44,6 +44,11 @@ class _NearbyHealthcareScreenState extends ConsumerState<NearbyHealthcareScreen>
   Widget _buildCategoryChip(String title, IconData icon) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
+    String displayTitle = title;
+    if (title == 'Hospital') displayTitle = AppLocalizations.of(context)!.hospital;
+    if (title == 'Clinic') displayTitle = AppLocalizations.of(context)!.clinic;
+    if (title == 'Pharmacy') displayTitle = AppLocalizations.of(context)!.pharmacy;
+
     return GestureDetector(
       onTap: () {
         // Map UI category string to API category string if necessary
@@ -76,7 +81,7 @@ class _NearbyHealthcareScreenState extends ConsumerState<NearbyHealthcareScreen>
             Icon(icon, color: AppColors.primaryGreen, size: 20),
             const SizedBox(width: 8),
             Text(
-              title,
+              displayTitle,
               style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.primaryGreen),
             ),
           ],
@@ -173,8 +178,8 @@ class _NearbyHealthcareScreenState extends ConsumerState<NearbyHealthcareScreen>
                       controller: _searchController,
                       readOnly: true,
                       onTap: () => _navigateToFindNearby(),
-                      decoration: const InputDecoration(
-                        hintText: 'Search hospitals, clinics, midwives...',
+                      decoration: InputDecoration(
+                        hintText: AppLocalizations.of(context)!.searchHospitalsClinicsMidwives,
                         hintStyle: TextStyle(color: Colors.grey),
                         prefixIcon: Icon(Icons.search, color: AppColors.primaryGreen),
                         border: InputBorder.none,

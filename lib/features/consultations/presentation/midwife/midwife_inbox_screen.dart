@@ -1,20 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
 import 'package:cagh_frontend/features/consultations/data/services/chat_api_service.dart';
 import 'package:cagh_frontend/features/consultations/presentation/midwife/midwife_chat_screen.dart';
 import 'package:cagh_frontend/shared/widgets/app_profile_avatar.dart';
 import 'package:cagh_frontend/shared/models/appointment.dart';
+import 'package:cagh_frontend/features/notifications/presentation/providers/notification_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
 
-class MidwifeInboxScreen extends StatefulWidget {
+class MidwifeInboxScreen extends ConsumerStatefulWidget {
   const MidwifeInboxScreen({super.key});
 
   @override
-  State<MidwifeInboxScreen> createState() => _MidwifeInboxScreenState();
+  ConsumerState<MidwifeInboxScreen> createState() => _MidwifeInboxScreenState();
 }
 
-class _MidwifeInboxScreenState extends State<MidwifeInboxScreen> {
+class _MidwifeInboxScreenState extends ConsumerState<MidwifeInboxScreen> {
   bool _isLoading = true;
   List<Map<String, dynamic>> _rooms = [];
   String? _errorMessage;
@@ -53,6 +55,7 @@ class _MidwifeInboxScreenState extends State<MidwifeInboxScreen> {
           _rooms = uniqueRooms.values.toList();
           _isLoading = false;
         });
+        ref.read(notificationProvider.notifier).refreshNotifications();
       }
     } catch (e) {
       if (mounted) {
@@ -115,8 +118,8 @@ class _MidwifeInboxScreenState extends State<MidwifeInboxScreen> {
         ),
       ),
     ).then((_) {
-      // Reload rooms when returning from chat
       _loadRooms();
+      ref.read(notificationProvider.notifier).refreshNotifications();
     });
   }
 

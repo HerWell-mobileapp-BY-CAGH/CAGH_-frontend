@@ -1,5 +1,6 @@
 import 'package:cagh_frontend/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
 import 'package:cagh_frontend/shared/constants/app_constants.dart';
 import 'package:cagh_frontend/core/services/language_service.dart';
@@ -7,19 +8,22 @@ import 'package:cagh_frontend/features/onboarding/presentation/user_type_selecti
 import 'package:cagh_frontend/features/profile/presentation/personal_information_screen.dart';
 import 'package:cagh_frontend/features/profile/presentation/appearance_accessibility_screen.dart';
 import 'package:cagh_frontend/features/consultations/presentation/user/user_inbox_screen.dart';
+import 'package:cagh_frontend/features/consultations/presentation/user/consult_hub_screen.dart';
+import 'package:cagh_frontend/features/notifications/presentation/providers/notification_provider.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
 import 'package:cagh_frontend/shared/widgets/app_profile_avatar.dart';
 import 'package:cagh_frontend/core/utils/app_logger.dart';
 
-class UserProfileScreen extends StatefulWidget {
+class UserProfileScreen extends ConsumerStatefulWidget {
   final VoidCallback? onBackTap;
-  const UserProfileScreen({super.key, this.onBackTap});
+  final VoidCallback? onAppointmentsTap;
+  const UserProfileScreen({super.key, this.onBackTap, this.onAppointmentsTap});
 
   @override
-  State<UserProfileScreen> createState() => _UserProfileScreenState();
+  ConsumerState<UserProfileScreen> createState() => _UserProfileScreenState();
 }
 
-class _UserProfileScreenState extends State<UserProfileScreen> {
+class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
   bool isLoading = true;
   bool notificationsEnabled = true;
   String fullName = '';
@@ -213,36 +217,68 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     _buildListTile(
                       icon: Icons.chat_bubble_outline_rounded,
                       title: AppLocalizations.of(context)!.messages,
+                      badge: ref.watch(notificationProvider).unreadMessagesCount > 0
+                          ? Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                              decoration: const BoxDecoration(
+                                color: AppColors.primaryGreen,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Text(
+                                ref.watch(notificationProvider).unreadMessagesCount.toString(),
+                                style: const TextStyle(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            )
+                          : null,
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => const UserInboxScreen(),
                           ),
-                        );
+                        ).then((_) {
+                          ref.read(notificationProvider.notifier).refreshNotifications();
+                        });
                       },
                     ),
                     _buildDivider(),
                     _buildListTile(
                       icon: Icons.calendar_today_outlined,
                       title: AppLocalizations.of(context)!.myAppointments,
-                      badge: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: AppColors.accentYellow,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          AppLocalizations.of(context)!.oneUpcoming,
-                          style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.primaryGreen,
-                          ),
-                        ),
-                      ),
-                      onTap: () {},
+                      badge: ref.watch(notificationProvider).upcomingAppointmentsCount > 0
+                          ? Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: AppColors.accentYellow,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                AppLocalizations.of(context)!.upcomingBadge(ref.watch(notificationProvider).upcomingAppointmentsCount),
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.primaryGreen,
+                                ),
+                              ),
+                            )
+                          : null,
+                      onTap: () {
+                        if (widget.onAppointmentsTap != null) {
+                          widget.onAppointmentsTap!();
+                        } else {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const ConsultHubScreen(isActive: true),
+                            ),
+                          );
+                        }
+                      },
                     ),
                     _buildDivider(),
                     _buildListTile(

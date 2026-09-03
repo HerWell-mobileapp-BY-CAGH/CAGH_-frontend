@@ -262,7 +262,7 @@
   "languageSettings": "Language",
   "emergencyContactsList": "Emergency Contacts",
   "support": "Support",
-  "appVersion": "Version 2.4.1 (Build 890)",
+  "appVersion": "Version {version} (Build {build})",
   "adolescentGirlsHealthAndNutrition": "Adolescent Girls Health & Nutrition",
   "adolescentGirlsHealthAndNutritionDesc": "Puberty, menstrual health, nutrition & healthy lifestyle, life skills & well-being.",
   "preventionAndAwareness": "Prevention and Awareness",
@@ -279,5 +279,241 @@
   "noUpcomingConsultations": "No upcoming consultations",
   "noPastConsultations": "No past consultations",
   "connectWithCertifiedMidwife": "Connect with a certified midwife for a consultation",
-  "messages": "Messages"
+  "messages": "Messages",
+  "personalDetails": "Personal Details",
+  "credentials": "Credentials",
+  "professionalCv": "Professional CV",
+  "remoteConnectionInterrupted": "Remote connection interrupted. Reconnecting...",
+  "callConnectionFailed": "Call connection failed",
+  "callFailed": "Call failed",
+  "multiPartyAvailable": "Multi-party consultation available in group mode.",
+  "failedToPickFile": "Failed to pick file",
+  "failedToCancel": "Failed to cancel",
+  "available": "Available",
+  "booked": "BOOKED",
+  "generateSlots": "Generate Slots",
+  "noSlotsFound": "No slots found for this date",
+  "addSlot": "Add Slot",
+  "deleteSlot": "Delete Slot",
+  "selectTime": "Select Time",
+  "durationMinutes": "Duration (minutes)",
+  "sessionFee": "Session Fee",
+  "emergencyHotline": "Emergency Hotlines",
+  "callAmbulance": "Call Ambulance (907)",
+  "callPolice": "Call Police (991)",
+  "callRedCross": "Call Red Cross (922)",
+  "emergencySupportDesc": "If you are experiencing an acute medical emergency, please call one of the national hotlines immediately.",
+  "findNearbyHelp": "Find Nearby Health Facility",
+  "pendingRequests": "Pending Requests",
+  "confirmedAppointments": "Confirmed Appointments",
+  "acceptedConsultations": "Accepted Consultations",
+  "patientNotes": "Patient Notes",
+  "saveNotes": "Save Notes",
+  "typingPlaceholder": "Type a message...",
+  "sendMessage": "Send",
+  "audioCall": "Audio Call",
+  "endCall": "End Call",
+  "muteMic": "Mute",
+  "unmuteMic": "Unmute",
+  "speaker": "Speaker",
+  "earpiece": "Earpiece",
+  "digitalMidwife": "Digital Midwife",
+  "systemDefault": "System Default",
+  "lightMode": "Light Mode",
+  "darkMode": "Dark Mode",
+  "termsAndConditions": "Terms & Conditions",
+  "privacyPolicy": "Privacy Policy",
+  "blockADate": "Block a Date",
+  "selectDateToBlock": "Select the date you want to take off or block from bookings.",
+  "reasonOptional": "Reason (Optional)",
+  "reasonLeavePlaceholder": "Reason (e.g., Sick leave, Vacation)",
+  "noBlockedDates": "No blocked dates.",
+  "dateAlreadyBlocked": "This date is already blocked.",
+  "startCall": "Start Call",
+  "details": "Details",
+  "moreOptions": "More options",
+  "licenseNumber": "License Number",
+  "specialty": "Specialty",
+  "hospitalAffiliationOptional": "Hospital Affiliation (Optional)",
+  "completeYourProfile": "Complete Your Profile",
+  "completeSetup": "Complete Setup",
+  "profileCreatedSuccess": "Profile created successfully!",
+  "profileUpdatedSuccess": "Profile updated successfully!",
+  "cameraPhotoUpdated": "Camera photo captured and profile updated!",
+  "galleryPhotoUpdated": "Gallery photo uploaded successfully!",
+  "noWorkingHoursConfigured": "No working hours configured yet.",
+  "addedWorkingHoursSuccessfully": "Added working hours successfully!",
+  "failedToAddWorkingHours": "Failed to add working hours",
+  "dayOfWeek": "Day of Week",
+  "startTime": "Start Time",
+  "endTime": "End Time",
+  "preferencesSaved": "Preferences saved successfully!",
+  "blockedDateRemoved": "Blocked date removed.",
+  "noSlotsAvailableForDay": "No slots available for this day.",
+  "noConsultationOptionsOffered": "No consultation options currently offered.",
+  "selectDayToSetRecurring": "Select a day of the week to set recurring hours",
+  "mySchedules": "My Schedules",
+  "activeCount": "{count} active",
+  "saveSelectedSlots": "Save Selected Slots ({count})",
+  "saving": "Saving...",
+  "savePreferences": "Save Preferences",
+  "noHotlinesAvailable": "No hotlines available",
+  "couldNotLaunchDialer": "Could not launch dialer",
+  "sosAlertTriggered": "SOS Alert Triggered! Notified {count} contacts.",
+  "failedToTriggerSos": "Failed to trigger SOS alert. Please call a hotline directly.",
+  "failedToLoadNotifications": "Failed to load notifications",
+  "failedToLoadMidwives": "Failed to load midwives",
+  "unableToConnectConsultation": "Unable to connect to consultation. Please try again.",
+  "failedToUpdateStatus": "Failed to update status",
+  "failedToSendRequest": "Failed to send request. Try again.",
+  "waitForMidwifeAccept": "Waiting for midwife to accept request before sending more messages.",
+  "waitForChatConnected": "Wait for the chat to be connected.",
+  "failedToUploadFile": "Failed to upload file",
+  "failedToAcceptChat": "Failed to accept chat",
+  "failedToRejectChat": "Failed to reject chat",
+  "failedToInitializeSession": "Failed to initialize session",
+  "live": "LIVE",
+  "dateLabel": "Date: {date}",
+  "@activeCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "@saveSelectedSlots": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@sosAlertTriggered": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "@dateLabel": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "voiceCall": "Voice Call",
+  "hotlines": "Hotlines",
+  "qualification": "Primary Qualification",
+  "viewProfile": "View Profile",
+  "conversationsCount": "Conversations ({count})",
+  "@conversationsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "midwivesCount": "Midwives ({count})",
+  "@midwivesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "newMessage": "New Message",
+  "connectAndMessageDirectly": "Connect and message directly with our verified healthcare midwives.",
+  "startChatWithMidwife": "Start Chat with a Midwife",
+  "upcomingConsultation": "Upcoming Consultation",
+  "consultationAccepted": "Consultation Accepted",
+  "consultationCancelled": "Consultation Cancelled",
+  "consultationDeclined": "Consultation Declined",
+  "newConsultationRequest": "New Consultation Request",
+  "newChatMessage": "New Message",
+  "yearsExp": "{years} yrs exp",
+  "@yearsExp": {
+    "placeholders": {
+      "years": {
+        "type": "int"
+      }
+    }
+  },
+  "ratingsCount": "{count} ratings",
+  "@ratingsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "upcomingBadge": "{count} UPCOMING",
+  "@upcomingBadge": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "welcomeUser": "Welcome {name}",
+  "@welcomeUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "welcome": "Welcome",
+  "patientConsultationBookingsPending": "You have {count} patient consultation bookings pending.",
+  "@patientConsultationBookingsPending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "patientBookingsWillAppearHere": "Your patient bookings will appear here.",
+  "totalCount": "{count} Total",
+  "@totalCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "confirmed": "CONFIRMED",
+  "generalNotifications": "General Notifications",
+  "pushNotifications": "Push Notifications",
+  "consultationRequests": "Consultation Requests",
+  "scheduleReminders": "Schedule Reminders",
+  "@appVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "build": {
+        "type": "String"
+      }
+    }
+  },
+  "mon": "Mon",
+  "tue": "Tue",
+  "wed": "Wed",
+  "thu": "Thu",
+  "fri": "Fri",
+  "sat": "Sat",
+  "sun": "Sun",
+  "monday": "Monday",
+  "tuesday": "Tuesday",
+  "wednesday": "Wednesday",
+  "thursday": "Thursday",
+  "friday": "Friday",
+  "saturday": "Saturday",
+  "sunday": "Sunday",
+  "scheduledDay": "Scheduled Day",
+  "statusPending": "PENDING",
+  "statusConfirmed": "CONFIRMED",
+  "statusCompleted": "COMPLETED",
+  "statusCancelled": "CANCELLED",
+  "statusDeclined": "DECLINED"
 }

@@ -281,7 +281,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to send request. Try again.'), backgroundColor: Colors.red),
+            SnackBar(content: Text(AppLocalizations.of(context)!.failedToSendRequest), backgroundColor: Colors.red),
           );
         }
       } finally {
@@ -292,7 +292,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     if (_roomStatus == 'REQUESTED') {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Waiting for midwife to accept request before sending more messages.')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.waitForMidwifeAccept)),
       );
       return;
     }
@@ -320,7 +320,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Future<void> _pickAndSendFile() async {
     if (_roomId == null || _roomStatus != 'ACCEPTED') {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Wait for the chat to be connected.')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.waitForChatConnected)),
       );
       return;
     }
@@ -355,7 +355,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       AppLogger.d('File upload error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to upload file.'), backgroundColor: Colors.red),
+          SnackBar(content: Text(AppLocalizations.of(context)!.failedToUploadFile), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -434,15 +434,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                 color: Colors.orange.shade100,
-                child: const Text(
-                  'Waiting for midwife to accept request...',
-                  style: TextStyle(color: Colors.orange, fontWeight: FontWeight.w600, fontSize: 12),
+                child: Text(
+                  AppLocalizations.of(context)!.waitingForConfirmation,
+                  style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.w600, fontSize: 12),
                   textAlign: TextAlign.center,
                 ),
               ),
             Expanded(
               child: _messages.isEmpty 
-                ? const Center(child: Text("No messages yet. Start the conversation!", style: TextStyle(color: Colors.grey)))
+                ? Center(child: Text(AppLocalizations.of(context)!.noMessagesYet, style: const TextStyle(color: Colors.grey)))
                 : ListView.builder(
                 controller: _scrollController,
                 padding: const EdgeInsets.all(20),
@@ -494,7 +494,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     required bool isRead,
     Map<String, dynamic>? attachment,
   }) {
-    final bool hasImage = attachment != null &&
+    final hasImage = attachment != null &&
         attachment['file_url'] != null &&
         (attachment['file_url'].toString().endsWith('.png') ||
          attachment['file_url'].toString().endsWith('.jpg') ||
@@ -554,7 +554,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         const SizedBox(width: 8),
                         Flexible(
                           child: Text(
-                            text.isNotEmpty ? text : 'Attachment',
+                            text.isNotEmpty ? text : AppLocalizations.of(context)!.professionalCv,
                             style: TextStyle(
                               color: isMe ? Colors.white : Colors.black87,
                               fontWeight: FontWeight.w600,
@@ -656,7 +656,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         onSubmitted: disabled ? null : (_) => _sendMessage(),
                         enabled: !disabled,
                         decoration: InputDecoration(
-                          hintText: disabled ? 'Cannot reply yet...' : 'Type your message...',
+                          hintText: disabled ? AppLocalizations.of(context)!.pleaseAcceptRequest : AppLocalizations.of(context)!.typingPlaceholder,
                           hintStyle: TextStyle(color: Theme.of(context).hintColor, fontSize: 14),
                           border: InputBorder.none,
                           isDense: true,

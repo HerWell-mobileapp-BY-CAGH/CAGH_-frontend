@@ -151,7 +151,7 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                       padding: const EdgeInsets.only(top: 40.0),
                       child: Column(
                         children: [
-                          Text('Failed to load midwives', style: TextStyle(color: Colors.red.shade700)),
+                          Text(AppLocalizations.of(context)!.failedToLoadMidwives, style: TextStyle(color: Colors.red.shade700)),
                           SizedBox(height: 10),
                           ElevatedButton(
                             onPressed: _fetchMidwives,
@@ -356,9 +356,9 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                                       borderRadius: BorderRadius.circular(14),
                                     ),
                                   ),
-                                  child: const Text(
-                                    'View Profile',
-                                    style: TextStyle(
+                                  child: Text(
+                                    AppLocalizations.of(context)!.viewProfile,
+                                    style: const TextStyle(
                                       color: Colors.white,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 14,

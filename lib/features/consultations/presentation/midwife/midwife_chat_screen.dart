@@ -88,7 +88,7 @@ class _MidwifeChatScreenState extends ConsumerState<MidwifeChatScreen> {
         Future.delayed(Duration.zero, () {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text("No active chat room found for patient ${widget.patientName}"),
+              content: Text(AppLocalizations.of(context)!.noActiveChatFound),
               backgroundColor: Colors.red,
             ));
           }
@@ -119,16 +119,11 @@ class _MidwifeChatScreenState extends ConsumerState<MidwifeChatScreen> {
         ref.read(notificationProvider.notifier).refreshNotifications();
       }
     } catch (e) {
-      debugPrint("Error initializing chat: $e");
-      Future.delayed(Duration.zero, () {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text("API ERROR: $e"),
-            duration: const Duration(seconds: 15),
-            backgroundColor: Colors.red,
-          ));
-        }
-      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${AppLocalizations.of(context)!.failedToUpdateStatus}: $e'), backgroundColor: Colors.red),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -266,7 +261,7 @@ class _MidwifeChatScreenState extends ConsumerState<MidwifeChatScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to accept chat'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Failed to accept chat'), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -287,7 +282,7 @@ class _MidwifeChatScreenState extends ConsumerState<MidwifeChatScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to reject chat'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Failed to reject chat'), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -337,7 +332,7 @@ class _MidwifeChatScreenState extends ConsumerState<MidwifeChatScreen> {
   Future<void> _pickAndSendFile() async {
     if (_roomId == null || _roomStatus != 'ACCEPTED') {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Wait for the chat to be connected.')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.waitForChatConnected)),
       );
       return;
     }
@@ -371,7 +366,7 @@ class _MidwifeChatScreenState extends ConsumerState<MidwifeChatScreen> {
     } catch (e) {
       debugPrint('File upload error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to upload file: $e'), backgroundColor: Colors.red),
+        SnackBar(content: Text('${AppLocalizations.of(context)!.failedToUploadFile}: $e'), backgroundColor: Colors.red),
       );
     } finally {
       if (mounted) {

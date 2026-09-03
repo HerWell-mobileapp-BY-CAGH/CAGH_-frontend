@@ -164,7 +164,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error picking file: $e')),
+        SnackBar(content: Text('${AppLocalizations.of(context)!.failedToUploadFile}: $e')),
       );
     }
   }
@@ -284,7 +284,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                   // Personal Details
                   _buildSection(
                     icon: Icons.person_outline,
-                    title: 'Personal Details',
+                    title: AppLocalizations.of(context)!.personalInformation,
                     children: [
                       Row(
                         children: [
@@ -292,7 +292,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _buildLabel('First Name'),
+                                _buildLabel(AppLocalizations.of(context)!.firstName),
                                 _buildTextField(
                                   controller: _firstNameController,
                                   hint: 'e.g. Sarah',
@@ -307,7 +307,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _buildLabel('Last Name'),
+                                _buildLabel(AppLocalizations.of(context)!.lastName),
                                 _buildTextField(
                                   controller: _lastNameController,
                                   hint: 'e.g. Mitchell',
@@ -320,7 +320,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      _buildLabel('Email Address'),
+                      _buildLabel(AppLocalizations.of(context)!.emailAddress),
                       _buildTextField(
                         controller: _emailController,
                         hint: 'sarah.m@example.com',
@@ -329,7 +329,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                         onChanged: _validateEmail,
                       ),
                       const SizedBox(height: 16),
-                      _buildLabel('Phone Number (Ethiopia)'),
+                      _buildLabel(AppLocalizations.of(context)!.phoneNumber),
                       Row(
                         children: [
                           Container(
@@ -355,7 +355,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      _buildLabel('Password'),
+                      _buildLabel(AppLocalizations.of(context)!.password),
                       _buildTextField(
                         controller: _passwordController,
                         hint: 'Create a password',
@@ -375,7 +375,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                         errorText: _passwordError,
                       ),
                       const SizedBox(height: 16),
-                      _buildLabel('Confirm Password'),
+                      _buildLabel(AppLocalizations.of(context)!.confirmPassword),
                       _buildTextField(
                         controller: _confirmPasswordController,
                         hint: 'Confirm your password',
@@ -402,16 +402,16 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                   // Credentials
                   _buildSection(
                     icon: Icons.verified_user_outlined,
-                    title: 'Credentials',
+                    title: AppLocalizations.of(context)!.credentials,
                     children: [
-                      _buildLabel('License Number'),
+                      _buildLabel(AppLocalizations.of(context)!.licenseNumber),
                       _buildTextField(
                         controller: _licenseController,
                         hint: 'State/National License ID',
                         errorText: _licenseError,
                       ),
                       const SizedBox(height: 16),
-                      _buildLabel('Primary Qualification'),
+                      _buildLabel(AppLocalizations.of(context)!.qualification),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         decoration: BoxDecoration(
@@ -440,7 +440,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                   // Years of Experience
                   _buildSection(
                     icon: Icons.work_history_outlined,
-                    title: 'Experience',
+                    title: AppLocalizations.of(context)!.experience,
                     children: [
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -509,7 +509,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                   // Professional CV
                   _buildSection(
                     icon: Icons.upload_file_outlined,
-                    title: 'Professional CV',
+                    title: AppLocalizations.of(context)!.professionalCv,
                     children: [
                       GestureDetector(
                         onTap: _pickCV,

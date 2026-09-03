@@ -85,13 +85,13 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
       await _fetchData();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Preferences saved successfully!'), backgroundColor: Colors.green),
+          SnackBar(content: Text(AppLocalizations.of(context)!.preferencesSaved), backgroundColor: Colors.green),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save preferences: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('${AppLocalizations.of(context)!.failedToUpdateStatus}: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -107,13 +107,13 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
       await _fetchData();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Blocked date removed.'), backgroundColor: Colors.green),
+          SnackBar(content: Text(AppLocalizations.of(context)!.blockedDateRemoved), backgroundColor: Colors.green),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to remove blocked date: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('${AppLocalizations.of(context)!.failedToUpdateStatus}: $e'), backgroundColor: Colors.red),
         );
       }
     }
@@ -133,12 +133,12 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
           return AlertDialog(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             backgroundColor: isDark ? const Color(0xFF2C2C2C) : Colors.white,
-            title: Text('Block a Date', style: TextStyle(fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF2E5B2E))),
+            title: Text(AppLocalizations.of(context)!.blockADate, style: TextStyle(fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF2E5B2E))),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Select the date you want to take off or block from bookings.', style: TextStyle(fontSize: 13, color: isDark ? Colors.grey.shade400 : Colors.grey.shade600)),
+                Text(AppLocalizations.of(context)!.selectDateToBlock, style: TextStyle(fontSize: 13, color: isDark ? Colors.grey.shade400 : Colors.grey.shade600)),
                 const SizedBox(height: 20),
                 
                 // Date Picker Button
@@ -196,11 +196,11 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                 // Reason TextField
                 TextField(
                   decoration: InputDecoration(
-                    labelText: 'Reason (e.g., Sick leave, Vacation)',
+                    labelText: AppLocalizations.of(context)!.reasonLeavePlaceholder,
                     labelStyle: TextStyle(color: isDark ? Colors.grey.shade400 : Colors.grey.shade600, fontSize: 14),
                     enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: isDark ? Colors.grey.shade700 : Colors.grey.shade300)),
                     focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFF6B4B9A))),
-                    errorText: showError ? 'Please provide a reason' : null,
+                    errorText: showError ? AppLocalizations.of(context)!.valNameReq : null,
                   ),
                   style: TextStyle(color: isDark ? Colors.white : Colors.black87),
                   onChanged: (val) {
@@ -216,7 +216,7 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx), 
-                child: Text('Cancel', style: TextStyle(color: isDark ? Colors.grey.shade400 : Colors.grey.shade600))
+                child: Text(AppLocalizations.of(context)!.cancel, style: TextStyle(color: isDark ? Colors.grey.shade400 : Colors.grey.shade600))
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
@@ -233,7 +233,7 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                   final dateStr = '${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}';
                   if (_blockedDates.any((b) => b.date == dateStr)) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('This date is already blocked.'), backgroundColor: Colors.orange),
+                      SnackBar(content: Text(AppLocalizations.of(context)!.dateAlreadyBlocked), backgroundColor: Colors.orange),
                     );
                     return;
                   }
@@ -244,10 +244,10 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                     await _fetchData();
                   } catch (e) {
                     setState(() => _isLoading = false);
-                    if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to add leave')));
+                    if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${AppLocalizations.of(context)!.failedToUpdateStatus}: $e')));
                   }
                 },
-                child: Text(AppLocalizations.of(context)!.blockDate, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                child: Text(AppLocalizations.of(context)!.blockDate, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               )
             ],
           );
@@ -361,7 +361,7 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                 children: [
                   Text(AppLocalizations.of(context)!.setWorkingHours, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Color(0xFF2E5B2E))),
                   const SizedBox(height: 4),
-                  Text('Every $dayName', style: TextStyle(color: isDark ? Colors.grey.shade400 : Colors.grey.shade600)),
+                  Text(dayName, style: TextStyle(color: isDark ? Colors.grey.shade400 : Colors.grey.shade600)),
                   const SizedBox(height: 16),
                   
                   Expanded(
@@ -424,13 +424,13 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                           }
                           
                           await _fetchData();
-                          if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Availability scheduled successfully!'), backgroundColor: Colors.green));
+                          if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.preferencesSaved), backgroundColor: Colors.green));
                         } catch (e) {
                           setState(() => _isLoading = false);
-                          if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to schedule: $e'), backgroundColor: Colors.red));
+                          if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${AppLocalizations.of(context)!.failedToUpdateStatus}: $e'), backgroundColor: Colors.red));
                         }
                       },
-                      child: Text('Save Selected Slots (${_selectedSlots.length})', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      child: Text(AppLocalizations.of(context)!.saveSelectedSlots(_selectedSlots.length), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                     ),
                   )
                 ],
@@ -465,14 +465,14 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
               Container(
                 color: const Color(0xFF2E5B2E),
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                child: const Row(
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Digital Midwife',
-                      style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                      AppLocalizations.of(context)!.digitalMidwife,
+                      style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
                     ),
-                    Icon(Icons.notifications_outlined, color: Color(0xFFFFD22B), size: 24),
+                    const Icon(Icons.notifications_outlined, color: Color(0xFFFFD22B), size: 24),
                   ],
                 ),
               ),
@@ -484,20 +484,18 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                   children: [
                     Text(
                       AppLocalizations.of(context)!.availabilityManagement,
-                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1.2),
+                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1.2),
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     Text(
                       AppLocalizations.of(context)!.yourSchedule,
                       style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF2E5B2E)),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Manage your consulting hours, block out dates for rest, and set your preferred session types.',
+                      AppLocalizations.of(context)!.defineRegularWorkingHours,
                       style: TextStyle(fontSize: 13, color: isDark ? Colors.grey.shade400 : Colors.grey.shade600, height: 1.4),
                     ),
-                    const SizedBox(height: 24),
-
                     const SizedBox(height: 24),
 
                     // Weekly Schedule Picker
@@ -507,17 +505,25 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                         color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
-                          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))
+                          BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4))
                         ]
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Select a day of the week to set recurring hours', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                          Text(AppLocalizations.of(context)!.selectDayToSetRecurring, style: const TextStyle(fontSize: 12, color: Colors.grey)),
                           const SizedBox(height: 16),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].asMap().entries.map((entry) {
+                            children: [
+                              AppLocalizations.of(context)!.mon,
+                              AppLocalizations.of(context)!.tue,
+                              AppLocalizations.of(context)!.wed,
+                              AppLocalizations.of(context)!.thu,
+                              AppLocalizations.of(context)!.fri,
+                              AppLocalizations.of(context)!.sat,
+                              AppLocalizations.of(context)!.sun,
+                            ].asMap().entries.map((entry) {
                               final int index = entry.key; // 0 = Monday
                               final String label = entry.value;
                               
@@ -569,7 +575,7 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                         children: [
                           Padding(
                             padding: const EdgeInsets.all(20),
-                            child: Text('Consultation Types', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? const Color(0xFFB39DDB) : const Color(0xFF6B4B9A))),
+                            child: Text(AppLocalizations.of(context)!.consultationType, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? const Color(0xFFB39DDB) : const Color(0xFF6B4B9A))),
                           ),
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -578,7 +584,7 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                               runSpacing: 12,
                               children: [
                                 _buildConsultationChip(
-                                  title: 'Voice Call',
+                                  title: AppLocalizations.of(context)!.voiceCall,
                                   icon: Icons.phone_outlined,
                                   isSelected: _voiceCall,
                                   onSelected: (v) => setState(() => _voiceCall = v),
@@ -603,7 +609,7 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                                 icon: _isSavingPrefs 
                                     ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                                     : const Icon(Icons.save_outlined, color: Colors.white, size: 18),
-                                label: Text(_isSavingPrefs ? 'Saving...' : 'Save Preferences', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                label: Text(_isSavingPrefs ? AppLocalizations.of(context)!.saving : AppLocalizations.of(context)!.savePreferences, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xFF2E5B2E),
                                   padding: const EdgeInsets.symmetric(vertical: 14),
@@ -624,7 +630,7 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                         color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
-                          BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))
+                          BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4))
                         ]
                       ),
                       child: Column(
@@ -632,14 +638,14 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(AppLocalizations.of(context)!.blockedDates, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: isDark ? Colors.white : Color(0xFF2E5B2E))),
+                              Text(AppLocalizations.of(context)!.blockedDates, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: isDark ? Colors.white : const Color(0xFF2E5B2E))),
                               GestureDetector(
                                 onTap: _showAddLeaveModal,
                                 child: Row(
                                   children: [
                                     Icon(Icons.add_circle_outline, color: isDark ? const Color(0xFFB39DDB) : const Color(0xFF6B4B9A), size: 16),
-                                    SizedBox(width: 4),
-                                    Text(AppLocalizations.of(context)!.addLeave, style: TextStyle(color: isDark ? Color(0xFFB39DDB) : Color(0xFF6B4B9A), fontSize: 12, fontWeight: FontWeight.bold))
+                                    const SizedBox(width: 4),
+                                    Text(AppLocalizations.of(context)!.addLeave, style: TextStyle(color: isDark ? const Color(0xFFB39DDB) : const Color(0xFF6B4B9A), fontSize: 12, fontWeight: FontWeight.bold))
                                   ],
                                 ),
                               )
@@ -648,9 +654,9 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                           const SizedBox(height: 16),
                           ..._blockedDates.map((b) => _buildBlockedDateItem(b, isDark)).toList(),
                           if (_blockedDates.isEmpty)
-                            const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 16),
-                              child: Text('No blocked dates.', style: TextStyle(color: Colors.grey)),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              child: Text(AppLocalizations.of(context)!.noBlockedDates, style: const TextStyle(color: Colors.grey)),
                             ),
                         ],
                       ),
@@ -675,7 +681,7 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -688,7 +694,7 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'My Schedules',
+                AppLocalizations.of(context)!.mySchedules,
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
@@ -696,7 +702,7 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                 ),
               ),
               Text(
-                '${_availabilities.length} active',
+                AppLocalizations.of(context)!.activeCount(_availabilities.length.toString()),
                 style: TextStyle(
                   fontSize: 12,
                   color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
@@ -751,7 +757,7 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              slot.dayDisplayName,
+                              _getLocalizedDayName(context, slot),
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 14,
@@ -858,6 +864,32 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
         ],
       ),
     );
+  }
+
+  String _getLocalizedDayName(BuildContext context, dynamic slot) {
+    final l10n = AppLocalizations.of(context)!;
+    final dayInt = int.tryParse(slot.dateOrDay.toString());
+    if (dayInt != null && dayInt >= 0 && dayInt < 7) {
+      final days = [
+        l10n.monday,
+        l10n.tuesday,
+        l10n.wednesday,
+        l10n.thursday,
+        l10n.friday,
+        l10n.saturday,
+        l10n.sunday,
+      ];
+      return days[dayInt];
+    }
+    final rawName = slot.dayName?.toString().toLowerCase() ?? '';
+    if (rawName.contains('mon')) return l10n.monday;
+    if (rawName.contains('tue')) return l10n.tuesday;
+    if (rawName.contains('wed')) return l10n.wednesday;
+    if (rawName.contains('thu')) return l10n.thursday;
+    if (rawName.contains('fri')) return l10n.friday;
+    if (rawName.contains('sat')) return l10n.saturday;
+    if (rawName.contains('sun')) return l10n.sunday;
+    return slot.dateOrDay.isNotEmpty ? slot.dateOrDay : l10n.scheduledDay;
   }
 
   String _formatMonthYearDay(DateTime date) {

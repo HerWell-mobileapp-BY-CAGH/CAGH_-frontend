@@ -60,11 +60,29 @@ Color getStatusColor(AppointmentStatus status) {
   }
 }
 
-Widget buildStatusIndicator(AppointmentStatus status) {
+Widget buildStatusIndicator(BuildContext context, AppointmentStatus status) {
   final dotColor = getStatusColor(status);
+  final l10n = AppLocalizations.of(context);
   String text = status.name.toUpperCase();
-  if (status == AppointmentStatus.declined) text = 'DECLINED';
-  if (status == AppointmentStatus.cancelled) text = 'CANCELLED';
+  if (l10n != null) {
+    switch (status) {
+      case AppointmentStatus.pending:
+        text = l10n.statusPending;
+        break;
+      case AppointmentStatus.confirmed:
+        text = l10n.statusConfirmed;
+        break;
+      case AppointmentStatus.completed:
+        text = l10n.statusCompleted;
+        break;
+      case AppointmentStatus.cancelled:
+        text = l10n.statusCancelled;
+        break;
+      case AppointmentStatus.declined:
+        text = l10n.statusDeclined;
+        break;
+    }
+  }
 
   return Row(
     mainAxisSize: MainAxisSize.min,
@@ -237,7 +255,7 @@ void showRescheduleModal(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Reschedule Appointment',
+                        AppLocalizations.of(context)!.rescheduleAppointment,
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -315,7 +333,7 @@ void showRescheduleModal(
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       child: Text(
-                        'No available time slots for this date.',
+                        AppLocalizations.of(context)!.noAvailableSlotsForDate,
                         style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
                       ),
                     )
@@ -428,56 +446,56 @@ void showDetailsModal(
             ),
             const Divider(),
             const SizedBox(height: 10),
-            detailRow('Consultation Type', consultType),
-            detailRow('Midwife', apt.midwifeName ?? 'Midwife'),
-            detailRow('Date & Time', formatAppointmentDateTime(apt.date, apt.startTime)),
-            detailRow('Status', apt.status.name.toUpperCase()),
-            if (apt.reason != null && apt.reason!.isNotEmpty)
-              detailRow('Reason', apt.reason!),
-            const SizedBox(height: 16),
-            if (isCancelable && (onReschedule != null || onCancel != null)) ...[
-              const Divider(),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  if (onReschedule != null)
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          onReschedule();
-                        },
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: AppColors.primaryGreen),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                          padding: const EdgeInsets.symmetric(vertical: 10),
+              detailRow(AppLocalizations.of(context)!.consultationType, consultType),
+              detailRow(AppLocalizations.of(context)!.yourMidwife, apt.midwifeName ?? 'Midwife'),
+              detailRow(AppLocalizations.of(context)!.selectDate, formatAppointmentDateTime(apt.date, apt.startTime)),
+              detailRow('Status', apt.status.name.toUpperCase()),
+              if (apt.reason != null && apt.reason!.isNotEmpty)
+                detailRow(AppLocalizations.of(context)!.reasonForVisit, apt.reason!),
+              const SizedBox(height: 16),
+              if (isCancelable && (onReschedule != null || onCancel != null)) ...[
+                const Divider(),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    if (onReschedule != null)
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            onReschedule();
+                          },
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: AppColors.primaryGreen),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                          ),
+                          child: Text(AppLocalizations.of(context)!.reschedule, style: const TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.bold)),
                         ),
-                        child: const Text('Reschedule', style: TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.bold)),
                       ),
-                    ),
-                  if (onReschedule != null && onCancel != null)
-                    const SizedBox(width: 12),
-                  if (onCancel != null)
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          onCancel();
-                        },
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: AppColors.errorRed),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                          padding: const EdgeInsets.symmetric(vertical: 10),
+                    if (onReschedule != null && onCancel != null)
+                      const SizedBox(width: 12),
+                    if (onCancel != null)
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            onCancel();
+                          },
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: AppColors.errorRed),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                          ),
+                          child: Text(AppLocalizations.of(context)!.cancelRequest, style: const TextStyle(color: AppColors.errorRed, fontWeight: FontWeight.bold)),
                         ),
-                        child: Text(AppLocalizations.of(context)!.cancelRequest, style: TextStyle(color: AppColors.errorRed, fontWeight: FontWeight.bold)),
                       ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 10),
+                  ],
+                ),
+                const SizedBox(height: 10),
+              ],
             ],
-          ],
-        ),
+          ),
         ),
       );
     },
@@ -514,7 +532,7 @@ void showCancelConfirmDialog(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Are you sure you want to cancel this appointment?'),
+                Text(AppLocalizations.of(context)!.areYouSureCancelAppointment),
                 if (cancelError != null) ...[
                   const SizedBox(height: 10),
                   Text(
@@ -581,7 +599,11 @@ Widget buildMinimalTabBar({
   required int selectedIndex,
   required ValueChanged<int> onTabSelected,
 }) {
-  final tabs = ['Requests', 'Upcoming', 'Past'];
+  final tabs = [
+    AppLocalizations.of(context)!.pendingRequests,
+    AppLocalizations.of(context)!.upcoming,
+    AppLocalizations.of(context)!.past,
+  ];
   final isDark = Theme.of(context).brightness == Brightness.dark;
   
   return Container(
@@ -668,11 +690,11 @@ Widget buildAppointmentCard(
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              buildStatusIndicator(apt.status),
+              buildStatusIndicator(context, apt.status),
               if (isUpcoming)
                 PopupMenuButton<String>(
                   icon: const Icon(Icons.more_vert, color: Color(0xFF64748B), size: 20),
-                  tooltip: 'More options',
+                  tooltip: AppLocalizations.of(context)!.moreOptions,
                   onSelected: (value) {
                     if (value == 'reschedule') {
                       onReschedule();
@@ -680,24 +702,24 @@ Widget buildAppointmentCard(
                       onCancel();
                     }
                   },
-                  itemBuilder: (context) => [
-                    const PopupMenuItem<String>(
+                  itemBuilder: (context) => <PopupMenuEntry<String>>[
+                    PopupMenuItem<String>(
                       value: 'reschedule',
                       child: Row(
                         children: [
-                          Icon(Icons.edit_calendar_outlined, size: 18, color: AppColors.primaryGreen),
-                          SizedBox(width: 10),
-                          Text('Reschedule', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                          const Icon(Icons.edit_calendar_outlined, size: 18, color: AppColors.primaryGreen),
+                          const SizedBox(width: 10),
+                          Text(AppLocalizations.of(context)!.reschedule, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
                         ],
                       ),
                     ),
-                    const PopupMenuItem<String>(
+                    PopupMenuItem<String>(
                       value: 'cancel',
                       child: Row(
                         children: [
-                          Icon(Icons.cancel_outlined, size: 18, color: AppColors.errorRed),
-                          SizedBox(width: 10),
-                          Text('Cancel', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.errorRed)),
+                          const Icon(Icons.cancel_outlined, size: 18, color: AppColors.errorRed),
+                          const SizedBox(width: 10),
+                          Text(AppLocalizations.of(context)!.cancel, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.errorRed)),
                         ],
                       ),
                     ),
@@ -706,7 +728,6 @@ Widget buildAppointmentCard(
             ],
           ),
           const SizedBox(height: 14),
-
 
           // 2. Person Info (Midwife Name & Role)
           Row(
@@ -737,10 +758,10 @@ Widget buildAppointmentCard(
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
-                    SizedBox(height: 2),
+                    const SizedBox(height: 2),
                     Text(
                       AppLocalizations.of(context)!.certifiedMidwife,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 12,
                         color: Color(0xFF64748B),
                       ),
@@ -776,7 +797,7 @@ Widget buildAppointmentCard(
                 ElevatedButton.icon(
                   onPressed: onJoinCall,
                   icon: const Icon(Icons.call_outlined, color: Colors.white, size: 15),
-                  label: const Text('Join Call', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+                  label: Text(AppLocalizations.of(context)!.joinCall, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryGreen,
                     elevation: 0,
@@ -792,7 +813,7 @@ Widget buildAppointmentCard(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                   ),
-                  child: const Text('Details', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                  child: Text(AppLocalizations.of(context)!.viewDetails, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
                 ),
               ],
             )
@@ -804,7 +825,7 @@ Widget buildAppointmentCard(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
               ),
-              child: const Text('View Details', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+              child: Text(AppLocalizations.of(context)!.viewDetails, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
             )
           ] else ...[
             TextButton(
@@ -814,7 +835,7 @@ Widget buildAppointmentCard(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
               ),
-              child: const Text('View Details', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+              child: Text(AppLocalizations.of(context)!.viewDetails, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
             )
           ],
         ],

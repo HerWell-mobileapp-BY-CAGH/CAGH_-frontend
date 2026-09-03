@@ -38,7 +38,7 @@ class _AppearanceAccessibilityScreenState extends State<AppearanceAccessibilityS
             const SizedBox(height: 10),
             _buildGroupedCard([
               _buildRadioTile<ThemeMode>(
-                title: 'System Default',
+                title: AppLocalizations.of(context)!.systemDefault,
                 value: ThemeMode.system,
                 groupValue: AppearanceService.currentThemeMode.value,
                 onChanged: (val) {
@@ -50,7 +50,7 @@ class _AppearanceAccessibilityScreenState extends State<AppearanceAccessibilityS
               ),
               _buildDivider(),
               _buildRadioTile<ThemeMode>(
-                title: 'Light Mode',
+                title: AppLocalizations.of(context)!.lightMode,
                 value: ThemeMode.light,
                 groupValue: AppearanceService.currentThemeMode.value,
                 onChanged: (val) {
@@ -62,7 +62,7 @@ class _AppearanceAccessibilityScreenState extends State<AppearanceAccessibilityS
               ),
               _buildDivider(),
               _buildRadioTile<ThemeMode>(
-                title: 'Dark Mode',
+                title: AppLocalizations.of(context)!.darkMode,
                 value: ThemeMode.dark,
                 groupValue: AppearanceService.currentThemeMode.value,
                 onChanged: (val) {

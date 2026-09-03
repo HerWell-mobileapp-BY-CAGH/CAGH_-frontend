@@ -71,6 +71,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
         extendBody: true,
         body: UserProfileScreen(
           onBackTap: () => setState(() => _currentIndex = 0),
+          onAppointmentsTap: () => setState(() => _currentIndex = 1),
         ),
         floatingActionButton: _buildFloatingButtons(),
         bottomNavigationBar: _buildBottomNav(),
@@ -93,7 +94,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Home',
+                      AppLocalizations.of(context)!.home,
                       style: TextStyle(
                         color: Theme.of(context).appBarTheme.foregroundColor,
                         fontSize: 20,
@@ -158,15 +159,13 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
     );
   }
 
-  // TAB 0: HOME DASHBOARD
+  // TAB 0: HOME / FEED
   Widget _buildHomeTab() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 20),
-
           // Upcoming Appointment Alert Card (Hidden by default for new users)
           if (_hasUpcomingAppointment) ...[
             Container(
@@ -217,9 +216,9 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             const SizedBox(height: 24),
           ],
 
-          const Text(
-            'ABOUT US',
-            style: TextStyle(
+          Text(
+            AppLocalizations.of(context)!.aboutUs,
+            style: const TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.bold,
               letterSpacing: 1.1,
@@ -233,7 +232,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             color: const Color(0xFFFFD22B),
           ),
           Text(
-            'We provide confidential consultation, education and care to help women and adolescent girls make informed choices and live healthier lives.',
+            AppLocalizations.of(context)!.aboutUsDesc,
             style: TextStyle(
               fontSize: 14,
               height: 1.5,
@@ -279,8 +278,8 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             icon: Icons.menu_book_rounded,
             iconBgColor: const Color(0xFFE8F5E9),
             iconColor: const Color(0xFF315E26),
-            title: 'Adolescent Girls Health & Nutrition',
-            subtitle: 'Puberty, menstrual health, nutrition & healthy lifestyle, life skills & well-being.',
+            title: AppLocalizations.of(context)!.adolescentGirlsHealthAndNutrition,
+            subtitle: AppLocalizations.of(context)!.adolescentGirlsHealthAndNutritionDesc,
             arrowBgColor: const Color(0xFFF1F8E9),
             onTap: () => setState(() => _currentIndex = 2),
           ),
@@ -289,8 +288,8 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             icon: Icons.shield_outlined,
             iconBgColor: const Color(0xFFFFF8E1),
             iconColor: const Color(0xFFFFD22B),
-            title: 'Prevention and Awareness',
-            subtitle: 'STI/HIV prevention, HPV & cervical cancer awareness, healthy relationships.',
+            title: AppLocalizations.of(context)!.preventionAndAwareness,
+            subtitle: AppLocalizations.of(context)!.preventionAndAwarenessDesc,
             arrowBgColor: const Color(0xFFFFF8E1),
             onTap: () => setState(() => _currentIndex = 2),
           ),
@@ -299,8 +298,8 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             icon: Icons.favorite_border_rounded,
             iconBgColor: const Color(0xFFFFF8E1),
             iconColor: const Color(0xFFFFD22B),
-            title: 'Psychosocial Support & Protection',
-            subtitle: 'Mental health, GBV support, counseling services, and emergency help.',
+            title: AppLocalizations.of(context)!.psychosocialSupportAndProtection,
+            subtitle: AppLocalizations.of(context)!.psychosocialSupportAndProtectionDesc,
             arrowBgColor: const Color(0xFFFFF8E1),
             onTap: () => setState(() => _currentIndex = 2),
           ),
@@ -309,8 +308,8 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             icon: Icons.female,
             iconBgColor: const Color(0xFFE8F5E9),
             iconColor: const Color(0xFF315E26),
-            title: 'Reproductive Health & Care',
-            subtitle: 'Pregnancy prevention, maternal care, ANC, newborn care, and checkups.',
+            title: AppLocalizations.of(context)!.reproductiveHealthAndCare,
+            subtitle: AppLocalizations.of(context)!.reproductiveHealthAndCareDesc,
             arrowBgColor: const Color(0xFFF1F8E9),
             onTap: () => setState(() => _currentIndex = 2),
           ),
@@ -346,8 +345,8 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             icon: Icons.menu_book_rounded,
             iconBgColor: const Color(0xFFE8F5E9),
             iconColor: const Color(0xFF315E26),
-            title: 'Adolescent Girls Health & Nutrition',
-            subtitle: 'Puberty, menstrual health, nutrition & healthy lifestyle, life skills & well-being.',
+            title: AppLocalizations.of(context)!.adolescentGirlsHealthAndNutrition,
+            subtitle: AppLocalizations.of(context)!.adolescentGirlsHealthAndNutritionDesc,
             arrowBgColor: const Color(0xFFF1F8E9),
             onTap: () {},
           ),
@@ -356,8 +355,8 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             icon: Icons.shield_outlined,
             iconBgColor: const Color(0xFFFFF8E1),
             iconColor: const Color(0xFFFFD22B),
-            title: 'Prevention and Awareness',
-            subtitle: 'STI/HIV prevention, HPV & cervical cancer awareness, healthy relationships.',
+            title: AppLocalizations.of(context)!.preventionAndAwareness,
+            subtitle: AppLocalizations.of(context)!.preventionAndAwarenessDesc,
             arrowBgColor: const Color(0xFFFFF8E1),
           ),
           const SizedBox(height: 14),
@@ -365,8 +364,8 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             icon: Icons.favorite_border_rounded,
             iconBgColor: const Color(0xFFFFF8E1),
             iconColor: const Color(0xFFFFD22B),
-            title: 'Psychosocial Support & Protection',
-            subtitle: 'Mental health, GBV support, counseling services, and emergency help.',
+            title: AppLocalizations.of(context)!.psychosocialSupportAndProtection,
+            subtitle: AppLocalizations.of(context)!.psychosocialSupportAndProtectionDesc,
             arrowBgColor: const Color(0xFFFFF8E1),
           ),
           const SizedBox(height: 14),
@@ -374,8 +373,8 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             icon: Icons.female,
             iconBgColor: const Color(0xFFE8F5E9),
             iconColor: const Color(0xFF315E26),
-            title: 'Reproductive Health & Care',
-            subtitle: 'Pregnancy prevention, maternal care, ANC, newborn care, and checkups.',
+            title: AppLocalizations.of(context)!.reproductiveHealthAndCare,
+            subtitle: AppLocalizations.of(context)!.reproductiveHealthAndCareDesc,
             arrowBgColor: const Color(0xFFF1F8E9),
           ),
           const SizedBox(height: 80),

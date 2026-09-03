@@ -74,7 +74,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
       }
     } catch (e, st) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${AppLocalizations.of(context)!.failedToUpdateStatus}: $e')));
         setState(() {
           _isLoading = false;
           _timeSlots = null;
