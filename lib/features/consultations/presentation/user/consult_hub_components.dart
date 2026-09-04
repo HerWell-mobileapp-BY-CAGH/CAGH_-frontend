@@ -79,6 +79,9 @@ Widget buildStatusIndicator(BuildContext context, AppointmentStatus status) {
         text = l10n.statusCancelled;
         break;
       case AppointmentStatus.declined:
+      case AppointmentStatus.missed:
+      case AppointmentStatus.unknown:
+      default:
         text = l10n.statusDeclined;
         break;
     }
@@ -255,7 +258,7 @@ void showRescheduleModal(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        AppLocalizations.of(context)!.rescheduleAppointment,
+                        AppLocalizations.of(context)!.reschedule,
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -333,7 +336,7 @@ void showRescheduleModal(
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       child: Text(
-                        AppLocalizations.of(context)!.noAvailableSlotsForDate,
+                        AppLocalizations.of(context)!.noSlotsFound,
                         style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
                       ),
                     )

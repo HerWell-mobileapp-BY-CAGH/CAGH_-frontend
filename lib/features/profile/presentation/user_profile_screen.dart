@@ -428,7 +428,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                   const SizedBox(height: 12),
 
                   Text(
-                    AppLocalizations.of(context)!.appVersion,
+                    AppLocalizations.of(context)!.appVersion('1.0.0', '1'),
                     style: TextStyle(
                       fontSize: 11.5,
                       color: Colors.grey.shade500,

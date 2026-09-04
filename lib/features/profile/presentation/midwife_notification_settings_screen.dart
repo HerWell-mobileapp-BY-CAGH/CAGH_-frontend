@@ -57,7 +57,7 @@ class _MidwifeNotificationSettingsScreenState extends State<MidwifeNotificationS
             const SizedBox(height: 12),
             _buildSettingsCard([
               _buildSwitchRow(
-                l10n.newMessages,
+                l10n.newMessage,
                 newMessages,
                 (val) => setState(() => newMessages = val),
               ),
