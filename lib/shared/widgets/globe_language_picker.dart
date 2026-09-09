@@ -8,7 +8,7 @@ class GlobeLanguagePicker extends StatelessWidget {
 
   const GlobeLanguagePicker({
     super.key,
-    this.iconColor = AppColors.accentYellow,
+    this.iconColor = const Color(0xFF385A2E), // AppColors.primaryGreen
     this.iconSize = 24.0,
   });
 

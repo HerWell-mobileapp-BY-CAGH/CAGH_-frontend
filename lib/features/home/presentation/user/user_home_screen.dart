@@ -4,6 +4,7 @@ import 'package:cagh_frontend/features/appointments/data/services/appointment_ap
 import 'package:flutter/material.dart';
 import 'package:cagh_frontend/features/consultations/presentation/user/find_midwife_screen.dart';
 import 'package:cagh_frontend/features/nearby/presentation/screens/nearby_healthcare_screen.dart';
+import 'package:cagh_frontend/shared/widgets/globe_language_picker.dart';
 import 'package:cagh_frontend/features/consultations/presentation/user/consult_hub_screen.dart';
 import 'package:cagh_frontend/features/profile/presentation/user_profile_screen.dart';
 import 'package:cagh_frontend/shared/widgets/floating_glass_nav_bar.dart';
@@ -15,6 +16,7 @@ import 'package:cagh_frontend/shared/widgets/learning_module_card.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cagh_frontend/features/notifications/presentation/widgets/notification_bell.dart';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
+import 'package:cagh_frontend/shared/widgets/globe_language_picker.dart';
 
 class UserHomeScreen extends StatefulWidget {
   const UserHomeScreen({super.key});
@@ -88,20 +90,27 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             if (_currentIndex == 0)
               Container(
                 width: double.infinity,
-                color: Theme.of(context).appBarTheme.backgroundColor,
+                color: const Color(0xFF385A2E), // Dark green
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                child: Stack(
+                  alignment: Alignment.center,
                   children: [
                     Text(
                       AppLocalizations.of(context)!.home,
-                      style: TextStyle(
-                        color: Theme.of(context).appBarTheme.foregroundColor,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const NotificationBell(iconColor: Color(0xFFFFD22B)),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: const [
+                        GlobeLanguagePicker(iconColor: Colors.white, iconSize: 24),
+                        SizedBox(width: 16),
+                        NotificationBell(iconColor: Colors.white),
+                      ],
+                    ),
                   ],
                 ),
               )
@@ -109,31 +118,26 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             else if (_currentIndex == 2)
               Container(
                 width: double.infinity,
-                color: Theme.of(context).appBarTheme.backgroundColor,
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                color: const Color(0xFF385A2E), // Dark green
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                child: Stack(
+                  alignment: Alignment.center,
                   children: [
-                    Row(
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.arrow_back, color: Color(0xFFFFD22B)),
-                          onPressed: () => setState(() => _currentIndex = 0),
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          AppLocalizations.of(context)!.learningModule,
-                          style: TextStyle(
-                            color: Theme.of(context).appBarTheme.foregroundColor,
-                            fontSize: 19,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
+                    Text(
+                      AppLocalizations.of(context)!.learningModule,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.more_vert, color: Color(0xFFFFD22B)),
-                      onPressed: () {},
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: const [
+                        GlobeLanguagePicker(iconColor: Colors.white, iconSize: 24),
+                        SizedBox(width: 16),
+                        NotificationBell(iconColor: Colors.white),
+                      ],
                     ),
                   ],
                 ),
@@ -161,159 +165,411 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
 
   // TAB 0: HOME / FEED
   Widget _buildHomeTab() {
+    final primaryDarkGreen = const Color(0xFF385A2E);
+    
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Upcoming Appointment Alert Card (Hidden by default for new users)
-          if (_hasUpcomingAppointment) ...[
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFFE8F5E9),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFA5D6A7)),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF315E26),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.phone_in_talk, color: Colors.white, size: 20),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          AppLocalizations.of(context)!.virtualVoiceConsultation,
-                          style: TextStyle(
-                            fontSize: 14.5,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF315E26),
+          // 1. Welcome Banner
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFFDF5),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Text(
+                            'Welcome',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF385A2E),
+                            ),
                           ),
+                          const SizedBox(width: 8),
+                          Icon(Icons.favorite, color: primaryDarkGreen, size: 20),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        "We're here to support your health, well-being and informed choices.",
+                        style: TextStyle(
+                          fontSize: 13,
+                          height: 1.4,
+                          color: Colors.black87,
                         ),
-                        SizedBox(height: 2),
-                        Text(
-                          'Tomorrow at 10:00 AM • Sr. Martha T.',
-                          style: TextStyle(fontSize: 12.5, color: Colors.black87),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  flex: 2,
+                  child: Image.asset(
+                    'assets/images/home_illustration.png',
+                    height: 100,
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) => const SizedBox(height: 100),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 24),
+
+          // 2. Need urgent help? Card
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: primaryDarkGreen,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Container(
+                          width: 52,
+                          height: 52,
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.phone, color: primaryDarkGreen, size: 28),
+                        ),
+                        Positioned(
+                          right: -4,
+                          top: -4,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Text(
+                              '24/7',
+                              style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                            ),
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                  TextButton(
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Need urgent help?',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Talk to a trained professional now.',
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.9),
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton.icon(
                     onPressed: () {},
-                    child: Text(AppLocalizations.of(context)!.join, style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF315E26))),
+                    icon: Icon(Icons.chat, color: primaryDarkGreen, size: 18),
+                    label: Text(
+                      'Start Quick Consultation',
+                      style: TextStyle(color: primaryDarkGreen, fontWeight: FontWeight.w700),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                      elevation: 0,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 32),
+
+          // 3. Focus Areas
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Focus Areas',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: primaryDarkGreen,
+                    ),
+                  ),
+                  Container(
+                    width: 30,
+                    height: 2,
+                    color: const Color(0xFFF9A825),
+                    margin: const EdgeInsets.only(top: 4),
                   ),
                 ],
               ),
+              Row(
+                children: const [
+                  Text('View all', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                  SizedBox(width: 4),
+                  Icon(Icons.arrow_forward_ios, size: 12),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            clipBehavior: Clip.none,
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 260,
+                  child: _buildFocusAreaCard(
+                    title: AppLocalizations.of(context)!.adolescentGirlsHealthAndNutrition,
+                    subtitle: AppLocalizations.of(context)!.adolescentGirlsHealthAndNutritionDesc,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                SizedBox(
+                  width: 260,
+                  child: _buildFocusAreaCard(
+                    title: AppLocalizations.of(context)!.preventionAndAwareness,
+                    subtitle: AppLocalizations.of(context)!.preventionAndAwarenessDesc,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                SizedBox(
+                  width: 260,
+                  child: _buildFocusAreaCard(
+                    title: AppLocalizations.of(context)!.psychosocialSupportAndProtection,
+                    subtitle: AppLocalizations.of(context)!.psychosocialSupportAndProtectionDesc,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                SizedBox(
+                  width: 260,
+                  child: _buildFocusAreaCard(
+                    title: AppLocalizations.of(context)!.reproductiveHealthAndCare,
+                    subtitle: AppLocalizations.of(context)!.reproductiveHealthAndCareDesc,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 24),
-          ],
+          ),
 
+          const SizedBox(height: 32),
+
+          // 4. About Us
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'About Us',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: primaryDarkGreen,
+                ),
+              ),
+              Container(
+                width: 30,
+                height: 2,
+                color: const Color(0xFFF9A825),
+                margin: const EdgeInsets.only(top: 4, bottom: 16),
+              ),
+            ],
+          ),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF6F8F5),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE2E7E1)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.health_and_safety, color: primaryDarkGreen, size: 40),
+                const SizedBox(width: 16),
+                const Expanded(
+                  child: Text(
+                    'We provide confidential consultation, education and care to help women and adolescent girls live healthier lives.',
+                    style: TextStyle(fontSize: 12, height: 1.4, color: Colors.black87),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Icon(Icons.local_florist, color: const Color(0xFFF9A825), size: 40),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 32),
+
+          // 5. Helpful Services
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Helpful Services',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: primaryDarkGreen,
+                ),
+              ),
+              Container(
+                width: 30,
+                height: 2,
+                color: const Color(0xFFF9A825),
+                margin: const EdgeInsets.only(top: 4, bottom: 16),
+              ),
+            ],
+          ),
+          
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            clipBehavior: Clip.none,
+            child: Row(
+              children: [
+                _buildHelpfulServiceChip(
+                  icon: Icons.calendar_today,
+                  iconColor: primaryDarkGreen,
+                  iconBg: const Color(0xFFD6E5D0),
+                  title: 'Book\nAppointment',
+                ),
+                const SizedBox(width: 12),
+                _buildHelpfulServiceChip(
+                  icon: Icons.description,
+                  iconColor: const Color(0xFF6B4C9A),
+                  iconBg: const Color(0xFFEBE6F3),
+                  title: 'Health\nResources',
+                ),
+                const SizedBox(width: 12),
+                _buildHelpfulServiceChip(
+                  icon: Icons.location_on,
+                  iconColor: primaryDarkGreen,
+                  iconBg: const Color(0xFFD6E5D0),
+                  title: 'Find Nearby\nServices',
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 100), // Bottom padding for nav bar
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFocusAreaCard({required String title, required String subtitle}) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF6F8F5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E7E1)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           Text(
-            AppLocalizations.of(context)!.aboutUs,
+            title,
             style: const TextStyle(
               fontSize: 13,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.1,
-              color: Color(0xFF315E26),
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF385A2E),
+              height: 1.2,
             ),
           ),
-          Container(
-            height: 2,
-            width: 50,
-            margin: const EdgeInsets.only(top: 4, bottom: 16),
-            color: const Color(0xFFFFD22B),
-          ),
+          const SizedBox(height: 8),
           Text(
-            AppLocalizations.of(context)!.aboutUsDesc,
-            style: TextStyle(
-              fontSize: 14,
-              height: 1.5,
-              color: Theme.of(context).textTheme.bodyMedium?.color,
+            subtitle,
+            style: const TextStyle(
+              fontSize: 11,
+              color: Colors.black87,
+              height: 1.3,
             ),
           ),
-
-          const SizedBox(height: 20),
-
-          Center(
-            child: Image.asset(
-              'assets/images/home_illustration.png',
-              fit: BoxFit.contain,
-              height: 220,
-              errorBuilder: (_, __, ___) {
-                return const Icon(
-                  Icons.health_and_safety,
-                  size: 70,
-                  color: Color(0xFF315E26),
-                );
-              },
-            ),
+          const SizedBox(height: 12),
+          const Align(
+            alignment: Alignment.bottomRight,
+            child: Icon(Icons.arrow_forward_ios, size: 12, color: Color(0xFF385A2E)),
           ),
+        ],
+      ),
+    );
+  }
 
-          SizedBox(height: 24),
-
-          Text(
-            AppLocalizations.of(context)!.ourFocusAreas,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF315E26),
-            ),
-          ),
+  Widget _buildHelpfulServiceChip({
+    required IconData icon,
+    required Color iconColor,
+    required Color iconBg,
+    required String title,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E7E1)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
           Container(
-            height: 2,
-            width: 40,
-            margin: const EdgeInsets.only(top: 4, bottom: 16),
-            color: const Color(0xFFFFD22B),
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: iconBg,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: iconColor, size: 18),
           ),
-
-          _buildLearningModuleCard(
-            icon: Icons.menu_book_rounded,
-            iconBgColor: const Color(0xFFE8F5E9),
-            iconColor: const Color(0xFF315E26),
-            title: AppLocalizations.of(context)!.adolescentGirlsHealthAndNutrition,
-            subtitle: AppLocalizations.of(context)!.adolescentGirlsHealthAndNutritionDesc,
-            arrowBgColor: const Color(0xFFF1F8E9),
-            onTap: () => setState(() => _currentIndex = 2),
+          const SizedBox(width: 12),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: Colors.black87,
+              height: 1.2,
+            ),
           ),
-          const SizedBox(height: 14),
-          _buildLearningModuleCard(
-            icon: Icons.shield_outlined,
-            iconBgColor: const Color(0xFFFFF8E1),
-            iconColor: const Color(0xFFFFD22B),
-            title: AppLocalizations.of(context)!.preventionAndAwareness,
-            subtitle: AppLocalizations.of(context)!.preventionAndAwarenessDesc,
-            arrowBgColor: const Color(0xFFFFF8E1),
-            onTap: () => setState(() => _currentIndex = 2),
-          ),
-          const SizedBox(height: 14),
-          _buildLearningModuleCard(
-            icon: Icons.favorite_border_rounded,
-            iconBgColor: const Color(0xFFFFF8E1),
-            iconColor: const Color(0xFFFFD22B),
-            title: AppLocalizations.of(context)!.psychosocialSupportAndProtection,
-            subtitle: AppLocalizations.of(context)!.psychosocialSupportAndProtectionDesc,
-            arrowBgColor: const Color(0xFFFFF8E1),
-            onTap: () => setState(() => _currentIndex = 2),
-          ),
-          const SizedBox(height: 14),
-          _buildLearningModuleCard(
-            icon: Icons.female,
-            iconBgColor: const Color(0xFFE8F5E9),
-            iconColor: const Color(0xFF315E26),
-            title: AppLocalizations.of(context)!.reproductiveHealthAndCare,
-            subtitle: AppLocalizations.of(context)!.reproductiveHealthAndCareDesc,
-            arrowBgColor: const Color(0xFFF1F8E9),
-            onTap: () => setState(() => _currentIndex = 2),
-          ),
-          const SizedBox(height: 30),
+          const SizedBox(width: 12),
+          const Icon(Icons.arrow_forward_ios, size: 12, color: Colors.black54),
         ],
       ),
     );
@@ -384,7 +640,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
   }
 
   Widget _buildLearningModuleCard({
-    required IconData icon,
+    required IconData icon, // Kept for backwards compatibility but not used
     required Color iconBgColor,
     required Color iconColor,
     required String title,
@@ -395,73 +651,56 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Theme.of(context).dividerColor, width: 1),
+          border: Border.all(color: Colors.black.withOpacity(0.05), width: 1),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
+              color: Colors.black.withOpacity(0.03),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),
           ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: iconBgColor,
-                    borderRadius: BorderRadius.circular(12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2E4823), // Dark green title
+                      height: 1.3,
+                    ),
                   ),
-                  child: Icon(icon, color: iconColor, size: 22),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).textTheme.bodyLarge?.color,
-                          height: 1.3,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        subtitle,
-                        style: TextStyle(
-                          fontSize: 12.5,
-                          color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
-                          height: 1.4,
-                        ),
-                      ),
-                    ],
+                  const SizedBox(height: 8),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Colors.black54,
+                      height: 1.4,
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Align(
-              alignment: Alignment.bottomRight,
-              child: Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: arrowBgColor,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.arrow_forward_rounded, color: Color(0xFF315E26), size: 16),
+                ],
               ),
+            ),
+            const SizedBox(width: 16),
+            Container(
+              width: 40,
+              height: 40,
+              decoration: const BoxDecoration(
+                color: Color(0xFFE8F2E9), // Light green circular bg
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.arrow_forward_rounded, color: Color(0xFF385A2E), size: 20),
             ),
           ],
         ),

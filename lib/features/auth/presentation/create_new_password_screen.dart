@@ -143,7 +143,7 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
         backgroundColor: AppColors.primaryGreen,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: AppColors.accentYellow),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context), // Pops back to ForgotPasswordScreen securely
         ),
         title: Text(
@@ -162,9 +162,7 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
             ),
             const SizedBox(height: 10),
             Text(
-              widget.isMidwife 
-                  ? 'Create a strong new password for your CAGH Midwife account.'
-                  : 'Create a strong new password for your CAGH account.',
+              'Create a strong new password for your Digital Midwife account.',
               style: TextStyle(fontSize: 15, height: 1.4, color: Colors.grey.shade700),
             ),
             SizedBox(height: 36),
@@ -186,7 +184,8 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
             const SizedBox(height: 8),
             _buildRequirement('At least 8 characters', pass.length >= 8),
             _buildRequirement('One uppercase & lowercase letter', RegExp(r'[A-Z]').hasMatch(pass) && RegExp(r'[a-z]').hasMatch(pass)),
-            _buildRequirement('One number & special character', RegExp(r'[0-9]').hasMatch(pass) && RegExp(r'[!@#\$&*~]').hasMatch(pass)),
+            _buildRequirement('One number', RegExp(r'[0-9]').hasMatch(pass)),
+            _buildRequirement('One special character (e.g. !, @, #, \$, %)', RegExp(r'[!@#\$%^&*(),.?":{}|<>]').hasMatch(pass)),
 
             SizedBox(height: 24),
 

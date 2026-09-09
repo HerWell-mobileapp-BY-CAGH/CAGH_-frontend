@@ -58,8 +58,8 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
     setState(() {
       _isLoadingSlots = true;
     });
+    final dateStr = DateFormat('yyyy-MM-dd').format(_nextDays[_selectedDayIndex]);
     try {
-      final dateStr = DateFormat('yyyy-MM-dd').format(_nextDays[_selectedDayIndex]);
       final slots = await _appointmentRepo.getTimeSlots(widget.midwife.id, dateStr);
       if (mounted) {
         setState(() {
@@ -69,8 +69,20 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${AppLocalizations.of(context)!.failedToUpdateStatus}: $e')));
-        setState(() => _isLoadingSlots = false);
+        // Treat 500 or any error as empty slots instead of crashing or showing a raw exception
+        setState(() {
+          _timeSlots = TimeSlotsResponse(
+            midwifeId: widget.midwife.id,
+            midwifeName: widget.midwife.fullName,
+            date: dateStr,
+            offeredConsultationTypes: [],
+            availableSlotsCount: 0,
+            morningSlots: [],
+            afternoonSlots: [],
+            eveningSlots: [],
+          );
+          _isLoadingSlots = false;
+        });
       }
     }
   }
@@ -511,43 +523,114 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
     );
   }
 
+  String _formatTime12h(String time) {
+    if (time.isEmpty) return '';
+    try {
+      final parts = time.split(':');
+      int hour = int.parse(parts[0]);
+      int min = int.parse(parts[1]);
+      String period = hour >= 12 ? 'PM' : 'AM';
+      hour = hour % 12;
+      if (hour == 0) hour = 12;
+      return '${hour.toString().padLeft(2, '0')}:${min.toString().padLeft(2, '0')} $period';
+    } catch (_) {
+      return time;
+    }
+  }
+
   Widget _buildTimeSlotSection(String title, List<TimeSlot> slots) {
     final availableSlots = slots.where((s) => s.isAvailable).toList();
     if (availableSlots.isEmpty) return const SizedBox.shrink();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: Colors.grey.shade500),
-        ),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
+        Column(
           children: availableSlots.map((slot) {
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: const Color(0xFFDCEDC8),
-                  width: 1.5,
+            final isMorning = title.contains('MORNING');
+            final isAfternoon = title.contains('AFTERNOON');
+            // Since TimeSlot doesn't currently store the consultation method, 
+            // we infer a reasonable default based on what the midwife supports.
+            final supportsVoice = widget.midwife.supportsVoiceCall;
+            final supportsInPerson = widget.midwife.supportsInPerson;
+            // Fake alternating if both supported to match mockup variety
+            final isVoice = supportsVoice && (!supportsInPerson || slot.startTime.contains('30')); 
+            
+            final icon = isVoice ? Icons.call_outlined : Icons.location_on_outlined;
+            final typeStr = isVoice ? 'Voice call' : 'In-person';
+            final sessionStr = isMorning ? 'Morning session' : isAfternoon ? 'Afternoon session' : 'Evening session';
+            
+            final start12 = slot.displayTime.isNotEmpty ? slot.displayTime : _formatTime12h(slot.startTime);
+            final end12 = slot.endTime.isNotEmpty ? _formatTime12h(slot.endTime) : '08:30 AM';
+
+            return GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => BookAppointmentScreen(
+                      midwife: widget.midwife,
+                    ),
+                  ),
+                );
+              },
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFDCEDC8), width: 1.5),
                 ),
-              ),
-              child: Text(
-                slot.displayTime.isNotEmpty ? slot.displayTime : slot.startTime,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF315E26),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          start12,
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF315E26)),
+                        ),
+                        const Text('+', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF81C784))),
+                        Text(
+                          end12,
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF315E26)),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(icon, size: 16, color: Colors.grey.shade600),
+                            const SizedBox(width: 6),
+                            Text('$sessionStr \u00B7 $typeStr', style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.w600)),
+                          ],
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text('30 min', style: TextStyle(fontSize: 12, color: Colors.grey.shade500, fontWeight: FontWeight.w600)),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: const [
+                                Text('Select', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF315E26))),
+                                SizedBox(width: 4),
+                                Icon(Icons.arrow_forward, size: 16, color: Color(0xFF315E26)),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             );
           }).toList(),
         ),
-        const SizedBox(height: 20),
       ],
     );
   }

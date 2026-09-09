@@ -96,7 +96,7 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
           ),
         ),
         actions: [
-          const GlobeLanguagePicker(iconColor: AppColors.accentYellow),
+          const GlobeLanguagePicker(),
           IconButton(
             icon: const Icon(Icons.more_vert, color: Colors.white),
             onPressed: () {},
@@ -111,29 +111,48 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Search Input Bar
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).cardColor,
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: Theme.of(context).dividerColor),
-                  ),
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: (val) {
-                      setState(() => _searchQuery = val);
-                      if (_debounce?.isActive ?? false) _debounce!.cancel();
-                      _debounce = Timer(Duration(milliseconds: 500), () {
-                        _fetchMidwives();
-                      });
-                    },
-                    decoration: InputDecoration(
-                      icon: Icon(Icons.search, color: Colors.grey.shade600, size: 22),
-                      hintText: AppLocalizations.of(context)!.searchByNameOrSpecialty,
-                      hintStyle: TextStyle(color: Colors.grey.shade600, fontSize: 14),
-                      border: InputBorder.none,
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100, // Gray background
+                          borderRadius: BorderRadius.circular(14), // Rounded rectangle
+                        ),
+                        child: TextField(
+                          controller: _searchController,
+                          onChanged: (val) {
+                            setState(() => _searchQuery = val);
+                            if (_debounce?.isActive ?? false) _debounce!.cancel();
+                            _debounce = Timer(const Duration(milliseconds: 500), () {
+                              _fetchMidwives();
+                            });
+                          },
+                          decoration: InputDecoration(
+                            icon: Icon(Icons.search, color: Colors.grey.shade600, size: 22),
+                            hintText: AppLocalizations.of(context)!.searchByNameOrSpecialty,
+                            hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 14),
+                            border: InputBorder.none,
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 12),
+                    Container(
+                      height: 48,
+                      width: 48,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: AppColors.primaryGreen, width: 1.5),
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.filter_alt_outlined, color: AppColors.primaryGreen),
+                        onPressed: () {},
+                      ),
+                    ),
+                  ],
                 ),
 
                 const SizedBox(height: 20),
@@ -208,16 +227,22 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Text(
-                                        mw.fullName,
-                                        style: TextStyle(
-                                          fontSize: 16.5,
-                                          fontWeight: FontWeight.bold,
-                                          color: Theme.of(context).textTheme.bodyLarge?.color,
-                                        ),
+                                      Row(
+                                        children: [
+                                          Text(
+                                            mw.fullName,
+                                            style: TextStyle(
+                                              fontSize: 16.5,
+                                              fontWeight: FontWeight.bold,
+                                              color: Theme.of(context).textTheme.bodyLarge?.color,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 6),
+                                          const Icon(Icons.check_circle, color: Colors.green, size: 18),
+                                        ],
                                       ),
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                         decoration: BoxDecoration(
                                           color: AppColors.cream,
                                           borderRadius: BorderRadius.circular(12),
@@ -225,7 +250,7 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                                         child: Row(
                                           children: [
                                             const Icon(Icons.star, color: AppColors.accentYellow, size: 14),
-                                            const SizedBox(width: 3),
+                                            const SizedBox(width: 4),
                                             Text(
                                               mw.ratingAverage.toStringAsFixed(1),
                                               style: TextStyle(
@@ -248,48 +273,36 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
-                                  const SizedBox(height: 8),
-                                  Row(
-                                    children: [
-                                      Icon(Icons.chat_bubble_outline_rounded, size: 14, color: Colors.grey.shade600),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        '${mw.ratingCount} ratings',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey.shade600,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 14),
-                                      Icon(Icons.work_outline, size: 14, color: Colors.grey.shade600),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        '${mw.experienceYears} yrs',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey.shade600,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 8),
+                                  const SizedBox(height: 10),
                                   Row(
                                     children: [
                                       Container(
-                                        width: 8,
-                                        height: 8,
-                                        decoration: const BoxDecoration(
-                                          color: Colors.green,
-                                          shape: BoxShape.circle,
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFEBF3EA), // Light green
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Row(
+                                          children: const [
+                                            Icon(Icons.home_outlined, size: 14, color: Color(0xFF385A2E)),
+                                            SizedBox(width: 4),
+                                            Text('In-person', style: TextStyle(fontSize: 12, color: Color(0xFF385A2E), fontWeight: FontWeight.w600)),
+                                          ],
                                         ),
                                       ),
-                                      SizedBox(width: 6),
-                                      Text(
-                                        AppLocalizations.of(context)!.availableToday,
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.green.shade700,
+                                      const SizedBox(width: 8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFEBF3EA), // Light green
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Row(
+                                          children: const [
+                                            Icon(Icons.videocam_outlined, size: 14, color: Color(0xFF385A2E)),
+                                            SizedBox(width: 4),
+                                            Text('Voice call', style: TextStyle(fontSize: 12, color: Color(0xFF385A2E), fontWeight: FontWeight.w600)),
+                                          ],
                                         ),
                                       ),
                                     ],
@@ -308,7 +321,7 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                             Expanded(
                               child: SizedBox(
                                 height: 42,
-                                child: OutlinedButton(
+                                child: OutlinedButton.icon(
                                   onPressed: () {
                                     Navigator.push(
                                       context,
@@ -317,18 +330,19 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                                       ),
                                     );
                                   },
+                                  icon: const Icon(Icons.chat_bubble_outline_rounded, size: 16),
+                                  label: const Text(
+                                    'Request Chat',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                    ),
+                                  ),
                                   style: OutlinedButton.styleFrom(
                                     foregroundColor: AppColors.primaryGreen,
                                     side: const BorderSide(color: AppColors.primaryGreen, width: 1.5),
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(14),
-                                    ),
-                                  ),
-                                  child: Text(
-                                    AppLocalizations.of(context)!.message,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
+                                      borderRadius: BorderRadius.circular(12),
                                     ),
                                   ),
                                 ),
@@ -353,16 +367,23 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                                     backgroundColor: AppColors.primaryGreen,
                                     elevation: 0,
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(14),
+                                      borderRadius: BorderRadius.circular(12),
                                     ),
                                   ),
-                                  child: Text(
-                                    AppLocalizations.of(context)!.viewProfile,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        AppLocalizations.of(context)!.viewProfile,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      const Icon(Icons.chevron_right, color: Colors.white, size: 18),
+                                    ],
                                   ),
                                 ),
                               ),

@@ -17,9 +17,9 @@ class AppProfileAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Warm, premium dark amber/brown background matching design reference
-    final bgColor = const Color(0xFF382E25);
-    final iconColor = const Color(0xFFF5BE6B); // Warm golden amber icon
+    // White background matching request
+    final bgColor = Colors.white;
+    final iconColor = const Color(0xFF385A2E); // Green icon for contrast
 
     if (imageUrl != null && imageUrl!.trim().isNotEmpty) {
       return CircleAvatar(

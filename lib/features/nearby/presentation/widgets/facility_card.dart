@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../domain/entities/healthcare_facility.dart';
 import 'package:cagh_frontend/shared/constants/app_constants.dart';
 import '../screens/facility_details_screen.dart';
+import '../screens/midwife_detail_screen.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
 
@@ -39,12 +40,21 @@ class FacilityCard extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => FacilityDetailsScreen(facility: facility),
-            ),
-          );
+          if (facility.type == 'Midwife') {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => MidwifeDetailScreen(facility: facility),
+              ),
+            );
+          } else {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => FacilityDetailsScreen(facility: facility),
+              ),
+            );
+          }
         },
         borderRadius: BorderRadius.circular(16),
         child: Padding(
@@ -199,12 +209,21 @@ class FacilityCard extends StatelessWidget {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => FacilityDetailsScreen(facility: facility),
-                          ),
-                        );
+                        if (facility.type == 'Midwife') {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => MidwifeDetailScreen(facility: facility),
+                            ),
+                          );
+                        } else {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => FacilityDetailsScreen(facility: facility),
+                            ),
+                          );
+                        }
                       },
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.primaryGreen, side: const BorderSide(color: AppColors.primaryGreen),

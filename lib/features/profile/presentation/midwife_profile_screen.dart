@@ -106,7 +106,7 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
           },
         ) : null,
         title: Text(
-          fullName.isNotEmpty ? fullName : AppLocalizations.of(context)!.profile,
+          AppLocalizations.of(context)!.profile,
           style: const TextStyle(
             fontSize: 19,
             fontWeight: FontWeight.w700,
@@ -147,22 +147,22 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
                                   radius: 42,
                                 ),
                               ),
-                              Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  color: isVerified ? AppColors.accentPurpleStrong : Colors.orange,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(color: Colors.white, width: 2),
+                                Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: const Color(0xFFF0F0F0), width: 1),
+                                  ),
+                                  child: const Icon(
+                                    Icons.camera_alt_outlined,
+                                    size: 18,
+                                    color: Color(0xFF385A2E),
+                                  ),
                                 ),
-                                child: Icon(
-                                  isVerified ? Icons.verified : Icons.hourglass_top,
-                                  size: 14,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
                         const SizedBox(height: 12),
 
                         Text(
@@ -171,16 +171,6 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
                             color: Theme.of(context).textTheme.bodyLarge?.color,
-                          ),
-                        ),
-
-                        const SizedBox(height: 3),
-
-                        Text(
-                          title,
-                          style: TextStyle(
-                            fontSize: 13.5,
-                            color: Theme.of(context).textTheme.bodySmall?.color,
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -350,30 +340,7 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
 
                   const SizedBox(height: 24),
 
-                  // 3. Support & Info
-                  _buildSectionHeader(AppLocalizations.of(context)!.support),
-                  const SizedBox(height: 10),
-                  _buildGroupedCard([
-                    _buildListTile(
-                      icon: Icons.help_outline_rounded,
-                      title: AppLocalizations.of(context)!.helpSupport,
-                      onTap: () {},
-                    ),
-                    _buildDivider(),
-                    _buildListTile(
-                      icon: Icons.description_outlined,
-                      title: AppLocalizations.of(context)!.termsAndConditions,
-                      onTap: () {},
-                    ),
-                    _buildDivider(),
-                    _buildListTile(
-                      icon: Icons.policy_outlined,
-                      title: AppLocalizations.of(context)!.privacyPolicy,
-                      onTap: () {},
-                    ),
-                  ]),
 
-                  const SizedBox(height: 28),
 
                   // Logout Button
                   SizedBox(

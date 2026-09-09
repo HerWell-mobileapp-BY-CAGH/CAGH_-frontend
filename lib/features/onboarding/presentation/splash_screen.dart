@@ -6,6 +6,9 @@ import 'package:cagh_frontend/core/services/global_call_service.dart';
 import 'package:cagh_frontend/core/utils/app_logger.dart';
 import 'language_selection_screen.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
+import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
+import 'package:cagh_frontend/features/home/presentation/user/user_home_screen.dart';
+import 'package:cagh_frontend/features/home/presentation/midwife/midwife_home_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -28,7 +31,7 @@ class _SplashScreenState extends State<SplashScreen> {
     _timer = Timer(const Duration(milliseconds: 3600), _onTimerFired);
   }
 
-  void _onTimerFired() {
+  void _onTimerFired() async {
     if (!mounted) return;
 
     final isCallActiveOrPending = CallNavigationCoordinator.hasCallNavigationActiveOrPending;
@@ -40,11 +43,37 @@ class _SplashScreenState extends State<SplashScreen> {
       return;
     }
 
-    AppLogger.d('[SPLASH] Proceeding to main application destination (LanguageSelectionScreen)');
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const LanguageSelectionScreen()),
-    );
+    final isValid = await AuthService.isSessionValid();
+
+    if (!mounted) return;
+
+    if (isValid) {
+      AppLogger.d('[SPLASH] Valid session found. Checking user role.');
+      final userData = await AuthService.getUserData();
+      final role = (userData['role'] ?? '').toString().toUpperCase();
+      
+      if (role == 'MIDWIFE') {
+        AuthService.setMockRole('MIDWIFE');
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const MidwifeHomeScreen()),
+        );
+      } else {
+        AuthService.setMockRole('PATIENT');
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const UserHomeScreen()),
+        );
+      }
+    } else {
+      AppLogger.d('[SPLASH] No valid session or expired. Proceeding to LanguageSelectionScreen.');
+      await AuthService.logout();
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LanguageSelectionScreen()),
+      );
+    }
   }
 
   @override
@@ -53,10 +82,9 @@ class _SplashScreenState extends State<SplashScreen> {
     super.dispose();
   }
 
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // white background
+      backgroundColor: const Color(0xFFF4F7F5), // off-white/light-green background
       body: SafeArea(
         child: Column(
           children: [
@@ -64,16 +92,18 @@ class _SplashScreenState extends State<SplashScreen> {
 
             // Logo circle
             Container(
-              width: 140,
-              height: 140,
+              width: 180,
+              height: 180,
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: Colors.white,
                 shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 8),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.04),
-                    blurRadius: 20,
-                    offset: const Offset(0, 4),
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 15,
+                    offset: const Offset(0, 5),
                   ),
                 ],
               ),
@@ -81,8 +111,8 @@ class _SplashScreenState extends State<SplashScreen> {
                 child: ClipOval(
                   child: Image.asset(
                     'assets/images/logo.png',
-                    width: 120,
-                    height: 120,
+                    width: 140,
+                    height: 140,
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -95,9 +125,9 @@ class _SplashScreenState extends State<SplashScreen> {
             Text(
               AppLocalizations.of(context)!.appTitle.toUpperCase(),
               style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 1.5,
+                fontSize: 28,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.0,
                 color: AppColors.primaryGreen,
               ),
             ),
@@ -110,16 +140,16 @@ class _SplashScreenState extends State<SplashScreen> {
               children: [
                 Icon(
                   Icons.shield_outlined,
-                  size: 16,
-                  color: Colors.green.shade700,
+                  size: 18,
+                  color: AppColors.primaryGreen,
                 ),
-                SizedBox(width: 6),
+                SizedBox(width: 8),
                 Text(
                   AppLocalizations.of(context)!.secureConnection,
                   style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.green.shade700,
-                    fontWeight: FontWeight.w500,
+                    fontSize: 14,
+                    color: AppColors.primaryGreen,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],

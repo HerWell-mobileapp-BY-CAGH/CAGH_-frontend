@@ -152,10 +152,12 @@ class _MidwifePersonalInformationScreenState extends State<MidwifePersonalInform
                         Expanded(
                           child: TextField(
                             controller: firstNameController,
+                            readOnly: true,
                             decoration: InputDecoration(
                               labelText: AppLocalizations.of(context)!.firstName,
                               filled: true,
-                              fillColor: Colors.grey.shade100,
+                              fillColor: Colors.grey.shade200,
+                              suffixIcon: const Icon(Icons.lock_outline, size: 16, color: Colors.grey),
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                             ),
                           ),
@@ -164,10 +166,12 @@ class _MidwifePersonalInformationScreenState extends State<MidwifePersonalInform
                         Expanded(
                           child: TextField(
                             controller: lastNameController,
+                            readOnly: true,
                             decoration: InputDecoration(
                               labelText: AppLocalizations.of(context)!.lastName,
                               filled: true,
-                              fillColor: Colors.grey.shade100,
+                              fillColor: Colors.grey.shade200,
+                              suffixIcon: const Icon(Icons.lock_outline, size: 16, color: Colors.grey),
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                             ),
                           ),
@@ -179,10 +183,12 @@ class _MidwifePersonalInformationScreenState extends State<MidwifePersonalInform
                     // Title
                     TextField(
                       controller: titleController,
+                      readOnly: true,
                       decoration: InputDecoration(
                         labelText: AppLocalizations.of(context)!.professionalTitle,
                         filled: true,
-                        fillColor: Colors.grey.shade100,
+                        fillColor: Colors.grey.shade200,
+                        suffixIcon: const Icon(Icons.lock_outline, size: 16, color: Colors.grey),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                       ),
                     ),
@@ -191,11 +197,13 @@ class _MidwifePersonalInformationScreenState extends State<MidwifePersonalInform
                     // Experience
                     TextField(
                       controller: experienceController,
+                      readOnly: true,
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
                         labelText: AppLocalizations.of(context)!.yearsOfExperience,
                         filled: true,
-                        fillColor: Colors.grey.shade100,
+                        fillColor: Colors.grey.shade200,
+                        suffixIcon: const Icon(Icons.lock_outline, size: 16, color: Colors.grey),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                       ),
                     ),

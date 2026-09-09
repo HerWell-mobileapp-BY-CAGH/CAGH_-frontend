@@ -12,6 +12,8 @@ import 'package:cagh_frontend/features/consultations/presentation/midwife/midwif
 import 'package:cagh_frontend/features/consultations/presentation/midwife/midwife_inbox_screen.dart';
 import 'package:cagh_frontend/features/scheduling/presentation/screens/midwife_schedule_screen.dart';
 import 'package:cagh_frontend/features/scheduling/presentation/screens/midwife_manage_schedule_screen.dart';
+import 'package:cagh_frontend/features/consultations/data/repositories/midwife_repository_impl.dart';
+import 'package:cagh_frontend/features/consultations/data/services/midwife_api_service.dart';
 import 'package:cagh_frontend/shared/widgets/floating_glass_nav_bar.dart';
 import 'package:cagh_frontend/features/notifications/presentation/widgets/notification_bell.dart';
 import 'package:cagh_frontend/core/services/language_service.dart';
@@ -49,21 +51,53 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
   Future<void> _fetchProfile() async {
     try {
       final localData = await AuthService.getUserData();
-      if (localData['full_name'] != null && localData['full_name'].toString().isNotEmpty && mounted) {
+      
+      String resolvedName = '';
+      
+      void extractName(Map<String, dynamic> data) {
+        final u = data['user'] is Map ? data['user'] : data;
+        final p = u['profile'] is Map ? u['profile'] : (data['profile'] is Map ? data['profile'] : {});
+        
+        final fName = p['first_name']?.toString() ?? u['first_name']?.toString() ?? data['first_name']?.toString() ?? '';
+        final lName = p['last_name']?.toString() ?? u['last_name']?.toString() ?? data['last_name']?.toString() ?? '';
+        final full = p['full_name']?.toString() ?? u['full_name']?.toString() ?? data['full_name']?.toString() ?? '';
+        
+        if (full.isNotEmpty) {
+          resolvedName = full;
+        } else if (fName.isNotEmpty) {
+          resolvedName = '$fName $lName'.trim();
+        }
+        
+        if (resolvedName.isEmpty) {
+          resolvedName = p['email']?.toString() ?? u['email']?.toString() ?? data['email']?.toString() ?? '';
+        }
+      }
+      
+      extractName(localData);
+      
+      if (resolvedName.isNotEmpty && mounted) {
         setState(() {
-          midwifeName = localData['full_name'].toString();
+          midwifeName = resolvedName;
         });
       }
 
       final response = await AuthService.getProfile();
       if (response.success && response.data != null && mounted) {
-        final profileData = response.data!;
-        final fullName = profileData['full_name'] ?? profileData['email'] ?? '';
-        if (fullName.toString().isNotEmpty) {
+        extractName(response.data!);
+        if (resolvedName.isNotEmpty) {
           setState(() {
-            midwifeName = fullName.toString();
+            midwifeName = resolvedName;
           });
         }
+      }
+      
+      // Final reliable fallback using Midwife specific profile
+      final midwifeRepo = MidwifeRepositoryImpl(MidwifeApiService());
+      final midwifeProfile = await midwifeRepo.getMyProfile();
+      if (midwifeProfile != null && midwifeProfile.fullName.isNotEmpty && mounted) {
+        setState(() {
+          midwifeName = midwifeProfile.fullName;
+        });
       }
     } catch (_) {}
 
@@ -124,7 +158,7 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
           ),
         ),
         actions: [
-          const GlobeLanguagePicker(iconColor: Color(0xFFFFD22B), iconSize: 24),
+          const GlobeLanguagePicker(iconSize: 24),
           NotificationBell(iconColor: Theme.of(context).appBarTheme.foregroundColor),
           const SizedBox(width: 8),
         ],
@@ -202,17 +236,17 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
                           const SizedBox(height: 6),
                           Text(
                             upcomingApts.isEmpty
-                                ? AppLocalizations.of(context)!.patientBookingsWillAppearHere
+                                ? 'Bookings from adolescent girls\nwill appear here.'
                                 : AppLocalizations.of(context)!.patientConsultationBookingsPending(upcomingApts.length),
                             style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.87),
-                              fontSize: 13,
+                              color: Colors.white.withOpacity(0.87),
+                              fontSize: 14,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const Icon(Icons.medical_services_outlined, color: Colors.white, size: 48),
+                    const Icon(Icons.volunteer_activism_outlined, color: Colors.white, size: 48),
                   ],
                 ),
               ),
@@ -245,19 +279,24 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
                       MaterialPageRoute(builder: (_) => const MidwifeManageScheduleScreen()),
                     );
                   },
-                  icon: Icon(Icons.edit_calendar, color: Color(0xFF315E26)),
-                  label: Text(
-                    AppLocalizations.of(context)!.manageAvailability,
+                  icon: const Icon(Icons.calendar_month, color: Color(0xFF315E26)),
+                  label: const Text(
+                    'Manage Availability',
                     style: TextStyle(color: Color(0xFF315E26), fontWeight: FontWeight.bold),
                   ),
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                     side: const BorderSide(color: Color(0xFF315E26)),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
+              const Text(
+                'Set the days and times when girls can book\na consultation with you.',
+                style: TextStyle(color: Colors.black54, fontSize: 13, height: 1.4),
+              ),
+              const SizedBox(height: 24),
 
               if (snapshot.connectionState == ConnectionState.waiting)
                 const Center(child: CircularProgressIndicator(color: Color(0xFF315E26)))
@@ -272,17 +311,17 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
                   ),
                   child: Column(
                     children: [
-                      Icon(Icons.calendar_month_outlined, size: 42, color: Theme.of(context).iconTheme.color?.withOpacity(0.4)),
-                      SizedBox(height: 10),
+                      Icon(Icons.calendar_today, size: 42, color: Theme.of(context).iconTheme.color?.withOpacity(0.5)),
+                      const SizedBox(height: 16),
                       Text(
-                        AppLocalizations.of(context)!.noAppointments,
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Theme.of(context).textTheme.bodyLarge?.color),
+                        'No appointments today',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).textTheme.bodyLarge?.color),
                       ),
-                      SizedBox(height: 4),
+                      const SizedBox(height: 8),
                       Text(
-                        AppLocalizations.of(context)!.noAppointmentsSub,
+                        'When an adolescent girl books a consultation\nwith you, it will appear here.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color, fontSize: 12.5),
+                        style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color, fontSize: 13, height: 1.4),
                       ),
                     ],
                   ),
@@ -514,6 +553,9 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
       selectedIndex: selectedIndex,
       items: items,
       onTabSelected: (index) {
+        if (index == 0) {
+          _fetchProfile();
+        }
         setState(() {
           selectedIndex = index;
         });

@@ -229,7 +229,23 @@ class AppointmentApiService {
     if (response.statusCode == 201 || response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
-      throw Exception('Failed to set availability. Status: ${response.statusCode}');
+      throw Exception('Failed to set availability. Status: ${response.statusCode}, Body: ${response.body}');
+    }
+  }
+
+  Future<Map<String, dynamic>> updateAvailability(String availabilityId, Map<String, dynamic> data) async {
+    final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.availabilities}$availabilityId/');
+    
+    final response = await http.patch(
+      url,
+      headers: await _getHeaders(),
+      body: jsonEncode(data),
+    ).timeout(AppDurations.apiRequestTimeout);
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to update availability. Status: ${response.statusCode}, Body: ${response.body}');
     }
   }
 

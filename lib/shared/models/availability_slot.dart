@@ -8,6 +8,8 @@ class AvailabilitySlot {
   final int? durationMinutes;
   final String status; // e.g. "AVAILABLE", "BOOKED"
   final bool isActive;
+  final bool isInPerson;
+  final bool isVoiceCall;
 
   AvailabilitySlot({
     required this.availabilityId,
@@ -19,12 +21,18 @@ class AvailabilitySlot {
     this.durationMinutes,
     required this.status,
     this.isActive = true,
+    this.isInPerson = true,
+    this.isVoiceCall = false,
   });
 
   factory AvailabilitySlot.fromJson(Map<String, dynamic> json) {
     final dayOfWeekVal = json['day_of_week']?.toString();
-    final dateVal = json['date']?.toString();
-    final dateOrDayVal = json['date_or_day']?.toString() ?? dayOfWeekVal ?? dateVal ?? json['day']?.toString() ?? '';
+    var dateVal = json['date']?.toString();
+    if (dateVal != null && dateVal.length > 10) {
+      dateVal = dateVal.substring(0, 10);
+    }
+    // Prioritize specific date over day of week
+    final dateOrDayVal = json['date_or_day']?.toString() ?? dateVal ?? dayOfWeekVal ?? json['day']?.toString() ?? '';
 
     final isActiveBool = json['is_active'] ?? true;
     final statusStr = json['status'] ?? (isActiveBool ? 'AVAILABLE' : 'UNAVAILABLE');
@@ -39,6 +47,8 @@ class AvailabilitySlot {
       durationMinutes: json['duration_minutes'] ?? json['duration'],
       status: statusStr,
       isActive: isActiveBool,
+      isInPerson: json['is_in_person'] ?? json['in_person'] ?? json['isInPerson'] ?? json['inPerson'] ?? true,
+      isVoiceCall: json['is_voice_call'] ?? json['voice_call'] ?? json['isVoiceCall'] ?? json['voiceCall'] ?? false,
     );
   }
 
@@ -52,10 +62,10 @@ class AvailabilitySlot {
       String period = hour >= 12 ? 'PM' : 'AM';
       int displayHour = hour % 12;
       if (displayHour == 0) displayHour = 12;
-      return '${displayHour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')} $period';
+      return '${displayHour}:${minute.toString().padLeft(2, '0')} $period';
     }
 
-    return '${formatTime(startTime)} - ${formatTime(endTime)}';
+    return '${formatTime(startTime)}–${formatTime(endTime)}';
   }
 
   String get dayDisplayName {
@@ -79,6 +89,8 @@ class AvailabilitySlot {
       'duration_minutes': durationMinutes,
       'status': status,
       'is_active': isActive,
+      'is_in_person': isInPerson,
+      'is_voice_call': isVoiceCall,
     };
   }
 }

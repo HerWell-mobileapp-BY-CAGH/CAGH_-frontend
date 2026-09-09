@@ -24,7 +24,6 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
 
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
-  bool _agreeTerms = false;
   bool _isLoading = false;
 
   String? _firstNameError;
@@ -33,6 +32,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
   String? _emailError;
   String? _passwordError;
   String? _confirmPasswordError;
+  String? _dobError;
 
   @override
   void dispose() {
@@ -50,7 +50,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
     final nameRegExp = RegExp(r'^[a-zA-Z\s]+$');
     setState(() {
       if (value.trim().isEmpty) {
-        _firstNameError = AppLocalizations.of(context)!.valNameReq;
+        _firstNameError = 'First name is required';
       } else if (!nameRegExp.hasMatch(value.trim())) {
         _firstNameError = 'Cannot contain numbers or special characters';
       } else {
@@ -63,7 +63,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
     final nameRegExp = RegExp(r'^[a-zA-Z\s]+$');
     setState(() {
       if (value.trim().isEmpty) {
-        _lastNameError = AppLocalizations.of(context)!.valNameReq;
+        _lastNameError = 'Last name is required';
       } else if (!nameRegExp.hasMatch(value.trim())) {
         _lastNameError = 'Cannot contain numbers or special characters';
       } else {
@@ -105,6 +105,8 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
     setState(() {
       if (value.isEmpty) {
         _passwordError = AppLocalizations.of(context)!.valPasswordReq;
+      } else if (value.length < 8) {
+        _passwordError = 'Password must be at least 8 characters';
       } else {
         _passwordError = null;
       }
@@ -126,40 +128,25 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: AppColors.primaryGreen,
+        elevation: 0,
+        leading: IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+        ),
+        title: const Text(
+          'Digital Midwife',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        centerTitle: true,
+      ),
       body: Column(
         children: [
-          // Green Header Bar
-          Container(
-            width: double.infinity,
-            color: AppColors.primaryGreen,
-            child: SafeArea(
-              bottom: false,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-                child: Row(
-                  children: [
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: Icon(Icons.arrow_back, color: AppColors.accentYellow),
-                    ),
-                    Expanded(
-                      child: Text(
-                        AppLocalizations.of(context)!.appTitle,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 48),
-                  ],
-                ),
-              ),
-            ),
-          ),
-
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
@@ -308,6 +295,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                     hint: 'Select your date of birth',
                     prefixIcon: Icons.calendar_today_outlined,
                     readOnly: true,
+                    errorText: _dobError,
                     onTap: () async {
                       final date = await showDatePicker(
                         context: context,
@@ -319,6 +307,9 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                         if (!mounted) return;
                         _dobController.text =
                             "${date.day}/${date.month}/${date.year}";
+                        setState(() {
+                          _dobError = null;
+                        });
                       }
                     },
                   ),
@@ -373,36 +364,6 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 20),
-
-                  // Terms Checkbox
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: Checkbox(
-                          value: _agreeTerms,
-                          activeColor: AppColors.primaryGreen,
-                          onChanged: (value) {
-                            setState(() => _agreeTerms = value ?? false);
-                          },
-                        ),
-                      ),
-                      SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          AppLocalizations.of(context)!.agreeTerms,
-                          style: TextStyle(
-                            fontSize: 13.5,
-                            color: Colors.grey.shade700,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-
                   const SizedBox(height: 28),
 
                   // Register Button
@@ -410,7 +371,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                     width: double.infinity,
                     height: 54,
                     child: ElevatedButton(
-                      onPressed: (_agreeTerms && !_isLoading)
+                      onPressed: !_isLoading
                           ? () async {
                               final firstName = _firstNameController.text.trim();
                               final lastName = _lastNameController.text.trim();
@@ -418,17 +379,34 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                               final phone = _phoneController.text.trim();
                               final password = _passwordController.text;
                               final confirmPassword = _confirmPasswordController.text;
+                              final dob = _dobController.text;
 
                               setState(() {
-                                _firstNameError = firstName.isEmpty ? AppLocalizations.of(context)!.valNameReq : null;
-                                _lastNameError = lastName.isEmpty ? AppLocalizations.of(context)!.valNameReq : null;
+                                _firstNameError = firstName.isEmpty ? 'First name is required' : null;
+                                _lastNameError = lastName.isEmpty ? 'Last name is required' : null;
                                 _emailError = email.isEmpty ? AppLocalizations.of(context)!.valEmailReq : null;
-                                _passwordError = password.isEmpty ? AppLocalizations.of(context)!.valPasswordReq : null;
-                                _confirmPasswordError = confirmPassword.isEmpty ? AppLocalizations.of(context)!.valPasswordConfirmReq : null;
+                                _dobError = dob.isEmpty ? 'Date of birth is required' : null;
+                                
+                                if (password.isEmpty) {
+                                  _passwordError = AppLocalizations.of(context)!.valPasswordReq;
+                                } else if (password.length < 8) {
+                                  _passwordError = 'Password must be at least 8 characters';
+                                } else {
+                                  _passwordError = null;
+                                }
+
+                                if (confirmPassword.isEmpty) {
+                                  _confirmPasswordError = AppLocalizations.of(context)!.valPasswordConfirmReq;
+                                } else if (password != confirmPassword) {
+                                  _confirmPasswordError = 'Passwords do not match';
+                                } else {
+                                  _confirmPasswordError = null;
+                                }
+
                                 _phoneError = null;
                               });
 
-                              if (_firstNameError != null || _lastNameError != null || _emailError != null || _passwordError != null || _confirmPasswordError != null) {
+                              if (_firstNameError != null || _lastNameError != null || _emailError != null || _passwordError != null || _confirmPasswordError != null || _dobError != null) {
                                 return;
                               }
 
@@ -537,14 +515,15 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
 
                   // Already have account
                   Center(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    child: Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         Text(
                           AppLocalizations.of(context)!.alreadyHaveAccount,
                           style: TextStyle(color: Colors.grey.shade700),
                         ),
-                        SizedBox(width: 4),
+                        const SizedBox(width: 4),
                         GestureDetector(
                           onTap: () => Navigator.pop(context),
                           child: Text(
@@ -621,7 +600,36 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: AppColors.primaryGreen, width: 1.5),
         ),
-        errorText: errorText,
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.red, width: 1.0),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.red, width: 1.5),
+        ),
+        error: errorText != null
+            ? Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(top: 1.0),
+                    child: Icon(Icons.error, color: Colors.red, size: 14),
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      errorText,
+                      style: const TextStyle(
+                        color: Colors.red,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            : null,
       ),
     );
   }

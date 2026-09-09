@@ -39,8 +39,28 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
 
     setState(() {
       _apiError = null;
-      _emailError = identifier.isEmpty ? AppLocalizations.of(context)!.valEmailPhoneReq : null;
-      _passwordError = password.isEmpty ? AppLocalizations.of(context)!.valPasswordReq : null;
+      
+      if (identifier.isEmpty) {
+        _emailError = AppLocalizations.of(context)!.valEmailPhoneReq;
+      } else {
+        final emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+        final cleanPhone = identifier.replaceAll(RegExp(r'\s+'), '');
+        final ethPhoneRegExp = RegExp(r'^(?:\+251|0)?[97]\d{8}$');
+        
+        if (!emailRegExp.hasMatch(identifier) && !ethPhoneRegExp.hasMatch(cleanPhone)) {
+          _emailError = 'Please enter a valid email or phone number';
+        } else {
+          _emailError = null;
+        }
+      }
+      
+      if (password.isEmpty) {
+        _passwordError = AppLocalizations.of(context)!.valPasswordReq;
+      } else if (password.length < 8) {
+        _passwordError = 'Password must be at least 8 characters';
+      } else {
+        _passwordError = null;
+      }
     });
 
     if (_emailError != null || _passwordError != null) return;
@@ -79,9 +99,10 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark ? Theme.of(context).scaffoldBackgroundColor : Colors.white;
+    final bgColor = isDark ? Theme.of(context).scaffoldBackgroundColor : const Color(0xFFF6F8F5);
     final cardColor = isDark ? Theme.of(context).cardColor : Colors.white;
-    final textColor = isDark ? Colors.white : AppColors.textDark;
+    final textColor = isDark ? Colors.white : const Color(0xFF1C1C1E);
+    final primaryDarkGreen = const Color(0xFF385A2E);
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -91,9 +112,10 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           child: Column(
             children: [
+              const SizedBox(height: 16),
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
@@ -102,45 +124,57 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
                   boxShadow: [
                     if (!isDark)
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 20,
-                        offset: const Offset(0, 8),
+                        color: Colors.black.withOpacity(0.04),
+                        blurRadius: 15,
+                        offset: const Offset(0, 4),
                       ),
                   ],
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Center(
-                      child: Container(
-                        width: 80,
-                        height: 80,
-                        margin: const EdgeInsets.only(bottom: 16),
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: ClipOval(
-                            child: Image.asset(
-                              'assets/images/logo.png',
-                              width: 60,
-                              height: 60,
-                              fit: BoxFit.cover,
+                    // Circular Logo Container with Shadow
+                    Container(
+                      width: 64,
+                      height: 64,
+                      margin: const EdgeInsets.only(bottom: 24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          if (!isDark)
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.06),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
                             ),
+                        ],
+                      ),
+                      child: Center(
+                        child: ClipOval(
+                          child: Image.asset(
+                            'assets/images/logo.png',
+                            width: 44,
+                            height: 44,
+                            fit: BoxFit.contain,
+                            errorBuilder: (_, __, ___) {
+                              return Icon(Icons.spa, color: primaryDarkGreen, size: 28);
+                            },
                           ),
                         ),
                       ),
                     ),
                     Text(
                       AppLocalizations.of(context)!.welcomeBack,
+                      textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
                         color: textColor,
+                        letterSpacing: -0.5,
                       ),
                     ),
-                    SizedBox(height: 28),
+                    const SizedBox(height: 32),
 
                     AppTextField(
                       controller: _emailController,
@@ -148,8 +182,12 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
                       hintText: AppLocalizations.of(context)!.enterContactDetails,
                       keyboardType: TextInputType.emailAddress,
                       errorText: _emailError,
+                      prefixIcon: const Icon(Icons.mail_outline),
+                      onChanged: (val) {
+                        if (_emailError != null) setState(() => _emailError = null);
+                      },
                     ),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
 
                     AppTextField(
                       controller: _passwordController,
@@ -157,6 +195,10 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
                       hintText: AppLocalizations.of(context)!.enterPassword,
                       isPassword: true,
                       errorText: _passwordError,
+                      prefixIcon: const Icon(Icons.lock_outline),
+                      onChanged: (val) {
+                        if (_passwordError != null) setState(() => _passwordError = null);
+                      },
                     ),
                     const SizedBox(height: 8),
 
@@ -167,23 +209,31 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => ForgotPasswordScreen(isMidwife: false),
+                              builder: (_) => const ForgotPasswordScreen(isMidwife: false),
                             ),
                           );
                         },
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
                         child: Text(
                           AppLocalizations.of(context)!.forgotPassword,
                           style: TextStyle(
-                            color: Theme.of(context).primaryColor,
-                            fontWeight: FontWeight.w500,
+                            color: primaryDarkGreen,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
                           ),
                         ),
                       ),
                     ),
+                    const SizedBox(height: 24),
+                    
                     if (_apiError != null)
                       Container(
                         width: double.infinity,
-                        margin: const EdgeInsets.only(top: 4, bottom: 16),
+                        margin: const EdgeInsets.only(bottom: 16),
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: Colors.red.shade50,
@@ -206,25 +256,49 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
                             ),
                           ],
                         ),
-                      )
-                    else
-                      SizedBox(height: 16),
+                      ),
 
-                    PrimaryButton(
-                      text: AppLocalizations.of(context)!.login,
-                      isLoading: _isLoading,
-                      onPressed: _handleLogin,
+                    SizedBox(
+                      width: double.infinity,
+                      height: 54,
+                      child: ElevatedButton(
+                        onPressed: _handleLogin,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryDarkGreen,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                        ),
+                        child: _isLoading 
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                              )
+                            : Text(
+                                AppLocalizations.of(context)!.login,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                      ),
                     ),
                   ],
                 ),
               ),
-              SizedBox(height: 24),
+              const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
                     AppLocalizations.of(context)!.dontHaveAccount,
-                    style: TextStyle(color: isDark ? Colors.grey.shade400 : Colors.grey.shade800),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: isDark ? Colors.white70 : const Color(0xFF1C1C1E),
+                    ),
                   ),
                   const SizedBox(width: 4),
                   GestureDetector(
@@ -232,14 +306,15 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => UserRegistrationScreen(),
+                          builder: (context) => const UserRegistrationScreen(),
                         ),
                       );
                     },
                     child: Text(
                       AppLocalizations.of(context)!.register,
                       style: TextStyle(
-                        color: Theme.of(context).primaryColor,
+                        fontSize: 13,
+                        color: primaryDarkGreen,
                         fontWeight: FontWeight.w700,
                       ),
                     ),

@@ -20,6 +20,7 @@ class AuthService {
   static const String _accessTokenKey = 'auth_token';
   static const String _refreshTokenKey = 'refresh_token';
   static const String _userDataKey = 'user_data';
+  static const String _lastActiveKey = 'last_active_timestamp';
   static String _lastRole = 'PATIENT';
 
   /// Set the active role for prototyping ('PATIENT' or 'MIDWIFE')
@@ -102,6 +103,7 @@ class AuthService {
             ? body['user'] as Map<String, dynamic>
             : userObj;
         await prefs.setString(_userDataKey, jsonEncode(finalUserObj));
+        await prefs.setString(_lastActiveKey, DateTime.now().toIso8601String());
 
         try {
           await GlobalCallService.initUserCallListener(force: true);
@@ -159,6 +161,7 @@ class AuthService {
     await prefs.remove(_accessTokenKey);
     await prefs.remove(_refreshTokenKey);
     await prefs.remove(_userDataKey);
+    await prefs.remove(_lastActiveKey);
 
     final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.register}');
     try {
@@ -186,12 +189,14 @@ class AuthService {
       if (response.statusCode == 201 || response.statusCode == 200) {
         final userObj = (body['user'] is Map) ? body['user'] : registeredUser;
         await prefs.setString(_userDataKey, jsonEncode(userObj));
+        await prefs.setString(_lastActiveKey, DateTime.now().toIso8601String());
         return ApiResponse(
           success: true,
           message: body['message'] ?? 'Registration successful',
           data: body,
         );
       } else {
+        print('Registration Failed. Raw backend response: $body');
         return ApiResponse(
           success: false,
           message: _extractErrorMessage(body),
@@ -252,6 +257,7 @@ class AuthService {
           if (body['refresh'] != null) {
             await prefs.setString(_refreshTokenKey, body['refresh']);
           }
+          await prefs.setString(_lastActiveKey, DateTime.now().toIso8601String());
         }
         return ApiResponse(
           success: true,
@@ -416,6 +422,7 @@ class AuthService {
         if (body['refresh'] != null) {
           await prefs.setString(_refreshTokenKey, body['refresh']);
         }
+        await prefs.setString(_lastActiveKey, DateTime.now().toIso8601String());
         return ApiResponse(
           success: true,
           message: body['message'] ?? 'OTP Login successful',
@@ -728,6 +735,36 @@ class AuthService {
     return prefs.getString(_accessTokenKey);
   }
 
+  static Future<bool> isSessionValid() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString(_accessTokenKey) ?? prefs.getString('access_token') ?? prefs.getString('access');
+    
+    if (token == null || token.trim().isEmpty) return false;
+
+    final lastActiveStr = prefs.getString(_lastActiveKey);
+    if (lastActiveStr != null && lastActiveStr.isNotEmpty) {
+      try {
+        final lastActive = DateTime.parse(lastActiveStr);
+        final difference = DateTime.now().difference(lastActive);
+        if (difference.inDays < 7) {
+          // Extend session window
+          await prefs.setString(_lastActiveKey, DateTime.now().toIso8601String());
+          return true;
+        } else {
+          AppLogger.d('[AUTH] Session expired due to 7 days of inactivity.');
+          return false;
+        }
+      } catch (e) {
+        AppLogger.d('[AUTH] Error parsing last active timestamp: $e');
+        return false;
+      }
+    } else {
+      // If we have a token but no timestamp, we migrate them to valid and set the timestamp.
+      await prefs.setString(_lastActiveKey, DateTime.now().toIso8601String());
+      return true;
+    }
+  }
+
   static Future<bool> forceTokenRefresh() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -745,6 +782,7 @@ class AuthService {
           final newAccess = (data['access'] ?? data['access_token'] ?? '').toString().trim();
           if (newAccess.isNotEmpty) {
             await prefs.setString(_accessTokenKey, newAccess);
+            await prefs.setString(_lastActiveKey, DateTime.now().toIso8601String());
             AppLogger.d('[AUTH] JWT token refresh successful');
             return true;
           }
@@ -795,6 +833,7 @@ class AuthService {
     await prefs.remove(_accessTokenKey);
     await prefs.remove(_refreshTokenKey);
     await prefs.remove(_userDataKey);
+    await prefs.remove(_lastActiveKey);
   }
 
   // ---------------------------------------------------------------------------
@@ -842,12 +881,18 @@ class AuthService {
       if (lowerMsg.contains('access denied') || lowerMsg.contains('registered as') || lowerMsg.contains('role_mismatch') || lowerMsg.contains('cannot log in')) {
         return msg;
       }
-      if (lowerMsg.contains('unauthorized') || lowerMsg.contains('invalid credentials') || lowerMsg.contains('no active account')) {
+      if (lowerMsg.contains('no active account')) {
+        return 'Your account is not active. Please verify your account or contact support.';
+      }
+      if (lowerMsg.contains('unauthorized') || lowerMsg.contains('invalid credentials')) {
         return 'Your email or password is incorrect. Please try again.';
       }
       if (msg.isNotEmpty) return msg;
     } else if (body is String && body.isNotEmpty) {
       final lowerBody = body.toLowerCase();
+      if (lowerBody.contains('no active account')) {
+        return 'Your account is not active. Please verify your account or contact support.';
+      }
       if (lowerBody.contains('unauthorized') || lowerBody.contains('invalid credentials')) {
         return 'Your email or password is incorrect. Please try again.';
       }

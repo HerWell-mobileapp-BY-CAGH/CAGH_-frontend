@@ -114,7 +114,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
           },
         ),
         title: Text(
-          fullName.isNotEmpty ? fullName : AppLocalizations.of(context)!.profile,
+          AppLocalizations.of(context)!.profile,
           style: const TextStyle(
             fontSize: 19,
             fontWeight: FontWeight.w700,
@@ -280,12 +280,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                         }
                       },
                     ),
-                    _buildDivider(),
-                    _buildListTile(
-                      icon: Icons.bookmark_outline_rounded,
-                      title: AppLocalizations.of(context)!.savedMidwives,
-                      onTap: () {},
-                    ),
+
                   ]),
 
                   const SizedBox(height: 24),
@@ -365,28 +360,12 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                       title: AppLocalizations.of(context)!.privacySecurity,
                       onTap: () {},
                     ),
-                    _buildDivider(),
-                    _buildListTile(
-                      icon: Icons.contact_phone_outlined,
-                      title: AppLocalizations.of(context)!.emergencyContactsList,
-                      onTap: () {},
-                    ),
+
                   ]),
 
                   const SizedBox(height: 24),
 
-                  // 3. Support
-                  _buildSectionHeader(AppLocalizations.of(context)!.support),
-                  const SizedBox(height: 10),
-                  _buildGroupedCard([
-                    _buildListTile(
-                      icon: Icons.help_outline_rounded,
-                      title: AppLocalizations.of(context)!.helpSupport,
-                      onTap: () {},
-                    ),
-                  ]),
 
-                  const SizedBox(height: 28),
 
                   // Logout Button
                   SizedBox(
@@ -428,7 +407,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                   const SizedBox(height: 12),
 
                   Text(
-                    AppLocalizations.of(context)!.appVersion,
+                    AppLocalizations.of(context)!.appVersion('1.0.0', '1'),
                     style: TextStyle(
                       fontSize: 11.5,
                       color: Colors.grey.shade500,

@@ -36,7 +36,7 @@ class PasswordStrengthIndicator extends StatelessWidget {
       default:
         score = 0;
         color = Colors.grey.shade300;
-        label = 'Strength';
+        label = 'Password strength';
     }
 
     return Column(
@@ -45,10 +45,12 @@ class PasswordStrengthIndicator extends StatelessWidget {
         Row(
           children: [
             Expanded(child: _buildBar(score >= 1, score >= 1 ? color : Colors.grey.shade300)),
-            const SizedBox(width: 4),
+            const SizedBox(width: 6),
             Expanded(child: _buildBar(score >= 2, score >= 2 ? color : Colors.grey.shade300)),
-            const SizedBox(width: 4),
+            const SizedBox(width: 6),
             Expanded(child: _buildBar(score >= 3, score >= 3 ? color : Colors.grey.shade300)),
+            const SizedBox(width: 6),
+            Expanded(child: _buildBar(score >= 4, score >= 4 ? color : Colors.grey.shade300)),
           ],
         ),
         const SizedBox(height: 6),
