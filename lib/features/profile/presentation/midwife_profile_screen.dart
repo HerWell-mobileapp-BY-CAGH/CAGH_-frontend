@@ -20,7 +20,8 @@ import 'package:cagh_frontend/core/utils/app_logger.dart';
 
 class MidwifeProfileScreen extends ConsumerStatefulWidget {
   final VoidCallback? onBackTap;
-  const MidwifeProfileScreen({super.key, this.onBackTap});
+  final bool showAppBar;
+  const MidwifeProfileScreen({super.key, this.onBackTap, this.showAppBar = false});
 
   @override
   ConsumerState<MidwifeProfileScreen> createState() => _MidwifeProfileScreenState();
@@ -93,26 +94,23 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
+      appBar: widget.showAppBar ? AppBar(
         elevation: 0,
         backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         automaticallyImplyLeading: widget.onBackTap != null,
         leading: widget.onBackTap != null ? IconButton(
-          icon: Icon(Icons.arrow_back, color: AppColors.accentYellow),
-          onPressed: () {
-            if (widget.onBackTap != null) {
-              widget.onBackTap!();
-            }
-          },
+          icon: Icon(Icons.arrow_back, color: Theme.of(context).appBarTheme.foregroundColor),
+          onPressed: widget.onBackTap,
         ) : null,
         title: Text(
           AppLocalizations.of(context)!.profile,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 19,
             fontWeight: FontWeight.w700,
+            color: Theme.of(context).appBarTheme.foregroundColor,
           ),
         ),
-      ),
+      ) : null,
       body: isLoading
           ? const Center(
               child: CircularProgressIndicator(color: AppColors.primaryGreen),
@@ -285,19 +283,20 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
                       title: AppLocalizations.of(context)!.languageSettings,
                       subtitle: activeLang,
                       trailing: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 3),
                         decoration: BoxDecoration(
-                          color: AppColors.lightGreen,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppColors.mint),
+                          color: const Color(0xFFE8F5E9),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: const Color(0xFFA5D6A7), width: 1.2),
                         ),
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<String>(
                             value: LanguageService.currentLanguage.value,
-                            icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: AppColors.primaryGreen),
+                            isDense: true,
+                            icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: Color(0xFF2E5E2A)),
                             style: const TextStyle(
-                              color: AppColors.primaryGreen,
-                              fontSize: 13,
+                              color: Color(0xFF2E5E2A),
+                              fontSize: 13.5,
                               fontWeight: FontWeight.w600,
                             ),
                             items: const [
@@ -306,10 +305,10 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
                               DropdownMenuItem(value: 'om', child: Text('Afaan Oromoo')),
                               DropdownMenuItem(value: 'so', child: Text('Somali')),
                             ],
-                            onChanged: (lang) {
+                            onChanged: (lang) async {
                               if (lang != null) {
-                                LanguageService.setLanguage(lang);
-                                setState(() {});
+                                await LanguageService.setLanguage(lang);
+                                if (mounted) setState(() {});
                               }
                             },
                           ),

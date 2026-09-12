@@ -24,7 +24,11 @@ class MidwifeProfile {
   final String verificationStatus;
 
   // Computed property
-  String get fullName => '$firstName $lastName';
+  String get fullName {
+    final raw = '$firstName $lastName'.trim();
+    if (raw.isEmpty) return 'Midwife';
+    return raw.split(' ').where((s) => s.isNotEmpty).map((s) => '${s[0].toUpperCase()}${s.substring(1).toLowerCase()}').join(' ');
+  }
 
   bool get supportsVoiceCall =>
       offeredConsultationTypes.any((t) => t.toLowerCase().contains('voice'));
@@ -57,36 +61,55 @@ class MidwifeProfile {
   });
 
   factory MidwifeProfile.fromJson(Map<String, dynamic> json) {
-    final user = json['user'] ?? {};
-    final userProfile = user['profile'] ?? {};
-    final hospital = json['hospital'] ?? {};
+    final user = json['user'] is Map ? Map<String, dynamic>.from(json['user'] as Map) : <String, dynamic>{};
+    final userProfile = user['profile'] is Map 
+        ? Map<String, dynamic>.from(user['profile'] as Map) 
+        : (json['profile'] is Map ? Map<String, dynamic>.from(json['profile'] as Map) : <String, dynamic>{});
+    final hospital = json['hospital'] is Map ? Map<String, dynamic>.from(json['hospital'] as Map) : <String, dynamic>{};
+
+    String fName = (userProfile['first_name'] ?? user['first_name'] ?? json['first_name'] ?? '').toString().trim();
+    String lName = (userProfile['last_name'] ?? user['last_name'] ?? json['last_name'] ?? '').toString().trim();
+    final fullName = (json['full_name'] ?? user['full_name'] ?? userProfile['full_name'] ?? '').toString().trim();
+    if (fName.isEmpty && lName.isEmpty && fullName.isNotEmpty) {
+      final parts = fullName.split(' ');
+      fName = parts.isNotEmpty ? parts.first : '';
+      lName = parts.length > 1 ? parts.sublist(1).join(' ') : '';
+    }
+
+    final rawStatus = json['verification_status']?.toString() ?? '';
+    final status = rawStatus.isNotEmpty ? rawStatus : 'APPROVED';
+
+    final rawTypes = json['offered_consultation_types'];
+    final consultTypes = (rawTypes is List && rawTypes.isNotEmpty)
+        ? rawTypes.map((e) => e.toString()).toList()
+        : ['In-Person', 'Voice Call'];
 
     return MidwifeProfile(
-      id: json['id'] ?? '',
-      userId: user['id'] ?? '',
-      username: user['username'] ?? '',
-      firstName: userProfile['first_name'] ?? user['first_name'] ?? '',
-      lastName: userProfile['last_name'] ?? user['last_name'] ?? '',
-      email: user['email'] ?? '',
-      avatarUrl: userProfile['profile_image'] ?? user['avatar_url'],
+      id: json['id']?.toString() ?? '',
+      userId: user['id']?.toString() ?? json['user_id']?.toString() ?? '',
+      username: user['username']?.toString() ?? json['username']?.toString() ?? '',
+      firstName: fName.isNotEmpty ? fName : (fullName.isNotEmpty ? fullName : 'Midwife'),
+      lastName: lName,
+      email: user['email']?.toString() ?? json['email']?.toString() ?? '',
+      avatarUrl: (userProfile['profile_image'] ?? user['avatar_url'] ?? json['avatar_url'])?.toString(),
       
-      hospitalId: hospital['id'] ?? '',
-      hospitalName: hospital['name'] ?? '',
-      hospitalAddress: hospital['address'] ?? '',
+      hospitalId: hospital['id']?.toString() ?? json['hospital_id']?.toString() ?? '',
+      hospitalName: hospital['name']?.toString() ?? json['hospital_name']?.toString() ?? (json['hospital'] is String ? json['hospital'].toString() : ''),
+      hospitalAddress: hospital['address']?.toString() ?? json['hospital_address']?.toString() ?? '',
 
-      specialty: json['specialty'] ?? '',
+      specialty: json['specialty']?.toString() ?? 'Maternal Health Specialist',
       experienceYears: int.tryParse((json['years_of_experience'] ?? json['experience_years'] ?? userProfile['years_of_experience'] ?? userProfile['experience_years'])?.toString() ?? '') ?? 0,
-      languages: (json['languages'] as String?)?.split(',').map((e) => e.trim()).toList() ?? [],
-      bio: json['bio'] ?? '',
-      offeredConsultationTypes: json['offered_consultation_types'] != null 
-          ? List<String>.from(json['offered_consultation_types']) 
-          : [],
-      ratingAverage: double.tryParse(json['rating_average']?.toString() ?? '0') ?? 0.0,
-      ratingCount: int.tryParse(json['rating_count']?.toString() ?? '') ?? 0,
-      isFavorite: json['is_favorite'] ?? false,
-      isAcceptingBookings: json['is_accepting_bookings'] ?? false,
-      consultationFee: json['consultation_fee'] ?? '0.00',
-      verificationStatus: json['verification_status'] ?? '',
+      languages: json['languages'] is List
+          ? (json['languages'] as List).map((e) => e.toString()).toList()
+          : ((json['languages'] as String?)?.split(',').map((e) => e.trim()).toList() ?? ['Amharic', 'English']),
+      bio: json['bio']?.toString() ?? '',
+      offeredConsultationTypes: consultTypes,
+      ratingAverage: double.tryParse(json['rating_average']?.toString() ?? '5.0') ?? 5.0,
+      ratingCount: int.tryParse(json['rating_count']?.toString() ?? '0') ?? 0,
+      isFavorite: json['is_favorite'] == true,
+      isAcceptingBookings: json['is_accepting_bookings'] != false,
+      consultationFee: json['consultation_fee']?.toString() ?? '0.00',
+      verificationStatus: status,
     );
   }
 

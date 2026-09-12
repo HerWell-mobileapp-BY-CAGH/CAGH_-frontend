@@ -12,44 +12,44 @@ class MidwifeRepositoryImpl implements MidwifeRepository {
   @override
   Future<List<MidwifeProfile>> getMidwives({String? search}) async {
     final response = await _apiService.getMidwives(search: search);
-    return response.map((json) => MidwifeProfile.fromJson(json)).toList();
+    return response.map((json) => MidwifeProfile.fromJson(Map<String, dynamic>.from(json as Map))).toList();
   }
 
   @override
   Future<MidwifeProfile> getMidwifeProfile(String midwifeId) async {
     final response = await _apiService.getMidwifeProfile(midwifeId);
-    return MidwifeProfile.fromJson(response);
+    return MidwifeProfile.fromJson(Map<String, dynamic>.from(response as Map));
   }
 
   @override
   Future<MidwifeProfile?> getMyProfile() async {
     final response = await _apiService.getMyProfile();
     if (response == null) return null;
-    return MidwifeProfile.fromJson(response);
+    return MidwifeProfile.fromJson(Map<String, dynamic>.from(response as Map));
   }
 
   @override
   Future<MidwifeProfile> createMyProfile(Map<String, dynamic> data) async {
     final response = await _apiService.createMyProfile(data);
-    return MidwifeProfile.fromJson(response);
+    return MidwifeProfile.fromJson(Map<String, dynamic>.from(response as Map));
   }
 
   @override
   Future<MidwifeProfile> toggleFavorite(String midwifeId) async {
     final response = await _apiService.toggleFavorite(midwifeId);
-    return MidwifeProfile.fromJson(response);
+    return MidwifeProfile.fromJson(Map<String, dynamic>.from(response as Map));
   }
 
   @override
   Future<MidwifeProfile> updateMyProfile(Map<String, dynamic> data) async {
     final response = await _apiService.updateMyProfile(data);
-    return MidwifeProfile.fromJson(response);
+    return MidwifeProfile.fromJson(Map<String, dynamic>.from(response as Map));
   }
 
   @override
   Future<MidwifeDashboard> getDashboard() async {
     final response = await _apiService.getDashboard();
-    return MidwifeDashboard.fromJson(response);
+    return MidwifeDashboard.fromJson(Map<String, dynamic>.from(response as Map));
   }
 
   @override

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cagh_frontend/core/services/language_service.dart';
 import 'package:cagh_frontend/features/ai_assistant/presentation/providers/ai_chat_provider.dart';
 import 'package:cagh_frontend/features/ai_assistant/presentation/widgets/ai_chat_bubble.dart';
 import 'package:cagh_frontend/features/ai_assistant/presentation/widgets/ai_chat_input_bar.dart';

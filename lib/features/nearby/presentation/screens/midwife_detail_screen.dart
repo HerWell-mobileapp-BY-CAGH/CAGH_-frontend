@@ -11,6 +11,8 @@ class MidwifeDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAEB), // Very light pale green/yellow background
       appBar: AppBar(
@@ -44,10 +46,10 @@ class MidwifeDetailScreen extends StatelessWidget {
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
-                      children: const [
-                        Icon(Icons.check_circle, color: Color(0xFF385A2E), size: 14),
-                        SizedBox(width: 4),
-                        Text('Verified Midwife', style: TextStyle(color: Color(0xFF385A2E), fontSize: 12, fontWeight: FontWeight.bold)),
+                      children: [
+                        const Icon(Icons.check_circle, color: Color(0xFF385A2E), size: 14),
+                        const SizedBox(width: 4),
+                        Text(l10n.verifiedMidwife, style: const TextStyle(color: Color(0xFF385A2E), fontSize: 12, fontWeight: FontWeight.bold)),
                       ],
                     ),
                   ),
@@ -61,9 +63,9 @@ class MidwifeDetailScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                const Text(
-                  'Maternal Health Specialist',
-                  style: TextStyle(
+                Text(
+                  l10n.maternalHealthSpecialist,
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                     color: Color(0xFF385A2E),
@@ -72,13 +74,13 @@ class MidwifeDetailScreen extends StatelessWidget {
                 const SizedBox(height: 32),
                 
                 Text(
-                  'About ${facility.name.split(" ").first.toLowerCase()}',
+                  l10n.aboutMidwife(facility.name.split(" ").first),
                   style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF182335)),
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  'A dedicated midwife committed to providing the best care.',
-                  style: TextStyle(fontSize: 15, color: Colors.black54, height: 1.4),
+                Text(
+                  l10n.dedicatedMidwifeDesc,
+                  style: const TextStyle(fontSize: 15, color: Colors.black54, height: 1.4),
                 ),
                 const SizedBox(height: 32),
                 
@@ -95,7 +97,7 @@ class MidwifeDetailScreen extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('HOSPITAL', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black45)),
+                            Text(l10n.hospital, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black45)),
                             const SizedBox(height: 8),
                             Text(
                               facility.address.isNotEmpty ? facility.address : 'Tikur Anbessa',
@@ -117,10 +119,10 @@ class MidwifeDetailScreen extends StatelessWidget {
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
-                            Text('EXPERIENCE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black45)),
-                            SizedBox(height: 8),
-                            Text(
+                          children: [
+                            Text(l10n.experience, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black45)),
+                            const SizedBox(height: 8),
+                            const Text(
                               '0+ Years',
                               style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF182335)),
                             ),
@@ -133,25 +135,25 @@ class MidwifeDetailScreen extends StatelessWidget {
                 const SizedBox(height: 32),
 
                 // Languages
-                const Text('LANGUAGES', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black45)),
+                Text(l10n.languages, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black45)),
                 const SizedBox(height: 12),
                 Wrap(
                   spacing: 12,
                   children: [
                     _buildLanguageChip('English'),
-                    _buildLanguageChip('Amharic'),
+                    _buildLanguageChip('አማርኛ'),
                   ],
                 ),
                 const SizedBox(height: 32),
 
                 // Offered Consultations
-                const Text('OFFERED CONSULTATIONS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black45)),
+                Text(l10n.offeredConsultations, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black45)),
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    _buildConsultationChip(Icons.home_outlined, 'In-person'),
+                    _buildConsultationChip(Icons.home_outlined, l10n.inPerson),
                     const SizedBox(width: 12),
-                    _buildConsultationChip(Icons.videocam_outlined, 'Voice call'),
+                    _buildConsultationChip(Icons.videocam_outlined, l10n.voiceCall),
                   ],
                 ),
               ],
@@ -180,7 +182,7 @@ class MidwifeDetailScreen extends StatelessWidget {
                     child: OutlinedButton.icon(
                       onPressed: () {},
                       icon: const Icon(Icons.chat_bubble_outline, color: Color(0xFF385A2E), size: 20),
-                      label: const Text('Message', style: TextStyle(color: Color(0xFF385A2E), fontSize: 16, fontWeight: FontWeight.bold)),
+                      label: Text(l10n.message, style: const TextStyle(color: Color(0xFF385A2E), fontSize: 16, fontWeight: FontWeight.bold)),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         side: const BorderSide(color: Color(0xFF385A2E)),
@@ -200,7 +202,7 @@ class MidwifeDetailScreen extends StatelessWidget {
                         );
                       },
                       icon: const Icon(Icons.calendar_month_outlined, color: Colors.white, size: 20),
-                      label: const Text('Book', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                      label: Text(l10n.book, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF385A2E),
                         padding: const EdgeInsets.symmetric(vertical: 16),

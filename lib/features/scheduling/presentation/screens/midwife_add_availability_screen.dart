@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:cagh_frontend/features/appointments/data/services/appointment_api_service.dart';
 import 'package:cagh_frontend/shared/models/availability_slot.dart';
 import 'package:cagh_frontend/shared/widgets/custom_snackbar.dart';
 import 'package:cagh_frontend/shared/widgets/globe_language_picker.dart';
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 class MidwifeAddAvailabilityScreen extends StatefulWidget {
   final DateTime? initialDate;
@@ -29,11 +29,16 @@ class _MidwifeAddAvailabilityScreenState extends State<MidwifeAddAvailabilityScr
   @override
   void initState() {
     super.initState();
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
     if (widget.existingSlot != null) {
       final slot = widget.existingSlot!;
       _selectedDate = DateTime.tryParse(slot.dateOrDay);
-      if (_selectedDate == null) {
-        _selectedDate = widget.initialDate;
+      if (_selectedDate == null || _selectedDate!.isBefore(today)) {
+        _selectedDate = widget.initialDate != null && !widget.initialDate!.isBefore(today) 
+            ? widget.initialDate 
+            : today;
       }
       
       final startParts = slot.startTime.split(':');
@@ -47,16 +52,24 @@ class _MidwifeAddAvailabilityScreenState extends State<MidwifeAddAvailabilityScr
       _inPerson = slot.isInPerson;
       _voiceCall = slot.isVoiceCall;
     } else {
-      _selectedDate = widget.initialDate;
+      if (widget.initialDate != null && !widget.initialDate!.isBefore(today)) {
+        _selectedDate = widget.initialDate;
+      } else {
+        _selectedDate = today;
+      }
     }
   }
 
   Future<void> _selectDate() async {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final initial = (_selectedDate != null && !_selectedDate!.isBefore(today)) ? _selectedDate! : today;
+
     final date = await showDatePicker(
       context: context,
-      initialDate: _selectedDate ?? DateTime.now(),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
+      initialDate: initial,
+      firstDate: today,
+      lastDate: today.add(const Duration(days: 365)),
     );
     if (date != null) {
       setState(() {
@@ -83,7 +96,16 @@ class _MidwifeAddAvailabilityScreenState extends State<MidwifeAddAvailabilityScr
 
   Future<void> _save() async {
     if (_selectedDate == null || _startTime == null || _endTime == null) {
-      CustomSnackBar.show(context, message: 'Please select date and time', type: SnackBarType.error);
+      CustomSnackBar.show(context, message: AppLocalizations.of(context)!.pleaseSelectDateTime, type: SnackBarType.error);
+      return;
+    }
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final selDateOnly = DateTime(_selectedDate!.year, _selectedDate!.month, _selectedDate!.day);
+
+    if (selDateOnly.isBefore(today)) {
+      CustomSnackBar.show(context, message: 'Cannot schedule availability for past dates.', type: SnackBarType.error);
       return;
     }
 
@@ -92,48 +114,79 @@ class _MidwifeAddAvailabilityScreenState extends State<MidwifeAddAvailabilityScr
     final endMinutes = _endTime!.hour * 60 + _endTime!.minute;
     
     if (endMinutes <= startMinutes) {
-      CustomSnackBar.show(context, message: 'End time must be after start time', type: SnackBarType.error);
+      CustomSnackBar.show(context, message: AppLocalizations.of(context)!.endTimeAfterStartTime, type: SnackBarType.error);
       return;
+    }
+
+    if (selDateOnly.isAtSameMomentAs(today)) {
+      final currentMinutes = now.hour * 60 + now.minute;
+      if (startMinutes < currentMinutes) {
+        CustomSnackBar.show(context, message: AppLocalizations.of(context)!.startTimeCannotBeInPast, type: SnackBarType.error);
+        return;
+      }
     }
     
     if (!_inPerson && !_voiceCall) {
-      CustomSnackBar.show(context, message: 'Please select at least one consultation method', type: SnackBarType.error);
+      CustomSnackBar.show(context, message: AppLocalizations.of(context)!.selectConsultationMethod, type: SnackBarType.error);
       return;
     }
 
     setState(() => _isLoading = true);
     try {
-      final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate!);
       final dayOfWeek = _selectedDate!.weekday - 1; // 0 = Monday, 6 = Sunday
       
       final startStr = '${_startTime!.hour.toString().padLeft(2, '0')}:${_startTime!.minute.toString().padLeft(2, '0')}:00';
       final endStr = '${_endTime!.hour.toString().padLeft(2, '0')}:${_endTime!.minute.toString().padLeft(2, '0')}:00';
       
+      String consultType = 'VOICE_CALL';
+      if (_inPerson && _voiceCall) {
+        consultType = 'BOTH';
+      } else if (_inPerson) {
+        consultType = 'IN_PERSON';
+      } else if (_voiceCall) {
+        consultType = 'VOICE_CALL';
+      }
+
+      final List<String> typesList = [];
+      if (_inPerson) typesList.add('In-Person');
+      if (_voiceCall) typesList.add('Voice Call');
+
+      final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate!);
       final Map<String, dynamic> payload = {
+        'date': dateStr,
         'day_of_week': dayOfWeek,
         'start_time': startStr,
         'end_time': endStr,
         'is_in_person': _inPerson,
         'is_voice_call': _voiceCall,
+        'in_person': _inPerson,
+        'voice_call': _voiceCall,
+        'consultation_type': consultType,
+        'appointment_type': consultType,
+        'offered_consultation_types': typesList,
         'is_active': true,
       };
 
       if (widget.existingSlot != null) {
         await _api.updateAvailability(widget.existingSlot!.availabilityId, payload);
         if (mounted) {
-          CustomSnackBar.show(context, message: 'Availability updated successfully', type: SnackBarType.success);
-          Navigator.pop(context);
+          CustomSnackBar.show(context, message: AppLocalizations.of(context)!.availabilityUpdatedSuccess, type: SnackBarType.success);
+          Navigator.pop(context, true);
         }
       } else {
         await _api.setAvailability(payload);
         if (mounted) {
-          CustomSnackBar.show(context, message: 'Availability added successfully', type: SnackBarType.success);
-          Navigator.pop(context);
+          CustomSnackBar.show(context, message: AppLocalizations.of(context)!.availabilityAddedSuccess, type: SnackBarType.success);
+          Navigator.pop(context, true);
         }
       }
     } catch (e) {
       if (mounted) {
-        CustomSnackBar.show(context, message: 'Failed to add availability: $e', type: SnackBarType.error);
+        String msg = '$e'.replaceAll('Exception: ', '');
+        if (msg.contains('TimeoutException')) {
+          msg = 'Server took too long to respond. Please check your connection and try again.';
+        }
+        CustomSnackBar.show(context, message: '${AppLocalizations.of(context)!.failedToAddAvailability}: $msg', type: SnackBarType.error);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -144,20 +197,22 @@ class _MidwifeAddAvailabilityScreenState extends State<MidwifeAddAvailabilityScr
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF9F9F9),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Top Green App Bar
-            Container(
-              width: double.infinity,
-              color: const Color(0xFF385A2E),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-              child: Stack(
+      body: Column(
+        children: [
+          // Top Green App Bar
+          Container(
+            width: double.infinity,
+            color: const Color(0xFF385A2E),
+            child: SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  const Text(
-                    'Schedule',
-                    style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
+                  Text(
+                    AppLocalizations.of(context)!.schedule,
+                    style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -168,10 +223,10 @@ class _MidwifeAddAvailabilityScreenState extends State<MidwifeAddAvailabilityScr
                       ),
                       Row(
                         children: const [
-                          GlobeLanguagePicker(iconColor: Colors.white, iconSize: 24),
-                          SizedBox(width: 16),
-                          Icon(Icons.notifications_none, color: Colors.white),
-                          SizedBox(width: 16),
+                          GlobeLanguagePicker(iconColor: Colors.white, iconSize: 22),
+                          SizedBox(width: 2),
+                          Icon(Icons.notifications_none, color: Colors.white, size: 22),
+                          SizedBox(width: 12),
                         ],
                       ),
                     ],
@@ -179,8 +234,10 @@ class _MidwifeAddAvailabilityScreenState extends State<MidwifeAddAvailabilityScr
                 ],
               ),
             ),
-            
-            Expanded(
+          ),
+        ),
+        
+        Expanded(
               child: SingleChildScrollView(
                 child: Container(
                   margin: const EdgeInsets.all(20),
@@ -199,7 +256,9 @@ class _MidwifeAddAvailabilityScreenState extends State<MidwifeAddAvailabilityScr
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            widget.existingSlot != null ? 'Edit Available Time' : 'Add Available Time',
+                            widget.existingSlot != null 
+                              ? AppLocalizations.of(context)!.editAvailableTime 
+                              : AppLocalizations.of(context)!.addAvailableTime,
                             style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1C2A3A)),
                           ),
                           GestureDetector(
@@ -214,37 +273,47 @@ class _MidwifeAddAvailabilityScreenState extends State<MidwifeAddAvailabilityScr
                       ),
                       const SizedBox(height: 12),
                       Row(
-                        children: const [
-                          Icon(Icons.calendar_today, size: 18, color: Color(0xFF385A2E)),
-                          SizedBox(width: 8),
-                          Text('Add a time adolescent girls may request.', style: TextStyle(fontSize: 12, color: Colors.black54)),
+                        children: [
+                          const Icon(Icons.calendar_today, size: 18, color: Color(0xFF385A2E)),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              AppLocalizations.of(context)!.addTimeSubtitle,
+                              style: const TextStyle(fontSize: 12, color: Colors.black54),
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 32),
                       
-                      const Text('DATE AND TIME', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF385A2E))),
+                      Text(
+                        AppLocalizations.of(context)!.dateTimeSection,
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF385A2E)),
+                      ),
                       const SizedBox(height: 16),
                       
-                      _buildLabel('Date *'),
+                      _buildLabel(AppLocalizations.of(context)!.dateRequired),
                       _buildSelectorField(
                         icon: Icons.calendar_today,
-                        text: _selectedDate != null ? DateFormat('MMM d, yyyy').format(_selectedDate!) : 'Select date',
+                        text: _selectedDate != null 
+                          ? DateFormat('MMM d, yyyy', Localizations.localeOf(context).languageCode).format(_selectedDate!) 
+                          : AppLocalizations.of(context)!.selectDatePrompt,
                         onTap: _selectDate,
                       ),
                       const SizedBox(height: 16),
                       
-                      _buildLabel('Start time *'),
+                      _buildLabel(AppLocalizations.of(context)!.startTimeRequired),
                       _buildSelectorField(
                         icon: Icons.access_time,
-                        text: _startTime != null ? _startTime!.format(context) : 'Select start time',
+                        text: _startTime != null ? _startTime!.format(context) : AppLocalizations.of(context)!.selectStartTimePrompt,
                         onTap: () => _selectTime(true),
                       ),
                       const SizedBox(height: 16),
                       
-                      _buildLabel('End time *'),
+                      _buildLabel(AppLocalizations.of(context)!.endTimeRequired),
                       _buildSelectorField(
                         icon: Icons.access_time,
-                        text: _endTime != null ? _endTime!.format(context) : 'Select end time',
+                        text: _endTime != null ? _endTime!.format(context) : AppLocalizations.of(context)!.selectEndTimePrompt,
                         onTap: () => _selectTime(false),
                       ),
                       const SizedBox(height: 32),
@@ -252,12 +321,15 @@ class _MidwifeAddAvailabilityScreenState extends State<MidwifeAddAvailabilityScr
                       const Divider(height: 1, color: Colors.black12),
                       const SizedBox(height: 24),
                       
-                      const Text('CONSULTATION METHOD', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF385A2E))),
+                      Text(
+                        AppLocalizations.of(context)!.consultationMethodSection,
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF385A2E)),
+                      ),
                       const SizedBox(height: 16),
                       
-                      _buildCheckboxField('In person', _inPerson, (v) => setState(() => _inPerson = v ?? false)),
+                      _buildCheckboxField(AppLocalizations.of(context)!.inPerson, _inPerson, (v) => setState(() => _inPerson = v ?? false)),
                       const SizedBox(height: 12),
-                      _buildCheckboxField('Voice call', _voiceCall, (v) => setState(() => _voiceCall = v ?? false)),
+                      _buildCheckboxField(AppLocalizations.of(context)!.voiceCall, _voiceCall, (v) => setState(() => _voiceCall = v ?? false)),
                       
                       const SizedBox(height: 32),
                       
@@ -273,7 +345,10 @@ class _MidwifeAddAvailabilityScreenState extends State<MidwifeAddAvailabilityScr
                           ),
                           child: _isLoading 
                             ? const CircularProgressIndicator(color: Colors.white)
-                            : const Text('Save Availability', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600)),
+                            : Text(
+                                AppLocalizations.of(context)!.saveAvailability,
+                                style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
+                              ),
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -286,7 +361,10 @@ class _MidwifeAddAvailabilityScreenState extends State<MidwifeAddAvailabilityScr
                             backgroundColor: const Color(0xFFF3F4F1),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           ),
-                          child: const Text('Cancel', style: TextStyle(color: Color(0xFF385A2E), fontSize: 15, fontWeight: FontWeight.w600)),
+                          child: Text(
+                            AppLocalizations.of(context)!.cancel,
+                            style: const TextStyle(color: Color(0xFF385A2E), fontSize: 15, fontWeight: FontWeight.w600),
+                          ),
                         ),
                       ),
                     ],
@@ -296,7 +374,6 @@ class _MidwifeAddAvailabilityScreenState extends State<MidwifeAddAvailabilityScr
             ),
           ],
         ),
-      ),
     );
   }
 

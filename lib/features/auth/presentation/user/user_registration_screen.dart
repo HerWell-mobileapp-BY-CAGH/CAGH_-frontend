@@ -50,9 +50,9 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
     final nameRegExp = RegExp(r'^[a-zA-Z\s]+$');
     setState(() {
       if (value.trim().isEmpty) {
-        _firstNameError = 'First name is required';
+        _firstNameError = AppLocalizations.of(context)!.firstNameRequired;
       } else if (!nameRegExp.hasMatch(value.trim())) {
-        _firstNameError = 'Cannot contain numbers or special characters';
+        _firstNameError = AppLocalizations.of(context)!.nameNoSpecialChars;
       } else {
         _firstNameError = null;
       }
@@ -63,9 +63,9 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
     final nameRegExp = RegExp(r'^[a-zA-Z\s]+$');
     setState(() {
       if (value.trim().isEmpty) {
-        _lastNameError = 'Last name is required';
+        _lastNameError = AppLocalizations.of(context)!.lastNameRequired;
       } else if (!nameRegExp.hasMatch(value.trim())) {
-        _lastNameError = 'Cannot contain numbers or special characters';
+        _lastNameError = AppLocalizations.of(context)!.nameNoSpecialChars;
       } else {
         _lastNameError = null;
       }
@@ -106,7 +106,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
       if (value.isEmpty) {
         _passwordError = AppLocalizations.of(context)!.valPasswordReq;
       } else if (value.length < 8) {
-        _passwordError = 'Password must be at least 8 characters';
+        _passwordError = AppLocalizations.of(context)!.passwordMinLength;
       } else {
         _passwordError = null;
       }
@@ -135,9 +135,9 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
           onPressed: () => Navigator.pop(context),
           icon: const Icon(Icons.arrow_back, color: Colors.white),
         ),
-        title: const Text(
-          'Digital Midwife',
-          style: TextStyle(
+        title: Text(
+          AppLocalizations.of(context)!.userRegistration,
+          style: const TextStyle(
             color: Colors.white,
             fontSize: 18,
             fontWeight: FontWeight.w600,
@@ -203,7 +203,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildLabel('First Name'),
+                            _buildLabel(AppLocalizations.of(context)!.firstName),
                             _buildTextField(
                               controller: _firstNameController,
                               hint: AppLocalizations.of(context)!.firstName,
@@ -219,7 +219,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildLabel('Last Name'),
+                            _buildLabel(AppLocalizations.of(context)!.lastName),
                             _buildTextField(
                               controller: _lastNameController,
                               hint: AppLocalizations.of(context)!.lastName,
@@ -236,7 +236,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                   const SizedBox(height: 18),
 
                   // Phone Number (Ethiopian Standard)
-                  _buildLabel('Phone Number (Ethiopia)'),
+                  _buildLabel(AppLocalizations.of(context)!.phoneNumberEthiopia),
                   Row(
                     children: [
                       Container(
@@ -276,7 +276,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                   SizedBox(height: 18),
 
                   // Email Address
-                  _buildLabel('Email Address'),
+                  _buildLabel(AppLocalizations.of(context)!.emailAddress),
                   _buildTextField(
                     controller: _emailController,
                     hint: AppLocalizations.of(context)!.emailAddress,
@@ -289,10 +289,10 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                   const SizedBox(height: 18),
 
                   // Date of Birth
-                  _buildLabel('Date of Birth'),
+                  _buildLabel(AppLocalizations.of(context)!.dateOfBirth),
                   _buildTextField(
                     controller: _dobController,
-                    hint: 'Select your date of birth',
+                    hint: AppLocalizations.of(context)!.selectDateOfBirth,
                     prefixIcon: Icons.calendar_today_outlined,
                     readOnly: true,
                     errorText: _dobError,
@@ -346,7 +346,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                   _buildLabel(AppLocalizations.of(context)!.confirmPassword),
                   _buildTextField(
                     controller: _confirmPasswordController,
-                    hint: 'Confirm your password',
+                    hint: AppLocalizations.of(context)!.confirmPassword,
                     prefixIcon: Icons.lock_outline,
                     obscureText: _obscureConfirm,
                     errorText: _confirmPasswordError,
@@ -382,15 +382,15 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                               final dob = _dobController.text;
 
                               setState(() {
-                                _firstNameError = firstName.isEmpty ? 'First name is required' : null;
-                                _lastNameError = lastName.isEmpty ? 'Last name is required' : null;
+                                _firstNameError = firstName.isEmpty ? AppLocalizations.of(context)!.firstNameRequired : null;
+                                _lastNameError = lastName.isEmpty ? AppLocalizations.of(context)!.lastNameRequired : null;
                                 _emailError = email.isEmpty ? AppLocalizations.of(context)!.valEmailReq : null;
-                                _dobError = dob.isEmpty ? 'Date of birth is required' : null;
+                                _dobError = dob.isEmpty ? AppLocalizations.of(context)!.dateOfBirthRequired : null;
                                 
                                 if (password.isEmpty) {
                                   _passwordError = AppLocalizations.of(context)!.valPasswordReq;
                                 } else if (password.length < 8) {
-                                  _passwordError = 'Password must be at least 8 characters';
+                                  _passwordError = AppLocalizations.of(context)!.passwordMinLength;
                                 } else {
                                   _passwordError = null;
                                 }
@@ -398,7 +398,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                                 if (confirmPassword.isEmpty) {
                                   _confirmPasswordError = AppLocalizations.of(context)!.valPasswordConfirmReq;
                                 } else if (password != confirmPassword) {
-                                  _confirmPasswordError = 'Passwords do not match';
+                                  _confirmPasswordError = AppLocalizations.of(context)!.valPasswordMismatch;
                                 } else {
                                   _confirmPasswordError = null;
                                 }
@@ -412,11 +412,11 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
 
                               final nameRegExp = RegExp(r'^[a-zA-Z\s]+$');
                               if (!nameRegExp.hasMatch(firstName)) {
-                                setState(() => _firstNameError = 'Cannot contain numbers or special characters');
+                                setState(() => _firstNameError = AppLocalizations.of(context)!.nameNoSpecialChars);
                                 return;
                               }
                               if (!nameRegExp.hasMatch(lastName)) {
-                                setState(() => _lastNameError = 'Cannot contain numbers or special characters');
+                                setState(() => _lastNameError = AppLocalizations.of(context)!.nameNoSpecialChars);
                                 return;
                               }
 
@@ -501,9 +501,9 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                                 strokeWidth: 2.5,
                               ),
                             )
-                          : const Text(
-                              'Register >',
-                              style: TextStyle(
+                          : Text(
+                              '${AppLocalizations.of(context)!.register} >',
+                              style: const TextStyle(
                                 fontSize: 17,
                                 fontWeight: FontWeight.w600,
                               ),

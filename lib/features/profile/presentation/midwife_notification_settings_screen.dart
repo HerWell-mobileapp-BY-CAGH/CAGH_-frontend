@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
 
@@ -15,6 +16,34 @@ class _MidwifeNotificationSettingsScreenState extends State<MidwifeNotificationS
   bool consultationRequests = true;
   bool upcomingConsultations = true;
   bool scheduleReminders = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (mounted) {
+        setState(() {
+          pushNotifications = prefs.getBool('midwife_push_notifications') ?? true;
+          newMessages = prefs.getBool('midwife_new_messages') ?? true;
+          consultationRequests = prefs.getBool('midwife_consultation_requests') ?? true;
+          upcomingConsultations = prefs.getBool('midwife_upcoming_consultations') ?? true;
+          scheduleReminders = prefs.getBool('midwife_schedule_reminders') ?? true;
+        });
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _saveSetting(String key, bool value) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(key, value);
+    } catch (_) {}
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +77,10 @@ class _MidwifeNotificationSettingsScreenState extends State<MidwifeNotificationS
               _buildSwitchRow(
                 l10n.pushNotifications,
                 pushNotifications,
-                (val) => setState(() => pushNotifications = val),
+                (val) {
+                  setState(() => pushNotifications = val);
+                  _saveSetting('midwife_push_notifications', val);
+                },
               ),
             ]),
             const SizedBox(height: 24),
@@ -59,7 +91,10 @@ class _MidwifeNotificationSettingsScreenState extends State<MidwifeNotificationS
               _buildSwitchRow(
                 l10n.newMessage,
                 newMessages,
-                (val) => setState(() => newMessages = val),
+                (val) {
+                  setState(() => newMessages = val);
+                  _saveSetting('midwife_new_messages', val);
+                },
               ),
             ]),
             const SizedBox(height: 24),
@@ -70,13 +105,19 @@ class _MidwifeNotificationSettingsScreenState extends State<MidwifeNotificationS
               _buildSwitchRow(
                 l10n.consultationRequests,
                 consultationRequests,
-                (val) => setState(() => consultationRequests = val),
+                (val) {
+                  setState(() => consultationRequests = val);
+                  _saveSetting('midwife_consultation_requests', val);
+                },
               ),
               _buildDivider(),
               _buildSwitchRow(
                 l10n.upcomingConsultation,
                 upcomingConsultations,
-                (val) => setState(() => upcomingConsultations = val),
+                (val) {
+                  setState(() => upcomingConsultations = val);
+                  _saveSetting('midwife_upcoming_consultations', val);
+                },
               ),
             ]),
             const SizedBox(height: 24),
@@ -87,7 +128,10 @@ class _MidwifeNotificationSettingsScreenState extends State<MidwifeNotificationS
               _buildSwitchRow(
                 l10n.scheduleReminders,
                 scheduleReminders,
-                (val) => setState(() => scheduleReminders = val),
+                (val) {
+                  setState(() => scheduleReminders = val);
+                  _saveSetting('midwife_schedule_reminders', val);
+                },
               ),
             ]),
           ],

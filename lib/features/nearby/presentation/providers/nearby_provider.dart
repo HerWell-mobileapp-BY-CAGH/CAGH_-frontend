@@ -83,34 +83,34 @@ class NearbyStateNotifier extends StateNotifier<NearbyState> {
 
       // Handle location permissions and GPS
       if (_lastKnownPosition == null || forceRefreshLocation) {
-        bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-        if (!serviceEnabled) {
-          state = NearbyLocationDisabled();
-          return;
-        }
-
-        LocationPermission permission = await Geolocator.checkPermission();
-        if (permission == LocationPermission.denied) {
-          permission = await Geolocator.requestPermission();
-          if (permission == LocationPermission.denied) {
-            state = NearbyLocationPermissionDenied();
-            return;
+        try {
+          bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+          if (serviceEnabled) {
+            LocationPermission permission = await Geolocator.checkPermission();
+            if (permission == LocationPermission.denied) {
+              permission = await Geolocator.requestPermission();
+            }
+            if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
+              _lastKnownPosition = await Geolocator.getCurrentPosition(
+                locationSettings: const LocationSettings(accuracy: LocationAccuracy.medium),
+              ).timeout(const Duration(seconds: 4));
+            }
           }
-        }
+        } catch (_) {}
 
-        if (permission == LocationPermission.deniedForever) {
-          state = NearbyLocationPermissionDenied(isPermanent: true);
-          return;
-        }
-
-        _lastKnownPosition = await Geolocator.getCurrentPosition(
-          locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+        // Use standard Addis Ababa central coordinates if GPS is unavailable
+        _lastKnownPosition ??= Position(
+          latitude: 9.0300,
+          longitude: 38.7400,
+          timestamp: DateTime.now(),
+          accuracy: 10.0,
+          altitude: 2355.0,
+          altitudeAccuracy: 10.0,
+          heading: 0.0,
+          headingAccuracy: 0.0,
+          speed: 0.0,
+          speedAccuracy: 0.0,
         );
-      }
-
-      if (_lastKnownPosition == null) {
-        state = NearbyError('Could not determine current location.');
-        return;
       }
 
       final facilities = await _repository.getNearbyFacilities(

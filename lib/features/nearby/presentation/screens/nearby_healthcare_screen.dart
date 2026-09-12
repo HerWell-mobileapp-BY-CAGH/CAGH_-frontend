@@ -2,8 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/nearby_provider.dart';
 import 'find_nearby_screen.dart';
+import '../widgets/nearby_map.dart';
+import '../widgets/facility_bottom_sheet.dart';
+import '../widgets/nearby_search_bar.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
+import 'package:cagh_frontend/shared/widgets/search_filter_bottom_sheet.dart' as cagh_frontend_filter;
+
 class NearbyHealthcareScreen extends ConsumerStatefulWidget {
   final bool showBackButton;
   const NearbyHealthcareScreen({super.key, this.showBackButton = true});
@@ -110,14 +115,14 @@ class _NearbyHealthcareScreenState extends ConsumerState<NearbyHealthcareScreen>
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
+      appBar: widget.showBackButton ? AppBar(
         backgroundColor: AppColors.primaryGreen,
         elevation: 0,
         centerTitle: true,
-        leading: widget.showBackButton ? IconButton(
+        leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
-        ) : null,
+        ),
         title: Text(AppLocalizations.of(context)!.healthcareNearYou, style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
         actions: [
           Padding(
@@ -134,96 +139,106 @@ class _NearbyHealthcareScreenState extends ConsumerState<NearbyHealthcareScreen>
             ),
           )
         ],
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Top Section
-            Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: isDark ? Colors.grey.shade900 : Colors.white,
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(24),
-                  bottomRight: Radius.circular(24),
-                ),
-              ),
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+      ) : null,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Fixed Search Bar
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+            child: NearbySearchBar(
+              controller: _searchController,
+              onClear: () {
+                _searchController.clear();
+              },
+              onChanged: (val) {},
+              onFilterTapped: () {
+                cagh_frontend_filter.SearchFilterBottomSheet.show(
+                  context,
+                  isForMidwife: false,
+                  onApply: (distanceStr, rating, availability) {
+                    // Passed to FindNearbyScreen in real app, ignore for now
+                  },
+                );
+              },
+            ),
+          ),
+          
+          Expanded(
+            child: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    AppLocalizations.of(context)!.findTrustedMaternal,
-                    style: TextStyle(
-                        color: isDark ? Colors.grey.shade300 : Colors.grey.shade800, 
-                        fontSize: 14, 
-                        height: 1.4),
-                  ),
-                  const SizedBox(height: 20),
-                  // Search Bar
-                  Container(
-                    decoration: BoxDecoration(
-                      color: isDark ? Colors.grey.shade800 : AppColors.backgroundTealWhite,
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.04),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
+                  if (!widget.showBackButton)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton.icon(
+                          onPressed: () => _navigateToFindNearby(),
+                          icon: Icon(Icons.location_on, color: AppColors.primaryGreen, size: 16),
+                          label: Text(AppLocalizations.of(context)!.findNearby, style: TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.bold, fontSize: 13)),
+                          style: TextButton.styleFrom(
+                            backgroundColor: AppColors.primaryGreen.withValues(alpha: 0.1),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                          ),
                         ),
-                      ],
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      readOnly: true,
-                      onTap: () => _navigateToFindNearby(),
-                      decoration: InputDecoration(
-                        hintText: AppLocalizations.of(context)!.searchHospitalsClinicsMidwives,
-                        hintStyle: TextStyle(color: Colors.grey),
-                        prefixIcon: Icon(Icons.search, color: AppColors.primaryGreen),
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(vertical: 14),
                       ),
                     ),
+                  
+                  // Top Section
+                  Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.grey.shade900 : Colors.white,
+                      borderRadius: const BorderRadius.only(
+                        bottomLeft: Radius.circular(24),
+                        bottomRight: Radius.circular(24),
+                      ),
+                    ),
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                    child: Text(
+                      AppLocalizations.of(context)!.findTrustedMaternal,
+                      style: TextStyle(
+                          color: isDark ? Colors.grey.shade300 : Colors.grey.shade800, 
+                          fontSize: 14, 
+                          height: 1.4),
+                    ),
                   ),
+
+                  const SizedBox(height: 24),
+
+                  // Categories Section
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Text(
+                      AppLocalizations.of(context)!.findCareByType,
+                      style: TextStyle(
+                          fontSize: 16, 
+                          fontWeight: FontWeight.bold, 
+                          color: isDark ? Colors.white : AppColors.textDark),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 48,
+                    child: ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _categories.length,
+                      itemBuilder: (context, index) {
+                        return _buildCategoryChip(_categories[index], _getIconForCategory(_categories[index]));
+                      },
+                    ),
+                  ),
+
+                  const SizedBox(height: 40),
                 ],
               ),
             ),
-
-            const SizedBox(height: 8),
-
-            // Categories Section
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                AppLocalizations.of(context)!.findCareByType,
-                style: TextStyle(
-                    fontSize: 16, 
-                    fontWeight: FontWeight.bold, 
-                    color: isDark ? Colors.white : AppColors.textDark),
-              ),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 48,
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                scrollDirection: Axis.horizontal,
-                itemCount: _categories.length,
-                itemBuilder: (context, index) {
-                  return _buildCategoryChip(_categories[index], _getIconForCategory(_categories[index]));
-                },
-              ),
-            ),
-
-            const SizedBox(height: 28),
-
-
-            
-            const SizedBox(height: 40),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

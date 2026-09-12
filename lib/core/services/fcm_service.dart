@@ -8,9 +8,18 @@ import 'package:cagh_frontend/core/network/api_config.dart';
 import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
 import 'package:cagh_frontend/shared/constants/app_durations.dart';
 import 'package:cagh_frontend/core/utils/app_logger.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class FcmService {
   static bool _isInitialized = false;
+  static final FlutterLocalNotificationsPlugin _localNotificationsPlugin = FlutterLocalNotificationsPlugin();
+
+  static const AndroidNotificationChannel _channel = AndroidNotificationChannel(
+    'high_importance_channel', // id
+    'High Importance Notifications', // title
+    description: 'This channel is used for important notifications.', // description
+    importance: Importance.max,
+  );
 
   static Future<void> initialize() async {
     if (_isInitialized || kIsWeb) return;
@@ -36,6 +45,25 @@ class FcmService {
 
       _isInitialized = true;
 
+      if (!kIsWeb) {
+        const AndroidInitializationSettings initializationSettingsAndroid =
+            AndroidInitializationSettings('@mipmap/ic_launcher');
+        const DarwinInitializationSettings initializationSettingsIOS =
+            DarwinInitializationSettings();
+        const InitializationSettings initializationSettings = InitializationSettings(
+          android: initializationSettingsAndroid,
+          iOS: initializationSettingsIOS,
+        );
+        await _localNotificationsPlugin.initialize(settings: initializationSettings);
+
+        if (defaultTargetPlatform == TargetPlatform.android) {
+          await _localNotificationsPlugin
+              .resolvePlatformSpecificImplementation<
+                  AndroidFlutterLocalNotificationsPlugin>()
+              ?.createNotificationChannel(_channel);
+        }
+      }
+
       // Handle token refreshes automatically
       messaging.onTokenRefresh.listen((newToken) {
         registerDeviceToken(overrideToken: newToken);
@@ -45,6 +73,37 @@ class FcmService {
       registerDeviceToken();
     } catch (e) {
       AppLogger.d('[FCM SERVICE] Initialization notice: $e');
+    }
+  }
+
+  static void showForegroundNotification(RemoteMessage message) {
+    if (kIsWeb) return;
+    
+    final notification = message.notification;
+    final android = message.notification?.android;
+
+    if (notification != null && android != null) {
+      _localNotificationsPlugin.show(
+        id: notification.hashCode,
+        title: notification.title,
+        body: notification.body,
+        notificationDetails: NotificationDetails(
+          android: AndroidNotificationDetails(
+            _channel.id,
+            _channel.name,
+            channelDescription: _channel.description,
+            icon: '@mipmap/ic_launcher',
+            importance: Importance.max,
+            priority: Priority.high,
+          ),
+          iOS: const DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+          ),
+        ),
+        payload: jsonEncode(message.data),
+      );
     }
   }
 

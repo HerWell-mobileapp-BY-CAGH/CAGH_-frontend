@@ -4,8 +4,7 @@ import 'package:cagh_frontend/features/scheduling/presentation/screens/midwife_a
 import 'package:cagh_frontend/features/scheduling/presentation/screens/midwife_day_view_screen.dart';
 import 'package:cagh_frontend/features/appointments/data/services/appointment_api_service.dart';
 import 'package:cagh_frontend/shared/models/availability_slot.dart';
-import 'package:cagh_frontend/shared/widgets/globe_language_picker.dart';
-import 'package:cagh_frontend/features/notifications/presentation/widgets/notification_bell.dart';
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 
 class MidwifeScheduleScreen extends StatefulWidget {
@@ -48,289 +47,344 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
   }
 
   List<AvailabilitySlot> _getAvailabilitiesForDay(DateTime day) {
-    final dateString = DateFormat('yyyy-MM-dd').format(day);
-    final dayOfWeekString = (day.weekday - 1).toString();
+    final dateString = DateFormat('yyyy-MM-dd').format(day).toLowerCase();
+    final dayIndex = (day.weekday - 1).toString();
+    final dayIndex1Based = day.weekday.toString();
+    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    final dayName = days[day.weekday - 1];
     
     return _availabilities.where((a) {
-      final d = a.dateOrDay.toLowerCase();
-      return d == dateString.toLowerCase() || d == dayOfWeekString;
+      final d = a.dateOrDay.trim().toLowerCase();
+      if (d == dateString || d == dayIndex || d == dayIndex1Based || d == dayName) {
+        return true;
+      }
+      if (a.dayName != null && a.dayName!.trim().toLowerCase() == dayName) {
+        return true;
+      }
+      return false;
     }).toList();
   }
 
   @override
   Widget build(BuildContext context) {
+    final currentLocale = Localizations.localeOf(context).languageCode;
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F9F9),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Top Green App Bar
-            Container(
-              width: double.infinity,
-              color: const Color(0xFF385A2E), // Dark green
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  const Text(
-                    'Schedule',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: Column(
+        children: [
+          Expanded(
+            child: _isLoading 
+              ? const Center(child: CircularProgressIndicator(color: Color(0xFF385A2E)))
+              : SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const GlobeLanguagePicker(iconColor: Colors.white, iconSize: 24),
-                      const SizedBox(width: 16),
-                      const Icon(Icons.notifications_none, color: Colors.white), // Simplified for now since NotificationBell might not be readily exported here without extra setup in some files. I'll use standard icon if NotificationBell causes issues. Assuming it's fine.
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            Expanded(
-              child: _isLoading 
-                ? const Center(child: CircularProgressIndicator(color: Color(0xFF385A2E)))
-                : SingleChildScrollView(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Availability Calendar',
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF1C2A3A),
-                          ),
+                      Text(
+                        AppLocalizations.of(context)!.availabilityCalendar,
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
                         ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Create the times spiritual children may request.',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.black54,
-                          ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        AppLocalizations.of(context)!.availabilitySubtitle,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: isDark ? Colors.grey.shade400 : Colors.black54,
                         ),
-                        const SizedBox(height: 24),
-                        
-                        SizedBox(
-                          width: double.infinity,
-                          height: 52,
-                          child: ElevatedButton.icon(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const MidwifeAddAvailabilityScreen(),
-                                ),
-                              ).then((_) => _fetchData());
-                            },
-                            icon: const Icon(Icons.add, color: Colors.white),
-                            label: const Text(
-                              'Add Availability',
-                              style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF385A2E),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              elevation: 0,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Calendar Container
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.04),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
+                      ),
+                      const SizedBox(height: 24),
+                      
+                      SizedBox(
+                        width: double.infinity,
+                        height: 52,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const MidwifeAddAvailabilityScreen(),
                               ),
-                            ],
+                            ).then((_) => _fetchData());
+                          },
+                          icon: const Icon(Icons.add, color: Colors.white),
+                          label: Text(
+                            AppLocalizations.of(context)!.addAvailability,
+                            style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        DateFormat('MMMM yyyy').format(_focusedDay),
-                                        style: const TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                          color: Color(0xFF1C2A3A),
-                                        ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF385A2E),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            elevation: 0,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Calendar Container
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).cardColor,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Theme.of(context).dividerColor, width: 1),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      DateFormat('MMMM yyyy', currentLocale).format(_focusedDay),
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Theme.of(context).textTheme.bodyLarge?.color,
                                       ),
-                                      const SizedBox(height: 4),
-                                      const Text(
-                                        'Select a day to manage\nits availability.',
-                                        style: TextStyle(fontSize: 12, color: Colors.black54),
-                                      )
-                                    ],
-                                  ),
-                                  Row(
-                                    children: [
-                                      OutlinedButton(
-                                        onPressed: () {
-                                          setState(() {
-                                            _focusedDay = DateTime.now();
-                                          });
-                                        },
-                                        style: OutlinedButton.styleFrom(
-                                          side: const BorderSide(color: Colors.black12),
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                        ),
-                                        child: const Text('Today', style: TextStyle(color: Color(0xFF385A2E), fontWeight: FontWeight.w600)),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      GestureDetector(
-                                        onTap: () {
-                                          setState(() {
-                                            _focusedDay = DateTime(_focusedDay.year, _focusedDay.month - 1);
-                                          });
-                                        },
-                                        child: const Padding(
-                                          padding: EdgeInsets.all(4.0),
-                                          child: Icon(Icons.chevron_left, color: Colors.black87),
-                                        ),
-                                      ),
-                                      GestureDetector(
-                                        onTap: () {
-                                          setState(() {
-                                            _focusedDay = DateTime(_focusedDay.year, _focusedDay.month + 1);
-                                          });
-                                        },
-                                        child: const Padding(
-                                          padding: EdgeInsets.all(4.0),
-                                          child: Icon(Icons.chevron_right, color: Colors.black87),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 16),
-                              
-                              TableCalendar(
-                                firstDay: DateTime.now().subtract(const Duration(days: 365)),
-                                lastDay: DateTime.now().add(const Duration(days: 365 * 2)),
-                                focusedDay: _focusedDay,
-                                currentDay: DateTime.now(),
-                                headerVisible: false,
-                                onPageChanged: (focusedDay) {
-                                  _focusedDay = focusedDay;
-                                },
-                                selectedDayPredicate: (day) {
-                                  return false;
-                                },
-                                onDaySelected: (selectedDay, focusedDay) {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => MidwifeDayViewScreen(date: selectedDay),
                                     ),
-                                  ).then((_) => _fetchData());
-                                },
-                                calendarBuilders: CalendarBuilders(
-                                  defaultBuilder: (context, day, focusedDay) {
-                                    final hasAvail = _getAvailabilitiesForDay(day).isNotEmpty;
-                                    if (hasAvail) {
-                                      return Container(
-                                        margin: const EdgeInsets.all(6),
-                                        alignment: Alignment.center,
-                                        decoration: const BoxDecoration(
-                                          color: Color(0xFF385A2E),
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: Text(
-                                          '${day.day}',
-                                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                                        ),
-                                      );
-                                    }
-                                    return Container(
-                                      margin: const EdgeInsets.all(6),
-                                      alignment: Alignment.center,
-                                      child: Text(
-                                        '${day.day}',
-                                        style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w600),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      AppLocalizations.of(context)!.selectDayToManage,
+                                      style: TextStyle(
+                                        fontSize: 12, 
+                                        color: isDark ? Colors.grey.shade400 : Colors.black54,
                                       ),
-                                    );
-                                  },
-                                  todayBuilder: (context, day, focusedDay) {
-                                    final hasAvail = _getAvailabilitiesForDay(day).isNotEmpty;
-                                    if (hasAvail) {
-                                      return Container(
-                                        margin: const EdgeInsets.all(6),
-                                        alignment: Alignment.center,
-                                        decoration: const BoxDecoration(
-                                          color: Color(0xFF385A2E),
-                                          shape: BoxShape.circle,
+                                    )
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    OutlinedButton(
+                                      onPressed: () {
+                                        setState(() {
+                                          _focusedDay = DateTime.now();
+                                        });
+                                      },
+                                      style: OutlinedButton.styleFrom(
+                                        side: BorderSide(color: isDark ? Colors.white24 : Colors.black12),
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                      ),
+                                      child: Text(
+                                        AppLocalizations.of(context)!.today,
+                                        style: TextStyle(
+                                          color: isDark ? Colors.white : const Color(0xFF385A2E), 
+                                          fontWeight: FontWeight.w600,
                                         ),
-                                        child: Text(
-                                          '${day.day}',
-                                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          _focusedDay = DateTime(_focusedDay.year, _focusedDay.month - 1);
+                                        });
+                                      },
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(4.0),
+                                        child: Icon(
+                                          Icons.chevron_left, 
+                                          color: isDark ? Colors.white : Colors.black87,
                                         ),
-                                      );
-                                    }
+                                      ),
+                                    ),
+                                    GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          _focusedDay = DateTime(_focusedDay.year, _focusedDay.month + 1);
+                                        });
+                                      },
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(4.0),
+                                        child: Icon(
+                                          Icons.chevron_right, 
+                                          color: isDark ? Colors.white : Colors.black87,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            
+                            TableCalendar(
+                              locale: currentLocale,
+                              firstDay: DateTime.now().subtract(const Duration(days: 365)),
+                              lastDay: DateTime.now().add(const Duration(days: 365 * 2)),
+                              focusedDay: _focusedDay,
+                              currentDay: DateTime.now(),
+                              headerVisible: false,
+                              enabledDayPredicate: (day) {
+                                final now = DateTime.now();
+                                final today = DateTime(now.year, now.month, now.day);
+                                return !day.isBefore(today);
+                              },
+                              onPageChanged: (focusedDay) {
+                                _focusedDay = focusedDay;
+                              },
+                              selectedDayPredicate: (day) {
+                                return false;
+                              },
+                              onDaySelected: (selectedDay, focusedDay) {
+                                final now = DateTime.now();
+                                final today = DateTime(now.year, now.month, now.day);
+                                if (selectedDay.isBefore(today)) {
+                                  return;
+                                }
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => MidwifeDayViewScreen(date: selectedDay),
+                                  ),
+                                ).then((_) => _fetchData());
+                              },
+                              calendarBuilders: CalendarBuilders(
+                                disabledBuilder: (context, day, focusedDay) {
+                                  return Container(
+                                    margin: const EdgeInsets.all(6),
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      '${day.day}',
+                                      style: TextStyle(
+                                        color: isDark ? Colors.white24 : Colors.grey.shade300,
+                                        fontWeight: FontWeight.normal,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                outsideBuilder: (context, day, focusedDay) {
+                                  return Container(
+                                    margin: const EdgeInsets.all(6),
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      '${day.day}',
+                                      style: TextStyle(
+                                        color: isDark ? Colors.white24 : Colors.grey.shade300,
+                                        fontWeight: FontWeight.normal,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                defaultBuilder: (context, day, focusedDay) {
+                                  final hasAvail = _getAvailabilitiesForDay(day).isNotEmpty;
+                                  if (hasAvail) {
                                     return Container(
                                       margin: const EdgeInsets.all(6),
                                       alignment: Alignment.center,
-                                      decoration: BoxDecoration(
-                                        border: Border.all(color: const Color(0xFF385A2E)),
+                                      decoration: const BoxDecoration(
+                                        color: Color(0xFF385A2E),
                                         shape: BoxShape.circle,
                                       ),
                                       child: Text(
                                         '${day.day}',
-                                        style: const TextStyle(color: Color(0xFF385A2E), fontWeight: FontWeight.bold),
+                                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                                       ),
                                     );
-                                  },
-                                ),
-                                daysOfWeekStyle: const DaysOfWeekStyle(
-                                  weekdayStyle: TextStyle(color: Colors.black54, fontSize: 13),
-                                  weekendStyle: TextStyle(color: Colors.black54, fontSize: 13),
-                                ),
+                                  }
+                                  return Container(
+                                    margin: const EdgeInsets.all(6),
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      '${day.day}',
+                                      style: TextStyle(
+                                        color: isDark ? Colors.white : Colors.black87, 
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                todayBuilder: (context, day, focusedDay) {
+                                  final hasAvail = _getAvailabilitiesForDay(day).isNotEmpty;
+                                  if (hasAvail) {
+                                    return Container(
+                                      margin: const EdgeInsets.all(6),
+                                      alignment: Alignment.center,
+                                      decoration: const BoxDecoration(
+                                        color: Color(0xFF385A2E),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Text(
+                                        '${day.day}',
+                                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                      ),
+                                    );
+                                  }
+                                  return Container(
+                                    margin: const EdgeInsets.all(6),
+                                    alignment: Alignment.center,
+                                    decoration: BoxDecoration(
+                                      border: Border.all(color: const Color(0xFF385A2E), width: 1.5),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Text(
+                                      '${day.day}',
+                                      style: TextStyle(
+                                        color: isDark ? Colors.white : const Color(0xFF385A2E), 
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  );
+                                },
                               ),
-                              
-                              const Divider(height: 32, color: Colors.black12),
-                              
-                              Row(
-                                children: [
-                                  Container(width: 8, height: 8, decoration: const BoxDecoration(color: Color(0xFF385A2E), shape: BoxShape.circle)),
-                                  const SizedBox(width: 6),
-                                  const Text('Available', style: TextStyle(fontSize: 12, color: Colors.black54)),
-                                  const SizedBox(width: 16),
-                                  Container(width: 8, height: 8, decoration: const BoxDecoration(color: Colors.black45, shape: BoxShape.circle)),
-                                  const SizedBox(width: 6),
-                                  const Text('Past', style: TextStyle(fontSize: 12, color: Colors.black54)),
-                                ],
+                              daysOfWeekStyle: DaysOfWeekStyle(
+                                weekdayStyle: TextStyle(color: isDark ? Colors.grey.shade400 : Colors.black54, fontSize: 13),
+                                weekendStyle: TextStyle(color: isDark ? Colors.grey.shade400 : Colors.black54, fontSize: 13),
                               ),
-                            ],
-                          ),
+                            ),
+                            
+                            Divider(height: 32, color: Theme.of(context).dividerColor),
+                            
+                            Row(
+                              children: [
+                                Container(width: 8, height: 8, decoration: const BoxDecoration(color: Color(0xFF385A2E), shape: BoxShape.circle)),
+                                const SizedBox(width: 6),
+                                Text(
+                                  AppLocalizations.of(context)!.available, 
+                                  style: TextStyle(fontSize: 12, color: isDark ? Colors.grey.shade400 : Colors.black54),
+                                ),
+                                const SizedBox(width: 16),
+                                Container(
+                                  width: 8, 
+                                  height: 8, 
+                                  decoration: BoxDecoration(
+                                    color: isDark ? Colors.grey.shade600 : Colors.black45, 
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  AppLocalizations.of(context)!.pastStatus, 
+                                  style: TextStyle(fontSize: 12, color: isDark ? Colors.grey.shade400 : Colors.black54),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-            ),
-          ],
-        ),
+                ),
+          ),
+        ],
       ),
     );
   }

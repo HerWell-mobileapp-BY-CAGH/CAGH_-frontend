@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
 import 'package:cagh_frontend/core/services/language_service.dart';
-import 'package:cagh_frontend/features/auth/presentation/midwife/midwife_login_screen.dart';
+import 'package:cagh_frontend/features/auth/presentation/create_new_password_screen.dart';
 import 'package:cagh_frontend/features/auth/presentation/user/user_login_screen.dart';
+import 'package:cagh_frontend/features/auth/presentation/midwife/midwife_login_screen.dart';
+import 'package:cagh_frontend/features/auth/presentation/midwife/midwife_registration_success_screen.dart' as cagh_frontend_success;
 import 'package:cagh_frontend/shared/widgets/custom_snackbar.dart';
 import 'create_new_password_screen.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
@@ -353,6 +355,13 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                                         ),
                                       ),
                                     );
+                                  } else if (widget.isMidwife) {
+                                    navigator.pushAndRemoveUntil(
+                                      MaterialPageRoute(
+                                        builder: (context) => const cagh_frontend_success.MidwifeRegistrationSuccessScreen(),
+                                      ),
+                                      (route) => false,
+                                    );
                                   } else {
                                     // Registration complete! Must log in to get tokens.
                                     CustomSnackBar.show(
@@ -363,9 +372,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                                     
                                     navigator.pushAndRemoveUntil(
                                       MaterialPageRoute(
-                                        builder: (context) => widget.isMidwife
-                                            ? const MidwifeLoginScreen()
-                                            : const UserLoginScreen(),
+                                        builder: (context) => const UserLoginScreen(),
                                       ),
                                       (route) => false,
                                     );

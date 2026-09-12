@@ -72,7 +72,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
           _isLoading = false;
         });
       }
-    } catch (e, st) {
+    } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${AppLocalizations.of(context)!.failedToUpdateStatus}: $e')));
         setState(() {
@@ -324,7 +324,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
             // AVAILABLE TIMES Section
             Text(
               AppLocalizations.of(context)!.availableTimes,
-              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: Colors.grey.shade600),
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: Colors.grey.shade700),
             ),
             const SizedBox(height: 16),
 
@@ -338,7 +338,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                     children: [
                       Icon(Icons.event_busy, color: Colors.grey.shade400, size: 40),
                       const SizedBox(height: 12),
-                      Text('0 available slots / Blocked by Midwife', style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.bold)),
+                      Text(AppLocalizations.of(context)!.noSlotsFound, style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.bold)),
                     ],
                   )
                 )
@@ -347,60 +347,69 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
               if (morningSlots.isNotEmpty) ...[
                 Row(
                   children: [
-                    Icon(Icons.wb_sunny_outlined, color: Color(0xFF315E26), size: 16),
-                    SizedBox(width: 6),
-                    Text(AppLocalizations.of(context)!.morning, style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF315E26))),
+                    const Icon(Icons.wb_sunny_outlined, color: Color(0xFF315E26), size: 18),
+                    const SizedBox(width: 8),
+                    Text(AppLocalizations.of(context)!.morning, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF315E26))),
                   ],
                 ),
                 const SizedBox(height: 12),
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
-                  children: morningSlots.map((slot) => _buildSlotChip(slot.id, slot.startTime, slot.displayTime, slot.isAvailable)).toList(),
-                ),
-                SizedBox(height: 20),
+                ...morningSlots.map((slot) => _buildSlotCard(
+                  id: slot.id,
+                  startTime: slot.startTime,
+                  endTime: slot.endTime,
+                  displayTime: slot.displayTime,
+                  isAvailable: slot.isAvailable,
+                  sessionTitle: AppLocalizations.of(context)!.morning,
+                )),
+                const SizedBox(height: 16),
               ],
               if (afternoonSlots.isNotEmpty) ...[
                 Row(
                   children: [
-                    Icon(Icons.wb_sunny_outlined, color: Color(0xFF315E26), size: 16),
-                    SizedBox(width: 6),
-                    Text(AppLocalizations.of(context)!.afternoon, style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF315E26))),
+                    const Icon(Icons.wb_sunny_outlined, color: Color(0xFF315E26), size: 18),
+                    const SizedBox(width: 8),
+                    Text(AppLocalizations.of(context)!.afternoon, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF315E26))),
                   ],
                 ),
                 const SizedBox(height: 12),
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
-                  children: afternoonSlots.map((slot) => _buildSlotChip(slot.id, slot.startTime, slot.displayTime, slot.isAvailable)).toList(),
-                ),
-                SizedBox(height: 20),
+                ...afternoonSlots.map((slot) => _buildSlotCard(
+                  id: slot.id,
+                  startTime: slot.startTime,
+                  endTime: slot.endTime,
+                  displayTime: slot.displayTime,
+                  isAvailable: slot.isAvailable,
+                  sessionTitle: AppLocalizations.of(context)!.afternoon,
+                )),
+                const SizedBox(height: 16),
               ],
               if (eveningSlots.isNotEmpty) ...[
                 Row(
                   children: [
-                    Icon(Icons.nights_stay_outlined, color: Color(0xFF315E26), size: 16),
-                    SizedBox(width: 6),
-                    Text(AppLocalizations.of(context)!.evening, style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF315E26))),
+                    const Icon(Icons.nights_stay_outlined, color: Color(0xFF315E26), size: 18),
+                    const SizedBox(width: 8),
+                    Text(AppLocalizations.of(context)!.evening, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF315E26))),
                   ],
                 ),
                 const SizedBox(height: 12),
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
-                  children: eveningSlots.map((slot) => _buildSlotChip(slot.id, slot.startTime, slot.displayTime, slot.isAvailable)).toList(),
-                ),
-                const SizedBox(height: 20),
+                ...eveningSlots.map((slot) => _buildSlotCard(
+                  id: slot.id,
+                  startTime: slot.startTime,
+                  endTime: slot.endTime,
+                  displayTime: slot.displayTime,
+                  isAvailable: slot.isAvailable,
+                  sessionTitle: AppLocalizations.of(context)!.evening,
+                )),
+                const SizedBox(height: 16),
               ],
             ],
 
             // Patient Notes Section
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Text(
               AppLocalizations.of(context)!.reasonForVisit,
-              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: Colors.grey.shade600),
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: Colors.grey.shade700),
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             TextField(
               controller: _reasonController,
               maxLines: 3,
@@ -426,107 +435,26 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
             ),
             const SizedBox(height: 24),
 
-            // Booking Summary
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: Offset(0, 4)),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    AppLocalizations.of(context)!.bookingSummary,
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A)),
-                  ),
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF9F9F9),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 20,
-                          backgroundColor: const Color(0xFFE8F5E9),
-                          backgroundImage: widget.midwife.avatarUrl != null ? NetworkImage(widget.midwife.avatarUrl!) : null,
-                        ),
-                        SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(AppLocalizations.of(context)!.yourMidwife, style: TextStyle(fontSize: 10, color: Colors.grey.shade600, fontWeight: FontWeight.bold)),
-                              Text(widget.midwife.fullName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                              Text(widget.midwife.specialty, style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(AppLocalizations.of(context)!.consultationFee, style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
-                      Text(widget.midwife.consultationFee, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                    ],
-                  ),
-                  SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(AppLocalizations.of(context)!.serviceType, style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
-                      Text(_consultationType, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                    ],
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(vertical: 12.0),
-                    child: Divider(),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(AppLocalizations.of(context)!.totalAmount, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-                      Text(
-                        widget.midwife.consultationFee,
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF315E26)),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: ElevatedButton.icon(
-                      onPressed: _confirmBooking,
-                      icon: Icon(Icons.calendar_today, color: Colors.white, size: 18),
-                      label: Text(AppLocalizations.of(context)!.confirmBooking, style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF315E26),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Center(
-                    child: Text(
-                      'Free cancellation up to 24 hours before\nyour appointment.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.grey.shade400, fontSize: 10),
-                    ),
-                  ),
-                ],
+            // Confirm Booking Action Button
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton.icon(
+                onPressed: _confirmBooking,
+                icon: const Icon(Icons.calendar_today, color: Colors.white, size: 18),
+                label: Text(
+                  AppLocalizations.of(context)!.confirmBooking,
+                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF315E26),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
+                  elevation: 0,
+                ),
               ),
             ),
             const SizedBox(height: 16),
+
             // Privacy Note
             Container(
               padding: const EdgeInsets.all(12),
@@ -540,8 +468,8 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      "Your health data is encrypted and handled according to HerWell's strict privacy standards.",
-                      style: TextStyle(fontSize: 10, color: Colors.grey.shade700, height: 1.3),
+                      "Your health data is encrypted and handled according to strict privacy standards.",
+                      style: TextStyle(fontSize: 11, color: Colors.grey.shade700, height: 1.3),
                     ),
                   ),
                 ],
@@ -565,20 +493,20 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isSelected ? Color(0xFFFFD22B) : Colors.grey.shade200,
+              color: isSelected ? const Color(0xFF385A2E) : Colors.grey.shade200,
               width: isSelected ? 2 : 1,
             ),
           ),
           child: Column(
             children: [
-              Icon(icon, color: isSelected ? const Color(0xFF315E26) : Colors.grey.shade500, size: 28),
+              Icon(icon, color: isSelected ? const Color(0xFF385A2E) : Colors.grey.shade500, size: 28),
               const SizedBox(height: 8),
               Text(
                 title,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 13,
                   fontWeight: FontWeight.bold,
-                  color: isSelected ? const Color(0xFF315E26) : Colors.grey.shade500,
+                  color: isSelected ? const Color(0xFF385A2E) : Colors.grey.shade600,
                 ),
               ),
             ],
@@ -588,58 +516,155 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
     );
   }
 
-  Widget _buildSlotChip(String id, String startTime, String displayTime, bool isAvailable) {
+  String _formatTime12h(String time) {
+    if (time.isEmpty) return '';
+    try {
+      final parts = time.split(':');
+      int hour = int.parse(parts[0]);
+      int min = int.parse(parts[1]);
+      String period = hour >= 12 ? 'PM' : 'AM';
+      hour = hour % 12;
+      if (hour == 0) hour = 12;
+      return '${hour.toString().padLeft(2, '0')}:${min.toString().padLeft(2, '0')} $period';
+    } catch (_) {
+      return time;
+    }
+  }
+
+  Widget _buildSlotCard({
+    required String id,
+    required String startTime,
+    required String endTime,
+    required String displayTime,
+    required bool isAvailable,
+    required String sessionTitle,
+  }) {
     final isSelected = startTime == _selectedSlotTime;
+    final isVoice = _consultationType.toLowerCase().contains('voice');
+    final methodStr = isVoice ? AppLocalizations.of(context)!.voiceCall : AppLocalizations.of(context)!.inPerson;
+    final methodIcon = isVoice ? Icons.phone_in_talk_outlined : Icons.location_on_outlined;
+
+    final start12 = displayTime.isNotEmpty ? displayTime : _formatTime12h(startTime);
+    final end12 = endTime.isNotEmpty ? _formatTime12h(endTime) : '';
+
     return GestureDetector(
-      onTap: isAvailable ? () {
-        setState(() {
-          _selectedSlotId = id;
-          _selectedSlotTime = startTime;
-        });
-      } : null,
+      onTap: isAvailable
+          ? () {
+              setState(() {
+                _selectedSlotId = id;
+                _selectedSlotTime = startTime;
+              });
+            }
+          : null,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        margin: const EdgeInsets.only(bottom: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
         decoration: BoxDecoration(
-          color: isSelected 
-              ? const Color(0xFF315E26) 
-              : (isAvailable ? Colors.white : Colors.grey.shade100),
-          borderRadius: BorderRadius.circular(18),
+          color: isSelected ? const Color(0xFFF1F8E9) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected 
-                ? const Color(0xFF315E26) 
-                : (isAvailable ? const Color(0xFFE0E0E0) : Colors.grey.shade300),
+            color: isSelected ? const Color(0xFF385A2E) : Colors.black12,
             width: isSelected ? 2 : 1,
           ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              displayTime.isNotEmpty ? displayTime : startTime,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                color: isSelected ? Colors.white : (isAvailable ? Colors.black87 : Colors.grey.shade500),
-              ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
             ),
-            if (!isSelected) ...[
-              const SizedBox(width: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                decoration: BoxDecoration(
-                  color: isAvailable ? Colors.green.shade50 : Colors.red.shade50,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  isAvailable ? 'Available' : 'Booked',
+          ],
+        ),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  start12,
                   style: TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.bold,
-                    color: isAvailable ? Colors.green.shade700 : Colors.red.shade700,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: isSelected ? const Color(0xFF385A2E) : const Color(0xFF182335),
                   ),
                 ),
-              ),
-            ],
+                const Text(
+                  '+',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF385A2E),
+                  ),
+                ),
+                Text(
+                  end12.isNotEmpty ? end12 : start12,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: isSelected ? const Color(0xFF385A2E) : const Color(0xFF182335),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Icon(methodIcon, size: 16, color: Colors.black54),
+                    const SizedBox(width: 6),
+                    Text(
+                      '$sessionTitle · $methodStr',
+                      style: const TextStyle(fontSize: 12, color: Colors.black54, fontWeight: FontWeight.w500),
+                    ),
+                  ],
+                ),
+                Row(
+                  children: [
+                    const Text(
+                      '30 min',
+                      style: TextStyle(fontSize: 12, color: Colors.black45, fontWeight: FontWeight.w500),
+                    ),
+                    const SizedBox(width: 10),
+                    if (isSelected)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF385A2E),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.check, size: 12, color: Colors.white),
+                            SizedBox(width: 4),
+                            Text(
+                              'Selected',
+                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white),
+                            ),
+                          ],
+                        ),
+                      )
+                    else
+                      Row(
+                        children: [
+                          Text(
+                            isAvailable ? 'Select' : 'Booked',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: isAvailable ? const Color(0xFF385A2E) : Colors.grey,
+                            ),
+                          ),
+                          if (isAvailable) ...[
+                            const SizedBox(width: 2),
+                            const Icon(Icons.arrow_forward, size: 13, color: Color(0xFF385A2E)),
+                          ],
+                        ],
+                      ),
+                  ],
+                ),
+              ],
+            ),
           ],
         ),
       ),

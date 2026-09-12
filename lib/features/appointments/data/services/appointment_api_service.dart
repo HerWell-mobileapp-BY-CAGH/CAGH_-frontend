@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cagh_frontend/core/network/api_config.dart';
+import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
 import 'package:cagh_frontend/shared/constants/app_durations.dart';
 
 class AppointmentApiService {
@@ -14,13 +15,56 @@ class AppointmentApiService {
     };
   }
 
+  Future<http.Response> _getWithAuth(Uri url, {bool allowPublicRetry = true}) async {
+    var response = await http.get(url, headers: await _getHeaders()).timeout(AppDurations.apiRequestTimeout);
+    if (response.statusCode == 401) {
+      final refreshed = await AuthService.forceTokenRefresh();
+      if (refreshed) {
+        response = await http.get(url, headers: await _getHeaders()).timeout(AppDurations.apiRequestTimeout);
+      } else if (allowPublicRetry) {
+        response = await http.get(url, headers: {'Content-Type': 'application/json'}).timeout(AppDurations.apiRequestTimeout);
+      }
+    }
+    return response;
+  }
+
+  Future<http.Response> _postWithAuth(Uri url, {Object? body}) async {
+    var response = await http.post(url, headers: await _getHeaders(), body: body).timeout(AppDurations.apiRequestTimeout);
+    if (response.statusCode == 401) {
+      final refreshed = await AuthService.forceTokenRefresh();
+      if (refreshed) {
+        response = await http.post(url, headers: await _getHeaders(), body: body).timeout(AppDurations.apiRequestTimeout);
+      }
+    }
+    return response;
+  }
+
+  Future<http.Response> _patchWithAuth(Uri url, {Object? body}) async {
+    var response = await http.patch(url, headers: await _getHeaders(), body: body).timeout(AppDurations.apiRequestTimeout);
+    if (response.statusCode == 401) {
+      final refreshed = await AuthService.forceTokenRefresh();
+      if (refreshed) {
+        response = await http.patch(url, headers: await _getHeaders(), body: body).timeout(AppDurations.apiRequestTimeout);
+      }
+    }
+    return response;
+  }
+
+  Future<http.Response> _deleteWithAuth(Uri url) async {
+    var response = await http.delete(url, headers: await _getHeaders()).timeout(AppDurations.apiRequestTimeout);
+    if (response.statusCode == 401) {
+      final refreshed = await AuthService.forceTokenRefresh();
+      if (refreshed) {
+        response = await http.delete(url, headers: await _getHeaders()).timeout(AppDurations.apiRequestTimeout);
+      }
+    }
+    return response;
+  }
+
   Future<Map<String, dynamic>> getTimeSlots(String midwifeId, String date) async {
     final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.timeSlots}?midwife_id=$midwifeId&date=$date');
     
-    final response = await http.get(
-      url,
-      headers: await _getHeaders(),
-    ).timeout(AppDurations.apiRequestTimeout);
+    final response = await _getWithAuth(url);
 
     if (response.statusCode == 200) {
       try {
@@ -40,11 +84,10 @@ class AppointmentApiService {
   Future<Map<String, dynamic>> requestAppointment(Map<String, dynamic> body) async {
     final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.appointments}');
     
-    final response = await http.post(
+    final response = await _postWithAuth(
       url,
-      headers: await _getHeaders(),
       body: jsonEncode(body),
-    ).timeout(AppDurations.apiRequestTimeout);
+    );
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       return jsonDecode(response.body);
@@ -58,10 +101,7 @@ class AppointmentApiService {
   Future<List<Map<String, dynamic>>> getUserAppointments() async {
     final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.appointments}');
     
-    final response = await http.get(
-      url,
-      headers: await _getHeaders(),
-    ).timeout(AppDurations.apiRequestTimeout);
+    final response = await _getWithAuth(url);
 
     if (response.statusCode == 200) {
       final decoded = jsonDecode(response.body);
@@ -80,10 +120,7 @@ class AppointmentApiService {
   Future<List<Map<String, dynamic>>> getMidwifeAppointments() async {
     final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.appointments}');
     
-    final response = await http.get(
-      url,
-      headers: await _getHeaders(),
-    ).timeout(AppDurations.apiRequestTimeout);
+    final response = await _getWithAuth(url);
 
     if (response.statusCode == 200) {
       final decoded = jsonDecode(response.body);
@@ -100,50 +137,95 @@ class AppointmentApiService {
   }
 
   Future<Map<String, dynamic>> acceptAppointment(String appointmentId) async {
-    final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.appointments}$appointmentId/confirm/');
+    final primaryUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.appointments}$appointmentId/confirm/');
+    final acceptUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.appointments}$appointmentId/accept/');
+    final patchUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.appointments}$appointmentId/');
     
-    final response = await http.post(
-      url,
-      headers: await _getHeaders(),
-    ).timeout(AppDurations.apiRequestTimeout);
+    http.Response response = await _postWithAuth(primaryUrl);
 
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+    if (response.statusCode == 404) {
+      response = await _postWithAuth(acceptUrl);
+    }
+    if (response.statusCode == 404 || response.statusCode == 405) {
+      response = await _patchWithAuth(patchUrl, body: jsonEncode({'status': 'CONFIRMED'}));
+    }
+
+    if (response.statusCode == 200 || response.statusCode == 201 || response.statusCode == 204) {
+      if (response.body.isEmpty) return {'status': 'CONFIRMED'};
+      try {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map<String, dynamic>) return decoded;
+        return {'status': 'CONFIRMED'};
+      } catch (_) {
+        return {'status': 'CONFIRMED'};
+      }
     } else {
-      throw Exception('Failed to accept appointment.');
+      String msg = 'Failed to accept appointment.';
+      try {
+        final body = jsonDecode(response.body);
+        msg = body['detail'] ?? body['message'] ?? body['error'] ?? msg;
+      } catch (_) {}
+      throw Exception(msg);
     }
   }
 
   Future<Map<String, dynamic>> declineAppointment(String appointmentId) async {
-    final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.appointments}$appointmentId/decline/');
+    final primaryUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.appointments}$appointmentId/decline/');
+    final rejectUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.appointments}$appointmentId/reject/');
+    final patchUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.appointments}$appointmentId/');
     
-    final response = await http.post(
-      url,
-      headers: await _getHeaders(),
-    ).timeout(AppDurations.apiRequestTimeout);
+    http.Response response = await _postWithAuth(primaryUrl);
 
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+    if (response.statusCode == 404) {
+      response = await _postWithAuth(rejectUrl);
+    }
+    if (response.statusCode == 404 || response.statusCode == 405) {
+      response = await _patchWithAuth(patchUrl, body: jsonEncode({'status': 'DECLINED'}));
+    }
+
+    if (response.statusCode == 200 || response.statusCode == 201 || response.statusCode == 204) {
+      if (response.body.isEmpty) return {'status': 'DECLINED'};
+      try {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map<String, dynamic>) return decoded;
+        return {'status': 'DECLINED'};
+      } catch (_) {
+        return {'status': 'DECLINED'};
+      }
     } else {
-      throw Exception('Failed to decline appointment.');
+      String msg = 'Failed to decline appointment.';
+      try {
+        final body = jsonDecode(response.body);
+        msg = body['detail'] ?? body['message'] ?? body['error'] ?? msg;
+      } catch (_) {}
+      throw Exception(msg);
     }
   }
 
   Future<Map<String, dynamic>> cancelAppointment(String appointmentId) async {
-    final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.appointments}$appointmentId/cancel/');
+    final primaryUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.appointments}$appointmentId/cancel/');
+    final patchUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.appointments}$appointmentId/');
     
-    final response = await http.post(
-      url,
-      headers: await _getHeaders(),
-    ).timeout(AppDurations.apiRequestTimeout);
+    http.Response response = await _postWithAuth(primaryUrl);
 
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      return jsonDecode(response.body);
+    if (response.statusCode == 404 || response.statusCode == 405) {
+      response = await _patchWithAuth(patchUrl, body: jsonEncode({'status': 'CANCELLED'}));
+    }
+
+    if (response.statusCode == 200 || response.statusCode == 201 || response.statusCode == 204) {
+      if (response.body.isEmpty) return {'status': 'CANCELLED'};
+      try {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map<String, dynamic>) return decoded;
+        return {'status': 'CANCELLED'};
+      } catch (_) {
+        return {'status': 'CANCELLED'};
+      }
     } else {
       String msg = 'Failed to cancel appointment.';
       try {
         final body = jsonDecode(response.body);
-        msg = body['message'] ?? body['detail'] ?? body['error'] ?? msg;
+        msg = body['detail'] ?? body['message'] ?? body['error'] ?? msg;
       } catch (_) {}
       throw Exception(msg);
     }
@@ -157,15 +239,14 @@ class AppointmentApiService {
   }) async {
     final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.appointments}$appointmentId/reschedule/');
     
-    final response = await http.post(
+    final response = await _postWithAuth(
       url,
-      headers: await _getHeaders(),
       body: jsonEncode({
         'scheduled_date': scheduledDate,
         'start_time': startTime,
         'end_time': endTime,
       }),
-    ).timeout(AppDurations.apiRequestTimeout);
+    );
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       return jsonDecode(response.body);
@@ -183,10 +264,7 @@ class AppointmentApiService {
   Future<Map<String, dynamic>> getAppointmentDetails(String appointmentId) async {
     final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.appointments}$appointmentId/');
     
-    final response = await http.get(
-      url,
-      headers: await _getHeaders(),
-    ).timeout(AppDurations.apiRequestTimeout);
+    final response = await _getWithAuth(url);
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
@@ -196,17 +274,23 @@ class AppointmentApiService {
   }
 
   Future<List<Map<String, dynamic>>> getAvailabilities() async {
-    final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.availabilities}');
+    final primaryUrl = Uri.parse('${ApiConfig.baseUrl}/appointments/availabilities/');
+    final fallbackUrl = Uri.parse('${ApiConfig.baseUrl}/appointments/availability/');
     
-    final response = await http.get(
-      url,
-      headers: await _getHeaders(),
-    ).timeout(AppDurations.apiRequestTimeout);
+    http.Response response;
+    try {
+      response = await _getWithAuth(primaryUrl);
+      if (response.statusCode == 404) {
+        response = await _getWithAuth(fallbackUrl);
+      }
+    } catch (_) {
+      response = await _getWithAuth(fallbackUrl);
+    }
 
     if (response.statusCode == 200) {
       final decoded = jsonDecode(response.body);
       List<dynamic> listData = [];
-      if (decoded is Map<String, dynamic> && decoded.containsKey('results')) {
+      if (decoded is Map && decoded.containsKey('results')) {
         listData = decoded['results'] as List<dynamic>? ?? [];
       } else if (decoded is List) {
         listData = decoded;
@@ -218,44 +302,71 @@ class AppointmentApiService {
   }
 
   Future<Map<String, dynamic>> setAvailability(Map<String, dynamic> data) async {
-    final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.availabilities}');
+    final primaryUrl = Uri.parse('${ApiConfig.baseUrl}/appointments/availability/');
+    final fallbackUrl = Uri.parse('${ApiConfig.baseUrl}/appointments/working-hours/');
     
-    final response = await http.post(
-      url,
-      headers: await _getHeaders(),
-      body: jsonEncode(data),
-    ).timeout(AppDurations.apiRequestTimeout);
+    http.Response response;
+    try {
+      response = await _postWithAuth(primaryUrl, body: jsonEncode(data));
+      if (response.statusCode == 404 || response.statusCode == 405) {
+        response = await _postWithAuth(fallbackUrl, body: jsonEncode(data));
+      }
+    } catch (_) {
+      response = await _postWithAuth(fallbackUrl, body: jsonEncode(data));
+    }
 
     if (response.statusCode == 201 || response.statusCode == 200) {
-      return jsonDecode(response.body);
+      if (response.body.isEmpty) return {};
+      final decoded = jsonDecode(response.body);
+      return decoded is Map ? Map<String, dynamic>.from(decoded) : {};
     } else {
-      throw Exception('Failed to set availability. Status: ${response.statusCode}, Body: ${response.body}');
+      String msg = 'Failed to set availability.';
+      try {
+        final body = jsonDecode(response.body);
+        msg = body['detail'] ?? body['message'] ?? body['error'] ?? 'Status: ${response.statusCode}';
+      } catch (_) {
+        msg = 'Status: ${response.statusCode}, Body: ${response.body}';
+      }
+      throw Exception(msg);
     }
   }
 
   Future<Map<String, dynamic>> updateAvailability(String availabilityId, Map<String, dynamic> data) async {
-    final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.availabilities}$availabilityId/');
+    final primaryUrl = Uri.parse('${ApiConfig.baseUrl}/appointments/availabilities/$availabilityId/');
+    final fallbackUrl = Uri.parse('${ApiConfig.baseUrl}/appointments/availability/$availabilityId/');
     
-    final response = await http.patch(
-      url,
-      headers: await _getHeaders(),
-      body: jsonEncode(data),
-    ).timeout(AppDurations.apiRequestTimeout);
+    http.Response response;
+    try {
+      response = await _patchWithAuth(primaryUrl, body: jsonEncode(data));
+      if (response.statusCode == 404 || response.statusCode == 405) {
+        response = await _patchWithAuth(fallbackUrl, body: jsonEncode(data));
+      }
+    } catch (_) {
+      response = await _patchWithAuth(fallbackUrl, body: jsonEncode(data));
+    }
 
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+    if (response.statusCode == 200 || response.statusCode == 204) {
+      if (response.body.isEmpty) return {};
+      final decoded = jsonDecode(response.body);
+      return decoded is Map ? Map<String, dynamic>.from(decoded) : {};
     } else {
-      throw Exception('Failed to update availability. Status: ${response.statusCode}, Body: ${response.body}');
+      throw Exception('Failed to update availability. Status: ${response.statusCode}');
     }
   }
 
   Future<void> deleteAvailability(String availabilityId) async {
-    final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.availabilities}$availabilityId/');
+    final primaryUrl = Uri.parse('${ApiConfig.baseUrl}/appointments/availabilities/$availabilityId/');
+    final fallbackUrl = Uri.parse('${ApiConfig.baseUrl}/appointments/availability/$availabilityId/');
     
-    final response = await http.delete(
-      url,
-      headers: await _getHeaders(),
-    ).timeout(AppDurations.apiRequestTimeout);
+    http.Response response;
+    try {
+      response = await _deleteWithAuth(primaryUrl);
+      if (response.statusCode == 404 || response.statusCode == 405) {
+        response = await _deleteWithAuth(fallbackUrl);
+      }
+    } catch (_) {
+      response = await _deleteWithAuth(fallbackUrl);
+    }
 
     if (response.statusCode != 200 && response.statusCode != 204) {
       throw Exception('Failed to delete availability. Status: ${response.statusCode}');

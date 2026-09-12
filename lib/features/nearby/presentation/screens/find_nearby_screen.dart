@@ -8,6 +8,8 @@ import '../widgets/location_permission_view.dart';
 import '../widgets/nearby_empty_state.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
+import 'package:cagh_frontend/shared/widgets/inner_page_app_bar.dart';
+import 'package:cagh_frontend/shared/widgets/search_filter_bottom_sheet.dart' as cagh_frontend_filter;
 
 class FindNearbyScreen extends ConsumerStatefulWidget {
   final String initialCategory;
@@ -93,27 +95,22 @@ class _FindNearbyScreenState extends ConsumerState<FindNearbyScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        backgroundColor: AppColors.primaryGreen,
-        elevation: 0,
-        title: Text(AppLocalizations.of(context)!.findNearby, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        actions: [
+      appBar: buildInnerPageAppBar(
+        context,
+        title: AppLocalizations.of(context)!.findNearby,
+        showLanguage: true,
+        extraActions: [
           IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.white),
+            icon: const Icon(Icons.refresh_rounded, color: Colors.white),
             onPressed: () => ref.read(nearbyStateProvider.notifier).fetchNearbyFacilities(forceRefreshLocation: true),
           ),
         ],
       ),
       body: Column(
         children: [
-          // Search and Filters
+          // Search Bar
           Container(
-            color: AppColors.primaryGreen,
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: NearbySearchBar(
               controller: _searchController,
               onClear: () {
@@ -121,9 +118,28 @@ class _FindNearbyScreenState extends ConsumerState<FindNearbyScreen> {
                 _onSearchChanged('');
               },
               onChanged: _onSearchChanged,
+              onFilterTapped: () {
+                cagh_frontend_filter.SearchFilterBottomSheet.show(
+                  context,
+                  isForMidwife: false,
+                  onApply: (distanceStr, rating, availability) {
+                    final distance = double.tryParse(distanceStr) ?? 10.0;
+                    ref.read(nearbyStateProvider.notifier).updateFilters(radius: distance);
+                  },
+                );
+              },
             ),
           ),
-          
+
+          // Horizontally scrollable category filter chips (fixed, non-scrollable vertically)
+          NearbyFilterChips(
+            categories: _categories,
+            selectedCategory: _currentUiCategory,
+            onSelected: _onCategorySelected,
+          ),
+
+          const Divider(height: 1, thickness: 1, color: Color(0xFFF0F0F0)),
+
           // State Rendering
           Expanded(
             child: _buildBody(state),
@@ -173,55 +189,26 @@ class _FindNearbyScreenState extends ConsumerState<FindNearbyScreen> {
     }
 
     final bool isEmpty = state is NearbyEmpty;
-    final type = isEmpty ? (state).selectedType : (state as NearbyLoaded).selectedType;
     final radius = isEmpty ? (state).radius : (state as NearbyLoaded).radius;
     final facilities = isEmpty ? [] : (state as NearbyLoaded).facilities;
 
-    // Map Category UI name back from API type
-    String uiCategory = 'All';
-    if (type == 'Hospital') {
-      uiCategory = 'Hospitals';
-    } else if (type == 'Health Center') {
-      uiCategory = 'Health Centers';
-    } else if (type == 'Clinic') {
-      uiCategory = 'Clinics';
-    } else if (type == 'Midwife') {
-      uiCategory = 'Midwives';
-    } else if (type == 'Pharmacy') {
-      uiCategory = 'Pharmacies';
-    } else if (type == AppLocalizations.of(context)!.emergency) {
-      uiCategory = AppLocalizations.of(context)!.emergency;
+    if (isEmpty) {
+      return NearbyEmptyState(
+        onExpandRadius: () {
+          ref.read(nearbyStateProvider.notifier).updateFilters(radius: radius + 50.0);
+        },
+        onClearFilters: () {
+          ref.read(nearbyStateProvider.notifier).updateFilters(type: 'All', service: 'All');
+        },
+      );
     }
 
-    return Column(
-      children: [
-        NearbyFilterChips(
-          categories: _categories,
-          selectedCategory: uiCategory,
-          onSelected: _onCategorySelected,
-        ),
-        if (isEmpty)
-          Expanded(
-            child: NearbyEmptyState(
-              onExpandRadius: () {
-                ref.read(nearbyStateProvider.notifier).updateFilters(radius: radius + 50.0);
-              },
-              onClearFilters: () {
-                ref.read(nearbyStateProvider.notifier).updateFilters(type: 'All', service: 'All');
-              },
-            ),
-          )
-        else
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.only(top: 8, bottom: 80),
-              itemCount: facilities.length,
-              itemBuilder: (context, index) {
-                return FacilityCard(facility: facilities[index]);
-              },
-            ),
-          ),
-      ],
+    return ListView.builder(
+      padding: const EdgeInsets.only(top: 8, bottom: 80),
+      itemCount: facilities.length,
+      itemBuilder: (context, index) {
+        return FacilityCard(facility: facilities[index]);
+      },
     );
   }
 }

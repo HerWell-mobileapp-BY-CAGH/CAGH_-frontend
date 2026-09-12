@@ -45,7 +45,19 @@ class AiChatState {
 class AiChatNotifier extends StateNotifier<AiChatState> {
   final AiAssistantRepository _repository;
 
-  AiChatNotifier(this._repository) : super(AiChatState()) {
+  AiChatNotifier(this._repository)
+      : super(
+          AiChatState(
+            messages: [
+              AiMessage(
+                id: 'welcome_greeting',
+                text: 'Hello! I am your AI Health Assistant. How can I help you today?',
+                sender: SenderType.ai,
+                timestamp: DateTime.now(),
+              ),
+            ],
+          ),
+        ) {
     fetchSuggestedQuestions();
   }
 

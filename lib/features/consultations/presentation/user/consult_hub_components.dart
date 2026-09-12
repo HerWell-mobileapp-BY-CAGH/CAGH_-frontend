@@ -90,6 +90,9 @@ Widget buildStatusIndicator(BuildContext context, AppointmentStatus status) {
       case AppointmentStatus.unknown:
         text = 'UNKNOWN';
         break;
+      default:
+        text = l10n.statusDeclined;
+        break;
     }
   }
 

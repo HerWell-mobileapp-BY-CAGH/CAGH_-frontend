@@ -10,6 +10,7 @@ import 'package:cagh_frontend/features/consultations/presentation/user/voice_con
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
 import 'package:cagh_frontend/core/utils/app_logger.dart';
 import 'package:cagh_frontend/features/consultations/presentation/user/consult_hub_components.dart';
+import 'package:cagh_frontend/shared/widgets/custom_snackbar.dart';
 
 class ConsultHubScreen extends StatefulWidget {
   final VoidCallback? onFindMidwifeTap;
@@ -138,12 +139,16 @@ class ConsultHubScreenState extends State<ConsultHubScreen> {
     try {
       if (newStatus == AppointmentStatus.cancelled) {
         await _appointmentRepository.cancelAppointment(id);
+        if (mounted) CustomSnackBar.show(context, message: 'Appointment cancelled');
       }
       if (mounted) _fetchAppointments();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.failedToUpdateStatus), backgroundColor: Colors.red),
+        final errorMsg = e.toString().replaceAll('Exception: ', '').trim();
+        CustomSnackBar.show(
+          context,
+          message: errorMsg.isNotEmpty ? errorMsg : AppLocalizations.of(context)!.failedToUpdateStatus,
+          isError: true,
         );
       }
     }
@@ -199,18 +204,7 @@ class ConsultHubScreenState extends State<ConsultHubScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        backgroundColor: AppColors.primaryGreen,
-        elevation: 0,
-        title: Text(
-          AppLocalizations.of(context)!.consultations,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
+      // Removed AppBar because it is now handled by the parent UserHomeScreen
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: AppColors.primaryGreen))
           : RefreshIndicator(

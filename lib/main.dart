@@ -138,7 +138,8 @@ class _MyAppState extends ConsumerState<MyApp> {
         );
       } else {
         // Refresh notifications for other actions (like messages, consultation updates, etc)
-        AppLogger.d('FCM Foreground: Refreshing notifications');
+        AppLogger.d('FCM Foreground: Refreshing notifications and showing popup');
+        FcmService.showForegroundNotification(message);
         ref.read(notificationProvider.notifier).refreshNotifications();
       }
     });

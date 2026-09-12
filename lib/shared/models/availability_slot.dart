@@ -37,6 +37,57 @@ class AvailabilitySlot {
     final isActiveBool = json['is_active'] ?? true;
     final statusStr = json['status'] ?? (isActiveBool ? 'AVAILABLE' : 'UNAVAILABLE');
 
+    bool parseBool(dynamic val, bool def) {
+      if (val == null) return def;
+      if (val is bool) return val;
+      if (val is String) return val.toLowerCase() == 'true' || val == '1';
+      if (val is int) return val == 1;
+      return def;
+    }
+
+    final inPersonRaw = json['is_in_person'] ?? json['in_person'] ?? json['isInPerson'] ?? json['inPerson'];
+    final voiceCallRaw = json['is_voice_call'] ?? json['voice_call'] ?? json['isVoiceCall'] ?? json['voiceCall'];
+    final consultType = (json['consultation_type'] ?? json['appointment_type'] ?? json['type'] ?? '').toString().toUpperCase();
+    final rawTypes = json['offered_consultation_types'] ?? json['consultation_types'] ?? json['types'];
+
+    bool? inPerson;
+    bool? voiceCall;
+
+    if (inPersonRaw != null) {
+      inPerson = parseBool(inPersonRaw, false);
+    }
+    if (voiceCallRaw != null) {
+      voiceCall = parseBool(voiceCallRaw, false);
+    }
+
+    if (rawTypes is List && rawTypes.isNotEmpty) {
+      for (final t in rawTypes) {
+        final str = t.toString().toLowerCase();
+        if (str.contains('voice') || str.contains('call') || str.contains('virtual') || str.contains('phone')) {
+          voiceCall = true;
+        }
+        if (str.contains('person') || str.contains('hospital') || str.contains('clinic')) {
+          inPerson = true;
+        }
+      }
+    }
+
+    if (consultType.isNotEmpty) {
+      if (consultType.contains('VOICE') || consultType.contains('VIRTUAL') || consultType.contains('PHONE')) {
+        voiceCall = true;
+      }
+      if (consultType.contains('PERSON') || consultType.contains('HOSPITAL') || consultType.contains('CLINIC')) {
+        inPerson = true;
+      }
+      if (consultType == 'BOTH' || consultType.contains('ALL')) {
+        inPerson = true;
+        voiceCall = true;
+      }
+    }
+
+    final finalInPerson = inPerson ?? (voiceCall == true ? false : true);
+    final finalVoiceCall = voiceCall ?? (inPerson == true ? false : false);
+
     return AvailabilitySlot(
       availabilityId: json['availability_id']?.toString() ?? json['id']?.toString() ?? '',
       midwifeId: json['midwife_id']?.toString() ?? json['midwife']?.toString() ?? '',
@@ -47,8 +98,8 @@ class AvailabilitySlot {
       durationMinutes: json['duration_minutes'] ?? json['duration'],
       status: statusStr,
       isActive: isActiveBool,
-      isInPerson: json['is_in_person'] ?? json['in_person'] ?? json['isInPerson'] ?? json['inPerson'] ?? true,
-      isVoiceCall: json['is_voice_call'] ?? json['voice_call'] ?? json['isVoiceCall'] ?? json['voiceCall'] ?? false,
+      isInPerson: finalInPerson,
+      isVoiceCall: finalVoiceCall,
     );
   }
 

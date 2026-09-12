@@ -1,23 +1,19 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
-import 'package:cagh_frontend/core/services/global_call_service.dart';
 import 'package:cagh_frontend/features/appointments/data/services/appointment_api_service.dart';
-import 'package:flutter/material.dart';
 import 'package:cagh_frontend/shared/models/appointment.dart';
 import 'package:cagh_frontend/features/appointments/data/repositories/appointment_repository_impl.dart';
 import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
 import 'package:cagh_frontend/shared/widgets/globe_language_picker.dart';
 import 'package:cagh_frontend/features/profile/presentation/midwife_profile_screen.dart';
 import 'package:cagh_frontend/features/consultations/presentation/midwife/midwife_consults_screen.dart';
-import 'package:cagh_frontend/features/consultations/presentation/midwife/midwife_inbox_screen.dart';
 import 'package:cagh_frontend/features/scheduling/presentation/screens/midwife_schedule_screen.dart';
 import 'package:cagh_frontend/features/scheduling/presentation/screens/midwife_manage_schedule_screen.dart';
 import 'package:cagh_frontend/features/consultations/data/repositories/midwife_repository_impl.dart';
 import 'package:cagh_frontend/features/consultations/data/services/midwife_api_service.dart';
 import 'package:cagh_frontend/shared/widgets/floating_glass_nav_bar.dart';
 import 'package:cagh_frontend/features/notifications/presentation/widgets/notification_bell.dart';
-import 'package:cagh_frontend/core/services/language_service.dart';
-import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 class MidwifeHomeScreen extends ConsumerStatefulWidget {
   const MidwifeHomeScreen({super.key});
@@ -118,59 +114,56 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (selectedIndex == 1) {
-      return Scaffold(
-        extendBody: true,
-        body: const MidwifeScheduleScreen(),
-        bottomNavigationBar: _buildBottomBar(),
-      );
-    }
-
-    if (selectedIndex == 2) {
-      return Scaffold(
-        extendBody: true,
-        body: const MidwifeConsultsScreen(),
-        bottomNavigationBar: _buildBottomBar(),
-      );
-    }
-
-    if (selectedIndex == 4) {
-      return Scaffold(
-        extendBody: true,
-        body: const MidwifeProfileScreen(),
-        bottomNavigationBar: _buildBottomBar(),
-      );
-    }
-
     return Scaffold(
       extendBody: true,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        title: Text(
-          _getAppBarTitle(selectedIndex),
-          style: TextStyle(
-            color: Theme.of(context).appBarTheme.foregroundColor,
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        actions: [
-          const GlobeLanguagePicker(iconSize: 24),
-          NotificationBell(iconColor: Theme.of(context).appBarTheme.foregroundColor),
-          const SizedBox(width: 8),
-        ],
-      ),
-      body: IndexedStack(
-        index: selectedIndex,
+      body: Column(
         children: [
-          _buildHomeDashboardTab(),
-          const MidwifeScheduleScreen(),
-          const MidwifeConsultsScreen(),
-          _buildLearnTab(),
-          MidwifeProfileScreen(),
+          // ===== GREEN APP BAR (Applied to all tabs) =====
+          Container(
+            width: double.infinity,
+            color: const Color(0xFF385A2E),
+            child: SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: Row(
+                  children: [
+                    // Left spacer — same width as the right icons to keep title centered
+                    const SizedBox(width: 88),
+                    // Centered title
+                    Expanded(
+                      child: Text(
+                        _getAppBarTitle(selectedIndex),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    // Right icons — globe + notification bell
+                    const GlobeLanguagePicker(iconColor: Colors.white, iconSize: 24),
+                    const NotificationBell(iconColor: Colors.white),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          
+          Expanded(
+            child: IndexedStack(
+              index: selectedIndex,
+              children: [
+                _buildHomeDashboardTab(),
+                const MidwifeScheduleScreen(),
+                const MidwifeConsultsScreen(),
+                _buildLearnTab(),
+                const MidwifeProfileScreen(),
+              ],
+            ),
+          ),
         ],
       ),
       bottomNavigationBar: _buildBottomBar(),
@@ -236,7 +229,7 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
                           const SizedBox(height: 6),
                           Text(
                             upcomingApts.isEmpty
-                                ? 'Bookings from adolescent girls\nwill appear here.'
+                                ? AppLocalizations.of(context)!.midwifeBookingsAppearHere
                                 : AppLocalizations.of(context)!.patientConsultationBookingsPending(upcomingApts.length),
                             style: TextStyle(
                               color: Colors.white.withOpacity(0.87),
@@ -251,7 +244,7 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
                 ),
               ),
 
-              SizedBox(height: 24),
+              const SizedBox(height: 24),
 
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -280,9 +273,9 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
                     );
                   },
                   icon: const Icon(Icons.calendar_month, color: Color(0xFF315E26)),
-                  label: const Text(
-                    'Manage Availability',
-                    style: TextStyle(color: Color(0xFF315E26), fontWeight: FontWeight.bold),
+                  label: Text(
+                    AppLocalizations.of(context)!.manageAvailability,
+                    style: const TextStyle(color: Color(0xFF315E26), fontWeight: FontWeight.bold),
                   ),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -292,9 +285,18 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              const Text(
-                'Set the days and times when girls can book\na consultation with you.',
-                style: TextStyle(color: Colors.black54, fontSize: 13, height: 1.4),
+              Builder(
+                builder: (context) {
+                  final isDark = Theme.of(context).brightness == Brightness.dark;
+                  return Text(
+                    AppLocalizations.of(context)!.setDaysAndTimesPrompt,
+                    style: TextStyle(
+                      color: isDark ? Colors.grey.shade400 : Colors.black54,
+                      fontSize: 13,
+                      height: 1.4,
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 24),
 
@@ -314,12 +316,12 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
                       Icon(Icons.calendar_today, size: 42, color: Theme.of(context).iconTheme.color?.withOpacity(0.5)),
                       const SizedBox(height: 16),
                       Text(
-                        'No appointments today',
+                        AppLocalizations.of(context)!.noAppointmentsToday,
                         style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).textTheme.bodyLarge?.color),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'When an adolescent girl books a consultation\nwith you, it will appear here.',
+                        AppLocalizations.of(context)!.whenGirlBooksConsultation,
                         textAlign: TextAlign.center,
                         style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color, fontSize: 13, height: 1.4),
                       ),
@@ -328,22 +330,12 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
                 )
               else
                 ...upcomingApts.map((apt) {
-                  String displayType = apt.appointmentType;
-                  if (displayType == 'VIRTUAL_VIDEO' || displayType == 'VIRTUAL_VOICE') {
-                    displayType = AppLocalizations.of(context)!.voiceCall;
-                  } else if (displayType == 'IN_PERSON') {
-                    displayType = AppLocalizations.of(context)!.inPerson;
-                  }
-                  
                   return Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: _buildScheduleItem(
-                      time: apt.startTime,
-                      title: '${apt.userFullName ?? AppLocalizations.of(context)!.patient} - $displayType',
-                      subtitle: AppLocalizations.of(context)!.dateLabel(apt.date),
-                      badgeLabel: AppLocalizations.of(context)!.booked,
-                      badgeColor: const Color(0xFFC8E6C9),
-                      badgeTextColor: const Color(0xFF315E26),
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _buildConsultationCard(
+                      context,
+                      appointment: apt,
+                      onCompleted: () => setState(() {}),
                     ),
                   );
                 }),
@@ -414,10 +406,12 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
     required Color arrowBgColor,
     VoidCallback? onTap,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(16),
@@ -430,59 +424,46 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
             ),
           ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: iconBgColor,
-                    borderRadius: BorderRadius.circular(12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : const Color(0xFF2E4823),
+                      height: 1.3,
+                    ),
                   ),
-                  child: Icon(icon, color: iconColor, size: 22),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).textTheme.bodyLarge?.color,
-                          height: 1.3,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        subtitle,
-                        style: TextStyle(
-                          fontSize: 12.5,
-                          color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
-                          height: 1.4,
-                        ),
-                      ),
-                    ],
+                  const SizedBox(height: 8),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: isDark ? Colors.grey.shade400 : Colors.black54,
+                      height: 1.4,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-            const SizedBox(height: 14),
-            Align(
-              alignment: Alignment.bottomRight,
-              child: Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: arrowBgColor,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.arrow_forward_rounded, color: Color(0xFF315E26), size: 16),
+            const SizedBox(width: 16),
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF2E4823) : const Color(0xFFE8F2E9),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.arrow_forward_rounded,
+                color: isDark ? Colors.white : const Color(0xFF385A2E),
+                size: 20,
               ),
             ),
           ],

@@ -294,6 +294,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get valInvalidPhone => 'Please enter a valid phone number.';
 
   @override
+  String get invalidCredentials =>
+      'Incorrect email or password. Please try again.';
+
+  @override
   String get valPasswordReq => 'Password is required.';
 
   @override
@@ -516,6 +520,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get patient => 'Patient';
 
   @override
+  String get seekHealthcare => 'Seek Healthcare';
+
+  @override
   String get consultationDetails => 'Consultation Details';
 
   @override
@@ -583,7 +590,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get availability => 'Availability';
 
   @override
-  String get inPerson => 'In-person';
+  String get inPerson => 'In person';
 
   @override
   String get languages => 'LANGUAGES';
@@ -592,7 +599,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get offeredConsultations => 'OFFERED CONSULTATIONS';
 
   @override
-  String get viewAll => 'View All';
+  String get viewAll => 'View all';
 
   @override
   String get book => 'Book';
@@ -1150,7 +1157,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get voiceCall => 'Voice Call';
+  String get voiceCall => 'Voice call';
 
   @override
   String get hotlines => 'Hotlines';
@@ -1310,4 +1317,297 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get statusDeclined => 'DECLINED';
+
+  @override
+  String get helpfulServices => 'Helpful Services';
+
+  @override
+  String get healthResources => 'Health Resources';
+
+  @override
+  String get findNearbyServices => 'Find Nearby Services';
+
+  @override
+  String get welcomeSubtitle =>
+      'We\'re here to support your health, well-being and informed choices.';
+
+  @override
+  String get needUrgentHelp => 'Need urgent help?';
+
+  @override
+  String get talkToProfessionalNow => 'Talk to a trained professional now.';
+
+  @override
+  String get startQuickConsultation => 'Start Quick Consultation';
+
+  @override
+  String get focusAreas => 'Focus Areas';
+
+  @override
+  String get filters => 'Filters';
+
+  @override
+  String get reset => 'Reset';
+
+  @override
+  String get specialization => 'Specialization';
+
+  @override
+  String get any => 'Any';
+
+  @override
+  String get prenatalCare => 'Prenatal Care';
+
+  @override
+  String get postnatalCare => 'Postnatal Care';
+
+  @override
+  String get laborAndDelivery => 'Labor & Delivery';
+
+  @override
+  String get familyPlanning => 'Family Planning';
+
+  @override
+  String get consultationMethod => 'Consultation Method';
+
+  @override
+  String get rating => 'Rating';
+
+  @override
+  String get rating45Up => '4.5 & up';
+
+  @override
+  String get rating40Up => '4.0 & up';
+
+  @override
+  String get rating35Up => '3.5 & up';
+
+  @override
+  String get distance => 'Distance';
+
+  @override
+  String get anyTime => 'Any Time';
+
+  @override
+  String get availableNow => 'Available Now';
+
+  @override
+  String get thisWeek => 'This Week';
+
+  @override
+  String get applyFilters => 'Apply Filters';
+
+  @override
+  String get requestChat => 'Request Chat';
+
+  @override
+  String get maternalHealthSpecialist => 'Maternal Health Specialist';
+
+  @override
+  String get all => 'All';
+
+  @override
+  String get hospitals => 'Hospitals';
+
+  @override
+  String get clinics => 'Clinics';
+
+  @override
+  String get pharmacies => 'Pharmacies';
+
+  @override
+  String get healthCenters => 'Health Centers';
+
+  @override
+  String aboutMidwife(String name) {
+    return 'About $name';
+  }
+
+  @override
+  String get dedicatedMidwifeDesc =>
+      'A dedicated midwife committed to providing the best care.';
+
+  @override
+  String get noMidwivesMatchFilters =>
+      'No midwives match your filters. Try resetting.';
+
+  @override
+  String get userRegistration => 'User Registration';
+
+  @override
+  String get seekingCareTitle => 'I\'m seeking care';
+
+  @override
+  String get seekingCareSubtitle =>
+      'I want health information,\nsupport, and services.';
+
+  @override
+  String get midwifeRoleTitle => 'I\'m a Midwife';
+
+  @override
+  String get midwifeRoleSubtitle =>
+      'I\'m a healthcare provider\nsupporting clients.';
+
+  @override
+  String get selectDateOfBirth => 'Select your date of birth';
+
+  @override
+  String get tapToUploadCv => 'Tap to upload your CV or resume';
+
+  @override
+  String get cvFileFormatLimit => 'PDF, DOC (Max 5MB)';
+
+  @override
+  String get midwifeReviewNotice =>
+      'Your registration will be reviewed by an administrator before approval.';
+
+  @override
+  String get firstNameRequired => 'First name is required';
+
+  @override
+  String get lastNameRequired => 'Last name is required';
+
+  @override
+  String get dateOfBirthRequired => 'Date of birth is required';
+
+  @override
+  String get passwordMinLength => 'Password must be at least 8 characters';
+
+  @override
+  String get nameNoSpecialChars =>
+      'Cannot contain numbers or special characters';
+
+  @override
+  String get phoneNumberEthiopia => 'Phone Number (Ethiopia)';
+
+  @override
+  String get cvResume => 'CV / Resume';
+
+  @override
+  String get availabilityCalendar => 'Availability Calendar';
+
+  @override
+  String get availabilitySubtitle => 'Create the times clients may request.';
+
+  @override
+  String get selectDayToManage => 'Select a day to manage\nits availability.';
+
+  @override
+  String get pastStatus => 'Past';
+
+  @override
+  String get editAvailableTime => 'Edit Available Time';
+
+  @override
+  String get addAvailableTime => 'Add Available Time';
+
+  @override
+  String get addTimeSubtitle => 'Add a time clients may request.';
+
+  @override
+  String get dateTimeSection => 'DATE AND TIME';
+
+  @override
+  String get dateRequired => 'Date *';
+
+  @override
+  String get selectDatePrompt => 'Select date';
+
+  @override
+  String get startTimeRequired => 'Start time *';
+
+  @override
+  String get selectStartTimePrompt => 'Select start time';
+
+  @override
+  String get endTimeRequired => 'End time *';
+
+  @override
+  String get selectEndTimePrompt => 'Select end time';
+
+  @override
+  String get consultationMethodSection => 'CONSULTATION METHOD';
+
+  @override
+  String get saveAvailability => 'Save Availability';
+
+  @override
+  String get noAvailabilityCreated => 'No availability created';
+
+  @override
+  String get addTimeSlotPrompt => 'Add a time slot for this date.';
+
+  @override
+  String calendarEntries(int count) {
+    return '$count calendar entries';
+  }
+
+  @override
+  String get inPersonAndVoiceCall => 'In-person & Voice call';
+
+  @override
+  String get inPersonHospital => 'In-person meeting · Hospital';
+
+  @override
+  String get onlinePhoneCall => 'Online meeting · Phone call';
+
+  @override
+  String get pleaseSelectDateTime => 'Please select date and time';
+
+  @override
+  String get endTimeAfterStartTime => 'End time must be after start time';
+
+  @override
+  String get selectConsultationMethod =>
+      'Please select at least one consultation method';
+
+  @override
+  String get availabilityUpdatedSuccess => 'Availability updated successfully';
+
+  @override
+  String get availabilityAddedSuccess => 'Availability added successfully';
+
+  @override
+  String get failedToAddAvailability => 'Failed to add availability';
+
+  @override
+  String get edit => 'Edit';
+
+  @override
+  String get delete => 'Delete';
+
+  @override
+  String get deleteSlotConfirm =>
+      'Are you sure you want to delete this availability slot?';
+
+  @override
+  String get midwifeBookingsAppearHere =>
+      'Bookings from adolescent girls\nwill appear here.';
+
+  @override
+  String get setDaysAndTimesPrompt =>
+      'Set the days and times when girls can book\na consultation with you.';
+
+  @override
+  String get noAppointmentsToday => 'No appointments today';
+
+  @override
+  String get whenGirlBooksConsultation =>
+      'When an adolescent girl books a consultation\nwith you, it will appear here.';
+
+  @override
+  String get aiWelcomeGreeting =>
+      'Hello! I am your AI Health Assistant. How can I help you today?';
+
+  @override
+  String get roleMismatchMidwifeError =>
+      'This email is registered as an adolescent/patient account. Please use the User login.';
+
+  @override
+  String get roleMismatchPatientError =>
+      'This email is registered as a healthcare provider/midwife account. Please use the Midwife login.';
+
+  @override
+  String get startTimeCannotBeInPast =>
+      'Start time cannot be in the past for today';
 }

@@ -71,44 +71,50 @@ class _MidwifeLoginScreenState extends State<MidwifeLoginScreen> {
       
       final userRole = result.data?['user']?['role']?.toString().toUpperCase();
       
-      if (userRole == 'PATIENT') {
-        Navigator.pushAndRemoveUntil(
+      if (userRole != null && userRole.isNotEmpty && userRole != 'MIDWIFE') {
+        CustomSnackBar.show(
           context,
-          MaterialPageRoute(builder: (context) => UserBottomNavBar()),
-          (route) => false,
+          message: AppLocalizations.of(context)!.roleMismatchMidwifeError,
+          type: SnackBarType.error,
         );
-      } else {
-        setState(() => _isLoading = true);
-        try {
-          final repo = MidwifeRepositoryImpl(MidwifeApiService());
-          final profile = await repo.getMyProfile();
-          if (!mounted) return;
-          
-          if (profile == null) {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (context) => const MidwifeSetupProfileScreen()),
-              (route) => false,
-            );
-          } else {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (context) => const MidwifeHomeScreen()),
-              (route) => false,
-            );
-          }
-        } catch (e) {
+        return;
+      }
+
+      setState(() => _isLoading = true);
+      try {
+        final repo = MidwifeRepositoryImpl(MidwifeApiService());
+        final profile = await repo.getMyProfile();
+        if (!mounted) return;
+        
+        if (profile == null) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const MidwifeSetupProfileScreen()),
+            (route) => false,
+          );
+        } else {
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (context) => const MidwifeHomeScreen()),
             (route) => false,
           );
         }
-        if (mounted) setState(() => _isLoading = false);
+      } catch (e) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const MidwifeHomeScreen()),
+          (route) => false,
+        );
       }
+      if (mounted) setState(() => _isLoading = false);
     } else {
+      String err = result.message;
+      final lowerErr = err.toLowerCase();
+      if (lowerErr.contains('incorrect email or password') || lowerErr.contains('invalid credentials') || lowerErr.contains('no active account') || lowerErr.contains('unauthorized')) {
+        err = AppLocalizations.of(context)?.invalidCredentials ?? 'Incorrect email or password. Please try again.';
+      }
       setState(() {
-        _apiError = result.message;
+        _passwordError = err;
       });
     }
   }
@@ -217,35 +223,7 @@ class _MidwifeLoginScreenState extends State<MidwifeLoginScreen> {
                         ),
                       ),
                     ),
-                    if (_apiError != null)
-                      Container(
-                        width: double.infinity,
-                        margin: const EdgeInsets.only(top: 4, bottom: 16),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.red.shade50,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.red.shade200),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(Icons.error_outline, color: Colors.red.shade700, size: 20),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                _apiError!,
-                                style: TextStyle(
-                                  color: Colors.red.shade700,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    else
-                      SizedBox(height: 16),
+                    SizedBox(height: 16),
 
                     PrimaryButton(
                       text: AppLocalizations.of(context)!.login,

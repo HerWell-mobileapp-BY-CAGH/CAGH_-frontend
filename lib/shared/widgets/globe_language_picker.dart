@@ -18,6 +18,8 @@ class GlobeLanguagePicker extends StatelessWidget {
       valueListenable: LanguageService.currentLanguage,
       builder: (context, currentLang, _) {
         return PopupMenuButton<String>(
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(),
           icon: Icon(Icons.language, color: iconColor, size: iconSize),
           tooltip: 'Change Language / ቋንቋ ይምረጡ',
           offset: const Offset(0, 42),

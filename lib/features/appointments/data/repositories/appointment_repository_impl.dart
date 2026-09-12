@@ -24,20 +24,35 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
   @override
   Future<List<Appointment>> getUserAppointments() async {
     final response = await _apiService.getUserAppointments();
-    return response.map((json) => Appointment.fromJson(json)).toList();
+    return response.map((json) => Appointment.fromJson(Map<String, dynamic>.from(json as Map))).toList();
   }
 
   @override
   Future<List<Appointment>> getMidwifeAppointments() async {
     final response = await _apiService.getMidwifeAppointments();
-    return response.map((json) => Appointment.fromJson(json)).toList();
+    return response.map((json) => Appointment.fromJson(Map<String, dynamic>.from(json as Map))).toList();
   }
 
   @override
   Future<Appointment> acceptAppointment(String appointmentId) async {
     try {
       final data = await _apiService.acceptAppointment(appointmentId);
-      return Appointment.fromJson(data);
+      final apptData = data.containsKey('appointment') && data['appointment'] is Map
+          ? Map<String, dynamic>.from(data['appointment'] as Map)
+          : data;
+      if (apptData.containsKey('id') || apptData.containsKey('appointment_id')) {
+        return Appointment.fromJson(apptData);
+      }
+      return Appointment(
+        appointmentId: appointmentId,
+        userId: '',
+        midwifeId: '',
+        date: '',
+        startTime: '',
+        endTime: '',
+        appointmentType: '',
+        status: AppointmentStatus.confirmed,
+      );
     } catch (e) {
       throw Exception('Failed to accept appointment: $e');
     }
@@ -47,7 +62,22 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
   Future<Appointment> declineAppointment(String appointmentId) async {
     try {
       final data = await _apiService.declineAppointment(appointmentId);
-      return Appointment.fromJson(data);
+      final apptData = data.containsKey('appointment') && data['appointment'] is Map
+          ? Map<String, dynamic>.from(data['appointment'] as Map)
+          : data;
+      if (apptData.containsKey('id') || apptData.containsKey('appointment_id')) {
+        return Appointment.fromJson(apptData);
+      }
+      return Appointment(
+        appointmentId: appointmentId,
+        userId: '',
+        midwifeId: '',
+        date: '',
+        startTime: '',
+        endTime: '',
+        appointmentType: '',
+        status: AppointmentStatus.declined,
+      );
     } catch (e) {
       throw Exception('Failed to decline appointment: $e');
     }
@@ -58,11 +88,23 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
     try {
       final data = await _apiService.cancelAppointment(appointmentId);
       final apptData = data.containsKey('appointment') && data['appointment'] is Map
-          ? data['appointment']
+          ? Map<String, dynamic>.from(data['appointment'] as Map)
           : data;
-      return Appointment.fromJson(Map<String, dynamic>.from(apptData));
+      if (apptData.containsKey('id') || apptData.containsKey('appointment_id')) {
+        return Appointment.fromJson(apptData);
+      }
+      return Appointment(
+        appointmentId: appointmentId,
+        userId: '',
+        midwifeId: '',
+        date: '',
+        startTime: '',
+        endTime: '',
+        appointmentType: '',
+        status: AppointmentStatus.cancelled,
+      );
     } catch (e) {
-      throw Exception('$e'.replaceAll('Exception: ', ''));
+      throw Exception('Failed to cancel appointment: $e');
     }
   }
 

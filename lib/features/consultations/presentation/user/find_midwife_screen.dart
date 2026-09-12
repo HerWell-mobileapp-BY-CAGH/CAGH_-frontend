@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-import 'package:cagh_frontend/features/virtual_consultation/presentation/emergency_support_screen.dart';
 import 'package:cagh_frontend/features/consultations/presentation/user/midwife_profile_detail_screen.dart';
 import 'package:cagh_frontend/features/consultations/presentation/user/chat_screen.dart';
-import 'package:cagh_frontend/shared/widgets/globe_language_picker.dart';
+import 'package:cagh_frontend/shared/widgets/inner_page_app_bar.dart';
+import 'package:cagh_frontend/shared/widgets/search_filter_bottom_sheet.dart' as cagh_frontend_filter;
 import 'package:cagh_frontend/features/consultations/data/services/midwife_api_service.dart';
 import 'package:cagh_frontend/features/consultations/data/repositories/midwife_repository_impl.dart';
 import 'package:cagh_frontend/shared/models/midwife_profile.dart';
-import 'package:cagh_frontend/shared/widgets/hotline_fab.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
+import 'package:cagh_frontend/core/utils/app_logger.dart';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 class FindMidwifeScreen extends StatefulWidget {
@@ -29,6 +29,12 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
   String? _errorMessage;
   final _repository = MidwifeRepositoryImpl(MidwifeApiService());
   List<MidwifeProfile> _midwives = [];
+  List<MidwifeProfile> _filteredMidwives = [];
+
+  // Active filters
+  String _filterSpecialization = 'Any';
+  String _filterRating = 'Any';
+  String _filterConsultationType = 'Any';
 
   @override
   void initState() {
@@ -52,66 +58,81 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
       final data = await _repository.getMidwives(search: _searchQuery);
       if (mounted) {
         setState(() {
-          // Enforce Display Rule: Verified Midwives
-          _midwives = data.where((m) => 
-            m.verificationStatus.toUpperCase() == 'APPROVED' || 
+          final verified = data.where((m) =>
+            m.verificationStatus.toUpperCase() == 'APPROVED' ||
             m.verificationStatus.toUpperCase() == 'VERIFIED'
           ).toList();
+          _midwives = verified.isNotEmpty ? verified : data;
+          _applyFilters();
           _isLoading = false;
         });
       }
-    } catch (e) {
+    } catch (e, stack) {
+      AppLogger.e('FindMidwifeScreen', e, stack);
       if (mounted) {
         setState(() {
-          _errorMessage = 'Failed to load midwives. Please try again.';
+          _errorMessage = AppLocalizations.of(context)?.failedToLoadMidwives ?? 'Failed to load midwives. Please try again.';
           _isLoading = false;
         });
       }
     }
   }
 
+  void _applyFilters() {
+    _filteredMidwives = _midwives.where((m) {
+      // Specialization filter
+      if (_filterSpecialization != 'Any') {
+        final spec = m.specialty.toLowerCase();
+        if (!spec.contains(_filterSpecialization.toLowerCase())) return false;
+      }
+      // Rating filter
+      if (_filterRating != 'Any') {
+        final minRating = double.tryParse(_filterRating.split(' ').first) ?? 0.0;
+        if (m.ratingAverage < minRating) return false;
+      }
+      // Consultation type filter
+      if (_filterConsultationType == 'In-Person' && !m.supportsInPerson) return false;
+      if (_filterConsultationType == 'Voice Call' && !m.supportsVoiceCall) return false;
+      return true;
+    }).toList();
+  }
+
+  String _getLocalizedSpecialty(BuildContext context, String specialty) {
+    final lower = specialty.toLowerCase();
+    final l10n = AppLocalizations.of(context)!;
+    if (lower.contains('maternal') || lower.isEmpty) {
+      return l10n.maternalHealthSpecialist;
+    } else if (lower.contains('prenatal')) {
+      return l10n.prenatalCare;
+    } else if (lower.contains('postnatal')) {
+      return l10n.postnatalCare;
+    } else if (lower.contains('labor') || lower.contains('delivery')) {
+      return l10n.laborAndDelivery;
+    } else if (lower.contains('family planning')) {
+      return l10n.familyPlanning;
+    }
+    return specialty;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            if (widget.onBack != null) {
-              widget.onBack!();
-            } else {
-              Navigator.pop(context);
-            }
-          },
-        ),
-        title: Text(
-          'Find a Midwife',
-          style: TextStyle(
-            color: Theme.of(context).appBarTheme.foregroundColor,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        actions: [
-          const GlobeLanguagePicker(),
-          IconButton(
-            icon: const Icon(Icons.more_vert, color: Colors.white),
-            onPressed: () {},
-          ),
-        ],
+      appBar: buildInnerPageAppBar(
+        context,
+        title: AppLocalizations.of(context)!.findAMidwife,
+        onBack: widget.onBack != null ? widget.onBack : null,
+        showLanguage: true,
       ),
       body: Stack(
         children: [
-          SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Search Input Bar
-                Row(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Fixed Search Input Bar
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+                child: Row(
                   children: [
                     Expanded(
                       child: Container(
@@ -149,21 +170,39 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                       ),
                       child: IconButton(
                         icon: const Icon(Icons.filter_alt_outlined, color: AppColors.primaryGreen),
-                        onPressed: () {},
+                        onPressed: () {
+                          cagh_frontend_filter.SearchFilterBottomSheet.show(
+                            context,
+                            isForMidwife: true,
+                            onApply: (specialization, rating, consultationType) {
+                              setState(() {
+                                _filterSpecialization = specialization;
+                                _filterRating = rating;
+                                _filterConsultationType = consultationType;
+                                _applyFilters();
+                              });
+                            },
+                          );
+                        },
                       ),
                     ),
                   ],
                 ),
+              ),
 
-                const SizedBox(height: 20),
-
-                if (_isLoading)
-                  const Center(
-                    child: Padding(
-                      padding: EdgeInsets.only(top: 40.0),
-                      child: CircularProgressIndicator(color: AppColors.primaryGreen),
-                    ),
-                  )
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (_isLoading)
+                        const Center(
+                          child: Padding(
+                            padding: EdgeInsets.only(top: 40.0),
+                            child: CircularProgressIndicator(color: AppColors.primaryGreen),
+                          ),
+                        )
                 else if (_errorMessage != null)
                   Center(
                     child: Padding(
@@ -171,7 +210,7 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                       child: Column(
                         children: [
                           Text(AppLocalizations.of(context)!.failedToLoadMidwives, style: TextStyle(color: Colors.red.shade700)),
-                          SizedBox(height: 10),
+                          const SizedBox(height: 10),
                           ElevatedButton(
                             onPressed: _fetchMidwives,
                             child: Text(AppLocalizations.of(context)!.retry),
@@ -180,16 +219,22 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                       ),
                     ),
                   )
-                else if (_midwives.isEmpty)
+                else if (_filteredMidwives.isEmpty)
                   Center(
                     child: Padding(
-                      padding: EdgeInsets.only(top: 40.0),
-                      child: Text(AppLocalizations.of(context)!.noMidwivesAvailable, style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color)),
+                      padding: const EdgeInsets.only(top: 40.0),
+                      child: Text(
+                        _midwives.isEmpty
+                            ? AppLocalizations.of(context)!.noMidwivesAvailable
+                            : AppLocalizations.of(context)!.noMidwivesMatchFilters,
+                        style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                   )
                 else
                   // Midwife Cards List
-                  ..._midwives.map((mw) {
+                  ..._filteredMidwives.map((mw) {
                     return Container(
                       margin: const EdgeInsets.only(bottom: 16),
                       padding: const EdgeInsets.all(16),
@@ -266,7 +311,7 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    mw.specialty,
+                                    _getLocalizedSpecialty(context, mw.specialty),
                                     style: const TextStyle(
                                       fontSize: 13,
                                       color: AppColors.primaryGreen,
@@ -283,10 +328,10 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                                           borderRadius: BorderRadius.circular(8),
                                         ),
                                         child: Row(
-                                          children: const [
-                                            Icon(Icons.home_outlined, size: 14, color: Color(0xFF385A2E)),
-                                            SizedBox(width: 4),
-                                            Text('In-person', style: TextStyle(fontSize: 12, color: Color(0xFF385A2E), fontWeight: FontWeight.w600)),
+                                          children: [
+                                            const Icon(Icons.home_outlined, size: 14, color: Color(0xFF385A2E)),
+                                            const SizedBox(width: 4),
+                                            Text(AppLocalizations.of(context)!.inPerson, style: const TextStyle(fontSize: 12, color: Color(0xFF385A2E), fontWeight: FontWeight.w600)),
                                           ],
                                         ),
                                       ),
@@ -298,10 +343,10 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                                           borderRadius: BorderRadius.circular(8),
                                         ),
                                         child: Row(
-                                          children: const [
-                                            Icon(Icons.videocam_outlined, size: 14, color: Color(0xFF385A2E)),
-                                            SizedBox(width: 4),
-                                            Text('Voice call', style: TextStyle(fontSize: 12, color: Color(0xFF385A2E), fontWeight: FontWeight.w600)),
+                                          children: [
+                                            const Icon(Icons.videocam_outlined, size: 14, color: Color(0xFF385A2E)),
+                                            const SizedBox(width: 4),
+                                            Text(AppLocalizations.of(context)!.voiceCall, style: const TextStyle(fontSize: 12, color: Color(0xFF385A2E), fontWeight: FontWeight.w600)),
                                           ],
                                         ),
                                       ),
@@ -331,9 +376,9 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                                     );
                                   },
                                   icon: const Icon(Icons.chat_bubble_outline_rounded, size: 16),
-                                  label: const Text(
-                                    'Request Chat',
-                                    style: TextStyle(
+                                  label: Text(
+                                    AppLocalizations.of(context)!.requestChat,
+                                    style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 13,
                                     ),
@@ -399,8 +444,11 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
               ],
             ),
           ),
+        ),
 
         ],
+      ),
+      ],
       ),
     );
   }

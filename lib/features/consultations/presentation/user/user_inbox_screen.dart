@@ -35,6 +35,9 @@ class _UserInboxScreenState extends ConsumerState<UserInboxScreen> with SingleTi
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      if (mounted) setState(() {});
+    });
     _loadData();
   }
 
@@ -222,12 +225,17 @@ class _UserInboxScreenState extends ConsumerState<UserInboxScreen> with SingleTi
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
-        foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
+        backgroundColor: const Color(0xFF385A2E),
+        foregroundColor: Colors.white,
         elevation: 0,
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: Text(
           AppLocalizations.of(context)!.messages,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 18, color: Colors.white),
         ),
         bottom: TabBar(
           controller: _tabController,
@@ -248,17 +256,19 @@ class _UserInboxScreenState extends ConsumerState<UserInboxScreen> with SingleTi
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          _tabController.animateTo(1);
-        },
-        backgroundColor: AppColors.primaryGreen,
-        icon: const Icon(Icons.add_comment_rounded, color: Colors.white),
-        label: Text(
-          AppLocalizations.of(context)!.newMessage,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-      ),
+      floatingActionButton: _tabController.index == 0
+          ? FloatingActionButton.extended(
+              onPressed: () {
+                _tabController.animateTo(1);
+              },
+              backgroundColor: AppColors.primaryGreen,
+              icon: const Icon(Icons.add_comment_rounded, color: Colors.white),
+              label: Text(
+                AppLocalizations.of(context)!.newMessage,
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+            )
+          : null,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: AppColors.primaryGreen))
           : TabBarView(

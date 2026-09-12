@@ -99,9 +99,37 @@ class AuthService {
         }
         final finalUserObj = (body['user'] is Map &&
                 (body['user']['full_name'] != null ||
-                    body['user']['email'] != null))
+                    body['user']['email'] != null ||
+                    body['user']['role'] != null))
             ? body['user'] as Map<String, dynamic>
             : userObj;
+
+        // Role enforcement: 1 email for 1 role only
+        final serverRole = (finalUserObj['role'] ?? body['role'] ?? '').toString().toUpperCase();
+        if (role != null && serverRole.isNotEmpty && serverRole != role.toUpperCase()) {
+          await prefs.remove(_accessTokenKey);
+          await prefs.remove(_refreshTokenKey);
+          await prefs.remove(_userDataKey);
+          await prefs.remove(_lastActiveKey);
+
+          if (role.toUpperCase() == 'MIDWIFE' && serverRole == 'PATIENT') {
+            return ApiResponse(
+              success: false,
+              message: 'This email is registered as an adolescent/patient account. Please use the User login.',
+            );
+          } else if (role.toUpperCase() == 'PATIENT' && serverRole == 'MIDWIFE') {
+            return ApiResponse(
+              success: false,
+              message: 'This email is registered as a healthcare provider/midwife account. Please use the Midwife login.',
+            );
+          } else {
+            return ApiResponse(
+              success: false,
+              message: 'Role mismatch: You cannot log into this role with this account.',
+            );
+          }
+        }
+
         await prefs.setString(_userDataKey, jsonEncode(finalUserObj));
         await prefs.setString(_lastActiveKey, DateTime.now().toIso8601String());
 
@@ -881,20 +909,28 @@ class AuthService {
       if (lowerMsg.contains('access denied') || lowerMsg.contains('registered as') || lowerMsg.contains('role_mismatch') || lowerMsg.contains('cannot log in')) {
         return msg;
       }
-      if (lowerMsg.contains('no active account')) {
-        return 'Your account is not active. Please verify your account or contact support.';
-      }
-      if (lowerMsg.contains('unauthorized') || lowerMsg.contains('invalid credentials')) {
-        return 'Your email or password is incorrect. Please try again.';
+      if (lowerMsg.contains('no active account') || 
+          lowerMsg.contains('unauthorized') || 
+          lowerMsg.contains('invalid credentials') || 
+          lowerMsg.contains('given credentials') || 
+          lowerMsg.contains('user not found') || 
+          lowerMsg.contains('wrong password') || 
+          lowerMsg.contains('incorrect password') || 
+          lowerMsg.contains('invalid email or password')) {
+        return 'Incorrect email or password. Please try again.';
       }
       if (msg.isNotEmpty) return msg;
     } else if (body is String && body.isNotEmpty) {
       final lowerBody = body.toLowerCase();
-      if (lowerBody.contains('no active account')) {
-        return 'Your account is not active. Please verify your account or contact support.';
-      }
-      if (lowerBody.contains('unauthorized') || lowerBody.contains('invalid credentials')) {
-        return 'Your email or password is incorrect. Please try again.';
+      if (lowerBody.contains('no active account') || 
+          lowerBody.contains('unauthorized') || 
+          lowerBody.contains('invalid credentials') || 
+          lowerBody.contains('given credentials') || 
+          lowerBody.contains('user not found') || 
+          lowerBody.contains('wrong password') || 
+          lowerBody.contains('incorrect password') || 
+          lowerBody.contains('invalid email or password')) {
+        return 'Incorrect email or password. Please try again.';
       }
       return body;
     }

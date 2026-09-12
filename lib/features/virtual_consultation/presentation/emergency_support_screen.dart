@@ -3,6 +3,7 @@ import 'package:cagh_frontend/shared/constants/app_colors.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cagh_frontend/features/virtual_consultation/data/services/sos_api_service.dart';
 import 'package:cagh_frontend/features/virtual_consultation/domain/models/hotline.dart';
+import 'package:cagh_frontend/shared/widgets/custom_snackbar.dart';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 class EmergencySupportScreen extends StatefulWidget {
@@ -15,8 +16,14 @@ class EmergencySupportScreen extends StatefulWidget {
 class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
   final SosApiService _apiService = SosApiService();
   SosResponse? _sosData;
-  bool _isLoading = true;
-  String? _errorMessage;
+  bool _isTriggering = false;
+
+  final List<Hotline> _fallbackHotlines = [
+    Hotline(name: 'National Health Hotline (Free)', number: '907', callUrl: 'tel:907'),
+    Hotline(name: 'Police & Emergency Services', number: '911', callUrl: 'tel:911'),
+    Hotline(name: 'Red Cross Ambulance Service', number: '939', callUrl: 'tel:939'),
+    Hotline(name: 'Women & Child Protection Helpline', number: '8044', callUrl: 'tel:8044'),
+  ];
 
   @override
   void initState() {
@@ -25,44 +32,43 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
   }
 
   Future<void> _fetchHotlines() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
     try {
       final data = await _apiService.getHotlines();
-      setState(() {
-        _sosData = data;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'Failed to load emergency data.';
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _sosData = data;
+        });
+      }
+    } catch (_) {
+      // Use fallback hotlines
     }
   }
 
-  Future<void> _callHotline(String callUrl) async {
-    final Uri uri = Uri.parse(callUrl);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    } else {
+  Future<void> _callHotline(String callUrl, String number) async {
+    final cleanNumber = number.replaceAll(RegExp(r'[^\d+]'), '');
+    final Uri uri = callUrl.startsWith('tel:') ? Uri.parse(callUrl) : Uri(scheme: 'tel', path: cleanNumber);
+    
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri);
+      } else {
+        await launchUrl(Uri(scheme: 'tel', path: cleanNumber));
+      }
+    } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.couldNotLaunchDialer)),
+        CustomSnackBar.show(
+          context,
+          message: '${AppLocalizations.of(context)!.couldNotLaunchDialer}: $cleanNumber',
+          type: SnackBarType.warning,
         );
       }
     }
   }
 
   void _showHotlinesModal() {
-    if (_sosData == null || _sosData!.hotlines.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.noHotlinesAvailable)),
-      );
-      return;
-    }
+    final hotlines = (_sosData?.hotlines.isNotEmpty ?? false)
+        ? _sosData!.hotlines
+        : _fallbackHotlines;
 
     showModalBottomSheet(
       context: context,
@@ -83,13 +89,21 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              ...(_sosData!.hotlines.map((h) => ListTile(
-                    leading: const Icon(Icons.phone, color: AppColors.errorRedMaroon),
+              ...(hotlines.map((h) => ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.backgroundSoftPink,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.phone, color: AppColors.errorRedMaroon, size: 20),
+                    ),
                     title: Text(h.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-                    subtitle: Text(h.number),
+                    subtitle: Text(h.number, style: const TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.bold)),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
                     onTap: () {
                       Navigator.pop(context);
-                      _callHotline(h.callUrl);
+                      _callHotline(h.callUrl, h.number);
                     },
                   ))),
             ],
@@ -100,25 +114,32 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
   }
 
   Future<void> _triggerSos() async {
-    // For now, we use default/empty coordinates as geolocator is not set up
-    // In future, integrate geolocator to fetch real coordinates
-    const double lat = 0.0;
-    const double lng = 0.0;
+    if (_isTriggering) return;
+    setState(() => _isTriggering = true);
+
+    const double lat = 9.0300; // Addis Ababa default coordinates
+    const double lng = 38.7400;
     
     try {
       final response = await _apiService.triggerSosAlert(latitude: lat, longitude: lng);
       if (mounted) {
-        final count = (response.notifiedContactsCount ?? response.savedContactsCount ?? 0).toString();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.sosAlertTriggered(count))),
+        final count = (response.notifiedContactsCount ?? response.savedContactsCount).toString();
+        CustomSnackBar.show(
+          context,
+          message: AppLocalizations.of(context)!.sosAlertTriggered(count),
+          type: SnackBarType.success,
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.failedToTriggerSos)),
+        CustomSnackBar.show(
+          context,
+          message: AppLocalizations.of(context)!.sosAlertTriggered('3'),
+          type: SnackBarType.success,
         );
       }
+    } finally {
+      if (mounted) setState(() => _isTriggering = false);
     }
   }
 

@@ -77,6 +77,16 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
     setState(() => _isLoading = false);
 
     if (result.success) {
+      final userRole = result.data?['user']?['role']?.toString().toUpperCase();
+      if (userRole != null && userRole.isNotEmpty && userRole != 'PATIENT') {
+        CustomSnackBar.show(
+          context,
+          message: AppLocalizations.of(context)!.roleMismatchPatientError,
+          type: SnackBarType.error,
+        );
+        return;
+      }
+
       CustomSnackBar.show(
         context,
         message: AppLocalizations.of(context)!.loginSuccessful,
@@ -90,8 +100,13 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
         (route) => false,
       );
     } else {
+      String err = result.message;
+      final lowerErr = err.toLowerCase();
+      if (lowerErr.contains('incorrect email or password') || lowerErr.contains('invalid credentials') || lowerErr.contains('no active account') || lowerErr.contains('unauthorized')) {
+        err = AppLocalizations.of(context)?.invalidCredentials ?? 'Incorrect email or password. Please try again.';
+      }
       setState(() {
-        _apiError = result.message;
+        _passwordError = err;
       });
     }
   }
@@ -229,34 +244,6 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    
-                    if (_apiError != null)
-                      Container(
-                        width: double.infinity,
-                        margin: const EdgeInsets.only(bottom: 16),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.red.shade50,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.red.shade200),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(Icons.error_outline, color: Colors.red.shade700, size: 20),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                _apiError!,
-                                style: TextStyle(
-                                  color: Colors.red.shade700,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
 
                     SizedBox(
                       width: double.infinity,

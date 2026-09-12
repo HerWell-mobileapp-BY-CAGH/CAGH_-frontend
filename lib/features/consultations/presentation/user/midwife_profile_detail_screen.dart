@@ -539,7 +539,28 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
   }
 
   Widget _buildTimeSlotSection(String title, List<TimeSlot> slots) {
-    final availableSlots = slots.where((s) => s.isAvailable).toList();
+    final now = DateTime.now();
+    final isSelectedDayToday = _days.isNotEmpty && 
+        _selectedDayIndex < _days.length && 
+        _days[_selectedDayIndex].date.year == now.year &&
+        _days[_selectedDayIndex].date.month == now.month &&
+        _days[_selectedDayIndex].date.day == now.day;
+    final currentMinutes = now.hour * 60 + now.minute;
+
+    final availableSlots = slots.where((s) {
+      if (!s.isAvailable) return false;
+      if (isSelectedDayToday && s.startTime.isNotEmpty) {
+        try {
+          final parts = s.startTime.split(':');
+          final slotMinutes = int.parse(parts[0]) * 60 + int.parse(parts[1]);
+          if (slotMinutes <= currentMinutes) {
+            return false;
+          }
+        } catch (_) {}
+      }
+      return true;
+    }).toList();
+
     if (availableSlots.isEmpty) return const SizedBox.shrink();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

@@ -9,6 +9,7 @@ import 'package:cagh_frontend/features/consultations/presentation/midwife/midwif
 import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
+import 'package:cagh_frontend/shared/widgets/inner_page_app_bar.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 class NotificationsScreen extends ConsumerWidget {
@@ -20,12 +21,11 @@ class NotificationsScreen extends ConsumerWidget {
     final notifier = ref.read(notificationProvider.notifier);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          AppLocalizations.of(context)!.notifications,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-        ),
-        actions: [
+      appBar: buildInnerPageAppBar(
+        context,
+        title: AppLocalizations.of(context)!.notifications,
+        showLanguage: false,
+        extraActions: [
           if (state.notifications.isNotEmpty && state.unreadCount > 0)
             TextButton(
               onPressed: () => notifier.markAllAsRead(),

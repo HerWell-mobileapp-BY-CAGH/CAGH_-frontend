@@ -14,6 +14,19 @@ class NearbyFilterChips extends StatelessWidget {
     required this.onSelected,
   });
 
+  String _getLocalizedCategory(BuildContext context, String cat) {
+    final l10n = AppLocalizations.of(context);
+    if (l10n == null) return cat;
+    switch (cat) {
+      case 'All': return l10n.all;
+      case 'Hospitals': return l10n.hospitals;
+      case 'Clinics': return l10n.clinics;
+      case 'Pharmacies': return l10n.pharmacies;
+      case 'Health Centers': return l10n.healthCenters;
+      default: return cat;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -28,7 +41,7 @@ class NearbyFilterChips extends StatelessWidget {
             padding: const EdgeInsets.only(right: 8),
             child: ChoiceChip(
               label: Text(
-                category,
+                _getLocalizedCategory(context, category),
                 style: TextStyle(
                   color: isSelected 
                       ? Colors.white 
@@ -37,6 +50,7 @@ class NearbyFilterChips extends StatelessWidget {
                 ),
               ),
               selected: isSelected,
+              showCheckmark: false,
               onSelected: (_) => onSelected(category),
               selectedColor: isEmergency ? Colors.red : AppColors.primaryGreen,
               backgroundColor: isEmergency ? Colors.red.shade50 : Colors.white,

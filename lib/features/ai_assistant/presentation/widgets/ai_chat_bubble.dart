@@ -4,6 +4,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cagh_frontend/features/ai_assistant/domain/entities/ai_message.dart';
 import 'package:cagh_frontend/features/ai_assistant/presentation/providers/ai_chat_provider.dart';
+import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 class AiChatBubble extends ConsumerWidget {
   final AiMessage message;
@@ -71,7 +72,9 @@ class AiChatBubble extends ConsumerWidget {
                     ),
                   )
                 : MarkdownBody(
-                    data: message.text,
+                    data: message.id == 'welcome_greeting'
+                        ? (AppLocalizations.of(context)?.aiWelcomeGreeting ?? message.text)
+                        : message.text,
                     styleSheet: MarkdownStyleSheet(
                       p: TextStyle(
                         fontSize: 15,

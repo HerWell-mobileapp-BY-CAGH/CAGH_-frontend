@@ -18,10 +18,12 @@ class NotificationBell extends ConsumerWidget {
       clipBehavior: Clip.none,
       children: [
         IconButton(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          constraints: const BoxConstraints(),
           icon: Icon(
             unreadCount > 0 ? Icons.notifications_active_rounded : Icons.notifications_none_rounded,
             color: iconColor ?? Colors.white,
-            size: 26,
+            size: 24,
           ),
           onPressed: () {
             Navigator.push(

@@ -182,7 +182,7 @@ class AppLocalizationsAm extends AppLocalizations {
   String get learn => 'ትምህርት';
 
   @override
-  String get aiNearby => 'ኤአይ እና አቅራቢያ';
+  String get aiNearby => 'አቅራቢያ';
 
   @override
   String get notifications => 'ማሳወቂያዎች';
@@ -285,6 +285,10 @@ class AppLocalizationsAm extends AppLocalizations {
 
   @override
   String get valInvalidPhone => 'እባክዎ ትክክለኛ የስልክ ቁጥር ያስገቡ።';
+
+  @override
+  String get invalidCredentials =>
+      'የተሳሳተ ኢሜይል ወይም የይለፍ ቃል አስገብተዋል። እባክዎ እንደገና ይሞክሩ።';
 
   @override
   String get valPasswordReq => 'የይለፍ ቃል ያስፈልጋል።';
@@ -500,6 +504,9 @@ class AppLocalizationsAm extends AppLocalizations {
   String get patient => 'ታካሚ';
 
   @override
+  String get seekHealthcare => 'የጤና እንክብካቤ ፈላጊ';
+
+  @override
   String get consultationDetails => 'የምክክር ዝርዝሮች';
 
   @override
@@ -551,7 +558,7 @@ class AppLocalizationsAm extends AppLocalizations {
   String get searchByNameOrSpecialty => 'በስም ወይም በልዩ ሙያ ይፈልጉ...';
 
   @override
-  String get message => 'መልዕክት';
+  String get message => 'መልእክት';
 
   @override
   String get verifiedMidwife => 'የተረጋገጠ አዋላጅ';
@@ -575,10 +582,10 @@ class AppLocalizationsAm extends AppLocalizations {
   String get offeredConsultations => 'የሚሰጡ ምክክሮች';
 
   @override
-  String get viewAll => 'ሁሉንም አሳይ';
+  String get viewAll => 'ሁሉንም ይመልከቱ';
 
   @override
-  String get book => 'ይያዙ';
+  String get book => 'ቀጠሮ ያዝ';
 
   @override
   String get yourConversationsWillAppearHere => 'የእርስዎ ውይይቶች እዚህ ይታያሉ።';
@@ -1122,7 +1129,7 @@ class AppLocalizationsAm extends AppLocalizations {
   }
 
   @override
-  String get voiceCall => 'የድምጽ ጥሪ';
+  String get voiceCall => 'በስልክ ጥሪ';
 
   @override
   String get hotlines => 'የአደጋ ጊዜ ስልኮች';
@@ -1281,4 +1288,288 @@ class AppLocalizationsAm extends AppLocalizations {
 
   @override
   String get statusDeclined => 'ተቀባይነት አላገኘም';
+
+  @override
+  String get helpfulServices => 'ጠቃሚ አገልግሎቶች';
+
+  @override
+  String get healthResources => 'የጤና መረጃዎች';
+
+  @override
+  String get findNearbyServices => 'በአቅራቢያ ያሉ አገልግሎቶች';
+
+  @override
+  String get welcomeSubtitle =>
+      'ለጤናዎ፣ ለደህንነትዎ እና በመረጃ የተደገፉ ውሳኔዎችን እንዲያደርጉ ልንደግፍዎ እዚህ ነን።';
+
+  @override
+  String get needUrgentHelp => 'አስቸኳይ እርዳታ ይፈልጋሉ?';
+
+  @override
+  String get talkToProfessionalNow => 'አሁን የሰለጠነ ባለሙያ ያነጋግሩ።';
+
+  @override
+  String get startQuickConsultation => 'ፈጣን ምክክር ጀምር';
+
+  @override
+  String get focusAreas => 'የትኩረት መስኮች';
+
+  @override
+  String get filters => 'ማጣሪያዎች';
+
+  @override
+  String get reset => 'ዳግም አስጀምር';
+
+  @override
+  String get specialization => 'የሙያ መስክ';
+
+  @override
+  String get any => 'ማንኛውም';
+
+  @override
+  String get prenatalCare => 'የቅድመ ወሊድ እንክብካቤ';
+
+  @override
+  String get postnatalCare => 'የድህረ ወሊድ እንክብካቤ';
+
+  @override
+  String get laborAndDelivery => 'ምጥ እና ወሊድ';
+
+  @override
+  String get familyPlanning => 'የቤተሰብ ምጣኔ';
+
+  @override
+  String get consultationMethod => 'የምክክር ዘዴ';
+
+  @override
+  String get rating => 'ደረጃ';
+
+  @override
+  String get rating45Up => '4.5 እና ከዚያ በላይ';
+
+  @override
+  String get rating40Up => '4.0 እና ከዚያ በላይ';
+
+  @override
+  String get rating35Up => '3.5 እና ከዚያ በላይ';
+
+  @override
+  String get distance => 'ርቀት';
+
+  @override
+  String get anyTime => 'በማንኛውም ጊዜ';
+
+  @override
+  String get availableNow => 'አሁን ክፍት የሆነ';
+
+  @override
+  String get thisWeek => 'በዚህ ሳምንት';
+
+  @override
+  String get applyFilters => 'ማጣሪያዎችን ተግብር';
+
+  @override
+  String get requestChat => 'ውይይት ጠይቅ';
+
+  @override
+  String get maternalHealthSpecialist => 'የእናቶች ጤና ስፔሻሊስት';
+
+  @override
+  String get all => 'ሁሉም';
+
+  @override
+  String get hospitals => 'ሆስፒታሎች';
+
+  @override
+  String get clinics => 'ክሊኒኮች';
+
+  @override
+  String get pharmacies => 'ፋርማሲዎች';
+
+  @override
+  String get healthCenters => 'ጤና ጣቢያዎች';
+
+  @override
+  String aboutMidwife(String name) {
+    return 'ስለ $name';
+  }
+
+  @override
+  String get dedicatedMidwifeDesc => 'ምርጥ እንክብካቤ ለመስጠት ቁርጠኛ የሆነች አዋላጅ።';
+
+  @override
+  String get noMidwivesMatchFilters =>
+      'ምንም አዋላጅ ከማጣሪያዎችዎ ጋር አይዛመድም። ዳግም ለማስጀመር ይሞክሩ።';
+
+  @override
+  String get userRegistration => 'የተጠቃሚ ምዝገባ';
+
+  @override
+  String get seekingCareTitle => 'እርዳታ እና እንክብካቤ እፈልጋለሁ';
+
+  @override
+  String get seekingCareSubtitle => 'የጤና መረጃ፣ ድጋፍ እና አገልግሎቶችን እፈልጋለሁ።';
+
+  @override
+  String get midwifeRoleTitle => 'እኔ አዋላጅ ነኝ';
+
+  @override
+  String get midwifeRoleSubtitle => 'ደንበኞችን የምደግፍ የጤና ባለሙያ ነኝ።';
+
+  @override
+  String get selectDateOfBirth => 'የትውልድ ቀንዎን ይምረጡ';
+
+  @override
+  String get tapToUploadCv => 'ሲቪ ወይም ሬዙሜዎን ለመጫን ይንኩ';
+
+  @override
+  String get cvFileFormatLimit => 'PDF፣ DOC (ከፍተኛ 5 ሜባ)';
+
+  @override
+  String get midwifeReviewNotice => 'ምዝገባዎ ከመፅደቁ በፊት በአስተዳዳሪ ይገመገማል።';
+
+  @override
+  String get firstNameRequired => 'ስም ማስገባት ግዴታ ነው';
+
+  @override
+  String get lastNameRequired => 'የአባት ስም ማስገባት ግዴታ ነው';
+
+  @override
+  String get dateOfBirthRequired => 'የትውልድ ቀን ማስገባት ግዴታ ነው';
+
+  @override
+  String get passwordMinLength => 'የይለፍ ቃል ቢያንስ 8 ቁምፊዎች መሆን አለበት';
+
+  @override
+  String get nameNoSpecialChars => 'ቁጥሮችን ወይም ልዩ ቁምፊዎችን መያዝ አይችልም';
+
+  @override
+  String get phoneNumberEthiopia => 'ስልክ ቁጥር (ኢትዮጵያ)';
+
+  @override
+  String get cvResume => 'የሙያ ሲቪ (CV)';
+
+  @override
+  String get availabilityCalendar => 'የመገኘት ቀን መቁጠሪያ';
+
+  @override
+  String get availabilitySubtitle => 'ደንበኞች ቀጠሮ የሚይዙበትን ክፍት ሰዓታት ያዘጋጁ።';
+
+  @override
+  String get selectDayToManage => 'የመገኘት ሰዓት ለማስተካከል\nቀኑን ይምረጡ።';
+
+  @override
+  String get pastStatus => 'ያለፈ';
+
+  @override
+  String get editAvailableTime => 'ክፍት ሰዓት ያርትዑ';
+
+  @override
+  String get addAvailableTime => 'ክፍት ሰዓት ያክሉ';
+
+  @override
+  String get addTimeSubtitle => 'ደንበኞች ቀጠሮ የሚይዙበትን ሰዓት ያክሉ';
+
+  @override
+  String get dateTimeSection => 'ቀን እና ሰዓት';
+
+  @override
+  String get dateRequired => 'ቀን *';
+
+  @override
+  String get selectDatePrompt => 'ቀን ይምረጡ';
+
+  @override
+  String get startTimeRequired => 'የመጀመሪያ ሰዓት *';
+
+  @override
+  String get selectStartTimePrompt => 'የመጀመሪያ ሰዓት ይምረጡ';
+
+  @override
+  String get endTimeRequired => 'የማብቂያ ሰዓት *';
+
+  @override
+  String get selectEndTimePrompt => 'የማብቂያ ሰዓት ይምረጡ';
+
+  @override
+  String get consultationMethodSection => 'የምክክር ዘዴ';
+
+  @override
+  String get saveAvailability => 'የመገኘት ሰዓት አስቀምጥ';
+
+  @override
+  String get noAvailabilityCreated => 'ምንም ክፍት ሰዓት አልተፈጠረም';
+
+  @override
+  String get addTimeSlotPrompt => 'ለዚህ ቀን የሰዓት ክፍተት ያክሉ';
+
+  @override
+  String calendarEntries(int count) {
+    return '$count የመቁጠሪያ መዝገቦች';
+  }
+
+  @override
+  String get inPersonAndVoiceCall => 'በአካል እና በስልክ ጥሪ';
+
+  @override
+  String get inPersonHospital => 'በአካል መገናኘት · ሆስፒታል';
+
+  @override
+  String get onlinePhoneCall => 'ኦንላይን መገናኘት · የስልክ ጥሪ';
+
+  @override
+  String get pleaseSelectDateTime => 'እባክዎ ቀን እና ሰዓት ይምረጡ';
+
+  @override
+  String get endTimeAfterStartTime => 'የማብቂያ ሰዓት ከመጀመሪያ ሰዓት በኋላ መሆን አለበት';
+
+  @override
+  String get selectConsultationMethod => 'እባክዎ ቢያንስ አንድ የምክክር ዘዴ ይምረጡ';
+
+  @override
+  String get availabilityUpdatedSuccess => 'የመገኘት ሰዓት በተሳካ ሁኔታ ተሻሽሏል';
+
+  @override
+  String get availabilityAddedSuccess => 'የመገኘት ሰዓት በተሳካ ሁኔታ ተጨምሯል';
+
+  @override
+  String get failedToAddAvailability => 'የመገኘት ሰዓት መጨመር አልተሳካም';
+
+  @override
+  String get edit => 'አርትዕ';
+
+  @override
+  String get delete => 'ሰርዝ';
+
+  @override
+  String get deleteSlotConfirm => 'ይህን ክፍት ሰዓት በእርግጥ መሰረዝ ይፈልጋሉ?';
+
+  @override
+  String get midwifeBookingsAppearHere => 'ከታዳጊ ወጣቶች የተያዙ ቀጠሮዎች\nእዚህ ይታያሉ።';
+
+  @override
+  String get setDaysAndTimesPrompt =>
+      'ወጣቶች ከእርስዎ ጋር የምክክር ቀጠሮ\nየሚይዙባቸውን ቀናትና ሰዓታት ይወስኑ።';
+
+  @override
+  String get noAppointmentsToday => 'ዛሬ ምንም ቀጠሮ የለም';
+
+  @override
+  String get whenGirlBooksConsultation =>
+      'ታዳጊ ወጣት ከእርስዎ ጋር የምክክር ቀጠሮ\nስትይዝ እዚህ ይታያል።';
+
+  @override
+  String get aiWelcomeGreeting =>
+      'ሰላም! እኔ የእርስዎ የጤና ረዳት ነኝ። ዛሬ በምን ልርዳዎ እችላለሁ?';
+
+  @override
+  String get roleMismatchMidwifeError =>
+      'ይህ ኢሜይል የተመዘገበው እንደ ታዳጊ/ተጠቃሚ መለያ ነው። እባክዎ በተጠቃሚ መግቢያ ይጠቀሙ።';
+
+  @override
+  String get roleMismatchPatientError =>
+      'ይህ ኢሜይል የተመዘገበው እንደ አዋላጅ/ባለሙያ መለያ ነው። እባክዎ በአዋላጅ መግቢያ ይጠቀሙ።';
+
+  @override
+  String get startTimeCannotBeInPast => 'የመጀመሪያ ሰዓት ለዛሬ ካለፈው ሰዓት መሆን የለበትም';
 }

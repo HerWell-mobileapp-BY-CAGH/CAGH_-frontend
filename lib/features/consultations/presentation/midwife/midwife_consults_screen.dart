@@ -11,8 +11,11 @@ import 'package:cagh_frontend/core/utils/app_logger.dart';
 import 'package:cagh_frontend/features/consultations/presentation/midwife/midwife_chat_screen.dart';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
 
+import 'package:cagh_frontend/shared/widgets/custom_snackbar.dart';
+
 class MidwifeConsultsScreen extends StatefulWidget {
-  const MidwifeConsultsScreen({super.key});
+  final bool showAppBar;
+  const MidwifeConsultsScreen({super.key, this.showAppBar = false});
 
   @override
   State<MidwifeConsultsScreen> createState() => _MidwifeConsultsScreenState();
@@ -33,11 +36,18 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
     _fetchAppointments();
   }
 
-  Future<void> _fetchAppointments() async {
-    setState(() => _isLoading = true);
+  Future<void> _fetchAppointments({bool showLoading = true}) async {
+    if (showLoading && _appointments.isEmpty) {
+      setState(() => _isLoading = true);
+    }
     try {
-      _appointments = await _appointmentRepository.getMidwifeAppointments();
-      AppLogger.d('[BOOKING FETCH] Midwife fetched ${_appointments.length} bookings');
+      final list = await _appointmentRepository.getMidwifeAppointments();
+      AppLogger.d('[BOOKING FETCH] Midwife fetched ${list.length} bookings');
+      if (mounted) {
+        setState(() {
+          _appointments = list;
+        });
+      }
     } catch (e) {
       AppLogger.d('Error loading consults: $e');
     } finally {
@@ -51,16 +61,26 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
          // Completed logic
       } else if (newStatus == AppointmentStatus.cancelled) {
          await _appointmentRepository.cancelAppointment(id);
+         if (mounted) CustomSnackBar.show(context, message: 'Appointment cancelled', type: SnackBarType.info);
       } else if (newStatus == AppointmentStatus.confirmed) {
          await _appointmentRepository.acceptAppointment(id);
+         if (mounted) {
+           CustomSnackBar.show(context, message: 'Appointment confirmed', isSuccess: true);
+           // Switch to Upcoming tab so confirmed appointment is shown immediately
+           setState(() => _selectedTab = 1);
+         }
       } else if (newStatus == AppointmentStatus.declined) {
          await _appointmentRepository.declineAppointment(id);
+         if (mounted) CustomSnackBar.show(context, message: 'Appointment declined', type: SnackBarType.warning);
       }
-      _fetchAppointments();
+      _fetchAppointments(showLoading: false);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.failedToUpdateStatus), backgroundColor: Colors.red),
+        final errorMsg = e.toString().replaceAll('Exception: ', '').trim();
+        CustomSnackBar.show(
+          context,
+          message: errorMsg.isNotEmpty ? errorMsg : AppLocalizations.of(context)!.failedToUpdateStatus,
+          isError: true,
         );
       }
     }
@@ -192,7 +212,7 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
+      appBar: widget.showAppBar ? AppBar(
         backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
         automaticallyImplyLeading: false,
@@ -200,11 +220,11 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
           'Consultations',
           style: TextStyle(
             color: Theme.of(context).appBarTheme.foregroundColor,
-            fontSize: 18,
+            fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
         ),
-      ),
+      ) : null,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: AppColors.primaryGreen))
           : RefreshIndicator(
@@ -344,15 +364,18 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
             // 2. Person Info (Patient Name & Role)
             Row(
               children: [
-                CircleAvatar(
-                  radius: 18,
-                  backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                  child: Text(
-                    patientDisplayName.isNotEmpty ? patientDisplayName[0].toUpperCase() : 'P',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFF3F4F6),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.person,
+                      color: Color(0xFF385A2E),
+                      size: 22,
                     ),
                   ),
                 ),
@@ -370,12 +393,12 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
-                        SizedBox(height: 2),
+                        const SizedBox(height: 2),
                         Text(
-                          AppLocalizations.of(context)!.patient,
+                          AppLocalizations.of(context)!.seekHealthcare,
                           style: TextStyle(
                             fontSize: 12,
-                            color: Theme.of(context).textTheme.bodyMedium?.color,
+                            color: Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey.shade600,
                           ),
                         ),
                     ],

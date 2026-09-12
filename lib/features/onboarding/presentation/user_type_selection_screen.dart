@@ -102,8 +102,8 @@ class _UserTypeSelectionScreenState extends State<UserTypeSelectionScreen> {
                         ],
                       ),
                       iconBgColor: const Color(0xFFFFDB89), // Light orange/yellow
-                      title: "I'm seeking care",
-                      subtitle: "I want health information,\nsupport, and services.",
+                      title: AppLocalizations.of(context)!.seekingCareTitle,
+                      subtitle: AppLocalizations.of(context)!.seekingCareSubtitle,
                       isSelected: selectedRole == 'user',
                       isDark: isDark,
                       onTap: () {
@@ -133,8 +133,8 @@ class _UserTypeSelectionScreenState extends State<UserTypeSelectionScreen> {
                         ],
                       ),
                       iconBgColor: const Color(0xFFD6E5D0), // Light green
-                      title: "I'm a Midwife",
-                      subtitle: "I'm a healthcare provider\nsupporting clients.",
+                      title: AppLocalizations.of(context)!.midwifeRoleTitle,
+                      subtitle: AppLocalizations.of(context)!.midwifeRoleSubtitle,
                       isSelected: selectedRole == 'midwife',
                       isDark: isDark,
                       onTap: () {

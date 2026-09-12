@@ -68,81 +68,46 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_currentIndex == 4) {
-      return Scaffold(
-        extendBody: true,
-        body: UserProfileScreen(
-          onBackTap: () => setState(() => _currentIndex = 0),
-          onAppointmentsTap: () => setState(() => _currentIndex = 1),
-        ),
-        floatingActionButton: _buildFloatingButtons(),
-        bottomNavigationBar: _buildBottomNav(),
-      );
-    }
+
 
     return Scaffold(
       extendBody: true,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // ===== GREEN APP BAR (only on Home tab) =====
-            if (_currentIndex == 0)
-              Container(
-                width: double.infinity,
-                color: const Color(0xFF385A2E), // Dark green
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                child: Stack(
-                  alignment: Alignment.center,
+      body: Column(
+        children: [
+          // ===== GREEN APP BAR (Applied to all tabs) =====
+          Container(
+            width: double.infinity,
+            color: const Color(0xFF385A2E),
+            child: SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: Row(
                   children: [
-                    Text(
-                      AppLocalizations.of(context)!.home,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
+                    // Left spacer — same width as the right icons to keep title centered
+                    const SizedBox(width: 88),
+                    // Centered title
+                    Expanded(
+                      child: Text(
+                        _getTabTitle(context),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: const [
-                        GlobeLanguagePicker(iconColor: Colors.white, iconSize: 24),
-                        SizedBox(width: 16),
-                        NotificationBell(iconColor: Colors.white),
-                      ],
-                    ),
-                  ],
-                ),
-              )
-
-            else if (_currentIndex == 2)
-              Container(
-                width: double.infinity,
-                color: const Color(0xFF385A2E), // Dark green
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Text(
-                      AppLocalizations.of(context)!.learningModule,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: const [
-                        GlobeLanguagePicker(iconColor: Colors.white, iconSize: 24),
-                        SizedBox(width: 16),
-                        NotificationBell(iconColor: Colors.white),
-                      ],
-                    ),
+                    // Right icons — globe + notification bell
+                    const GlobeLanguagePicker(iconColor: Colors.white, iconSize: 24),
+                    const NotificationBell(iconColor: Colors.white),
                   ],
                 ),
               ),
-            // ===== MAIN BODY BASED ON SELECTED TAB =====
+            ),
+          ),
+          // ===== MAIN BODY BASED ON SELECTED TAB =====
 
             Expanded(
               child: IndexedStack(
@@ -152,22 +117,45 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                   _buildConsultTab(),
                   _buildLearnTab(),
                   _buildNearbyTab(),
+                  UserProfileScreen(
+                    onBackTap: () => setState(() => _currentIndex = 0),
+                    onAppointmentsTap: () => setState(() => _currentIndex = 1),
+                  ),
                 ],
               ),
             ),
           ],
         ),
-      ),
       floatingActionButton: _buildFloatingButtons(),
       bottomNavigationBar: _buildBottomNav(),
     );
+  }
+
+  String _getTabTitle(BuildContext context) {
+    switch (_currentIndex) {
+      case 0:
+        return AppLocalizations.of(context)!.home;
+      case 1:
+        return AppLocalizations.of(context)!.consultations;
+      case 2:
+        return AppLocalizations.of(context)!.learningModule;
+      case 3:
+        return AppLocalizations.of(context)!.nearbyFacilities;
+      case 4:
+        return AppLocalizations.of(context)!.profile;
+      default:
+        return '';
+    }
   }
 
   // TAB 0: HOME / FEED
   Widget _buildHomeTab() {
     final primaryDarkGreen = const Color(0xFF385A2E);
     
-    return SingleChildScrollView(
+    return MediaQuery.removePadding(
+      context: context,
+      removeTop: true,
+      child: SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -188,9 +176,9 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                     children: [
                       Row(
                         children: [
-                          const Text(
-                            'Welcome',
-                            style: TextStyle(
+                          Text(
+                            AppLocalizations.of(context)!.welcome,
+                            style: const TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.w800,
                               color: Color(0xFF385A2E),
@@ -201,9 +189,9 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                         ],
                       ),
                       const SizedBox(height: 8),
-                      const Text(
-                        "We're here to support your health, well-being and informed choices.",
-                        style: TextStyle(
+                      Text(
+                        AppLocalizations.of(context)!.welcomeSubtitle,
+                        style: const TextStyle(
                           fontSize: 13,
                           height: 1.4,
                           color: Colors.black87,
@@ -273,9 +261,9 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Need urgent help?',
-                            style: TextStyle(
+                          Text(
+                            AppLocalizations.of(context)!.needUrgentHelp,
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 18,
                               fontWeight: FontWeight.w700,
@@ -283,7 +271,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Talk to a trained professional now.',
+                            AppLocalizations.of(context)!.talkToProfessionalNow,
                             style: TextStyle(
                               color: Colors.white.withOpacity(0.9),
                               fontSize: 13,
@@ -302,7 +290,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                     onPressed: () {},
                     icon: Icon(Icons.chat, color: primaryDarkGreen, size: 18),
                     label: Text(
-                      'Start Quick Consultation',
+                      AppLocalizations.of(context)!.startQuickConsultation,
                       style: TextStyle(color: primaryDarkGreen, fontWeight: FontWeight.w700),
                     ),
                     style: ElevatedButton.styleFrom(
@@ -327,7 +315,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Focus Areas',
+                    AppLocalizations.of(context)!.focusAreas,
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
@@ -343,10 +331,10 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                 ],
               ),
               Row(
-                children: const [
-                  Text('View all', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                  SizedBox(width: 4),
-                  Icon(Icons.arrow_forward_ios, size: 12),
+                children: [
+                  Text(AppLocalizations.of(context)!.viewAll, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                  const SizedBox(width: 4),
+                  const Icon(Icons.arrow_forward_ios, size: 12),
                 ],
               ),
             ],
@@ -399,7 +387,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'About Us',
+                AppLocalizations.of(context)!.aboutUs,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
@@ -414,27 +402,36 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
               ),
             ],
           ),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF6F8F5),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFE2E7E1)),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.health_and_safety, color: primaryDarkGreen, size: 40),
-                const SizedBox(width: 16),
-                const Expanded(
-                  child: Text(
-                    'We provide confidential consultation, education and care to help women and adolescent girls live healthier lives.',
-                    style: TextStyle(fontSize: 12, height: 1.4, color: Colors.black87),
-                  ),
+          Builder(
+            builder: (context) {
+              final isDark = Theme.of(context).brightness == Brightness.dark;
+              return Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: isDark ? Theme.of(context).cardColor : const Color(0xFFF6F8F5),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: isDark ? Theme.of(context).dividerColor : const Color(0xFFE2E7E1)),
                 ),
-                const SizedBox(width: 16),
-                Icon(Icons.local_florist, color: const Color(0xFFF9A825), size: 40),
-              ],
-            ),
+                child: Row(
+                  children: [
+                    Icon(Icons.health_and_safety, color: isDark ? const Color(0xFF81C784) : primaryDarkGreen, size: 40),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.aboutUsDesc,
+                        style: TextStyle(
+                          fontSize: 12,
+                          height: 1.4,
+                          color: isDark ? Colors.grey.shade300 : Colors.black87,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Icon(Icons.local_florist, color: const Color(0xFFF9A825), size: 40),
+                  ],
+                ),
+              );
+            },
           ),
 
           const SizedBox(height: 32),
@@ -444,7 +441,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Helpful Services',
+                AppLocalizations.of(context)!.helpfulServices,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
@@ -469,21 +466,21 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                   icon: Icons.calendar_today,
                   iconColor: primaryDarkGreen,
                   iconBg: const Color(0xFFD6E5D0),
-                  title: 'Book\nAppointment',
+                  title: AppLocalizations.of(context)!.bookAppointment,
                 ),
                 const SizedBox(width: 12),
                 _buildHelpfulServiceChip(
                   icon: Icons.description,
                   iconColor: const Color(0xFF6B4C9A),
                   iconBg: const Color(0xFFEBE6F3),
-                  title: 'Health\nResources',
+                  title: AppLocalizations.of(context)!.healthResources,
                 ),
                 const SizedBox(width: 12),
                 _buildHelpfulServiceChip(
                   icon: Icons.location_on,
                   iconColor: primaryDarkGreen,
                   iconBg: const Color(0xFFD6E5D0),
-                  title: 'Find Nearby\nServices',
+                  title: AppLocalizations.of(context)!.findNearbyServices,
                 ),
               ],
             ),
@@ -492,42 +489,45 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
           const SizedBox(height: 100), // Bottom padding for nav bar
         ],
       ),
-    );
+    ),
+  );
   }
 
   Widget _buildFocusAreaCard({required String title, required String subtitle}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF6F8F5),
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E7E1)),
+        border: Border.all(color: Theme.of(context).dividerColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF385A2E),
+              color: isDark ? Colors.white : const Color(0xFF385A2E),
               height: 1.2,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             subtitle,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
-              color: Colors.black87,
+              color: isDark ? Colors.grey.shade400 : Colors.black87,
               height: 1.3,
             ),
           ),
           const SizedBox(height: 12),
-          const Align(
+          Align(
             alignment: Alignment.bottomRight,
-            child: Icon(Icons.arrow_forward_ios, size: 12, color: Color(0xFF385A2E)),
+            child: Icon(Icons.arrow_forward_ios, size: 12, color: isDark ? Colors.white70 : const Color(0xFF385A2E)),
           ),
         ],
       ),
@@ -540,12 +540,13 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
     required Color iconBg,
     required String title,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E7E1)),
+        border: Border.all(color: Theme.of(context).dividerColor),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -553,23 +554,23 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: iconBg,
+              color: isDark ? const Color(0xFF2E4823).withOpacity(0.3) : iconBg,
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: iconColor, size: 18),
+            child: Icon(icon, color: isDark ? const Color(0xFF81C784) : iconColor, size: 18),
           ),
           const SizedBox(width: 12),
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: Colors.black87,
+              color: isDark ? Colors.white : Colors.black87,
               height: 1.2,
             ),
           ),
           const SizedBox(width: 12),
-          const Icon(Icons.arrow_forward_ios, size: 12, color: Colors.black54),
+          Icon(Icons.arrow_forward_ios, size: 12, color: isDark ? Colors.white60 : Colors.black54),
         ],
       ),
     );
@@ -592,8 +593,11 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
 
   // TAB 2: LEARNING CENTER
   Widget _buildLearnTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+    return MediaQuery.removePadding(
+      context: context,
+      removeTop: true,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -636,8 +640,9 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
           const SizedBox(height: 80),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildLearningModuleCard({
     required IconData icon, // Kept for backwards compatibility but not used
@@ -648,14 +653,16 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
     required Color arrowBgColor,
     VoidCallback? onTap,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.black.withOpacity(0.05), width: 1),
+          border: Border.all(color: Theme.of(context).dividerColor, width: 1),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.03),
@@ -673,19 +680,19 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF2E4823), // Dark green title
+                      color: isDark ? Colors.white : const Color(0xFF2E4823),
                       height: 1.3,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     subtitle,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
-                      color: Colors.black54,
+                      color: isDark ? Colors.grey.shade400 : Colors.black54,
                       height: 1.4,
                     ),
                   ),
@@ -696,11 +703,15 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             Container(
               width: 40,
               height: 40,
-              decoration: const BoxDecoration(
-                color: Color(0xFFE8F2E9), // Light green circular bg
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF2E4823) : const Color(0xFFE8F2E9),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.arrow_forward_rounded, color: Color(0xFF385A2E), size: 20),
+              child: Icon(
+                Icons.arrow_forward_rounded,
+                color: isDark ? Colors.white : const Color(0xFF385A2E),
+                size: 20,
+              ),
             ),
           ],
         ),

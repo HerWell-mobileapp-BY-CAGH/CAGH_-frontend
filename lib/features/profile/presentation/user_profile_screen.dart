@@ -2,7 +2,6 @@ import 'package:cagh_frontend/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
-import 'package:cagh_frontend/shared/constants/app_constants.dart';
 import 'package:cagh_frontend/core/services/language_service.dart';
 import 'package:cagh_frontend/features/onboarding/presentation/user_type_selection_screen.dart';
 import 'package:cagh_frontend/features/profile/presentation/personal_information_screen.dart';
@@ -13,11 +12,18 @@ import 'package:cagh_frontend/features/notifications/presentation/providers/noti
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
 import 'package:cagh_frontend/shared/widgets/app_profile_avatar.dart';
 import 'package:cagh_frontend/core/utils/app_logger.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class UserProfileScreen extends ConsumerStatefulWidget {
   final VoidCallback? onBackTap;
   final VoidCallback? onAppointmentsTap;
-  const UserProfileScreen({super.key, this.onBackTap, this.onAppointmentsTap});
+  final bool showAppBar;
+  const UserProfileScreen({
+    super.key,
+    this.onBackTap,
+    this.onAppointmentsTap,
+    this.showAppBar = false,
+  });
 
   @override
   ConsumerState<UserProfileScreen> createState() => _UserProfileScreenState();
@@ -32,7 +38,18 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
   @override
   void initState() {
     super.initState();
+    _loadNotificationPreference();
     _fetchProfile();
+  }
+
+  Future<void> _loadNotificationPreference() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final enabled = prefs.getBool('notifications_enabled') ?? true;
+      if (mounted) {
+        setState(() => notificationsEnabled = enabled);
+      }
+    } catch (_) {}
   }
 
   Future<void> _fetchProfile() async {
@@ -101,7 +118,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
+      appBar: widget.showAppBar ? AppBar(
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.accentYellow),
@@ -120,7 +137,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
             fontWeight: FontWeight.w700,
           ),
         ),
-      ),
+      ) : null,
       body: isLoading
           ? const Center(
               child: CircularProgressIndicator(color: AppColors.primaryGreen),
@@ -311,24 +328,24 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                       title: AppLocalizations.of(context)!.languageSettings,
                       subtitle: activeLang,
                       trailing: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 3),
                         decoration: BoxDecoration(
-                          color: AppColors.lightGreen,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppColors.mint),
+                          color: const Color(0xFFE8F5E9),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: const Color(0xFFA5D6A7), width: 1.2),
                         ),
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<String>(
                             value: LanguageService.currentLanguage.value,
                             isDense: true,
-                            icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.primaryGreen, size: 20),
-                            borderRadius: BorderRadius.circular(12),
+                            icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF2E5E2A), size: 18),
+                            borderRadius: BorderRadius.circular(16),
                             items: LanguageService.supportedLanguages.map((lang) {
                               return DropdownMenuItem<String>(
                                 value: lang.code,
                                 child: Text(
-                                  '${lang.flag} ${lang.nativeName}',
-                                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
+                                  lang.nativeName,
+                                  style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: Color(0xFF2E5E2A)),
                                 ),
                               );
                             }).toList(),
@@ -349,8 +366,12 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                       trailing: Switch(
                         value: notificationsEnabled,
                         activeThumbColor: AppColors.primaryGreen,
-                        onChanged: (val) {
+                        onChanged: (val) async {
                           setState(() => notificationsEnabled = val);
+                          try {
+                            final prefs = await SharedPreferences.getInstance();
+                            await prefs.setBool('notifications_enabled', val);
+                          } catch (_) {}
                         },
                       ),
                     ),
@@ -414,7 +435,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 100),
                 ],
               ),
             ),

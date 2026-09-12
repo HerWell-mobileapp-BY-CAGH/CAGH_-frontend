@@ -3,10 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import '../otp_verification_screen.dart';
 import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
-import 'package:cagh_frontend/core/services/language_service.dart';
 import 'package:cagh_frontend/shared/widgets/custom_snackbar.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
-import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 class MidwifeRegistrationScreen extends StatefulWidget {
   const MidwifeRegistrationScreen({super.key});
@@ -55,9 +53,9 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
     final nameRegExp = RegExp(r'^[a-zA-Z\s]+$');
     setState(() {
       if (value.trim().isEmpty) {
-        _firstNameError = 'First name is required';
+        _firstNameError = AppLocalizations.of(context)!.firstNameRequired;
       } else if (!nameRegExp.hasMatch(value.trim())) {
-        _firstNameError = 'Cannot contain numbers or special characters';
+        _firstNameError = AppLocalizations.of(context)!.nameNoSpecialChars;
       } else {
         _firstNameError = null;
       }
@@ -68,9 +66,9 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
     final nameRegExp = RegExp(r'^[a-zA-Z\s]+$');
     setState(() {
       if (value.trim().isEmpty) {
-        _lastNameError = 'Last name is required';
+        _lastNameError = AppLocalizations.of(context)!.lastNameRequired;
       } else if (!nameRegExp.hasMatch(value.trim())) {
-        _lastNameError = 'Cannot contain numbers or special characters';
+        _lastNameError = AppLocalizations.of(context)!.nameNoSpecialChars;
       } else {
         _lastNameError = null;
       }
@@ -111,7 +109,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
       if (value.isEmpty) {
         _passwordError = AppLocalizations.of(context)!.valPasswordReq;
       } else if (value.length < 8) {
-        _passwordError = 'Password must be at least 8 characters';
+        _passwordError = AppLocalizations.of(context)!.passwordMinLength;
       } else {
         _passwordError = null;
       }
@@ -133,7 +131,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
   void _validateDOB(String value) {
     setState(() {
       if (value.trim().isEmpty) {
-        _dobError = 'Date of birth is required';
+        _dobError = AppLocalizations.of(context)!.dateOfBirthRequired;
       } else {
         _dobError = null;
       }
@@ -199,7 +197,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                   // Personal Details
                   _buildSection(
                     icon: Icons.person_outline,
-                    title: 'Personal Details',
+                    title: AppLocalizations.of(context)!.personalDetails,
                     children: [
                       Row(
                         children: [
@@ -210,7 +208,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                                 _buildLabel(AppLocalizations.of(context)!.firstName),
                                 _buildTextField(
                                   controller: _firstNameController,
-                                  hint: 'e.g. Sarah',
+                                  hint: AppLocalizations.of(context)!.firstName,
                                   errorText: _firstNameError,
                                   onChanged: _validateFirstName,
                                 ),
@@ -225,7 +223,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                                 _buildLabel(AppLocalizations.of(context)!.lastName),
                                 _buildTextField(
                                   controller: _lastNameController,
-                                  hint: 'e.g. Mitchell',
+                                  hint: AppLocalizations.of(context)!.lastName,
                                   errorText: _lastNameError,
                                   onChanged: _validateLastName,
                                 ),
@@ -238,13 +236,13 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                       _buildLabel(AppLocalizations.of(context)!.emailAddress),
                       _buildTextField(
                         controller: _emailController,
-                        hint: 'sarah.m@example.com',
+                        hint: AppLocalizations.of(context)!.emailAddress,
                         keyboardType: TextInputType.emailAddress,
                         errorText: _emailError,
                         onChanged: _validateEmail,
                       ),
                       const SizedBox(height: 16),
-                      _buildLabel(AppLocalizations.of(context)!.phoneNumber),
+                      _buildLabel(AppLocalizations.of(context)!.phoneNumberEthiopia),
                       Row(
                         children: [
                           Container(
@@ -270,10 +268,10 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      _buildLabel('Date of Birth'),
+                      _buildLabel(AppLocalizations.of(context)!.dateOfBirth),
                       _buildTextField(
                         controller: _dobController,
-                        hint: 'YYYY-MM-DD',
+                        hint: AppLocalizations.of(context)!.selectDateOfBirth,
                         errorText: _dobError,
                         onChanged: _validateDOB,
                         suffixIcon: const Icon(Icons.calendar_today_outlined, color: Colors.grey, size: 20),
@@ -282,7 +280,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                       _buildLabel(AppLocalizations.of(context)!.password),
                       _buildTextField(
                         controller: _passwordController,
-                        hint: 'Create a password',
+                        hint: AppLocalizations.of(context)!.password,
                         obscureText: _obscurePassword,
                         onChanged: _validatePassword,
                         suffixIcon: IconButton(
@@ -302,7 +300,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                       _buildLabel(AppLocalizations.of(context)!.confirmPassword),
                       _buildTextField(
                         controller: _confirmPasswordController,
-                        hint: 'Confirm your password',
+                        hint: AppLocalizations.of(context)!.confirmPassword,
                         obscureText: _obscureConfirm,
                         onChanged: _validateConfirmPassword,
                         suffixIcon: IconButton(
@@ -326,7 +324,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                   // CV / Resume
                   _buildSection(
                     icon: Icons.post_add,
-                    title: 'CV / Resume',
+                    title: AppLocalizations.of(context)!.cvResume,
                     children: [
                       GestureDetector(
                         onTap: _pickCV,
@@ -353,15 +351,15 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                                   size: 36, color: AppColors.primaryGreen),
                               const SizedBox(height: 10),
                               Text(
-                                'Tap to upload your CV or resume',
-                                style: TextStyle(
+                                AppLocalizations.of(context)!.tapToUploadCv,
+                                style: const TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
                                     color: Colors.black87),
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'PDF, DOC (Max 5MB)',
+                                AppLocalizations.of(context)!.cvFileFormatLimit,
                                 style: TextStyle(
                                     fontSize: 12,
                                     color: Colors.grey.shade500),
@@ -429,14 +427,14 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                         final confirmPassword = _confirmPasswordController.text;
 
                         setState(() {
-                          _firstNameError = firstName.isEmpty ? 'First name is required' : null;
-                          _lastNameError = lastName.isEmpty ? 'Last name is required' : null;
+                          _firstNameError = firstName.isEmpty ? AppLocalizations.of(context)!.firstNameRequired : null;
+                          _lastNameError = lastName.isEmpty ? AppLocalizations.of(context)!.lastNameRequired : null;
                           _emailError = email.isEmpty ? AppLocalizations.of(context)!.valEmailReq : null;
 
                           if (password.isEmpty) {
                             _passwordError = AppLocalizations.of(context)!.valPasswordReq;
                           } else if (password.length < 8) {
-                            _passwordError = 'Password must be at least 8 characters';
+                            _passwordError = AppLocalizations.of(context)!.passwordMinLength;
                           } else {
                             _passwordError = null;
                           }
@@ -444,7 +442,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                           if (confirmPassword.isEmpty) {
                             _confirmPasswordError = AppLocalizations.of(context)!.valPasswordConfirmReq;
                           } else if (password != confirmPassword) {
-                            _confirmPasswordError = 'Passwords do not match';
+                            _confirmPasswordError = AppLocalizations.of(context)!.valPasswordMismatch;
                           } else {
                             _confirmPasswordError = null;
                           }
@@ -457,11 +455,11 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
 
                         final nameRegExp = RegExp(r'^[a-zA-Z\s]+$');
                         if (!nameRegExp.hasMatch(firstName)) {
-                          setState(() => _firstNameError = 'Cannot contain numbers or special characters');
+                          setState(() => _firstNameError = AppLocalizations.of(context)!.nameNoSpecialChars);
                           return;
                         }
                         if (!nameRegExp.hasMatch(lastName)) {
-                          setState(() => _lastNameError = 'Cannot contain numbers or special characters');
+                          setState(() => _lastNameError = AppLocalizations.of(context)!.nameNoSpecialChars);
                           return;
                         }
 
@@ -545,9 +543,9 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                                 strokeWidth: 2.5,
                               ),
                             )
-                          : const Text(
-                              'Register',
-                              style: TextStyle(
+                          : Text(
+                              AppLocalizations.of(context)!.register,
+                              style: const TextStyle(
                                 fontSize: 17,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -565,7 +563,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'Your registration will be reviewed by an administrator before approval.',
+                          AppLocalizations.of(context)!.midwifeReviewNotice,
                           style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                         ),
                       ),

@@ -650,6 +650,12 @@ abstract class AppLocalizations {
   /// **'Please enter a valid phone number.'**
   String get valInvalidPhone;
 
+  /// No description provided for @invalidCredentials.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect email or password. Please try again.'**
+  String get invalidCredentials;
+
   /// No description provided for @valPasswordReq.
   ///
   /// In en, this message translates to:
@@ -1064,6 +1070,12 @@ abstract class AppLocalizations {
   /// **'Patient'**
   String get patient;
 
+  /// No description provided for @seekHealthcare.
+  ///
+  /// In en, this message translates to:
+  /// **'Seek Healthcare'**
+  String get seekHealthcare;
+
   /// No description provided for @consultationDetails.
   ///
   /// In en, this message translates to:
@@ -1199,7 +1211,7 @@ abstract class AppLocalizations {
   /// No description provided for @inPerson.
   ///
   /// In en, this message translates to:
-  /// **'In-person'**
+  /// **'In person'**
   String get inPerson;
 
   /// No description provided for @languages.
@@ -1217,7 +1229,7 @@ abstract class AppLocalizations {
   /// No description provided for @viewAll.
   ///
   /// In en, this message translates to:
-  /// **'View All'**
+  /// **'View all'**
   String get viewAll;
 
   /// No description provided for @book.
@@ -2261,7 +2273,7 @@ abstract class AppLocalizations {
   /// No description provided for @voiceCall.
   ///
   /// In en, this message translates to:
-  /// **'Voice Call'**
+  /// **'Voice call'**
   String get voiceCall;
 
   /// No description provided for @hotlines.
@@ -2545,6 +2557,552 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'DECLINED'**
   String get statusDeclined;
+
+  /// No description provided for @helpfulServices.
+  ///
+  /// In en, this message translates to:
+  /// **'Helpful Services'**
+  String get helpfulServices;
+
+  /// No description provided for @healthResources.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Resources'**
+  String get healthResources;
+
+  /// No description provided for @findNearbyServices.
+  ///
+  /// In en, this message translates to:
+  /// **'Find Nearby Services'**
+  String get findNearbyServices;
+
+  /// No description provided for @welcomeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'re here to support your health, well-being and informed choices.'**
+  String get welcomeSubtitle;
+
+  /// No description provided for @needUrgentHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Need urgent help?'**
+  String get needUrgentHelp;
+
+  /// No description provided for @talkToProfessionalNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Talk to a trained professional now.'**
+  String get talkToProfessionalNow;
+
+  /// No description provided for @startQuickConsultation.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Quick Consultation'**
+  String get startQuickConsultation;
+
+  /// No description provided for @focusAreas.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus Areas'**
+  String get focusAreas;
+
+  /// No description provided for @filters.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get filters;
+
+  /// No description provided for @reset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get reset;
+
+  /// No description provided for @specialization.
+  ///
+  /// In en, this message translates to:
+  /// **'Specialization'**
+  String get specialization;
+
+  /// No description provided for @any.
+  ///
+  /// In en, this message translates to:
+  /// **'Any'**
+  String get any;
+
+  /// No description provided for @prenatalCare.
+  ///
+  /// In en, this message translates to:
+  /// **'Prenatal Care'**
+  String get prenatalCare;
+
+  /// No description provided for @postnatalCare.
+  ///
+  /// In en, this message translates to:
+  /// **'Postnatal Care'**
+  String get postnatalCare;
+
+  /// No description provided for @laborAndDelivery.
+  ///
+  /// In en, this message translates to:
+  /// **'Labor & Delivery'**
+  String get laborAndDelivery;
+
+  /// No description provided for @familyPlanning.
+  ///
+  /// In en, this message translates to:
+  /// **'Family Planning'**
+  String get familyPlanning;
+
+  /// No description provided for @consultationMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Consultation Method'**
+  String get consultationMethod;
+
+  /// No description provided for @rating.
+  ///
+  /// In en, this message translates to:
+  /// **'Rating'**
+  String get rating;
+
+  /// No description provided for @rating45Up.
+  ///
+  /// In en, this message translates to:
+  /// **'4.5 & up'**
+  String get rating45Up;
+
+  /// No description provided for @rating40Up.
+  ///
+  /// In en, this message translates to:
+  /// **'4.0 & up'**
+  String get rating40Up;
+
+  /// No description provided for @rating35Up.
+  ///
+  /// In en, this message translates to:
+  /// **'3.5 & up'**
+  String get rating35Up;
+
+  /// No description provided for @distance.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance'**
+  String get distance;
+
+  /// No description provided for @anyTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Any Time'**
+  String get anyTime;
+
+  /// No description provided for @availableNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Available Now'**
+  String get availableNow;
+
+  /// No description provided for @thisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This Week'**
+  String get thisWeek;
+
+  /// No description provided for @applyFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply Filters'**
+  String get applyFilters;
+
+  /// No description provided for @requestChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Request Chat'**
+  String get requestChat;
+
+  /// No description provided for @maternalHealthSpecialist.
+  ///
+  /// In en, this message translates to:
+  /// **'Maternal Health Specialist'**
+  String get maternalHealthSpecialist;
+
+  /// No description provided for @all.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get all;
+
+  /// No description provided for @hospitals.
+  ///
+  /// In en, this message translates to:
+  /// **'Hospitals'**
+  String get hospitals;
+
+  /// No description provided for @clinics.
+  ///
+  /// In en, this message translates to:
+  /// **'Clinics'**
+  String get clinics;
+
+  /// No description provided for @pharmacies.
+  ///
+  /// In en, this message translates to:
+  /// **'Pharmacies'**
+  String get pharmacies;
+
+  /// No description provided for @healthCenters.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Centers'**
+  String get healthCenters;
+
+  /// No description provided for @aboutMidwife.
+  ///
+  /// In en, this message translates to:
+  /// **'About {name}'**
+  String aboutMidwife(String name);
+
+  /// No description provided for @dedicatedMidwifeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A dedicated midwife committed to providing the best care.'**
+  String get dedicatedMidwifeDesc;
+
+  /// No description provided for @noMidwivesMatchFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'No midwives match your filters. Try resetting.'**
+  String get noMidwivesMatchFilters;
+
+  /// No description provided for @userRegistration.
+  ///
+  /// In en, this message translates to:
+  /// **'User Registration'**
+  String get userRegistration;
+
+  /// No description provided for @seekingCareTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'m seeking care'**
+  String get seekingCareTitle;
+
+  /// No description provided for @seekingCareSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'I want health information,\nsupport, and services.'**
+  String get seekingCareSubtitle;
+
+  /// No description provided for @midwifeRoleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'m a Midwife'**
+  String get midwifeRoleTitle;
+
+  /// No description provided for @midwifeRoleSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'m a healthcare provider\nsupporting clients.'**
+  String get midwifeRoleSubtitle;
+
+  /// No description provided for @selectDateOfBirth.
+  ///
+  /// In en, this message translates to:
+  /// **'Select your date of birth'**
+  String get selectDateOfBirth;
+
+  /// No description provided for @tapToUploadCv.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to upload your CV or resume'**
+  String get tapToUploadCv;
+
+  /// No description provided for @cvFileFormatLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF, DOC (Max 5MB)'**
+  String get cvFileFormatLimit;
+
+  /// No description provided for @midwifeReviewNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Your registration will be reviewed by an administrator before approval.'**
+  String get midwifeReviewNotice;
+
+  /// No description provided for @firstNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'First name is required'**
+  String get firstNameRequired;
+
+  /// No description provided for @lastNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Last name is required'**
+  String get lastNameRequired;
+
+  /// No description provided for @dateOfBirthRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Date of birth is required'**
+  String get dateOfBirthRequired;
+
+  /// No description provided for @passwordMinLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be at least 8 characters'**
+  String get passwordMinLength;
+
+  /// No description provided for @nameNoSpecialChars.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot contain numbers or special characters'**
+  String get nameNoSpecialChars;
+
+  /// No description provided for @phoneNumberEthiopia.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone Number (Ethiopia)'**
+  String get phoneNumberEthiopia;
+
+  /// No description provided for @cvResume.
+  ///
+  /// In en, this message translates to:
+  /// **'CV / Resume'**
+  String get cvResume;
+
+  /// No description provided for @availabilityCalendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Availability Calendar'**
+  String get availabilityCalendar;
+
+  /// No description provided for @availabilitySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create the times clients may request.'**
+  String get availabilitySubtitle;
+
+  /// No description provided for @selectDayToManage.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a day to manage\nits availability.'**
+  String get selectDayToManage;
+
+  /// No description provided for @pastStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Past'**
+  String get pastStatus;
+
+  /// No description provided for @editAvailableTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Available Time'**
+  String get editAvailableTime;
+
+  /// No description provided for @addAvailableTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Available Time'**
+  String get addAvailableTime;
+
+  /// No description provided for @addTimeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a time clients may request.'**
+  String get addTimeSubtitle;
+
+  /// No description provided for @dateTimeSection.
+  ///
+  /// In en, this message translates to:
+  /// **'DATE AND TIME'**
+  String get dateTimeSection;
+
+  /// No description provided for @dateRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Date *'**
+  String get dateRequired;
+
+  /// No description provided for @selectDatePrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Select date'**
+  String get selectDatePrompt;
+
+  /// No description provided for @startTimeRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Start time *'**
+  String get startTimeRequired;
+
+  /// No description provided for @selectStartTimePrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Select start time'**
+  String get selectStartTimePrompt;
+
+  /// No description provided for @endTimeRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'End time *'**
+  String get endTimeRequired;
+
+  /// No description provided for @selectEndTimePrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Select end time'**
+  String get selectEndTimePrompt;
+
+  /// No description provided for @consultationMethodSection.
+  ///
+  /// In en, this message translates to:
+  /// **'CONSULTATION METHOD'**
+  String get consultationMethodSection;
+
+  /// No description provided for @saveAvailability.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Availability'**
+  String get saveAvailability;
+
+  /// No description provided for @noAvailabilityCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'No availability created'**
+  String get noAvailabilityCreated;
+
+  /// No description provided for @addTimeSlotPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a time slot for this date.'**
+  String get addTimeSlotPrompt;
+
+  /// No description provided for @calendarEntries.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} calendar entries'**
+  String calendarEntries(int count);
+
+  /// No description provided for @inPersonAndVoiceCall.
+  ///
+  /// In en, this message translates to:
+  /// **'In-person & Voice call'**
+  String get inPersonAndVoiceCall;
+
+  /// No description provided for @inPersonHospital.
+  ///
+  /// In en, this message translates to:
+  /// **'In-person meeting · Hospital'**
+  String get inPersonHospital;
+
+  /// No description provided for @onlinePhoneCall.
+  ///
+  /// In en, this message translates to:
+  /// **'Online meeting · Phone call'**
+  String get onlinePhoneCall;
+
+  /// No description provided for @pleaseSelectDateTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select date and time'**
+  String get pleaseSelectDateTime;
+
+  /// No description provided for @endTimeAfterStartTime.
+  ///
+  /// In en, this message translates to:
+  /// **'End time must be after start time'**
+  String get endTimeAfterStartTime;
+
+  /// No description provided for @selectConsultationMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select at least one consultation method'**
+  String get selectConsultationMethod;
+
+  /// No description provided for @availabilityUpdatedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Availability updated successfully'**
+  String get availabilityUpdatedSuccess;
+
+  /// No description provided for @availabilityAddedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Availability added successfully'**
+  String get availabilityAddedSuccess;
+
+  /// No description provided for @failedToAddAvailability.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to add availability'**
+  String get failedToAddAvailability;
+
+  /// No description provided for @edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get edit;
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// No description provided for @deleteSlotConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this availability slot?'**
+  String get deleteSlotConfirm;
+
+  /// No description provided for @midwifeBookingsAppearHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Bookings from adolescent girls\nwill appear here.'**
+  String get midwifeBookingsAppearHere;
+
+  /// No description provided for @setDaysAndTimesPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Set the days and times when girls can book\na consultation with you.'**
+  String get setDaysAndTimesPrompt;
+
+  /// No description provided for @noAppointmentsToday.
+  ///
+  /// In en, this message translates to:
+  /// **'No appointments today'**
+  String get noAppointmentsToday;
+
+  /// No description provided for @whenGirlBooksConsultation.
+  ///
+  /// In en, this message translates to:
+  /// **'When an adolescent girl books a consultation\nwith you, it will appear here.'**
+  String get whenGirlBooksConsultation;
+
+  /// No description provided for @aiWelcomeGreeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Hello! I am your AI Health Assistant. How can I help you today?'**
+  String get aiWelcomeGreeting;
+
+  /// No description provided for @roleMismatchMidwifeError.
+  ///
+  /// In en, this message translates to:
+  /// **'This email is registered as an adolescent/patient account. Please use the User login.'**
+  String get roleMismatchMidwifeError;
+
+  /// No description provided for @roleMismatchPatientError.
+  ///
+  /// In en, this message translates to:
+  /// **'This email is registered as a healthcare provider/midwife account. Please use the Midwife login.'**
+  String get roleMismatchPatientError;
+
+  /// No description provided for @startTimeCannotBeInPast.
+  ///
+  /// In en, this message translates to:
+  /// **'Start time cannot be in the past for today'**
+  String get startTimeCannotBeInPast;
 }
 
 class _AppLocalizationsDelegate
