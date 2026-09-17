@@ -3,12 +3,15 @@ import 'dart:convert';
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:vibration/vibration.dart';
 import 'package:cagh_frontend/core/utils/app_logger.dart';
 
 class RingtoneService {
   static AudioPlayer? _audioPlayer;
   static String? _cachedRingbackWav;
   static bool _isPlaying = false;
+  static bool _isOpInProgress = false;
+  static bool _vibrating = false;
 
   static String _generateRingbackWav() {
     if (_cachedRingbackWav != null) return _cachedRingbackWav!;
@@ -63,75 +66,113 @@ class RingtoneService {
   }
 
   static Future<void> playOutgoingRingback() async {
-    try {
-      await stopRingtone();
-      _isPlaying = true;
-      _audioPlayer = AudioPlayer();
-      await AudioPlayer.global.setAudioContext(AudioContext(
-        android: const AudioContextAndroid(
-          audioFocus: AndroidAudioFocus.gainTransient,
-          audioMode: AndroidAudioMode.normal,
-          contentType: AndroidContentType.music,
-          usageType: AndroidUsageType.voiceCommunication,
-          stayAwake: true,
-        ),
-      ));
-      await _audioPlayer!.setReleaseMode(ReleaseMode.loop);
-      await _audioPlayer!.setVolume(1.0);
-      if (_isPlaying) {
-        final base64Str = _generateRingbackWav().split(',').last;
-        final bytes = base64Decode(base64Str);
-        await _audioPlayer!.play(BytesSource(bytes));
-        AppLogger.d('RingtoneService: Playing outgoing ringback tone');
-        if (!_isPlaying) {
-          await stopRingtone();
-        }
-      }
-    } catch (e) {
-      AppLogger.d('Outgoing ringback error: $e');
-    }
+    await _playRingtone('outgoing');
   }
 
   static Future<void> playIncomingRingtone() async {
+    await _playRingtone('incoming');
+  }
+
+  static Future<void> _playRingtone(String type) async {
+    if (_isOpInProgress) return;
+    _isOpInProgress = true;
     try {
       await stopRingtone();
       _isPlaying = true;
-      _audioPlayer = AudioPlayer();
-      await AudioPlayer.global.setAudioContext(AudioContext(
-        android: const AudioContextAndroid(
-          audioFocus: AndroidAudioFocus.gainTransient,
-          audioMode: AndroidAudioMode.normal,
-          contentType: AndroidContentType.music,
-          usageType: AndroidUsageType.voiceCommunication,
-          stayAwake: true,
-        ),
-      ));
-      await _audioPlayer!.setReleaseMode(ReleaseMode.loop);
-      await _audioPlayer!.setVolume(1.0);
-      if (_isPlaying) {
+      final player = AudioPlayer();
+      _audioPlayer = player;
+
+      try {
+        await AudioPlayer.global.setAudioContext(AudioContext(
+          android: const AudioContextAndroid(
+            audioFocus: AndroidAudioFocus.gainTransient,
+            audioMode: AndroidAudioMode.normal,
+            contentType: AndroidContentType.music,
+            usageType: AndroidUsageType.notificationRingtone,
+            stayAwake: true,
+          ),
+        ));
+      } catch (e) {
+        AppLogger.d('AudioContext setup notice: $e');
+      }
+
+      if (!_isPlaying || _audioPlayer != player) {
+        try {
+          await player.stop();
+          await player.dispose();
+        } catch (_) {}
+        return;
+      }
+
+      await player.setReleaseMode(ReleaseMode.loop);
+      await player.setVolume(1.0);
+
+      if (_isPlaying && _audioPlayer == player) {
         final base64Str = _generateRingbackWav().split(',').last;
         final bytes = base64Decode(base64Str);
-        await _audioPlayer!.play(BytesSource(bytes));
-        AppLogger.d('RingtoneService: Playing incoming ringtone');
-        if (!_isPlaying) {
-          await stopRingtone();
-        }
+        await player.play(BytesSource(bytes));
+        AppLogger.d('RingtoneService: Playing $type ringtone');
+      }
+
+      if (type == 'incoming' && _isPlaying && _audioPlayer == player) {
+        await _startIncomingVibration();
+      }
+
+      if (!_isPlaying) {
+        await stopRingtone();
       }
     } catch (e) {
-      AppLogger.d('Incoming ringtone error: $e');
+      AppLogger.d('RingtoneService play $type error: $e');
+      await stopRingtone();
+    } finally {
+      _isOpInProgress = false;
+    }
+  }
+
+  /// Rumbles the device in a repeating call-style pattern while the incoming
+  /// call rings. Stops automatically when [stopRingtone] is called (accept,
+  /// decline, end, or timeout).
+  static Future<void> _startIncomingVibration() async {
+    if (_vibrating) return;
+    try {
+      final supported = await Vibration.hasVibrator();
+      if (supported && !kIsWeb) {
+        _vibrating = true;
+        // Vibrate 1s on / 500ms off, repeating indefinitely like a phone call.
+        await Vibration.vibrate(
+          pattern: <int>[0, 1000, 500, 1000],
+          repeat: -1,
+        );
+      }
+    } catch (e) {
+      _vibrating = false;
+      AppLogger.d('RingtoneService vibration notice: $e');
     }
   }
 
   static Future<void> stopRingtone() async {
     _isPlaying = false;
-    try {
-      if (_audioPlayer != null) {
-        await _audioPlayer!.stop();
-        await _audioPlayer!.dispose();
-        _audioPlayer = null;
+    if (_vibrating) {
+      _vibrating = false;
+      try {
+        await Vibration.cancel();
+      } catch (e) {
+        AppLogger.d('RingtoneService vibration cancel notice: $e');
       }
-    } catch (e) {
-      AppLogger.d('RingtoneService: Error stopping ringtone: $e');
     }
+    final player = _audioPlayer;
+    _audioPlayer = null;
+    if (player != null) {
+      try {
+        await player.stop();
+      } catch (_) {}
+      try {
+        await player.dispose();
+      } catch (_) {}
+    }
+  }
+
+  static Future<void> dispose() async {
+    await stopRingtone();
   }
 }

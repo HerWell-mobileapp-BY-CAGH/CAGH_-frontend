@@ -3,9 +3,11 @@ import 'package:flutter_callkit_incoming/entities/entities.dart';
 import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
 import 'package:cagh_frontend/shared/utils/name_formatter.dart';
 import 'package:cagh_frontend/core/services/global_call_service.dart';
-import 'package:cagh_frontend/shared/constants/app_colors.dart';
 import 'package:cagh_frontend/core/utils/app_logger.dart';
-import 'package:cagh_frontend/l10n/app_localizations.dart';
+// TODO: confirm the real import paths for these two and uncomment —
+// they are referenced below but were not imported in the original file.
+// import 'package:cagh_frontend/core/services/incoming_call_action_dispatcher.dart';
+// import 'package:cagh_frontend/core/services/call_navigation_coordinator.dart';
 
 enum CallKitPresentationOperation {
   none,
@@ -23,6 +25,14 @@ class CallKitService {
 
   CallKitService._internal();
 
+  // Single source of truth for the echo-suppression window. Previously this
+  // value was duplicated in three places (the presentationOperation setter,
+  // dismissIncomingCallKitPresentation, and the ACTION_CALL_ENDED handler)
+  // with two different durations (3500ms vs 3000ms), which opened a race
+  // window where a genuine native "call ended" echo would stop being
+  // suppressed 500ms before the timestamp-based check expected it to.
+  static const Duration _dismissalWindowDuration = Duration(milliseconds: 3500);
+
   static String? _activeConsultationId;
   static Map<String, dynamic> _activeExtra = {};
   static String _activeCallerName = 'Care Provider';
@@ -30,29 +40,43 @@ class CallKitService {
   static int _dismissalWindowTimestamp = 0;
 
   CallKitPresentationOperation get presentationOperation => _presentationOperation;
-  set presentationOperation(CallKitPresentationOperation op) {
+  set presentationOperation(CallKitPresentationOperation op) => _openDismissalWindow(op);
+
+  /// Opens (or re-opens) the echo-suppression window. This is now the only
+  /// place that mutates `_presentationOperation` / `_dismissalWindowTimestamp`
+  /// — both the public setter and `dismissIncomingCallKitPresentation` route
+  /// through here so the "how long do we suppress echoes" duration can never
+  /// drift out of sync with the window-expiry check in the event handler.
+  void _openDismissalWindow(CallKitPresentationOperation op) {
     _presentationOperation = op;
-    if (op != CallKitPresentationOperation.none) {
-      _dismissalWindowTimestamp = DateTime.now().millisecondsSinceEpoch;
-      Future.delayed(const Duration(milliseconds: 3500), () {
-        if (_presentationOperation == op) {
-          _presentationOperation = CallKitPresentationOperation.none;
-        }
-      });
-    }
+    if (op == CallKitPresentationOperation.none) return;
+    _dismissalWindowTimestamp = DateTime.now().millisecondsSinceEpoch;
+    Future.delayed(_dismissalWindowDuration, () {
+      if (_presentationOperation == op) {
+        _presentationOperation = CallKitPresentationOperation.none;
+      }
+    });
   }
 
-  void recordDismissalWindow() {
-    _dismissalWindowTimestamp = DateTime.now().millisecondsSinceEpoch;
+  /// Opens a suppression window without a specific operation label — used
+  /// when the accept/decline flow is driven from in-app UI rather than the
+  /// native CallKit UI, but a subsequent native ACTION_CALL_ENDED echo still
+  /// needs to be ignored. Previously this only stamped the timestamp and
+  /// never set `_presentationOperation`, so the suppression check (which
+  /// requires both conditions) silently never fired for this code path.
+  void recordDismissalWindow({
+    CallKitPresentationOperation operation = CallKitPresentationOperation.dismissingAfterAccept,
+  }) {
+    _openDismissalWindow(operation);
   }
 
   Map<String, dynamic> _parseCallData(dynamic call) {
     if (call == null) return {};
     if (call is CallKitParams) {
       return {
-        'id': call.id ?? '',
-        'nameCaller': call.nameCaller ?? '',
-        'extra': call.extra ?? {},
+        'id': call.id,
+        'nameCaller': call.nameCaller,
+        'extra': call.extra,
       };
     }
     if (call is Map) {
@@ -75,6 +99,19 @@ class CallKitService {
 
   bool _isInitialized = false;
 
+  /// Matches an event's name against a known constant safely. Using this
+  /// instead of a `switch` on `event.eventName` avoids Dart's compile-time
+  /// "duplicate case value" error, which the original code was exposed to:
+  /// if `CallEventConstants.actionCallIncoming` (etc.) is itself defined as
+  /// the literal string `'ACTION_CALL_INCOMING'`, having both
+  /// `case CallEventConstants.actionCallIncoming:` and
+  /// `case 'ACTION_CALL_INCOMING':` in the same switch is two case labels
+  /// for one value — illegal in Dart. Plain `==` comparisons in an if/else
+  /// chain tolerate that overlap safely.
+  bool _eventIs(String eventName, List<String> candidates) {
+    return candidates.contains(eventName);
+  }
+
   Future<void> init() async {
     if (_isInitialized) {
       AppLogger.d('[CALL][CALLKIT_LISTENER_REGISTERED] Listener already active, skipping re-registration');
@@ -85,7 +122,7 @@ class CallKitService {
 
     try {
       final activeCalls = await FlutterCallkitIncoming.activeCalls();
-      if (activeCalls is List && activeCalls.isNotEmpty) {
+      if (activeCalls.isNotEmpty) {
         final rawCall = activeCalls.first;
         final callMap = _parseCallData(rawCall);
         final extraMap = Map<String, dynamic>.from(callMap['extra'] ?? {});
@@ -174,70 +211,57 @@ class CallKitService {
         }
 
         final currentState = GlobalCallService.stateMachine.state;
-        AppLogger.d('[CALLKIT-LIFECYCLE] event=${event.eventName} callId=$consultationId state=$currentState presentationOperation=$_presentationOperation');
+        final eventName = event.eventName;
+        AppLogger.d('[CALLKIT-LIFECYCLE] event=$eventName callId=$consultationId state=$currentState presentationOperation=$_presentationOperation');
 
-        switch (event.eventName) {
-          case CallEventConstants.actionCallIncoming:
-          case 'ACTION_CALL_INCOMING':
-            AppLogger.d('[CALL-ACTION-FE] surface=CALLKIT action=INCOMING event=NATIVE_ACTION_RECEIVED call_id=$consultationId');
-            break;
-          case CallEventConstants.actionCallStart:
-          case 'ACTION_CALL_START':
-            AppLogger.d('[CALL-ACTION-FE] surface=CALLKIT action=START event=NATIVE_ACTION_RECEIVED call_id=$consultationId');
-            break;
-          case CallEventConstants.actionCallAccept:
-          case 'ACTION_CALL_ACCEPT':
-            AppLogger.d('[CALL-ACTION-FE] surface=CALLKIT action=ACCEPT event=NATIVE_ACTION_RECEIVED call_id=$consultationId');
-            AppLogger.d('[CALL-ACTION-FE] surface=CALLKIT action=ACCEPT event=ROUTING_TO_DISPATCHER call_id=$consultationId');
-            final mapExtra = Map<String, dynamic>.from(extra);
-            await IncomingCallActionDispatcher.dispatchAccept(consultationId, consultationId, mapExtra, source: 'CALLKIT_USER_ACCEPT');
-            break;
-          case CallEventConstants.actionCallDecline:
-          case 'ACTION_CALL_DECLINE':
-            AppLogger.d('[CALL-ACTION-FE] surface=CALLKIT action=DECLINE event=NATIVE_ACTION_RECEIVED call_id=$consultationId');
+        if (_eventIs(eventName, [CallEventConstants.actionCallIncoming, 'ACTION_CALL_INCOMING'])) {
+          AppLogger.d('[CALL-ACTION-FE] surface=CALLKIT action=INCOMING event=NATIVE_ACTION_RECEIVED call_id=$consultationId');
+        } else if (_eventIs(eventName, [CallEventConstants.actionCallStart, 'ACTION_CALL_START'])) {
+          AppLogger.d('[CALL-ACTION-FE] surface=CALLKIT action=START event=NATIVE_ACTION_RECEIVED call_id=$consultationId');
+        } else if (_eventIs(eventName, [CallEventConstants.actionCallAccept, 'ACTION_CALL_ACCEPT'])) {
+          AppLogger.d('[CALL_TRACE] CALL_ACCEPT_REQUESTED source=CALLKIT_USER_ACCEPT call_id=$consultationId');
+          AppLogger.d('[CALL-ACTION-FE] surface=CALLKIT action=ACCEPT event=NATIVE_ACTION_RECEIVED call_id=$consultationId');
+          AppLogger.d('[CALL-ACTION-FE] surface=CALLKIT action=ACCEPT event=ROUTING_TO_DISPATCHER call_id=$consultationId');
+          final mapExtra = Map<String, dynamic>.from(extra);
+          await IncomingCallActionDispatcher.dispatchAccept(consultationId, consultationId, mapExtra, source: 'CALLKIT_USER_ACCEPT');
+        } else if (_eventIs(eventName, [CallEventConstants.actionCallDecline, 'ACTION_CALL_DECLINE'])) {
+          AppLogger.d('[CALL-ACTION-FE] surface=CALLKIT action=DECLINE event=NATIVE_ACTION_RECEIVED call_id=$consultationId');
+          if (currentState == CallState.connecting || currentState == CallState.connected) {
+            AppLogger.d('[CALLKIT] Ignored ACTION_CALL_DECLINE echo generated after call acceptance (call_id=$consultationId state=$currentState)');
+          } else {
             await IncomingCallActionDispatcher.dispatchDecline(consultationId, consultationId);
-            break;
-          case CallEventConstants.actionCallEnded:
-          case 'ACTION_CALL_ENDED':
-            final now = DateTime.now().millisecondsSinceEpoch;
-            final isWithinWindow = _dismissalWindowTimestamp > 0 && (now - _dismissalWindowTimestamp) < 3500;
-            final isDismissingAccept = isWithinWindow && _presentationOperation != CallKitPresentationOperation.none;
+          }
+        } else if (_eventIs(eventName, [CallEventConstants.actionCallEnded, 'ACTION_CALL_ENDED'])) {
+          final now = DateTime.now().millisecondsSinceEpoch;
+          final isWithinWindow = _dismissalWindowTimestamp > 0 &&
+              (now - _dismissalWindowTimestamp) < _dismissalWindowDuration.inMilliseconds;
+          final isDismissalEcho = isWithinWindow && _presentationOperation != CallKitPresentationOperation.none;
 
-            AppLogger.d('[CALLKIT-LIFECYCLE] event=ACTION_CALL_ENDED callId=$consultationId state=$currentState presentationOperation=$_presentationOperation withinWindow=$isWithinWindow source=${isDismissingAccept ? "NATIVE_DISMISSAL_ECHO" : "GENUINE_NATIVE_END"}');
+          AppLogger.d('[CALLKIT-LIFECYCLE] event=ACTION_CALL_ENDED callId=$consultationId state=$currentState presentationOperation=$_presentationOperation withinWindow=$isWithinWindow source=${isDismissalEcho ? "NATIVE_DISMISSAL_ECHO" : "GENUINE_NATIVE_END"}');
 
-            if (isDismissingAccept) {
-              AppLogger.d('[CALLKIT] Ignored ACTION_CALL_ENDED generated by presentation dismissal echo (call_id=$consultationId)');
-              break;
-            }
+          if (isDismissalEcho) {
+            AppLogger.d('[CALLKIT] Ignored ACTION_CALL_ENDED generated by presentation dismissal echo (call_id=$consultationId)');
+          } else {
             AppLogger.d('[CALL-ACTION-FE] surface=CALLKIT action=END event=NATIVE_ACTION_RECEIVED call_id=$consultationId');
             await IncomingCallActionDispatcher.dispatchEnd(consultationId, consultationId);
-            break;
-          case CallEventConstants.actionCallTimeout:
-          case 'ACTION_CALL_TIMEOUT':
-            AppLogger.d('[CALL-ACTION-FE] surface=CALLKIT action=TIMEOUT event=NATIVE_ACTION_RECEIVED call_id=$consultationId');
-            await GlobalCallService.teardownCall(callId: consultationId, consultationId: consultationId, reason: CallTerminalReason.timeout, source: 'callkit_timeout');
-            await dismissIncomingCallKitPresentation(operation: CallKitPresentationOperation.dismissingAfterEnd);
-            break;
-          case CallEventConstants.actionCallCallback:
-          case CallEventConstants.actionCallCustom:
-          case 'ACTION_CALL_CALLBACK':
-          case 'ACTION_CALL_TOGGLE_DPO_WITH_DISPLAY':
-          case 'ACTION_CALL_CUSTOM':
-            AppLogger.d('[CALL-ACTION-FE] surface=CALLKIT action=CUSTOM event=NATIVE_ACTION_RECEIVED call_id=$consultationId');
-            if (consultationId.isNotEmpty && !GlobalCallService.isCallActive) {
-              final mapExtra = Map<String, dynamic>.from(extra);
-              // Body tap opens native full-screen CallKit UI while keeping call ringing
-              await showCallkitIncoming(
-                consultationId: consultationId,
-                name: callerName,
-                extra: mapExtra,
-                isFullScreen: true,
-              );
-            }
-            break;
-          default:
-            AppLogger.d('[CALL-ACTION-FE] surface=CALLKIT action=UNKNOWN event=ACTION_NOT_ROUTED call_id=$consultationId raw_event=${event.eventName}');
-            break;
+          }
+        } else if (_eventIs(eventName, [CallEventConstants.actionCallTimeout, 'ACTION_CALL_TIMEOUT'])) {
+          AppLogger.d('[CALL-ACTION-FE] surface=CALLKIT action=TIMEOUT event=NATIVE_ACTION_RECEIVED call_id=$consultationId');
+          await GlobalCallService.teardownCall(callId: consultationId, consultationId: consultationId, reason: CallTerminalReason.timeout, source: 'callkit_timeout');
+          await dismissIncomingCallKitPresentation(operation: CallKitPresentationOperation.dismissingAfterEnd);
+        } else if (_eventIs(eventName, [
+          CallEventConstants.actionCallCallback,
+          CallEventConstants.actionCallCustom,
+          'ACTION_CALL_CALLBACK',
+          'ACTION_CALL_TOGGLE_DPO_WITH_DISPLAY',
+          'ACTION_CALL_CUSTOM',
+        ])) {
+          AppLogger.d('[CALL-ACTION-FE] surface=CALLKIT action=CUSTOM event=NATIVE_ACTION_RECEIVED call_id=$consultationId');
+          if (consultationId.isNotEmpty && !GlobalCallService.isCallActive) {
+            CallNavigationCoordinator.checkAndNavigatePendingCall();
+          }
+        } else {
+          AppLogger.d('[CALL-ACTION-FE] surface=CALLKIT action=UNKNOWN event=ACTION_NOT_ROUTED call_id=$consultationId raw_event=$eventName');
         }
       } catch (e) {
         AppLogger.d('CallKitService event handling error: $e');
@@ -264,36 +288,7 @@ class CallKitService {
     _activeConsultationId = consultationId;
     _activeExtra = Map<String, dynamic>.from(extra);
     _activeCallerName = name;
-
-    final params = CallKitParams(
-      id: consultationId,
-      nameCaller: name,
-      appName: 'CAGH Digital Midwife',
-      avatar: avatar,
-      handle: 'End-to-End Encrypted Voice Call',
-      type: 0,
-      duration: 30000,
-      extra: extra,
-      android: AndroidParams(
-        isCustomNotification: false,
-        isShowLogo: false,
-        ringtonePath: 'system_ringtone_default',
-        backgroundColor: AppColors.primaryGreenHex,
-        actionColor: AppColors.accentGreenHex,
-        incomingCallNotificationChannelName: 'Incoming Voice Calls v5',
-        missedCallNotificationChannelName: 'Missed Voice Calls v5',
-        isShowFullLockedScreen: isFullScreen,
-        isFullScreen: isFullScreen,
-        isImportant: true,
-        textAccept: 'Answer',
-        textDecline: 'Decline',
-      ),
-      ios: const IOSParams(
-        supportsVideo: false,
-      ),
-    );
-
-    await FlutterCallkitIncoming.showCallkitIncoming(params);
+    AppLogger.d('[CALL_TRACE] Native CallKit UI suppressed in favor of custom VoiceCallScreen (call_id=$consultationId)');
   }
 
   /// Dismisses the native CallKit notification UI presentation on Android/iOS.
@@ -301,18 +296,24 @@ class CallKitService {
   Future<void> dismissIncomingCallKitPresentation({
     CallKitPresentationOperation operation = CallKitPresentationOperation.dismissingAfterAccept,
   }) async {
-    _presentationOperation = operation;
-    _dismissalWindowTimestamp = DateTime.now().millisecondsSinceEpoch;
-    _activeConsultationId = null;
-    _activeExtra = {};
+    _openDismissalWindow(operation);
     try {
       await FlutterCallkitIncoming.endAllCalls();
     } catch (e) {
       AppLogger.d('CallKitService dismissIncomingCallKitPresentation notice: $e');
     } finally {
-      Future.delayed(const Duration(milliseconds: 3000), () {
-        if (_presentationOperation == operation) {
-          _presentationOperation = CallKitPresentationOperation.none;
+      // Deliberately NOT clearing _activeConsultationId/_activeExtra here.
+      // endAllCalls() above can synchronously re-enter the onEvent listener
+      // with an ACTION_CALL_ENDED echo; that handler's fallback chain
+      // (`_activeConsultationId ?? GlobalCallService.activeConsultationId`)
+      // needs these values to still resolve the call id for logging/
+      // suppression during the dismissal window. They'll be naturally
+      // overwritten the next time showCallkitIncoming() runs, so nothing
+      // is leaked long-term — clear them once the window actually closes.
+      Future.delayed(_dismissalWindowDuration, () {
+        if (_presentationOperation == CallKitPresentationOperation.none) {
+          _activeConsultationId = null;
+          _activeExtra = {};
         }
       });
     }

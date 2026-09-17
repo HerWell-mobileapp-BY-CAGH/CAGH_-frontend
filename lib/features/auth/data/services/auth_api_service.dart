@@ -135,7 +135,7 @@ class AuthService {
 
         try {
           await GlobalCallService.initUserCallListener(force: true);
-          await FcmService.registerDeviceToken();
+          await FcmService.registerDeviceToken(force: true);
         } catch (e) {
           AppLogger.d('Failed to initialize GlobalCallService or FCM token on login: $e');
         }
@@ -201,6 +201,7 @@ class AuthService {
         'last_name': lastName,
         'role': role.toUpperCase(),
         if (phone != null && phone.isNotEmpty) 'phone_number': phone,
+        // ignore: use_null_aware_elements
         if (yearsOfExperience != null) 'years_of_experience': yearsOfExperience,
       };
 
@@ -224,7 +225,7 @@ class AuthService {
           data: body,
         );
       } else {
-        print('Registration Failed. Raw backend response: $body');
+        AppLogger.d('Registration Failed. Raw backend response: $body');
         return ApiResponse(
           success: false,
           message: _extractErrorMessage(body),
@@ -286,6 +287,12 @@ class AuthService {
             await prefs.setString(_refreshTokenKey, body['refresh']);
           }
           await prefs.setString(_lastActiveKey, DateTime.now().toIso8601String());
+          try {
+            await GlobalCallService.initUserCallListener(force: true);
+            await FcmService.registerDeviceToken(force: true);
+          } catch (e) {
+            AppLogger.d('Failed to initialize GlobalCallService or FCM token on verifyOtp: $e');
+          }
         }
         return ApiResponse(
           success: true,
@@ -451,6 +458,12 @@ class AuthService {
           await prefs.setString(_refreshTokenKey, body['refresh']);
         }
         await prefs.setString(_lastActiveKey, DateTime.now().toIso8601String());
+        try {
+          await GlobalCallService.initUserCallListener(force: true);
+          await FcmService.registerDeviceToken(force: true);
+        } catch (e) {
+          AppLogger.d('Failed to initialize GlobalCallService or FCM token on loginOtp: $e');
+        }
         return ApiResponse(
           success: true,
           message: body['message'] ?? 'OTP Login successful',
@@ -793,40 +806,124 @@ class AuthService {
     }
   }
 
+  static Completer<bool>? _refreshCompleter;
+
+  static int? getAccessTokenExpirationSeconds(String? token) {
+    if (token == null || token.trim().isEmpty) return null;
+    try {
+      var cleanToken = token.trim();
+      if (cleanToken.startsWith('Bearer ')) {
+        cleanToken = cleanToken.substring(7).trim();
+      }
+      cleanToken = cleanToken.replaceAll('"', '').replaceAll("'", '').trim();
+      if (cleanToken.endsWith('#')) {
+        cleanToken = cleanToken.substring(0, cleanToken.length - 1).trim();
+      }
+      final parts = cleanToken.split('.');
+      if (parts.length != 3) return null;
+      var payload = parts[1];
+      switch (payload.length % 4) {
+        case 2:
+          payload += '==';
+          break;
+        case 3:
+          payload += '=';
+          break;
+      }
+      final decodedBytes = base64Url.decode(payload);
+      final decodedMap = jsonDecode(utf8.decode(decodedBytes));
+      if (decodedMap is Map && decodedMap.containsKey('exp')) {
+        return int.tryParse(decodedMap['exp'].toString());
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  static bool isAccessTokenValid(String? token) {
+    final expSeconds = getAccessTokenExpirationSeconds(token);
+    if (expSeconds == null) return false;
+
+    final expDate = DateTime.fromMillisecondsSinceEpoch(expSeconds * 1000, isUtc: true);
+    final now = DateTime.now().toUtc();
+    final secondsRemaining = expDate.difference(now).inSeconds;
+
+    return secondsRemaining > 10;
+  }
+
   static Future<bool> forceTokenRefresh() async {
+    if (_refreshCompleter != null) {
+      AppLogger.d('[AUTH REFRESH] started (Awaiting inflight refresh)');
+      return _refreshCompleter!.future;
+    }
+
+    _refreshCompleter = Completer<bool>();
+    AppLogger.d('[AUTH REFRESH] started');
+
     try {
       final prefs = await SharedPreferences.getInstance();
       final refreshToken = prefs.getString(_refreshTokenKey) ?? prefs.getString('refresh_token');
-      if (refreshToken != null && refreshToken.trim().isNotEmpty) {
-        final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.tokenRefresh}');
-        final response = await http.post(
-          url,
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({'refresh': refreshToken.trim()}),
-        ).timeout(const Duration(seconds: 6));
 
-        if (response.statusCode == 200) {
-          final data = jsonDecode(response.body);
-          final newAccess = (data['access'] ?? data['access_token'] ?? '').toString().trim();
-          if (newAccess.isNotEmpty) {
-            await prefs.setString(_accessTokenKey, newAccess);
-            await prefs.setString(_lastActiveKey, DateTime.now().toIso8601String());
-            AppLogger.d('[AUTH] JWT token refresh successful');
-            return true;
+      if (refreshToken == null || refreshToken.trim().isEmpty) {
+        AppLogger.d('[AUTH REFRESH] refresh failed (No refresh token available)');
+        await logout();
+        AppLogger.d('[AUTH REFRESH] session cleared');
+        _refreshCompleter!.complete(false);
+        _refreshCompleter = null;
+        return false;
+      }
+
+      final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.tokenRefresh}');
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'refresh': refreshToken.trim()}),
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        final newAccess = (data['access'] ?? data['access_token'] ?? '').toString().trim();
+        final newRefresh = (data['refresh'] ?? data['refresh_token'] ?? '').toString().trim();
+
+        if (newAccess.isNotEmpty) {
+          await prefs.setString(_accessTokenKey, newAccess);
+          if (newRefresh.isNotEmpty) {
+            await prefs.setString(_refreshTokenKey, newRefresh);
           }
+          await prefs.setString(_lastActiveKey, DateTime.now().toIso8601String());
+
+          final newExp = getAccessTokenExpirationSeconds(newAccess);
+          AppLogger.d('[AUTH REFRESH] request succeeded');
+          AppLogger.d('[AUTH REFRESH] access token stored');
+          AppLogger.d('[AUTH REFRESH] new token expiration: $newExp');
+          _refreshCompleter!.complete(true);
+          _refreshCompleter = null;
+          return true;
         }
       }
+
+      AppLogger.d('[AUTH REFRESH] refresh failed (Status ${response.statusCode})');
+      await logout();
+      AppLogger.d('[AUTH REFRESH] session cleared');
+      _refreshCompleter!.complete(false);
+      _refreshCompleter = null;
+      return false;
     } catch (e) {
-      AppLogger.d('[AUTH] forceTokenRefresh error: $e');
+      AppLogger.d('[AUTH REFRESH] refresh failed (Error: $e)');
+      await logout();
+      AppLogger.d('[AUTH REFRESH] session cleared');
+      if (_refreshCompleter != null && !_refreshCompleter!.isCompleted) {
+        _refreshCompleter!.complete(false);
+      }
+      _refreshCompleter = null;
+      return false;
     }
-    return false;
   }
 
   static Future<bool> trySilentAuthRestore() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString(_accessTokenKey) ?? prefs.getString('access_token') ?? prefs.getString('access');
-      if (token != null && token.trim().isNotEmpty) {
+      if (isAccessTokenValid(token)) {
         return true;
       }
       return await forceTokenRefresh();
@@ -858,6 +955,11 @@ class AuthService {
     } catch (_) {}
     GlobalCallService.dispose();
     final prefs = await SharedPreferences.getInstance();
+    final userData = await AuthService.getUserData();
+    final userId = (userData['id'] ?? userData['user_id'] ?? '').toString();
+    if (userId.isNotEmpty) {
+      await prefs.remove('last_registered_fcm_token_$userId');
+    }
     await prefs.remove(_accessTokenKey);
     await prefs.remove(_refreshTokenKey);
     await prefs.remove(_userDataKey);

@@ -44,13 +44,6 @@ class _ConsultationSessionScreenState extends State<ConsultationSessionScreen> {
     try {
       // Start the consultation
       await _apiService.startConsultation(_sessionId);
-      
-      // Start Video or Voice if virtual
-      if (widget.appointment.appointmentType == 'VIRTUAL_VIDEO') {
-        await _apiService.startVideoSession(_sessionId);
-      } else if (widget.appointment.appointmentType == 'VIRTUAL_VOICE') {
-        await _apiService.startVoiceSession(_sessionId);
-      }
 
       if (mounted) {
         setState(() {

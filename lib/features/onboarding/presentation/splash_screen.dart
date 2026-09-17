@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:cagh_frontend/core/services/language_service.dart';
 import 'package:cagh_frontend/core/services/global_call_service.dart';
 import 'package:cagh_frontend/core/utils/app_logger.dart';
+import 'package:cagh_frontend/core/services/fcm_service.dart';
 import 'language_selection_screen.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
 import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
@@ -48,7 +49,13 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
 
     if (isValid) {
-      AppLogger.d('[SPLASH] Valid session found. Checking user role.');
+      AppLogger.d('[SPLASH] Valid session found. Syncing user call listener and FCM device token.');
+      try {
+        await GlobalCallService.initUserCallListener();
+        FcmService.registerDeviceToken(force: true);
+      } catch (e) {
+        AppLogger.d('[SPLASH] Notice initializing user call listener / FCM: $e');
+      }
       final userData = await AuthService.getUserData();
       final role = (userData['role'] ?? '').toString().toUpperCase();
       

@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cagh_frontend/core/network/api_config.dart';
 import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
 import 'package:cagh_frontend/shared/constants/app_durations.dart';
+import 'package:cagh_frontend/core/utils/app_logger.dart';
 
 class MidwifeApiService {
   Future<Map<String, String>> _getHeaders() async {
@@ -18,6 +19,7 @@ class MidwifeApiService {
   Future<http.Response> _getWithAuth(Uri url, {bool allowPublicRetry = true}) async {
     var response = await http.get(url, headers: await _getHeaders()).timeout(AppDurations.apiRequestTimeout);
     if (response.statusCode == 401) {
+      AppLogger.d('[AUTH] ACCESS_EXPIRED endpoint=${url.path}');
       final refreshed = await AuthService.forceTokenRefresh();
       if (refreshed) {
         response = await http.get(url, headers: await _getHeaders()).timeout(AppDurations.apiRequestTimeout);
@@ -31,6 +33,7 @@ class MidwifeApiService {
   Future<http.Response> _postWithAuth(Uri url, {Object? body, bool allowPublicRetry = false}) async {
     var response = await http.post(url, headers: await _getHeaders(), body: body).timeout(AppDurations.apiRequestTimeout);
     if (response.statusCode == 401) {
+      AppLogger.d('[AUTH] ACCESS_EXPIRED endpoint=${url.path}');
       final refreshed = await AuthService.forceTokenRefresh();
       if (refreshed) {
         response = await http.post(url, headers: await _getHeaders(), body: body).timeout(AppDurations.apiRequestTimeout);
@@ -44,6 +47,7 @@ class MidwifeApiService {
   Future<http.Response> _patchWithAuth(Uri url, {Object? body}) async {
     var response = await http.patch(url, headers: await _getHeaders(), body: body).timeout(AppDurations.apiRequestTimeout);
     if (response.statusCode == 401) {
+      AppLogger.d('[AUTH] ACCESS_EXPIRED endpoint=${url.path}');
       final refreshed = await AuthService.forceTokenRefresh();
       if (refreshed) {
         response = await http.patch(url, headers: await _getHeaders(), body: body).timeout(AppDurations.apiRequestTimeout);
@@ -55,6 +59,7 @@ class MidwifeApiService {
   Future<http.Response> _deleteWithAuth(Uri url) async {
     var response = await http.delete(url, headers: await _getHeaders()).timeout(AppDurations.apiRequestTimeout);
     if (response.statusCode == 401) {
+      AppLogger.d('[AUTH] ACCESS_EXPIRED endpoint=${url.path}');
       final refreshed = await AuthService.forceTokenRefresh();
       if (refreshed) {
         response = await http.delete(url, headers: await _getHeaders()).timeout(AppDurations.apiRequestTimeout);

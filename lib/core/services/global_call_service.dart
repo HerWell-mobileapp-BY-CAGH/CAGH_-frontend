@@ -17,6 +17,7 @@ import 'package:cagh_frontend/l10n/app_localizations.dart';
 import 'package:cagh_frontend/features/consultations/data/services/consultation_api_service.dart';
 import 'package:cagh_frontend/features/consultations/data/services/callkit_service.dart';
 import 'package:cagh_frontend/core/services/global_call_websocket_manager.dart';
+import 'package:cagh_frontend/core/services/fcm_service.dart';
 
 enum CallSignalType {
   callOffer,
@@ -173,6 +174,7 @@ class PendingCallAction {
 class CallNavigationCoordinator {
   static bool _isNavigating = false;
   static Map<String, dynamic>? _pendingAcceptedCallMap;
+  static String? _activeConsultationIdNavigated;
 
   static bool get hasCallNavigationActiveOrPending =>
       _isNavigating ||
@@ -209,6 +211,10 @@ class CallNavigationCoordinator {
       AppLogger.d('[CALL NAVIGATION] VoiceCallScreen navigation already in progress');
       return;
     }
+    if (GlobalCallService.isCallActive && _activeConsultationIdNavigated == consultationId) {
+      AppLogger.d('[CALL NAVIGATION] Already on VoiceCallScreen for consultation $consultationId, skipping duplicate push.');
+      return;
+    }
     _isNavigating = true;
 
     final context = globalNavigatorKey.currentContext;
@@ -227,6 +233,7 @@ class CallNavigationCoordinator {
     }
 
     _pendingAcceptedCallMap = null;
+    _activeConsultationIdNavigated = consultationId;
     GlobalCallService.isCallActive = true;
     globalNavigatorKey.currentState?.push(
       MaterialPageRoute(
@@ -250,6 +257,7 @@ class CallNavigationCoordinator {
       ),
     ).then((_) {
       _isNavigating = false;
+      _activeConsultationIdNavigated = null;
     });
   }
 }
@@ -287,6 +295,8 @@ class IncomingCallActionDispatcher {
         : (callId.isNotEmpty && callId != 'null' ? callId : (GlobalCallService.activeConsultationId ?? ''));
 
     final currentState = GlobalCallService.stateMachine.state;
+    AppLogger.d('[CALL ACCEPT V2] dispatchAccept execution started source=$source call_id=$effectiveConsultationId state=$currentState');
+    AppLogger.d('[CALL_TRACE] CALL_ACCEPT_REQUESTED source=$source call_id=$effectiveConsultationId');
     AppLogger.d('[CALL-LIFECYCLE] ACCEPTED source=$source call_id=$effectiveConsultationId');
     AppLogger.d('[CALL ACCEPT TRACE] source=$source call_id=$effectiveConsultationId state=$currentState');
 
@@ -294,10 +304,14 @@ class IncomingCallActionDispatcher {
     // Only explicit user button taps or native CallKit user answer actions are permitted to invoke accept.
     if (source != 'VOICE_SCREEN_ACCEPT_BUTTON' &&
         source != 'CALLKIT_USER_ACCEPT' &&
-        source != 'RESTORE_PENDING_CALL') {
+        source != 'RESTORE_PENDING_CALL' &&
+        source != 'NOTIFICATION_ACCEPT') {
       AppLogger.d('[CALL ACCEPT TRACE][REJECTED] source=$source reason=unauthorized_accept_source call_id=$effectiveConsultationId');
       return;
     }
+
+    // A user tapping Accept dismisses the incoming-call banner immediately.
+    FcmService.dismissIncomingCallNotification();
 
     if (effectiveConsultationId.isEmpty) {
       AppLogger.d('[CALL ACCEPT TRACE][ABORTED] source=$source reason=missing_consultation_id');
@@ -360,6 +374,7 @@ class IncomingCallActionDispatcher {
         return;
       }
 
+      AppLogger.d('[CALL_TRACE] CALL_ACCEPTED consultation_id=$effectiveConsultationId status=$statusCode');
       AppLogger.d('[CALL-ACTION-FE] surface=DISPATCHER action=ACCEPT event=BACKEND_REQUEST_SUCCESS call_id=$effectiveConsultationId');
       AppLogger.d('[CALL][$effectiveConsultationId][ACCEPT_BACKEND_SUCCESS] Backend ACCEPT confirmed');
 
@@ -367,6 +382,7 @@ class IncomingCallActionDispatcher {
       AppLogger.d('[CALL][$effectiveConsultationId][ACCEPT_WS_START] Broadcasting call_accepted WS signal');
       await GlobalCallService.broadcastWsSignal(effectiveConsultationId, 'call_accepted');
       AppLogger.d('[CALL][$effectiveConsultationId][ACCEPT_WS_SUCCESS] WS signal dispatched');
+      FcmService.dismissIncomingCallNotification();
 
       GlobalCallService.sendCallEvent({
         'action': 'call_accepted',
@@ -391,7 +407,7 @@ class IncomingCallActionDispatcher {
       final callerName = NameFormatter.format((extra['caller_name'] ?? extra['sender_name'] ?? 'Care Provider').toString());
       final receiverName = GlobalCallService.extractPersonName(extra, isSender: false);
 
-      AppLogger.d('[CALL-ACTION-FE] surface=DISPATCHER action=ACCEPT event=AGORA_INITIALIZATION_START call_id=$effectiveConsultationId');
+      AppLogger.d('[CALL-ACTION-FE] surface=DISPATCHER action=ACCEPT event=WEBRTC_INITIALIZATION_START call_id=$effectiveConsultationId');
       AppLogger.d('[CALL-ACTION-FE] surface=DISPATCHER action=ACCEPT event=NAVIGATION_START call_id=$effectiveConsultationId');
       AppLogger.d('[CALL][$effectiveConsultationId][ACCEPT_NAVIGATION_START] Navigating to VoiceCallScreen');
       CallNavigationCoordinator.navigateToVoiceCallScreen(
@@ -424,6 +440,12 @@ class IncomingCallActionDispatcher {
       return;
     }
 
+    if (GlobalCallService.stateMachine.state == CallState.connecting || GlobalCallService.stateMachine.state == CallState.connected) {
+      AppLogger.d('[CALL-ACTION-FE] surface=DISPATCHER action=DECLINE event=EARLY_RETURN reason=already_accepted call_id=$effectiveConsultationId state=${GlobalCallService.stateMachine.state}');
+      AppLogger.d('[CALL][$effectiveConsultationId][DECLINE_ABORTED] reason=already_accepted');
+      return;
+    }
+
     final key = 'decline_$effectiveConsultationId';
     if (_isDuplicate(key)) {
       AppLogger.d('[CALL-ACTION-FE] action=DECLINE event=IDEMPOTENCY_BLOCKED call_id=$effectiveConsultationId state=${GlobalCallService.stateMachine.state}');
@@ -440,6 +462,7 @@ class IncomingCallActionDispatcher {
     AppLogger.d('[CALL-ACTION-FE] surface=DISPATCHER action=DECLINE event=BACKEND_REQUEST_SUCCESS call_id=$effectiveConsultationId');
     AppLogger.d('[CALL][$effectiveConsultationId][DECLINE_API_RESPONSE] status=${ok ? 200 : 500}');
     AppLogger.d('[CALL][$effectiveConsultationId][DECLINE_BACKEND_SUCCESS] Backend DECLINE confirmed');
+    FcmService.dismissIncomingCallNotification();
 
     AppLogger.d('[CALL][$effectiveConsultationId][DECLINE_WS_START] Broadcasting call_declined WS signal');
     await GlobalCallService.broadcastWsSignal(effectiveConsultationId, 'call_declined');
@@ -502,24 +525,12 @@ class PresentationCoordinator {
       AppLogger.d('[PRESENTATION] Suppressing incoming call offer for recently ended callId: ${event.callId}');
       return;
     }
-    final isForeground = WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
-    final context = globalNavigatorKey.currentContext;
-
-    if (isForeground && context != null) {
-      AppLogger.d('[PRESENTATION] Single Owner -> Flutter Canonical Bottom-Sheet Overlay');
-      GlobalCallService.showIncomingCallModal(
-        event.rawData,
-        defaultAppointmentId: event.consultationId,
-        defaultConsultationId: event.consultationId,
-      );
-    } else {
-      AppLogger.d('[PRESENTATION] Single Owner -> Android CallKit System Notification with Full-Screen Intent');
-      await CallKitService().showCallkitIncoming(
-        consultationId: event.consultationId,
-        name: event.callerName,
-        extra: event.rawData,
-      );
-    }
+    AppLogger.d('[PRESENTATION] Single Owner -> Presenting VoiceCallScreen (Image 1)');
+    GlobalCallService.showIncomingCallModal(
+      event.rawData,
+      defaultAppointmentId: event.consultationId,
+      defaultConsultationId: event.consultationId,
+    );
   }
 }
 
@@ -602,6 +613,10 @@ class CallStateMachine {
     if (callId != null) _activeCallId = callId;
     if (consultationId != null) _activeConsultationId = consultationId;
 
+    if (newState == CallState.connected) {
+      AppLogger.d('[CALL_TRACE] CALL_STATE_ACTIVE call_id=${callId ?? _activeCallId} consultation_id=${consultationId ?? _activeConsultationId}');
+    }
+
     if (newState == CallState.idle) {
       _activeCallId = null;
       _activeConsultationId = null;
@@ -632,10 +647,24 @@ class GlobalCallService {
   static final Map<String, WebSocketChannel> _appointmentChannels = {};
   static Timer? _heartbeatTimer;
   static bool isRingingShown = false;
-  static bool get _isRingingShown => isRingingShown;
-  static set _isRingingShown(bool v) => isRingingShown = v;
   static bool isCallActive = false;
   static String? currentUserId;
+
+  static Future<String?> syncCurrentUserId({String? overrideId}) async {
+    if (overrideId != null && overrideId.isNotEmpty && overrideId != 'null') {
+      currentUserId = overrideId;
+      AppLogger.d('[GLOBAL_CALL_USER_ID_SET] currentUserId set to $currentUserId');
+      return currentUserId;
+    }
+    final authId = await getAuthenticatedUserId();
+    if (authId != null && authId.isNotEmpty) {
+      currentUserId = authId;
+      AppLogger.d('[GLOBAL_CALL_USER_ID_SET] currentUserId synced to $currentUserId');
+    } else {
+      AppLogger.d('[GLOBAL_CALL_USER_ID_SET] Could not determine authenticated user ID');
+    }
+    return currentUserId;
+  }
 
   static final StreamController<Map<String, dynamic>> _callEventController = StreamController<Map<String, dynamic>>.broadcast();
   static Stream<Map<String, dynamic>> get onCallEvent => _callEventController.stream;
@@ -683,6 +712,7 @@ class GlobalCallService {
     AppLogger.d('[TEARDOWN] Executing teardown for call $displayId (source: $source, reason: $reason)');
 
     RingtoneService.stopRingtone();
+    FcmService.dismissIncomingCallNotification();
     stateMachine.transitionTo(CallState.ended, callId: effectiveCallId, consultationId: effectiveConsultationId);
 
     // Emit ONE normalized local terminal event for subscribers (like VoiceCallScreen)
@@ -721,6 +751,11 @@ class GlobalCallService {
   static String? get activeConsultationId => stateMachine.activeConsultationId;
 
   static void sendCallEvent(Map<String, dynamic> event) {
+    final typeLower = (event['type'] ?? event['action'] ?? event['event'] ?? '').toString().toLowerCase();
+    if (typeLower.contains('accepted')) {
+      final callId = (event['call_id'] ?? event['consultation_id'] ?? '').toString();
+      AppLogger.d('[WEBRTC_TRACE_02_CALL_ACCEPTED_EVENT_DISPATCHED] call_id=$callId');
+    }
     if (!_callEventController.isClosed) {
       _callEventController.add(event);
     }
@@ -731,46 +766,62 @@ class GlobalCallService {
       final token = await _getSanitizedToken();
       if (token.isEmpty || consultationId.isEmpty || consultationId == 'null') return;
 
+      final currentAuthUserId = currentUserId ?? await getAuthenticatedUserId() ?? 'unknown';
+
       final Map<String, dynamic> payload = {
         'action': action,
         'type': action,
         'consultation_id': consultationId,
+        'sender_id': currentAuthUserId,
       };
       if (extraPayload != null && extraPayload.isNotEmpty) {
         payload.addAll(extraPayload);
       }
 
-      AppLogger.d('[CALL][$consultationId][WS_SIGNAL] Broadcasting signal: $action');
+      final effectiveCallId = (payload['call_id'] ?? consultationId).toString();
+      final recipientId = extractId(payload['receiver_id'] ?? payload['recipient_id'] ?? payload['recipient'] ?? payload['receiver']);
+      final isWsConnected = GlobalCallWebSocketManager.instance.state == GlobalWsState.connected;
+
+      if (action == 'webrtc_offer') {
+        AppLogger.d('[WEBRTC_TRACE_11_OFFER_SEND_ATTEMPT] consultation_id=$consultationId call_id=$effectiveCallId action=$action sender_id=$currentAuthUserId recipient_id=$recipientId ws_connected=$isWsConnected');
+      } else if (action == 'webrtc_answer') {
+        AppLogger.d('[WEBRTC_TRACE_24_ANSWER_SENT] consultation_id=$consultationId call_id=$effectiveCallId action=$action sender_id=$currentAuthUserId recipient_id=$recipientId ws_connected=$isWsConnected');
+      } else if (action == 'webrtc_ice_candidate') {
+        AppLogger.d('[WEBRTC_TRACE_31_LOCAL_ICE_SENT] consultation_id=$consultationId call_id=$effectiveCallId sender_id=$currentAuthUserId recipient_id=$recipientId ws_connected=$isWsConnected');
+      } else {
+        AppLogger.d('[WS_SIGNAL_OUT] action=$action consultation_id=$consultationId call_id=$effectiveCallId sender_id=$currentAuthUserId recipient_id=$recipientId ws_connected=$isWsConnected');
+      }
+
+      // Ensure global WS is connected if it dropped
+      if (!isWsConnected) {
+        AppLogger.d('[WS] Global WS disconnected when broadcasting $action. Reconnecting...');
+        await GlobalCallWebSocketManager.instance.connect(force: true);
+      }
 
       // 1. Primary: Persistent Global User Calls WebSocket
       final sentViaGlobalWs = GlobalCallWebSocketManager.instance.send(payload);
       if (sentViaGlobalWs) {
+        if (action == 'webrtc_offer') {
+          AppLogger.d('[WEBRTC_TRACE_12_OFFER_SEND_COMPLETED] consultation_id=$consultationId call_id=$effectiveCallId action=$action sender_id=$currentAuthUserId recipient_id=$recipientId');
+        }
         AppLogger.d('[CALL][$consultationId][WS_SIGNAL] Signal $action delivered via primary user-calls WS socket');
         return;
       }
 
-      // 2. Fallback: Active cached appointment channel
-      if (_appointmentChannels.containsKey(consultationId)) {
-        try {
-          _appointmentChannels[consultationId]?.sink.add(jsonEncode(payload));
-          AppLogger.d('[CALL][$consultationId][WS_SIGNAL] Signal $action delivered via active appointment channel');
-          return;
-        } catch (e) {
-          AppLogger.d('[CALL][$consultationId][WS_SIGNAL] Active channel send notice: $e');
+      // 2. Retry send via primary WebSocket after short delay
+      await Future.delayed(const Duration(milliseconds: 300));
+      final retrySent = GlobalCallWebSocketManager.instance.send(payload);
+      if (retrySent) {
+        if (action == 'webrtc_offer') {
+          AppLogger.d('[WEBRTC_TRACE_12_OFFER_SEND_COMPLETED] consultation_id=$consultationId call_id=$effectiveCallId action=$action sender_id=$currentAuthUserId recipient_id=$recipientId (retry)');
         }
+        AppLogger.d('[CALL][$consultationId][WS_SIGNAL] Signal $action delivered via primary WS retry');
+        return;
       }
 
-      // 3. Fallback: Connect temporary room socket only if primary sockets are disconnected
-      final wsUrlString = '${ApiConfig.wsUrl}/consultation/$consultationId/?token=$token';
-      final wsUrl = Uri.parse(wsUrlString);
-      final channel = WebSocketChannel.connect(wsUrl);
-      await Future.delayed(const Duration(milliseconds: 200));
-      channel.sink.add(jsonEncode(payload));
-      await Future.delayed(const Duration(milliseconds: 300));
-      channel.sink.close();
-      AppLogger.d('[CALL][$consultationId][WS_SIGNAL] Delivered $action to fallback consultation room WS');
-    } catch (e, s) {
-      AppLogger.d('[CALL][$consultationId][WS_SIGNAL] Error sending WS signal $action: $e\n$s');
+      AppLogger.d('[WEBRTC_TRACE_ERROR] stage=broadcastWsSignal consultation_id=$consultationId call_id=$effectiveCallId sender_id=$currentAuthUserId recipient_id=$recipientId error=Failed to send $action over WS');
+    } catch (e) {
+      AppLogger.d('[WEBRTC_TRACE_ERROR] stage=broadcastWsSignal call_id=$consultationId error=$e');
     }
   }
 
@@ -843,17 +894,34 @@ class GlobalCallService {
   }
 
   static Future<bool> handleIncomingCallEvent(IncomingCallEvent event) async {
-    // 1. Check call deduplication and state machine
-    if (_processedCallIds.contains(event.callId) || stateMachine.state != CallState.idle) {
-      AppLogger.d('[CALL][DEDUP] Duplicate or active call event ignored for callId: ${event.callId} (state: ${stateMachine.state})');
+    final effectiveId = event.callId.isNotEmpty ? event.callId : event.consultationId;
+    AppLogger.d('[CALL FLOW V2] incoming event handling call_id=${event.callId} consultation_id=${event.consultationId}');
+
+    // 1. Check call deduplication, terminal state, accepted state, and state machine.
+    //    Dedup is CALL-SCOPED: keyed only on this call's id, never on
+    //    consultationId. A consultation can host multiple sequential calls
+    //    (retry after a missed/hung-up call), so keying on consultationId
+    //    would permanently block every subsequent call for it.
+    if (_processedCallIds.contains(effectiveId) ||
+        isTerminalCallRecentlySeen(effectiveId) ||
+        IncomingCallActionDispatcher.hasBeenAccepted(effectiveId) ||
+        stateMachine.state != CallState.idle) {
+      AppLogger.d('[CALL][DEDUP] Duplicate, terminal, or active call event ignored for callId: $effectiveId (state: ${stateMachine.state})');
       return false;
     }
-    _processedCallIds.add(event.callId);
+    _processedCallIds.add(effectiveId);
+
+    // Release the dedup marker on any early-return path so a dropped attempt
+    // never poisons future calls for this session.
+    void releaseDedup() {
+      _processedCallIds.remove(effectiveId);
+    }
 
     // 2. Self-call prevention
     final myId = currentUserId ?? await getAuthenticatedUserId();
     if (myId != null && myId.isNotEmpty && event.callerId.isNotEmpty && myId == event.callerId) {
       AppLogger.d('[CALL][SELF_CALL] Ignored self-initiated call event for callerId: ${event.callerId}');
+      releaseDedup();
       return false;
     }
 
@@ -861,6 +929,7 @@ class GlobalCallService {
     final isActiveOnBackend = await ConsultationApiService().verifyVoiceSessionActive(event.consultationId);
     if (!isActiveOnBackend) {
       AppLogger.d('[CALL][VALIDITY] Call session is no longer active on backend for consultationId: ${event.consultationId}');
+      releaseDedup();
       return false;
     }
 
@@ -870,14 +939,37 @@ class GlobalCallService {
       callId: event.callId,
       consultationId: event.consultationId,
     );
-    if (!transitioned) return false;
+    if (!transitioned) {
+      releaseDedup();
+      return false;
+    }
 
-    // 5. Single Canonical Presentation Owner (Android Heads-Up Call Notification)
-    AppLogger.d('[CALL][PRESENTATION] Displaying canonical Android incoming-call notification banner');
-    await CallKitService().showCallkitIncoming(
+    // 5. Play Ringtone
+    RingtoneService.playIncomingRingtone();
+
+    // 6. Heads-up push notification: surface an Android status-bar banner (call
+    //    category + full-screen intent) alongside the in-app caller UI so the
+    //    device visibly rings even if the user is on another screen/another app.
+    try {
+      FcmService.showIncomingCallNotification(
+        title: event.callerName,
+        body: 'Incoming voice call',
+        data: event.rawData,
+      );
+    } catch (_) {}
+
+    // 7. Navigate directly to VoiceCallScreen (The single custom full screen caller UI)
+    final receiverId = extractId(event.rawData['receiver_id'] ?? event.rawData['recipient_id'] ?? event.rawData['receiver'] ?? currentUserId);
+    final receiverName = extractPersonName(event.rawData, isSender: false);
+
+    AppLogger.d('[CALL FLOW V2] opening VoiceCallScreen call_id=${event.callId} consultation_id=${event.consultationId}');
+    CallNavigationCoordinator.navigateToVoiceCallScreen(
       consultationId: event.consultationId,
-      name: event.callerName,
-      extra: event.rawData,
+      callId: event.callId,
+      callerName: event.callerName,
+      receiverName: receiverName,
+      callerId: event.callerId,
+      receiverId: receiverId,
     );
 
     return true;
@@ -897,6 +989,7 @@ class GlobalCallService {
   }
 
   static Future<void> initUserCallListener({bool force = false}) async {
+    await syncCurrentUserId();
     await GlobalCallWebSocketManager.instance.connect(force: force);
   }
 
@@ -913,7 +1006,8 @@ class GlobalCallService {
       debugPrint('[DECLINE SENT] Callee tapped decline for consultation: $consultationId');
       
       RingtoneService.stopRingtone();
-      _isRingingShown = false;
+      FcmService.dismissIncomingCallNotification();
+      isRingingShown = false;
       stateMachine.transitionTo(CallState.declined);
       stateMachine.transitionTo(CallState.idle);
 
@@ -970,7 +1064,7 @@ class GlobalCallService {
       channel.sink.close();
     }
     _appointmentChannels.clear();
-    _isRingingShown = false;
+    isRingingShown = false;
     isCallActive = false;
   }
 }

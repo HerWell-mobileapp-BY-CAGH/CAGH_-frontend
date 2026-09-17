@@ -540,11 +540,11 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
 
   Widget _buildTimeSlotSection(String title, List<TimeSlot> slots) {
     final now = DateTime.now();
-    final isSelectedDayToday = _days.isNotEmpty && 
-        _selectedDayIndex < _days.length && 
-        _days[_selectedDayIndex].date.year == now.year &&
-        _days[_selectedDayIndex].date.month == now.month &&
-        _days[_selectedDayIndex].date.day == now.day;
+    final isSelectedDayToday = _nextDays.isNotEmpty && 
+        _selectedDayIndex < _nextDays.length && 
+        _nextDays[_selectedDayIndex].year == now.year &&
+        _nextDays[_selectedDayIndex].month == now.month &&
+        _nextDays[_selectedDayIndex].day == now.day;
     final currentMinutes = now.hour * 60 + now.minute;
 
     final availableSlots = slots.where((s) {

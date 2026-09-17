@@ -5,6 +5,7 @@ import 'package:cagh_frontend/core/network/api_config.dart';
 import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
 import 'package:cagh_frontend/shared/constants/app_durations.dart';
 import 'package:cagh_frontend/core/utils/app_logger.dart';
+import 'package:cagh_frontend/core/services/global_call_service.dart';
 
 class ConsultationApiService {
   Future<Map<String, String>> _getHeaders() async {
@@ -119,21 +120,58 @@ class ConsultationApiService {
   }
 
   Future<Map<String, dynamic>> startVoiceSession(String consultationId) async {
-    // Try explicit endpoint first, fallback to start consultation action
+    AppLogger.d('[VOICE SESSION] START_REQUEST consultation_id=$consultationId');
+
+    // 1. First check if an active voice session already exists on backend for this consultation
+    try {
+      final tokenData = await getVoiceToken(consultationId);
+      final sessionKey = (tokenData['session_key'] ?? tokenData['voice_session']?['session_key'] ?? '').toString();
+      final status = (tokenData['status'] ?? tokenData['voice_session']?['status'] ?? '').toString().toLowerCase();
+
+      if (sessionKey.isNotEmpty && status != 'ended' && status != 'declined' && status != 'cancelled' && status != 'missed') {
+        final isActive = await verifyVoiceSessionActive(consultationId);
+        if (isActive) {
+          AppLogger.d('[VOICE SESSION] EXISTING_ACTIVE_SESSION consultation_id=$consultationId');
+          AppLogger.d('[VOICE SESSION] START_SUCCESS consultation_id=$consultationId (restored existing active session)');
+          return tokenData;
+        }
+      }
+    } catch (_) {
+      // No existing active session found, proceed to create one
+    }
+
     final primaryUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}$consultationId/voice-session/start/');
     final fallbackUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}$consultationId/start/');
-    
-    try {
-      final response = await http.post(
-        primaryUrl,
-        headers: await _getHeaders(),
-      ).timeout(AppDurations.apiRequestTimeout);
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        return jsonDecode(response.body);
+    for (int attempt = 1; attempt <= 2; attempt++) {
+      if (attempt > 1) {
+        AppLogger.d('[VOICE SESSION] NETWORK_RETRY consultation_id=$consultationId attempt=$attempt');
+        try {
+          final tokenData = await getVoiceToken(consultationId);
+          final sessionKey = (tokenData['session_key'] ?? tokenData['voice_session']?['session_key'] ?? '').toString();
+          if (sessionKey.isNotEmpty) {
+            AppLogger.d('[VOICE SESSION] EXISTING_SESSION consultation_id=$consultationId');
+            AppLogger.d('[VOICE SESSION] START_SUCCESS consultation_id=$consultationId');
+            return tokenData;
+          }
+        } catch (_) {}
       }
-    } catch (e) {
-      AppLogger.d('ConsultationApiService: Primary start voice session failed, trying fallback: $e');
+
+      try {
+        final response = await http.post(
+          primaryUrl,
+          headers: await _getHeaders(),
+        ).timeout(AppDurations.apiRequestTimeout);
+
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          final data = jsonDecode(response.body);
+          AppLogger.d('[VOICE SESSION] CREATED consultation_id=$consultationId');
+          AppLogger.d('[VOICE SESSION] START_SUCCESS consultation_id=$consultationId');
+          return data;
+        }
+      } catch (e) {
+        AppLogger.d('ConsultationApiService: Primary start voice session error (attempt $attempt): $e');
+      }
     }
 
     final response = await http.post(
@@ -143,7 +181,10 @@ class ConsultationApiService {
     ).timeout(AppDurations.apiRequestTimeout);
 
     if (response.statusCode == 200 || response.statusCode == 201) {
-      return jsonDecode(response.body);
+      final data = jsonDecode(response.body);
+      AppLogger.d('[VOICE SESSION] CREATED consultation_id=$consultationId (fallback)');
+      AppLogger.d('[VOICE SESSION] START_SUCCESS consultation_id=$consultationId');
+      return data;
     } else {
       throw Exception('Failed to start voice session. Status: ${response.statusCode}');
     }
@@ -151,14 +192,15 @@ class ConsultationApiService {
 
   Future<bool> verifyVoiceSessionActive(String consultationId) async {
     if (consultationId.isEmpty || consultationId == 'null') return false;
+    AppLogger.d('[WEBRTC TOKEN V2] verifyVoiceSessionActive checking consultation_id=$consultationId current call state=${GlobalCallService.stateMachine.state}');
     try {
       final primaryUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}$consultationId/voice-session/token/');
       final response = await http.post(
         primaryUrl,
         headers: await _getHeaders(),
       ).timeout(const Duration(seconds: 4));
-      // 410 Gone means the session is terminal — definitively inactive.
-      if (response.statusCode == 410) {
+
+      if (response.statusCode == 410 || response.statusCode == 404) {
         return false;
       }
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -169,29 +211,33 @@ class ConsultationApiService {
         }
         return true;
       }
+      return false;
     } catch (e) {
       AppLogger.d('ConsultationApiService: verifyVoiceSessionActive check notice: $e');
+      // Fail OPEN: a network/init error (e.g. NotInitializedError in a
+      // background FCM isolate) is NOT proof the session ended. Dropping the
+      // event here silently loses a real incoming call. Let the call proceed;
+      // a genuinely dead session will be rejected on the token request.
+      return true;
     }
-    return true;
   }
 
   Future<Map<String, dynamic>> getVoiceToken(String consultationId) async {
+    AppLogger.d('[WEBRTC TOKEN V3] request START call_id=$consultationId current_call_state=${GlobalCallService.stateMachine.state}');
+    AppLogger.d('[WEBRTC TOKEN V2] requesting token consultation_id=$consultationId current call state=${GlobalCallService.stateMachine.state}');
     final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}$consultationId/voice-session/token/');
     final response = await http.post(
       url,
       headers: await _getHeaders(),
     ).timeout(AppDurations.apiRequestTimeout);
 
+    AppLogger.d('[WEBRTC TOKEN V3] request FINISHED status=${response.statusCode} call_id=$consultationId');
     if (response.statusCode == 200 || response.statusCode == 201) {
       return jsonDecode(response.body);
     } else if (response.statusCode == 410) {
-      // The backend returns 410 Gone when the voice session has ended, been
-      // declined, cancelled, or missed. Throw a user-friendly exception so
-      // VoiceCallScreen can surface "call is no longer active" rather than
-      // attempting joinChannel with an empty token.
       throw Exception('Voice session is no longer active. The call may have ended.');
     } else {
-      throw Exception('Failed to get Agora token. Status: ${response.statusCode}');
+      throw Exception('Failed to get voice session token. Status: ${response.statusCode}');
     }
   }
 
@@ -200,7 +246,8 @@ class ConsultationApiService {
     final primaryUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}$consultationId/voice-session/accept/');
     final fallbackUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}$consultationId/voice-session/');
     final reqId = 'HTTP-${DateTime.now().millisecondsSinceEpoch.toRadixString(16).toUpperCase()}';
-    
+
+    AppLogger.d('[CALL_TRACE] CALL_ACCEPT_SENT consultation_id=$consultationId endpoint=/voice-session/accept/');
     AppLogger.d('[CALL-ACCEPT-DIAG] req_id=$reqId endpoint=PRIMARY POST $primaryUrl');
     AppLogger.d('[CALL][$consultationId][API_ACCEPT_REQUEST] req_id=$reqId POST $primaryUrl');
     try {
@@ -245,7 +292,7 @@ class ConsultationApiService {
     final headers = await _getHeaders();
     final primaryUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}$consultationId/voice-session/decline/');
     final fallbackUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}$consultationId/voice-session/');
-    
+
     AppLogger.d('[CALL][$consultationId][API_DECLINE_REQUEST] POST $primaryUrl');
     try {
       final response = await http.post(
@@ -273,9 +320,39 @@ class ConsultationApiService {
     }
   }
 
+  Future<bool> connectVoiceSession(String consultationId) async {
+    final headers = await _getHeaders();
+    final primaryUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}$consultationId/voice-session/connect/');
+    final fallbackUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}$consultationId/voice-session/');
+
+    AppLogger.d('[CALL][$consultationId][API_CONNECT_REQUEST] POST $primaryUrl');
+    try {
+      final response = await http.post(
+        primaryUrl,
+        headers: headers,
+      ).timeout(AppDurations.apiRequestTimeout);
+      AppLogger.d('[CALL][$consultationId][API_CONNECT_RESPONSE] status=${response.statusCode}, body=${response.body}');
+      if (response.statusCode == 200 || response.statusCode == 201 || response.statusCode == 409) return true;
+    } catch (e) {
+      AppLogger.d('[CALL][$consultationId][API_CONNECT_ERROR] Primary endpoint failed: $e');
+    }
+
+    try {
+      final response = await http.post(
+        fallbackUrl,
+        headers: headers,
+        body: jsonEncode({'action': 'CONNECT'}),
+      ).timeout(AppDurations.apiRequestTimeout);
+      return response.statusCode == 200 || response.statusCode == 201 || response.statusCode == 409;
+    } catch (e) {
+      AppLogger.d('[CALL][$consultationId][API_CONNECT_ERROR] Voice session connect failed: $e');
+      return false;
+    }
+  }
+
   Future<bool> missedVoiceSession(String consultationId) async {
     final headers = await _getHeaders();
-    final primaryUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}$consultationId/voice-session/cancel/');
+    final primaryUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}$consultationId/voice-session/missed/');
     final fallbackUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}$consultationId/voice-session/');
 
     try {
@@ -301,11 +378,17 @@ class ConsultationApiService {
     }
   }
 
-  Future<bool> endVoiceSession(String consultationId) async {
+  Future<bool> endVoiceSession(String consultationId, {String endSource = 'UNKNOWN', String stackReason = ''}) async {
     final headers = await _getHeaders();
     final primaryUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}$consultationId/voice-session/end/');
     final fallbackUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.consultations}$consultationId/voice-session/');
 
+    AppLogger.d('[CALL END V3] END REQUEST ABOUT TO BE SENT');
+    AppLogger.d('[CALL END V3] call_id=$consultationId');
+    AppLogger.d('[CALL END V3] consultation_id=$consultationId');
+    AppLogger.d('[CALL END V3] current_call_state=${GlobalCallService.stateMachine.state}');
+    AppLogger.d('[CALL END V3] end_source=$endSource');
+    AppLogger.d('[CALL END V3] stack_reason=$stackReason');
     AppLogger.d('[CALL][$consultationId][API_END_REQUEST] POST $primaryUrl');
     try {
       final response = await http.post(

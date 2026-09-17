@@ -12,7 +12,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/services.dart';
 import 'package:cagh_frontend/core/services/global_call_service.dart';
-import 'package:cagh_frontend/shared/utils/name_formatter.dart';
 import 'package:cagh_frontend/features/consultations/data/services/callkit_service.dart';
 import 'package:cagh_frontend/core/services/fcm_service.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
@@ -43,15 +42,9 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     }
 
     final consultationId = message.data['consultation_id']?.toString() ?? callId;
-    final callerName = NameFormatter.format((message.data['caller_name'] ?? message.data['sender_name'] ?? 'Care Provider').toString());
-
-    await CallKitService().init();
-    AppLogger.d('[CALL][NOTIFICATION] Incoming call notification created');
-    AppLogger.d('[CALL][NOTIFICATION] Full-screen intent triggered');
-    await CallKitService().showCallkitIncoming(
-      consultationId: consultationId,
-      name: callerName,
-      extra: Map<String, dynamic>.from(message.data),
+    GlobalCallService.showIncomingCallModal(
+      Map<String, dynamic>.from(message.data),
+      defaultConsultationId: consultationId,
     );
   }
 }

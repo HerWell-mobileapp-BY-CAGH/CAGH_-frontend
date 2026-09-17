@@ -348,6 +348,24 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
     );
   }
 
+  Widget _buildConsultationCard(
+    BuildContext context, {
+    required Appointment appointment,
+    required VoidCallback onCompleted,
+  }) {
+    final patientName = appointment.userFullName ?? 'Patient';
+    final type = appointment.appointmentType == 'VIRTUAL_VOICE' ? 'Voice Call' : 'Video Call';
+    final dateStr = '${appointment.date} • ${appointment.startTime}';
+    return _buildScheduleItem(
+      time: appointment.startTime.isNotEmpty ? appointment.startTime : 'Scheduled',
+      title: patientName,
+      subtitle: '$type • $dateStr',
+      badgeLabel: appointment.status.name.toUpperCase(),
+      badgeColor: const Color(0xFFE8F5E9),
+      badgeTextColor: const Color(0xFF315E26),
+    );
+  }
+
   // TAB 3: LEARNING CENTER
   Widget _buildLearnTab() {
     return SingleChildScrollView(
