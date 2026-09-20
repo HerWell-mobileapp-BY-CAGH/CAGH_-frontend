@@ -99,7 +99,28 @@ class AppointmentApiService {
     } else if (response.statusCode == 409) {
       throw Exception('CONFLICT: Slot is no longer available.');
     } else {
-      throw Exception('Failed to request appointment. Status: ${response.statusCode}');
+      String msg = 'Failed to request appointment.';
+      try {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map) {
+          if (decoded.containsKey('detail')) {
+            msg = decoded['detail'].toString();
+          } else if (decoded.containsKey('message')) {
+            msg = decoded['message'].toString();
+          } else if (decoded.containsKey('non_field_errors')) {
+            final nfe = decoded['non_field_errors'];
+            msg = nfe is List ? nfe.join(', ') : nfe.toString();
+          } else {
+            final parts = <String>[];
+            decoded.forEach((k, v) {
+              final valStr = v is List ? v.join(', ') : v.toString();
+              parts.add('$k: $valStr');
+            });
+            if (parts.isNotEmpty) msg = parts.join('; ');
+          }
+        }
+      } catch (_) {}
+      throw Exception(msg);
     }
   }
 

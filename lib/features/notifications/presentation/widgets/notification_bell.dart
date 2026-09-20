@@ -10,8 +10,7 @@ class NotificationBell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final notificationState = ref.watch(notificationProvider);
-    final unreadCount = notificationState.unreadCount;
+    final unreadCount = ref.watch(notificationProvider.select((state) => state.unreadCount));
 
     return Stack(
       alignment: Alignment.center,

@@ -27,6 +27,12 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
   }
 
   @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final state = ref.watch(aiChatProvider);
 

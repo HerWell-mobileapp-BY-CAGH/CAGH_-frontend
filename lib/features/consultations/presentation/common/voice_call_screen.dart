@@ -672,6 +672,8 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> with TickerProviderSt
     _ringTimeoutTimer = null;
     _connectionTimeoutTimer?.cancel();
     _connectionTimeoutTimer = null;
+    _offerRetryTimer?.cancel();
+    _offerRetryTimer = null;
     _callEventSub?.cancel();
     _connectionStateSub?.cancel();
     _userJoinedSub?.cancel();

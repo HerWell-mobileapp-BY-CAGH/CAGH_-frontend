@@ -587,7 +587,11 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
           },
         );
       },
-    );
+    ).then((_) {
+      nameController.dispose();
+      phoneController.dispose();
+      emailController.dispose();
+    });
   }
 
   @override

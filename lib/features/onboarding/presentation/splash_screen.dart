@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:cagh_frontend/core/services/global_call_service.dart';
@@ -19,10 +19,16 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   Timer? _timer;
+  late Future<List<dynamic>> _authInitFuture;
 
   @override
   void initState() {
     super.initState();
+    // Start session & user data check immediately concurrently with splash display
+    _authInitFuture = Future.wait([
+      AuthService.isSessionValid(),
+      AuthService.getUserData(),
+    ]);
     _startSplashTimer();
   }
 
@@ -43,11 +49,8 @@ class _SplashScreenState extends State<SplashScreen> {
       return;
     }
 
-    // Concurrent check: session validity & cached user data
-    final results = await Future.wait([
-      AuthService.isSessionValid(),
-      AuthService.getUserData(),
-    ]);
+    // Await pre-fetched session validity & cached user data
+    final results = await _authInitFuture;
 
     final isValid = results[0] as bool;
     final userData = results[1] as Map<String, dynamic>;

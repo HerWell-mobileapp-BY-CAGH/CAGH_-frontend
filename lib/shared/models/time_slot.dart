@@ -1,4 +1,4 @@
-class TimeSlot {
+﻿class TimeSlot {
   final String id;
   final String date;
   final String startTime;
@@ -17,11 +17,11 @@ class TimeSlot {
 
   factory TimeSlot.fromJson(Map<String, dynamic> json) {
     return TimeSlot(
-      id: json['id'] ?? '',
-      date: json['date'] ?? '',
-      startTime: json['start_time'] ?? '',
-      endTime: json['end_time'] ?? '',
-      displayTime: json['start_time_12h'] ?? json['start_time'] ?? '',
+      id: (json['id'] ?? json['availability_id'] ?? '').toString(),
+      date: (json['date'] ?? '').toString(),
+      startTime: (json['start_time'] ?? '').toString(),
+      endTime: (json['end_time'] ?? '').toString(),
+      displayTime: (json['start_time_12h'] ?? json['start_time'] ?? '').toString(),
       isAvailable: json['is_available'] ?? false,
     );
   }
@@ -29,6 +29,7 @@ class TimeSlot {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'availability_id': id,
       'date': date,
       'start_time': startTime,
       'end_time': endTime,

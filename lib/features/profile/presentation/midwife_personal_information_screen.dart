@@ -273,7 +273,13 @@ class _MidwifePersonalInformationScreenState extends State<MidwifePersonalInform
           },
         );
       },
-    );
+    ).then((_) {
+      firstNameController.dispose();
+      lastNameController.dispose();
+      titleController.dispose();
+      bioController.dispose();
+      experienceController.dispose();
+    });
   }
 
   @override

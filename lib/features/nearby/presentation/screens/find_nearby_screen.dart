@@ -56,6 +56,8 @@ class _FindNearbyScreenState extends ConsumerState<FindNearbyScreen> {
     ref.read(nearbyStateProvider.notifier).fetchNearbyFacilities(type: apiType ?? 'All');
   }
 
+  String _searchQuery = '';
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -63,7 +65,11 @@ class _FindNearbyScreenState extends ConsumerState<FindNearbyScreen> {
   }
 
   void _onSearchChanged(String query) {
-    // In a real app, this would debounce and filter the results by name/service
+    if (_searchQuery != query) {
+      setState(() {
+        _searchQuery = query.trim().toLowerCase();
+      });
+    }
   }
 
   void _onCategorySelected(String category) {
@@ -190,14 +196,26 @@ class _FindNearbyScreenState extends ConsumerState<FindNearbyScreen> {
 
     final bool isEmpty = state is NearbyEmpty;
     final radius = isEmpty ? (state).radius : (state as NearbyLoaded).radius;
-    final facilities = isEmpty ? [] : (state as NearbyLoaded).facilities;
+    final allFacilities = isEmpty ? [] : (state as NearbyLoaded).facilities;
 
-    if (isEmpty) {
+    final facilities = _searchQuery.isEmpty
+        ? allFacilities
+        : allFacilities.where((f) {
+            final q = _searchQuery;
+            return f.name.toLowerCase().contains(q) ||
+                f.type.toLowerCase().contains(q) ||
+                f.address.toLowerCase().contains(q) ||
+                f.services.any((s) => s.toLowerCase().contains(q));
+          }).toList();
+
+    if (facilities.isEmpty) {
       return NearbyEmptyState(
         onExpandRadius: () {
           ref.read(nearbyStateProvider.notifier).updateFilters(radius: radius + 50.0);
         },
         onClearFilters: () {
+          _searchController.clear();
+          _onSearchChanged('');
           ref.read(nearbyStateProvider.notifier).updateFilters(type: 'All', service: 'All');
         },
       );

@@ -116,16 +116,18 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
         'start_time': slot.startTime.length == 5 ? '${slot.startTime}:00' : slot.startTime,
         'end_time': slot.endTime.length == 5 ? '${slot.endTime}:00' : slot.endTime,
         'reason': _reasonController.text.isNotEmpty ? _reasonController.text : 'General Consultation',
+        if (slot.id.isNotEmpty) 'availability_id': slot.id,
       });
 
       if (mounted) Navigator.pop(context);
       _showSuccessBottomSheet();
     } catch (e) {
       if (mounted) Navigator.pop(context);
-      final isConflict = e.toString().contains('409');
+      final errStr = e.toString().replaceAll('Exception: ', '');
+      final isConflict = errStr.contains('409') || errStr.toLowerCase().contains('conflict');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(isConflict ? 'This slot was just booked by someone else! Please choose another time.' : 'Booking failed.'),
+          content: Text(isConflict ? 'This slot was just booked by someone else! Please choose another time.' : errStr),
           backgroundColor: Colors.red
         ),
       );
