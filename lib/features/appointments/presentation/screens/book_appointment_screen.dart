@@ -3,6 +3,7 @@ import 'package:cagh_frontend/features/appointments/data/services/appointment_ap
 import 'package:cagh_frontend/features/appointments/data/repositories/appointment_repository_impl.dart';
 import 'package:cagh_frontend/shared/models/midwife_profile.dart';
 import 'package:cagh_frontend/shared/models/time_slots_response.dart';
+import 'package:cagh_frontend/shared/models/time_slot.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
@@ -83,10 +84,44 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
     }
   }
 
+  String? _getIncompatibilityErrorMessage(TimeSlot slot, String selectedTypeTitle) {
+    final isVoiceSelected = selectedTypeTitle.toLowerCase().contains('voice');
+    final isPersonSelected = !isVoiceSelected;
+    final category = slot.consultationTypeCategory;
+
+    if (category == 'both') return null; // Always compatible
+
+    if (isPersonSelected && category == 'voice') {
+      return 'This time is available for voice consultation only. Please select Voice or choose another time.';
+    }
+
+    if (isVoiceSelected && category == 'in_person') {
+      return 'This time is available for in-person consultation only. Please select In-Person or choose another time.';
+    }
+
+    return null;
+  }
+
   Future<void> _confirmBooking() async {
     if (_selectedSlotId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context)!.selectTimeSlotFirst)),
+      );
+      return;
+    }
+
+    final slot = [...?_timeSlots?.morningSlots, ...?_timeSlots?.afternoonSlots, ...?_timeSlots?.eveningSlots]
+        .firstWhere((s) => s.startTime == _selectedSlotTime, orElse: () => throw Exception('Slot not found'));
+
+    final incompatibilityErr = _getIncompatibilityErrorMessage(slot, _consultationType);
+    if (incompatibilityErr != null) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(incompatibilityErr),
+          backgroundColor: Colors.orange.shade900,
+          duration: const Duration(seconds: 4),
+        ),
       );
       return;
     }
@@ -99,11 +134,9 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
 
     try {
       final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDay);
-      final slot = [...?_timeSlots?.morningSlots, ...?_timeSlots?.afternoonSlots, ...?_timeSlots?.eveningSlots]
-          .firstWhere((s) => s.startTime == _selectedSlotTime, orElse: () => throw Exception('Slot not found'));
           
       String apptType = 'VIRTUAL_VOICE';
-      if (_consultationType == 'Voice Call') {
+      if (_consultationType.toLowerCase().contains('voice')) {
         apptType = 'VIRTUAL_VOICE';
       } else if (_consultationType == AppLocalizations.of(context)!.inPerson) {
         apptType = 'IN_PERSON';
@@ -196,7 +229,6 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
 
   @override
   Widget build(BuildContext context) {
-    
     final morningSlots = _timeSlots?.morningSlots.where((s) => s.isAvailable).toList() ?? [];
     final afternoonSlots = _timeSlots?.afternoonSlots.where((s) => s.isAvailable).toList() ?? [];
     final eveningSlots = _timeSlots?.eveningSlots.where((s) => s.isAvailable).toList() ?? [];
@@ -356,11 +388,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                 ),
                 const SizedBox(height: 12),
                 ...morningSlots.map((slot) => _buildSlotCard(
-                  id: slot.id,
-                  startTime: slot.startTime,
-                  endTime: slot.endTime,
-                  displayTime: slot.displayTime,
-                  isAvailable: slot.isAvailable,
+                  slot: slot,
                   sessionTitle: AppLocalizations.of(context)!.morning,
                 )),
                 const SizedBox(height: 16),
@@ -375,11 +403,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                 ),
                 const SizedBox(height: 12),
                 ...afternoonSlots.map((slot) => _buildSlotCard(
-                  id: slot.id,
-                  startTime: slot.startTime,
-                  endTime: slot.endTime,
-                  displayTime: slot.displayTime,
-                  isAvailable: slot.isAvailable,
+                  slot: slot,
                   sessionTitle: AppLocalizations.of(context)!.afternoon,
                 )),
                 const SizedBox(height: 16),
@@ -394,11 +418,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                 ),
                 const SizedBox(height: 12),
                 ...eveningSlots.map((slot) => _buildSlotCard(
-                  id: slot.id,
-                  startTime: slot.startTime,
-                  endTime: slot.endTime,
-                  displayTime: slot.displayTime,
-                  isAvailable: slot.isAvailable,
+                  slot: slot,
                   sessionTitle: AppLocalizations.of(context)!.evening,
                 )),
                 const SizedBox(height: 16),
@@ -488,7 +508,13 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
     final isSelected = _consultationType == title;
     return Expanded(
       child: GestureDetector(
-        onTap: () => setState(() => _consultationType = title),
+        onTap: () {
+          setState(() {
+            _consultationType = title;
+            _selectedSlotId = null;
+            _selectedSlotTime = null;
+          });
+        },
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 20),
           decoration: BoxDecoration(
@@ -534,27 +560,46 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
   }
 
   Widget _buildSlotCard({
-    required String id,
-    required String startTime,
-    required String endTime,
-    required String displayTime,
-    required bool isAvailable,
+    required TimeSlot slot,
     required String sessionTitle,
   }) {
-    final isSelected = startTime == _selectedSlotTime;
-    final isVoice = _consultationType.toLowerCase().contains('voice');
-    final methodStr = isVoice ? AppLocalizations.of(context)!.voiceCall : AppLocalizations.of(context)!.inPerson;
-    final methodIcon = isVoice ? Icons.phone_in_talk_outlined : Icons.location_on_outlined;
+    final isSelected = slot.startTime == _selectedSlotTime;
+    final start12 = slot.displayTime.isNotEmpty ? slot.displayTime : _formatTime12h(slot.startTime);
+    final end12 = slot.endTime.isNotEmpty ? _formatTime12h(slot.endTime) : '';
+    final typeTagText = slot.consultationTypeTagText;
 
-    final start12 = displayTime.isNotEmpty ? displayTime : _formatTime12h(startTime);
-    final end12 = endTime.isNotEmpty ? _formatTime12h(endTime) : '';
+    IconData typeIcon;
+    Color tagColor;
+    final cat = slot.consultationTypeCategory;
+    if (cat == 'in_person') {
+      typeIcon = Icons.home_outlined;
+      tagColor = const Color(0xFF1565C0);
+    } else if (cat == 'voice') {
+      typeIcon = Icons.phone_in_talk_outlined;
+      tagColor = const Color(0xFF2E7D32);
+    } else {
+      typeIcon = Icons.medical_services_outlined;
+      tagColor = const Color(0xFF385A2E);
+    }
 
     return GestureDetector(
-      onTap: isAvailable
+      onTap: slot.isAvailable
           ? () {
+              final err = _getIncompatibilityErrorMessage(slot, _consultationType);
+              if (err != null) {
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(err),
+                    backgroundColor: Colors.orange.shade900,
+                    duration: const Duration(seconds: 4),
+                  ),
+                );
+                return;
+              }
               setState(() {
-                _selectedSlotId = id;
-                _selectedSlotTime = startTime;
+                _selectedSlotId = slot.id;
+                _selectedSlotTime = slot.startTime;
               });
             }
           : null,
@@ -613,21 +658,23 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
               children: [
                 Row(
                   children: [
-                    Icon(methodIcon, size: 16, color: Colors.black54),
+                    Icon(typeIcon, size: 16, color: tagColor),
                     const SizedBox(width: 6),
-                    Text(
-                      '$sessionTitle · $methodStr',
-                      style: const TextStyle(fontSize: 12, color: Colors.black54, fontWeight: FontWeight.w500),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: tagColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '$sessionTitle · $typeTagText',
+                        style: TextStyle(fontSize: 12, color: tagColor, fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ],
                 ),
                 Row(
                   children: [
-                    const Text(
-                      '30 min',
-                      style: TextStyle(fontSize: 12, color: Colors.black45, fontWeight: FontWeight.w500),
-                    ),
-                    const SizedBox(width: 10),
                     if (isSelected)
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -650,14 +697,14 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                       Row(
                         children: [
                           Text(
-                            isAvailable ? 'Select' : 'Booked',
+                            slot.isAvailable ? 'Select' : 'Booked',
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
-                              color: isAvailable ? const Color(0xFF385A2E) : Colors.grey,
+                              color: slot.isAvailable ? const Color(0xFF385A2E) : Colors.grey,
                             ),
                           ),
-                          if (isAvailable) ...[
+                          if (slot.isAvailable) ...[
                             const SizedBox(width: 2),
                             const Icon(Icons.arrow_forward, size: 13, color: Color(0xFF385A2E)),
                           ],

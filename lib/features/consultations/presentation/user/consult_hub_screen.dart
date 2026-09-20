@@ -10,6 +10,7 @@ import 'package:cagh_frontend/features/consultations/presentation/user/voice_con
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
 import 'package:cagh_frontend/core/utils/app_logger.dart';
 import 'package:cagh_frontend/features/consultations/presentation/user/consult_hub_components.dart';
+import 'package:cagh_frontend/features/consultations/presentation/user/chat_screen.dart';
 import 'package:cagh_frontend/shared/widgets/custom_snackbar.dart';
 
 class ConsultHubScreen extends StatefulWidget {
@@ -367,6 +368,17 @@ class ConsultHubScreenState extends State<ConsultHubScreen> {
                                 apt,
                                 onCardTap: () => _fetchAndShowDetails(apt),
                                 onJoinCall: () => _startPatientConsultation(context, apt),
+                                onChat: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => ChatScreen(
+                                        midwifeId: apt.midwifeId,
+                                        midwifeName: apt.midwifeName ?? 'Midwife',
+                                      ),
+                                    ),
+                                  );
+                                },
                                 onReschedule: () => showRescheduleModal(
                                   context,
                                   apt,

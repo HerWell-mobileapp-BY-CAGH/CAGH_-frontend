@@ -1,10 +1,11 @@
-﻿class TimeSlot {
+class TimeSlot {
   final String id;
   final String date;
   final String startTime;
   final String endTime;
   final String displayTime;
   final bool isAvailable;
+  final List<String> consultationMethods;
 
   TimeSlot({
     this.id = '',
@@ -13,9 +14,22 @@
     required this.endTime,
     this.displayTime = '',
     required this.isAvailable,
+    this.consultationMethods = const [],
   });
 
   factory TimeSlot.fromJson(Map<String, dynamic> json) {
+    List<String> methods = [];
+    if (json['consultation_methods'] is List) {
+      methods = List<String>.from(json['consultation_methods']);
+    } else if (json['offered_consultation_types'] is List) {
+      methods = List<String>.from(json['offered_consultation_types']);
+    }
+
+    final rawType = (json['consultation_type'] ?? json['appointment_type'] ?? '').toString();
+    if (rawType.isNotEmpty && !methods.contains(rawType)) {
+      methods.add(rawType);
+    }
+
     return TimeSlot(
       id: (json['id'] ?? json['availability_id'] ?? '').toString(),
       date: (json['date'] ?? '').toString(),
@@ -23,7 +37,42 @@
       endTime: (json['end_time'] ?? '').toString(),
       displayTime: (json['start_time_12h'] ?? json['start_time'] ?? '').toString(),
       isAvailable: json['is_available'] ?? false,
+      consultationMethods: methods,
     );
+  }
+
+  bool get supportsInPerson {
+    if (consultationMethods.isEmpty) return true;
+    return consultationMethods.any((m) {
+      final u = m.toUpperCase();
+      return u == 'IN_PERSON' || u == 'IN-PERSON' || u == 'BOTH';
+    });
+  }
+
+  bool get supportsVoice {
+    if (consultationMethods.isEmpty) return true;
+    return consultationMethods.any((m) {
+      final u = m.toUpperCase();
+      return u == 'VIRTUAL_VOICE' || u == 'VOICE_CALL' || u == 'VOICE' || u == 'BOTH';
+    });
+  }
+
+  /// Returns 'in_person', 'voice', or 'both'
+  String get consultationTypeCategory {
+    final inPerson = supportsInPerson;
+    final voice = supportsVoice;
+    if (inPerson && voice) return 'both';
+    if (inPerson) return 'in_person';
+    if (voice) return 'voice';
+    return 'both';
+  }
+
+  /// Display text for slot tag: 'In-Person', 'Voice', or 'Voice / In-Person'
+  String get consultationTypeTagText {
+    final cat = consultationTypeCategory;
+    if (cat == 'in_person') return 'In-Person';
+    if (cat == 'voice') return 'Voice';
+    return 'Voice / In-Person';
   }
 
   Map<String, dynamic> toJson() {
@@ -34,6 +83,7 @@
       'start_time': startTime,
       'end_time': endTime,
       'is_available': isAvailable,
+      'consultation_methods': consultationMethods,
     };
   }
 }

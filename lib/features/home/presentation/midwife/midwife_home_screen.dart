@@ -14,6 +14,7 @@ import 'package:cagh_frontend/features/consultations/data/repositories/midwife_r
 import 'package:cagh_frontend/features/consultations/data/services/midwife_api_service.dart';
 import 'package:cagh_frontend/shared/widgets/floating_glass_nav_bar.dart';
 import 'package:cagh_frontend/features/notifications/presentation/widgets/notification_bell.dart';
+import 'package:cagh_frontend/features/learning/presentation/screens/learning_center_screen.dart';
 
 class MidwifeHomeScreen extends ConsumerStatefulWidget {
   const MidwifeHomeScreen({super.key});
@@ -365,126 +366,7 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
 
   // TAB 3: LEARNING CENTER
   Widget _buildLearnTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _buildLearningModuleCard(
-            icon: Icons.menu_book_rounded,
-            iconBgColor: const Color(0xFFE8F5E9),
-            iconColor: const Color(0xFF315E26),
-            title: AppLocalizations.of(context)!.adolescentGirlsHealthAndNutrition,
-            subtitle: AppLocalizations.of(context)!.adolescentGirlsHealthAndNutritionDesc,
-            arrowBgColor: const Color(0xFFF1F8E9),
-            onTap: () {},
-          ),
-          const SizedBox(height: 14),
-          _buildLearningModuleCard(
-            icon: Icons.shield_outlined,
-            iconBgColor: const Color(0xFFFFF8E1),
-            iconColor: const Color(0xFFFFD22B),
-            title: AppLocalizations.of(context)!.preventionAndAwareness,
-            subtitle: AppLocalizations.of(context)!.preventionAndAwarenessDesc,
-            arrowBgColor: const Color(0xFFFFF8E1),
-          ),
-          const SizedBox(height: 14),
-          _buildLearningModuleCard(
-            icon: Icons.favorite_border_rounded,
-            iconBgColor: const Color(0xFFFFF8E1),
-            iconColor: const Color(0xFFFFD22B),
-            title: AppLocalizations.of(context)!.psychosocialSupportAndProtection,
-            subtitle: AppLocalizations.of(context)!.psychosocialSupportAndProtectionDesc,
-            arrowBgColor: const Color(0xFFFFF8E1),
-          ),
-          const SizedBox(height: 14),
-          _buildLearningModuleCard(
-            icon: Icons.female,
-            iconBgColor: const Color(0xFFE8F5E9),
-            iconColor: const Color(0xFF315E26),
-            title: AppLocalizations.of(context)!.reproductiveHealthAndCare,
-            subtitle: AppLocalizations.of(context)!.reproductiveHealthAndCareDesc,
-            arrowBgColor: const Color(0xFFF1F8E9),
-          ),
-          const SizedBox(height: 80),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLearningModuleCard({
-    required IconData icon,
-    required Color iconBgColor,
-    required Color iconColor,
-    required String title,
-    required String subtitle,
-    required Color arrowBgColor,
-    VoidCallback? onTap,
-  }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Theme.of(context).dividerColor, width: 1),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : const Color(0xFF2E4823),
-                      height: 1.3,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: isDark ? Colors.grey.shade400 : Colors.black54,
-                      height: 1.4,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 16),
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF2E4823) : const Color(0xFFE8F2E9),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.arrow_forward_rounded,
-                color: isDark ? Colors.white : const Color(0xFF385A2E),
-                size: 20,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    return const LearningCenterScreen(isMidwife: true);
   }
 
   Widget _buildScheduleItem({required String time, required String title, required String subtitle, required String badgeLabel, required Color badgeColor, required Color badgeTextColor}) {

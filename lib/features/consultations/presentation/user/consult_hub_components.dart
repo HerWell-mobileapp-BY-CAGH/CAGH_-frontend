@@ -660,6 +660,7 @@ Widget buildAppointmentCard(
   required VoidCallback onReschedule,
   required VoidCallback onCancel,
   required VoidCallback onViewDetails,
+  VoidCallback? onChat,
 }) {
   final isUpcoming = apt.status == AppointmentStatus.confirmed && !apt.isPast;
   final isPending = apt.status == AppointmentStatus.pending;
@@ -811,7 +812,14 @@ Widget buildAppointmentCard(
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                   ),
                 ),
-                const SizedBox(width: 10),
+                if (onChat != null) ...[
+                  const SizedBox(width: 8),
+                  IconButton(
+                    onPressed: onChat,
+                    icon: const Icon(Icons.chat_bubble_outline_rounded, color: AppColors.primaryGreen),
+                  ),
+                ],
+                const Spacer(),
                 TextButton(
                   onPressed: onViewDetails,
                   style: TextButton.styleFrom(
