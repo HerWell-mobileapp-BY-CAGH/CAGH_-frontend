@@ -72,68 +72,69 @@ class NotificationStateNotifier extends StateNotifier<NotificationState> {
 
   Future<void> _fetchAndSynthesize({bool isSilent = false}) async {
     try {
-      // 1. Fetch backend notifications & unread count
-      final backendNotifications = await _repository.getNotifications();
+      // 1. Fetch backend notifications, chat rooms, and user data concurrently
+      final results = await Future.wait([
+        _repository.getNotifications().catchError((_) => <NotificationModel>[]),
+        ChatApiService.getChatRooms().catchError((_) => <Map<String, dynamic>>[]),
+        AuthService.getUserData().catchError((_) => <String, dynamic>{}),
+      ]);
 
-      // 2. Fetch Chat Rooms & compute unread messages
+      final backendNotifications = results[0] as List<NotificationModel>;
+      final chatRooms = results[1] as List<dynamic>;
+      final userData = results[2] as Map<String, dynamic>;
+
+      // 2. Compute unread messages
       int totalUnreadMessages = 0;
       final List<NotificationModel> chatNotifications = [];
-      try {
-        final chatRooms = await ChatApiService.getChatRooms();
-        for (var room in chatRooms) {
-          final int roomUnread = int.tryParse(room['unread_count']?.toString() ?? '') ?? 0;
-          totalUnreadMessages += roomUnread;
+      for (var room in chatRooms) {
+        final int roomUnread = int.tryParse(room['unread_count']?.toString() ?? '') ?? 0;
+        totalUnreadMessages += roomUnread;
 
-          if (roomUnread > 0) {
-            final roomId = room['id']?.toString() ?? '';
-            // Determine partner name (midwife for patient, patient for midwife)
-            final mw = room['midwife_detail'] ?? room['midwife'];
-            final user = room['user_detail'] ?? room['user'] ?? room['patient'];
-            String partnerName = 'Healthcare Provider';
-            if (mw is Map && (mw['full_name'] != null || mw['name'] != null)) {
-              partnerName = mw['full_name'] ?? mw['name'];
-            } else if (user is Map && (user['full_name'] != null || user['first_name'] != null)) {
-              partnerName = user['full_name'] ?? "${user['first_name']} ${user['last_name'] ?? ''}".trim();
-            }
-
-            String preview = 'You have $roomUnread new message(s)';
-            DateTime msgTime = DateTime.now();
-            if (room['latest_message'] is Map) {
-              final lm = room['latest_message'];
-              final content = lm['content'] ?? lm['text'] ?? '';
-              if (content.toString().isNotEmpty) {
-                preview = content.toString();
-              }
-              final createdStr = lm['created_at'] ?? lm['sent_at'];
-              if (createdStr != null) {
-                msgTime = DateTime.tryParse(createdStr.toString())?.toLocal() ?? DateTime.now();
-              }
-            }
-
-            chatNotifications.add(
-              NotificationModel(
-                id: 'chat_$roomId',
-                recipientId: '',
-                type: 'message',
-                title: partnerName,
-                body: preview,
-                isRead: false,
-                createdAt: msgTime,
-                relatedId: roomId,
-                relatedType: 'conversation',
-              ),
-            );
+        if (roomUnread > 0) {
+          final roomId = room['id']?.toString() ?? '';
+          final mw = room['midwife_detail'] ?? room['midwife'];
+          final user = room['user_detail'] ?? room['user'] ?? room['patient'];
+          String partnerName = 'Healthcare Provider';
+          if (mw is Map && (mw['full_name'] != null || mw['name'] != null)) {
+            partnerName = mw['full_name'] ?? mw['name'];
+          } else if (user is Map && (user['full_name'] != null || user['first_name'] != null)) {
+            partnerName = user['full_name'] ?? "${user['first_name']} ${user['last_name'] ?? ''}".trim();
           }
+
+          String preview = 'You have $roomUnread new message(s)';
+          DateTime msgTime = DateTime.now();
+          if (room['latest_message'] is Map) {
+            final lm = room['latest_message'];
+            final content = lm['content'] ?? lm['text'] ?? '';
+            if (content.toString().isNotEmpty) {
+              preview = content.toString();
+            }
+            final createdStr = lm['created_at'] ?? lm['sent_at'];
+            if (createdStr != null) {
+              msgTime = DateTime.tryParse(createdStr.toString())?.toLocal() ?? DateTime.now();
+            }
+          }
+
+          chatNotifications.add(
+            NotificationModel(
+              id: 'chat_$roomId',
+              recipientId: '',
+              type: 'message',
+              title: partnerName,
+              body: preview,
+              isRead: false,
+              createdAt: msgTime,
+              relatedId: roomId,
+              relatedType: 'conversation',
+            ),
+          );
         }
-      } catch (_) {
-        // Chat rooms fetch fallback
       }
 
       // 3. Fetch user/midwife appointments to compute upcoming consultation events
       int totalUpcoming = 0;
       final List<NotificationModel> appointmentNotifications = [];
       try {
-        final userData = await AuthService.getUserData();
         final userType = (userData['user_type'] ?? userData['role'] ?? 'USER').toString().toUpperCase();
         
         List<Appointment> appointments = [];

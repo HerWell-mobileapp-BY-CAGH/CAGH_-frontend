@@ -37,6 +37,7 @@ class FacilityDetailsScreen extends StatelessWidget {
                   ? Image.network(
                       facility.image!,
                       fit: BoxFit.cover,
+                      cacheWidth: 800,
                       errorBuilder: (context, error, stackTrace) => const Icon(
                         Icons.local_hospital_outlined,
                         size: 80,

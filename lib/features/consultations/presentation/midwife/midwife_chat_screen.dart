@@ -127,28 +127,36 @@ class _MidwifeChatScreenState extends ConsumerState<MidwifeChatScreen> {
         _scrollToBottom();
       }
 
-      _pollingTimer = Timer.periodic(const Duration(seconds: 2), (timer) async {
+      _pollingTimer = Timer.periodic(const Duration(seconds: 4), (timer) async {
         if (_roomId == null || !mounted) return;
+        // Skip HTTP polling when WebSocket is connected
+        if (_wsService != null && _wsService!.isConnected) return;
         try {
           final history = await ChatApiService.getMessageHistory(_roomId!);
-          if (mounted) {
-            setState(() {
-              for (var msg in history) {
-                final parsedMsg = _parseMessage(msg);
+          if (mounted && history.isNotEmpty) {
+            bool hasChanges = false;
+            for (var msg in history) {
+              final parsedMsg = _parseMessage(msg);
 
-                // Deduplicate local optimistic messages
-                _messages.removeWhere((m) => 
-                    m['id'].toString().startsWith('local-') && 
-                    m['text'] == parsedMsg['text']);
+              // Deduplicate local optimistic messages
+              final prevLen = _messages.length;
+              _messages.removeWhere((m) => 
+                  m['id'].toString().startsWith('local-') && 
+                  m['text'] == parsedMsg['text']);
+              if (_messages.length != prevLen) hasChanges = true;
 
-                if (!_messages.any((m) => m['id'].toString() == parsedMsg['id'].toString())) {
-                  _messages.add(parsedMsg);
-                  if (!parsedMsg['isMe']) {
-                    _wsService?.markRead();
-                  }
+              if (!_messages.any((m) => m['id'].toString() == parsedMsg['id'].toString())) {
+                _messages.add(parsedMsg);
+                hasChanges = true;
+                if (!parsedMsg['isMe']) {
+                  _wsService?.markRead();
                 }
               }
-            });
+            }
+
+            if (hasChanges) {
+              setState(() {});
+            }
           }
         } catch (e) {
           // Silent fail for polling
@@ -432,6 +440,7 @@ class _MidwifeChatScreenState extends ConsumerState<MidwifeChatScreen> {
                     child: Image.network(
                       attachment['file_url'],
                       fit: BoxFit.cover,
+                      cacheWidth: 600,
                       errorBuilder: (context, error, stackTrace) =>
                           const Icon(Icons.broken_image, size: 40, color: Colors.grey),
                     ),

@@ -18,6 +18,8 @@ class ChatWebSocketService {
     this.onError,
   });
 
+  bool get isConnected => _channel != null;
+
   Future<void> connect(String roomId) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');

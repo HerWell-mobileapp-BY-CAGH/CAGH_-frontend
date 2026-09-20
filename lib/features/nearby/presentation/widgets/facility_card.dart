@@ -77,6 +77,7 @@ class FacilityCard extends StatelessWidget {
                         ? Image.network(
                             facility.image!,
                             fit: BoxFit.cover,
+                            cacheWidth: 200,
                             errorBuilder: (context, error, stackTrace) => Padding(
                               padding: const EdgeInsets.all(10),
                               child: Icon(
