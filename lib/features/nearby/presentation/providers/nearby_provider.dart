@@ -1,4 +1,4 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../domain/entities/healthcare_facility.dart';
 import '../../domain/repositories/nearby_repository.dart';
@@ -64,7 +64,7 @@ class NearbyStateNotifier extends StateNotifier<NearbyState> {
   Position? _lastKnownPosition;
   String _currentType = 'All';
   String _currentService = 'All';
-  double _currentRadius = 10.0; // 10 km default
+  double _currentRadius = 10.0;
 
   NearbyStateNotifier(this._repository) : super(NearbyInitial());
 
@@ -74,14 +74,26 @@ class NearbyStateNotifier extends StateNotifier<NearbyState> {
     double? radius,
     bool forceRefreshLocation = false,
   }) async {
+    // If state is already NearbyLoaded with identical parameters, retain cached data immediately
+    final targetType = type ?? _currentType;
+    final targetService = service ?? _currentService;
+    final targetRadius = radius ?? _currentRadius;
+
+    if (state is NearbyLoaded &&
+        !forceRefreshLocation &&
+        targetType == _currentType &&
+        targetService == _currentService &&
+        targetRadius == _currentRadius) {
+      return;
+    }
+
     state = NearbyLoading();
 
     try {
-      if (type != null) _currentType = type;
-      if (service != null) _currentService = service;
-      if (radius != null) _currentRadius = radius;
+      _currentType = targetType;
+      _currentService = targetService;
+      _currentRadius = targetRadius;
 
-      // Handle location permissions and GPS
       if (_lastKnownPosition == null || forceRefreshLocation) {
         try {
           bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -91,14 +103,15 @@ class NearbyStateNotifier extends StateNotifier<NearbyState> {
               permission = await Geolocator.requestPermission();
             }
             if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
-              _lastKnownPosition = await Geolocator.getCurrentPosition(
+              // Fast path: try cached last known position (<5ms!)
+              _lastKnownPosition = await Geolocator.getLastKnownPosition();
+              _lastKnownPosition ??= await Geolocator.getCurrentPosition(
                 locationSettings: const LocationSettings(accuracy: LocationAccuracy.medium),
-              ).timeout(const Duration(seconds: 4));
+              ).timeout(const Duration(seconds: 2));
             }
           }
         } catch (_) {}
 
-        // Use standard Addis Ababa central coordinates if GPS is unavailable
         _lastKnownPosition ??= Position(
           latitude: 9.0300,
           longitude: 38.7400,

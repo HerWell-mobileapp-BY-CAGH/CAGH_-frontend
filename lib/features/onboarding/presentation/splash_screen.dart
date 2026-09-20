@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:cagh_frontend/core/services/global_call_service.dart';
@@ -28,7 +28,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   void _startSplashTimer() {
     _timer?.cancel();
-    _timer = Timer(const Duration(milliseconds: 3600), _onTimerFired);
+    _timer = Timer(const Duration(milliseconds: 1200), _onTimerFired);
   }
 
   void _onTimerFired() async {
@@ -39,25 +39,32 @@ class _SplashScreenState extends State<SplashScreen> {
 
     if (isCallActiveOrPending || !isCurrentRoute) {
       AppLogger.d('[SPLASH] Delaying/Aborting splash navigation: callActiveOrPending=$isCallActiveOrPending isCurrentRoute=$isCurrentRoute');
-      _timer = Timer(const Duration(milliseconds: 1000), _onTimerFired);
+      _timer = Timer(const Duration(milliseconds: 500), _onTimerFired);
       return;
     }
 
-    final isValid = await AuthService.isSessionValid();
+    // Concurrent check: session validity & cached user data
+    final results = await Future.wait([
+      AuthService.isSessionValid(),
+      AuthService.getUserData(),
+    ]);
+
+    final isValid = results[0] as bool;
+    final userData = results[1] as Map<String, dynamic>;
 
     if (!mounted) return;
 
     if (isValid) {
       AppLogger.d('[SPLASH] Valid session found. Syncing user call listener and FCM device token.');
-      try {
-        await GlobalCallService.initUserCallListener();
-        FcmService.registerDeviceToken(force: true);
-      } catch (e) {
-        AppLogger.d('[SPLASH] Notice initializing user call listener / FCM: $e');
-      }
-      final userData = await AuthService.getUserData();
-      final role = (userData['role'] ?? '').toString().toUpperCase();
       
+      // Background non-blocking background initialization
+      unawaited(GlobalCallService.initUserCallListener().catchError((e) {
+        AppLogger.d('[SPLASH] Notice initializing user call listener: $e');
+      }));
+      unawaited(Future.microtask(() => FcmService.registerDeviceToken(force: true)));
+
+      final role = (userData['role'] ?? '').toString().toUpperCase();
+
       if (role == 'MIDWIFE') {
         AuthService.setMockRole('MIDWIFE');
         Navigator.pushReplacement(
@@ -91,13 +98,11 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7F5), // off-white/light-green background
+      backgroundColor: const Color(0xFFF4F7F5),
       body: SafeArea(
         child: Column(
           children: [
             const Spacer(flex: 3),
-
-            // Logo circle
             Container(
               width: 180,
               height: 180,
@@ -125,10 +130,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 ),
               ),
             ),
-
-            Spacer(flex: 2),
-
-            // App name
+            const Spacer(flex: 2),
             Text(
               AppLocalizations.of(context)!.appTitle.toUpperCase(),
               style: const TextStyle(
@@ -138,10 +140,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 color: AppColors.primaryGreen,
               ),
             ),
-
             const SizedBox(height: 12),
-
-            // Secure text
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -150,10 +149,10 @@ class _SplashScreenState extends State<SplashScreen> {
                   size: 18,
                   color: AppColors.primaryGreen,
                 ),
-                SizedBox(width: 8),
+                const SizedBox(width: 8),
                 Text(
                   AppLocalizations.of(context)!.secureConnection,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 14,
                     color: AppColors.primaryGreen,
                     fontWeight: FontWeight.w600,
@@ -161,7 +160,6 @@ class _SplashScreenState extends State<SplashScreen> {
                 ),
               ],
             ),
-
             const Spacer(flex: 2),
           ],
         ),

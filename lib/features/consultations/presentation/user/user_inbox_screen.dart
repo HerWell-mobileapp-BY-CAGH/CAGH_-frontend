@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:async';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
@@ -636,3 +636,4 @@ class _UserInboxScreenState extends ConsumerState<UserInboxScreen> with SingleTi
     );
   }
 }
+
