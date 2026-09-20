@@ -46,7 +46,7 @@ class _UserTypeSelectionScreenState extends State<UserTypeSelectionScreen> {
                       'assets/images/home_illustration.png',
                       height: 180,
                       fit: BoxFit.contain,
-                      errorBuilder: (_, __, ___) {
+                      errorBuilder: (_, _, _) {
                         return const Icon(
                           Icons.image_not_supported,
                           size: 90,
@@ -248,7 +248,7 @@ class _RoleSelectionCard extends StatelessWidget {
           boxShadow: [
             if (!isDark)
               BoxShadow(
-                color: Colors.black.withOpacity(0.04),
+                color: Colors.black.withValues(alpha: 0.04),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),

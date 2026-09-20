@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cagh_frontend/shared/widgets/hover_scale_widget.dart';
-import 'package:cagh_frontend/features/virtual_consultation/presentation/emergency_support_screen.dart';
+import 'package:cagh_frontend/features/hotline/presentation/emergency_support_screen.dart';
 
 class HotlineFab extends StatelessWidget {
   const HotlineFab({super.key});

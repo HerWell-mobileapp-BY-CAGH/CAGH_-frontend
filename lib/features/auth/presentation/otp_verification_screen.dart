@@ -3,15 +3,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
-import 'package:cagh_frontend/core/services/language_service.dart';
 import 'package:cagh_frontend/features/auth/presentation/create_new_password_screen.dart';
 import 'package:cagh_frontend/features/auth/presentation/user/user_login_screen.dart';
-import 'package:cagh_frontend/features/auth/presentation/midwife/midwife_login_screen.dart';
 import 'package:cagh_frontend/features/auth/presentation/midwife/midwife_registration_success_screen.dart' as cagh_frontend_success;
 import 'package:cagh_frontend/shared/widgets/custom_snackbar.dart';
-import 'create_new_password_screen.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
-import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 class OtpVerificationScreen extends StatefulWidget {
   final String contact;

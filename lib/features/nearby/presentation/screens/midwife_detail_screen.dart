@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/healthcare_facility.dart';
-import 'package:cagh_frontend/shared/constants/app_colors.dart';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
 import 'midwife_booking_screen.dart';
 
@@ -169,7 +168,7 @@ class MidwifeDetailScreen extends StatelessWidget {
                 color: const Color(0xFFF9FAEB),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFF9FAEB).withOpacity(0.9),
+                    color: const Color(0xFFF9FAEB).withValues(alpha: 0.9),
                     blurRadius: 20,
                     spreadRadius: 10,
                     offset: const Offset(0, -10),

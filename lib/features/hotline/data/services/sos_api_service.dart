@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cagh_frontend/core/network/api_config.dart';
-import 'package:cagh_frontend/features/virtual_consultation/domain/models/hotline.dart';
+import 'package:cagh_frontend/features/hotline/domain/models/hotline.dart';
 
 class SosApiService {
   Future<Map<String, String>> _getHeaders() async {

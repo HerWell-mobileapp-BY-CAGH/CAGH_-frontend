@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 class AppTextField extends StatefulWidget {
   final TextEditingController controller;

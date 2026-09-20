@@ -162,7 +162,7 @@ class _MidwifeManageScheduleScreenState extends State<MidwifeManageScheduleScree
                         Text(AppLocalizations.of(context)!.addAvailability, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                         const SizedBox(height: 16),
                         DropdownButtonFormField<int>(
-                          value: _selectedDayOfWeek,
+                          initialValue: _selectedDayOfWeek,
                           decoration: InputDecoration(
                             labelText: AppLocalizations.of(context)!.dayOfWeek,
                             border: const OutlineInputBorder(),
@@ -338,7 +338,7 @@ class _MidwifeManageScheduleScreenState extends State<MidwifeManageScheduleScree
                         child: ListTile(
                           leading: const Icon(Icons.block, color: Colors.red),
                           title: Text(block.date, style: const TextStyle(fontWeight: FontWeight.bold)),
-                          subtitle: Text(block.reason ?? ''),
+                          subtitle: Text(block.reason),
                         ),
                       );
                     }),

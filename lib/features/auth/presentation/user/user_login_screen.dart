@@ -4,12 +4,9 @@ import 'package:cagh_frontend/features/auth/presentation/user/user_registration_
 import 'package:cagh_frontend/features/auth/presentation/forgot_password_screen.dart';
 import 'package:cagh_frontend/features/home/presentation/user/user_home_screen.dart';
 import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
-import 'package:cagh_frontend/core/services/language_service.dart';
 import 'package:cagh_frontend/shared/widgets/custom_snackbar.dart';
 import 'package:cagh_frontend/shared/widgets/app_text_field.dart';
-import 'package:cagh_frontend/shared/widgets/primary_button.dart';
 import 'package:cagh_frontend/shared/widgets/standard_app_bar.dart';
-import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 class UserLoginScreen extends StatefulWidget {
   const UserLoginScreen({super.key});
@@ -24,7 +21,6 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
   bool _isLoading = false;
   String? _emailError;
   String? _passwordError;
-  String? _apiError;
 
   @override
   void dispose() {
@@ -38,7 +34,6 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
     final password = _passwordController.text;
 
     setState(() {
-      _apiError = null;
       
       if (identifier.isEmpty) {
         _emailError = AppLocalizations.of(context)!.valEmailPhoneReq;
@@ -139,7 +134,7 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
                   boxShadow: [
                     if (!isDark)
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
+                        color: Colors.black.withValues(alpha: 0.04),
                         blurRadius: 15,
                         offset: const Offset(0, 4),
                       ),
@@ -159,7 +154,7 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
                         boxShadow: [
                           if (!isDark)
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.06),
+                              color: Colors.black.withValues(alpha: 0.06),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
@@ -172,7 +167,7 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
                             width: 44,
                             height: 44,
                             fit: BoxFit.contain,
-                            errorBuilder: (_, __, ___) {
+                            errorBuilder: (_, _, _) {
                               return Icon(Icons.spa, color: primaryDarkGreen, size: 28);
                             },
                           ),

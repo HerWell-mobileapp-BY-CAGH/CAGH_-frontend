@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:audioplayers/audioplayers.dart';
+// ignore: depend_on_referenced_packages
 import 'package:vibration/vibration.dart';
 import 'package:cagh_frontend/core/utils/app_logger.dart';
 
@@ -84,7 +85,7 @@ class RingtoneService {
 
       try {
         await AudioPlayer.global.setAudioContext(AudioContext(
-          android: const AudioContextAndroid(
+          android: AudioContextAndroid(
             audioFocus: AndroidAudioFocus.gainTransient,
             audioMode: AndroidAudioMode.normal,
             contentType: AndroidContentType.music,

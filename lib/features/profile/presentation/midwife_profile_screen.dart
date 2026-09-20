@@ -3,9 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
-import 'package:cagh_frontend/shared/constants/app_constants.dart';
 import 'package:cagh_frontend/core/services/language_service.dart';
-import 'package:cagh_frontend/features/auth/presentation/midwife/midwife_login_screen.dart';
 import 'package:cagh_frontend/features/onboarding/presentation/user_type_selection_screen.dart';
 import 'package:cagh_frontend/features/profile/presentation/midwife_personal_information_screen.dart';
 import 'package:cagh_frontend/features/profile/presentation/midwife_notification_settings_screen.dart';
@@ -14,7 +12,6 @@ import 'package:cagh_frontend/features/consultations/presentation/midwife/midwif
 import 'package:cagh_frontend/features/consultations/data/repositories/midwife_repository_impl.dart';
 import 'package:cagh_frontend/features/consultations/data/services/midwife_api_service.dart';
 import 'package:cagh_frontend/features/notifications/presentation/providers/notification_provider.dart';
-import 'package:cagh_frontend/shared/models/midwife_profile.dart';
 import 'package:cagh_frontend/shared/widgets/app_profile_avatar.dart';
 import 'package:cagh_frontend/core/utils/app_logger.dart';
 
@@ -472,7 +469,7 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (badge != null) badge,
+              ?badge,
               if (badge != null) const SizedBox(width: 8),
               Icon(Icons.chevron_right, color: Theme.of(context).dividerColor, size: 22),
             ],

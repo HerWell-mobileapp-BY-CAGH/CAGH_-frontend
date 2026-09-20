@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/healthcare_facility.dart';
-import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 class MidwifeBookingScreen extends StatefulWidget {
   final HealthcareFacility facility;
@@ -102,7 +101,7 @@ class _MidwifeBookingScreenState extends State<MidwifeBookingScreen> {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF385A2E).withOpacity(0.8),
+                        color: Color(0xFF385A2E).withValues(alpha: 0.8),
                       ),
                     ),
                   ],
@@ -128,7 +127,7 @@ class _MidwifeBookingScreenState extends State<MidwifeBookingScreen> {
                           width: 60,
                           margin: const EdgeInsets.only(right: 12),
                           decoration: BoxDecoration(
-                            color: isSelected ? const Color(0xFF385A2E) : Colors.black.withOpacity(0.04),
+                            color: isSelected ? const Color(0xFF385A2E) : Colors.black.withValues(alpha: 0.04),
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Column(
@@ -162,7 +161,7 @@ class _MidwifeBookingScreenState extends State<MidwifeBookingScreen> {
                 const SizedBox(height: 24),
                 
                 // Slots
-                ..._mockSlots.map((slot) => _buildSlotCard(slot)).toList(),
+                ..._mockSlots.map((slot) => _buildSlotCard(slot)),
               ],
             ),
           ),
@@ -176,7 +175,7 @@ class _MidwifeBookingScreenState extends State<MidwifeBookingScreen> {
                 color: const Color(0xFFF9FAEB),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFF9FAEB).withOpacity(0.9),
+                    color: const Color(0xFFF9FAEB).withValues(alpha: 0.9),
                     blurRadius: 20,
                     spreadRadius: 10,
                     offset: const Offset(0, -10),
@@ -230,7 +229,7 @@ class _MidwifeBookingScreenState extends State<MidwifeBookingScreen> {
         border: Border.all(color: Colors.black12, width: 0.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),

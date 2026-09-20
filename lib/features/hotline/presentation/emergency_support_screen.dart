@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:cagh_frontend/features/virtual_consultation/data/services/sos_api_service.dart';
-import 'package:cagh_frontend/features/virtual_consultation/domain/models/hotline.dart';
+import 'package:cagh_frontend/features/hotline/data/services/sos_api_service.dart';
+import 'package:cagh_frontend/features/hotline/domain/models/hotline.dart';
 import 'package:cagh_frontend/shared/widgets/custom_snackbar.dart';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
 

@@ -3,9 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cagh_frontend/features/auth/presentation/midwife/midwife_registration_screen.dart';
 import 'package:cagh_frontend/features/auth/presentation/forgot_password_screen.dart';
 import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
-import 'package:cagh_frontend/core/services/language_service.dart';
 import 'package:cagh_frontend/features/home/presentation/midwife/midwife_home_screen.dart';
-import 'package:cagh_frontend/features/home/presentation/user/user_bottom_nav_bar.dart';
 import 'package:cagh_frontend/features/consultations/data/repositories/midwife_repository_impl.dart';
 import 'package:cagh_frontend/features/consultations/data/services/midwife_api_service.dart';
 import 'package:cagh_frontend/features/profile/presentation/midwife_setup_profile_screen.dart';
@@ -28,7 +26,6 @@ class _MidwifeLoginScreenState extends State<MidwifeLoginScreen> {
   bool _isLoading = false;
   String? _emailError;
   String? _passwordError;
-  String? _apiError;
 
   @override
   void dispose() {
@@ -42,7 +39,6 @@ class _MidwifeLoginScreenState extends State<MidwifeLoginScreen> {
     final password = _passwordController.text;
 
     setState(() {
-      _apiError = null;
       _emailError = identifier.isEmpty ? AppLocalizations.of(context)!.valEmailPhoneReq : null;
       _passwordError = password.isEmpty ? AppLocalizations.of(context)!.valPasswordReq : null;
     });

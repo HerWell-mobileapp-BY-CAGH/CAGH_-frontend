@@ -121,7 +121,7 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
       appBar: buildInnerPageAppBar(
         context,
         title: AppLocalizations.of(context)!.findAMidwife,
-        onBack: widget.onBack != null ? widget.onBack : null,
+        onBack: widget.onBack,
         showLanguage: true,
       ),
       body: Stack(

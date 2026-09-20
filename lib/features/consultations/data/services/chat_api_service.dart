@@ -6,7 +6,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:mime/mime.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:flutter/foundation.dart';
-import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 class ChatApiService {
   static Future<Map<String, String>> _getHeaders() async {

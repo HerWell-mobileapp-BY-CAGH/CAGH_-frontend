@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cagh_frontend/features/ai_assistant/presentation/providers/ai_chat_provider.dart';
 import 'package:cagh_frontend/features/ai_assistant/presentation/widgets/ai_chat_bubble.dart';
 import 'package:cagh_frontend/features/ai_assistant/presentation/widgets/ai_chat_input_bar.dart';
-import 'package:cagh_frontend/features/virtual_consultation/presentation/emergency_support_screen.dart';
+import 'package:cagh_frontend/features/hotline/presentation/emergency_support_screen.dart';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 class AiAssistantScreen extends ConsumerStatefulWidget {

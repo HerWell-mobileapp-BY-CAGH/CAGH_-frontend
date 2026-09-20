@@ -74,7 +74,6 @@ class NotificationStateNotifier extends StateNotifier<NotificationState> {
     try {
       // 1. Fetch backend notifications & unread count
       final backendNotifications = await _repository.getNotifications();
-      final backendUnreadCount = await _repository.getUnreadCount();
 
       // 2. Fetch Chat Rooms & compute unread messages
       int totalUnreadMessages = 0;

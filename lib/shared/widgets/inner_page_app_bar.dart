@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:cagh_frontend/shared/constants/app_colors.dart';
 import 'package:cagh_frontend/shared/widgets/globe_language_picker.dart';
 import 'package:cagh_frontend/features/notifications/presentation/widgets/notification_bell.dart';
 
@@ -33,7 +32,7 @@ PreferredSizeWidget buildInnerPageAppBar(
     actions: [
       if (showLanguage) const GlobeLanguagePicker(iconColor: Colors.white, iconSize: 22),
       if (showNotification) const NotificationBell(iconColor: Colors.white),
-      if (extraActions != null) ...extraActions,
+      ...?extraActions,
       const SizedBox(width: 4),
     ],
   );

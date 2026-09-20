@@ -411,7 +411,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   ),
                   Text(
                     AppLocalizations.of(context)!.online,
-                    style: TextStyle(color: Theme.of(context).appBarTheme.foregroundColor?.withOpacity(0.7), fontSize: 12),
+                    style: TextStyle(color: Theme.of(context).appBarTheme.foregroundColor?.withValues(alpha: 0.7), fontSize: 12),
                   ),
                 ],
               ),
@@ -568,7 +568,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   ),
                 if (text.isNotEmpty && !hasImage) const SizedBox(height: 6),
               ],
-              if (text.isNotEmpty && (!hasImage || attachment == null))
+              if (text.isNotEmpty && (!hasImage))
                 Text(
                   text,
                   style: TextStyle(
@@ -644,7 +644,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
-                  color: disabled ? Theme.of(context).disabledColor.withOpacity(0.1) : Theme.of(context).cardColor,
+                  color: disabled ? Theme.of(context).disabledColor.withValues(alpha: 0.1) : Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(color: Theme.of(context).dividerColor),
                 ),

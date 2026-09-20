@@ -203,7 +203,7 @@ class _MidwifeNotificationSettingsScreenState extends State<MidwifeNotificationS
           ),
           Switch(
             value: value,
-            activeColor: AppColors.primaryGreen,
+            activeThumbColor: AppColors.primaryGreen,
             onChanged: onChanged,
           ),
         ],

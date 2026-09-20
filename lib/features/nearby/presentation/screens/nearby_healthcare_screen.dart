@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/nearby_provider.dart';
 import 'find_nearby_screen.dart';
-import '../widgets/nearby_map.dart';
-import '../widgets/facility_bottom_sheet.dart';
 import '../widgets/nearby_search_bar.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
 import 'package:cagh_frontend/l10n/app_localizations.dart';

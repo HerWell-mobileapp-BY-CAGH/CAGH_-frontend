@@ -1,6 +1,4 @@
 import 'package:cagh_frontend/l10n/app_localizations.dart';
-import 'package:cagh_frontend/core/services/global_call_service.dart';
-import 'package:cagh_frontend/features/appointments/data/services/appointment_api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:cagh_frontend/features/consultations/presentation/user/find_midwife_screen.dart';
 import 'package:cagh_frontend/features/nearby/presentation/screens/nearby_healthcare_screen.dart';
@@ -8,15 +6,10 @@ import 'package:cagh_frontend/shared/widgets/globe_language_picker.dart';
 import 'package:cagh_frontend/features/consultations/presentation/user/consult_hub_screen.dart';
 import 'package:cagh_frontend/features/profile/presentation/user_profile_screen.dart';
 import 'package:cagh_frontend/shared/widgets/floating_glass_nav_bar.dart';
-import 'package:cagh_frontend/core/services/language_service.dart';
 import 'package:cagh_frontend/shared/widgets/ai_assistant_fab.dart';
 import 'package:cagh_frontend/features/ai_assistant/presentation/ai_assistant_screen.dart';
 import 'package:cagh_frontend/shared/widgets/hotline_fab.dart';
-import 'package:cagh_frontend/shared/widgets/learning_module_card.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cagh_frontend/features/notifications/presentation/widgets/notification_bell.dart';
-import 'package:cagh_frontend/l10n/app_localizations.dart';
-import 'package:cagh_frontend/shared/widgets/globe_language_picker.dart';
 
 class UserHomeScreen extends StatefulWidget {
   const UserHomeScreen({super.key});
@@ -27,7 +20,6 @@ class UserHomeScreen extends StatefulWidget {
 
 class _UserHomeScreenState extends State<UserHomeScreen> {
   int _currentIndex = 0;
-  final bool _hasUpcomingAppointment = false;
   
   @override
   void initState() {
@@ -207,7 +199,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                     'assets/images/home_illustration.png',
                     height: 100,
                     fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) => const SizedBox(height: 100),
+                    errorBuilder: (_, _, _) => const SizedBox(height: 100),
                   ),
                 ),
               ],
@@ -273,7 +265,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                           Text(
                             AppLocalizations.of(context)!.talkToProfessionalNow,
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.9),
+                              color: Colors.white.withValues(alpha: 0.9),
                               fontSize: 13,
                             ),
                           ),
@@ -554,7 +546,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF2E4823).withOpacity(0.3) : iconBg,
+              color: isDark ? const Color(0xFF2E4823).withValues(alpha: 0.3) : iconBg,
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: isDark ? const Color(0xFF81C784) : iconColor, size: 18),
@@ -665,7 +657,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
           border: Border.all(color: Theme.of(context).dividerColor, width: 1),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),
@@ -761,67 +753,6 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
           _currentIndex = index;
         });
       },
-    );
-  }
-}
-
-class _NotificationTile extends StatelessWidget {
-  final String title;
-  final String body;
-  final String time;
-  final bool isUnread;
-  final String type;
-  final VoidCallback? onTap;
-
-  const _NotificationTile({
-    required this.title,
-    required this.body,
-    required this.time,
-    required this.isUnread,
-    required this.type,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: isUnread ? Theme.of(context).colorScheme.primaryContainer : Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Theme.of(context).dividerColor),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          CircleAvatar(
-            radius: 16,
-            backgroundColor: const Color(0xFF315E26),
-            child: Icon(
-              type == 'APPOINTMENT' ? Icons.calendar_today : Icons.chat,
-              size: 16,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5, color: Theme.of(context).textTheme.bodyLarge?.color)),
-                const SizedBox(height: 2),
-                Text(body, style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color, fontSize: 12.5)),
-                const SizedBox(height: 4),
-                Text(time, style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color, fontSize: 11)),
-              ],
-            ),
-          ),
-        ],
-      ),
-      ),
     );
   }
 }

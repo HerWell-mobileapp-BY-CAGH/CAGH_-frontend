@@ -2,7 +2,6 @@ import 'package:cagh_frontend/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import '../otp_verification_screen.dart';
 import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
-import 'package:cagh_frontend/core/services/language_service.dart';
 import 'package:cagh_frontend/shared/widgets/custom_snackbar.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
 

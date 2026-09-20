@@ -29,9 +29,6 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
 
   final TextEditingController _learnSearchController = TextEditingController();
 
-  String _selectedLearnCategory = 'All';
-  final Set<String> _bookmarkedArticles = {};
-
   @override
   void initState() {
     super.initState();
@@ -232,7 +229,7 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
                                 ? AppLocalizations.of(context)!.midwifeBookingsAppearHere
                                 : AppLocalizations.of(context)!.patientConsultationBookingsPending(upcomingApts.length),
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.87),
+                              color: Colors.white.withValues(alpha: 0.87),
                               fontSize: 14,
                             ),
                           ),
@@ -313,7 +310,7 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
                   ),
                   child: Column(
                     children: [
-                      Icon(Icons.calendar_today, size: 42, color: Theme.of(context).iconTheme.color?.withOpacity(0.5)),
+                      Icon(Icons.calendar_today, size: 42, color: Theme.of(context).iconTheme.color?.withValues(alpha: 0.5)),
                       const SizedBox(height: 16),
                       Text(
                         AppLocalizations.of(context)!.noAppointmentsToday,
@@ -436,7 +433,7 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
           border: Border.all(color: Theme.of(context).dividerColor, width: 1),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),

@@ -136,7 +136,7 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                           border: Border.all(color: Theme.of(context).dividerColor, width: 1),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
+                              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),

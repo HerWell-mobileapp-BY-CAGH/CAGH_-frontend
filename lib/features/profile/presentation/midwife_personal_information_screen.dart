@@ -3,7 +3,6 @@ import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart'
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
 import 'package:cagh_frontend/features/consultations/data/repositories/midwife_repository_impl.dart';
 import 'package:cagh_frontend/features/consultations/data/services/midwife_api_service.dart';
-import 'package:cagh_frontend/shared/models/midwife_profile.dart';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 class MidwifePersonalInformationScreen extends StatefulWidget {
@@ -24,26 +23,6 @@ class _MidwifePersonalInformationScreenState extends State<MidwifePersonalInform
   String _memberSince = '';
   
   final _repository = MidwifeRepositoryImpl(MidwifeApiService());
-  
-  // Reuse the avatar logic from user side
-  int _selectedAvatarIndex = 0;
-  final List<Map<String, dynamic>> _avatarOptions = [
-    {
-      'label': 'Original Photo',
-      'bgColor': AppColors.lightGreen,
-      'iconColor': AppColors.primaryGreen,
-      'icon': Icons.person,
-      'isAsset': true,
-      'assetPath': 'assets/images/home_illustration.png',
-    },
-    {
-      'label': 'Warm Amber',
-      'bgColor': AppColors.cream,
-      'iconColor': AppColors.accentYellow,
-      'icon': Icons.face_rounded,
-      'isAsset': false,
-    },
-  ];
 
   @override
   void initState() {

@@ -522,7 +522,6 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                         onPressed: () async {
                           final updatedName = nameController.text.trim();
                           final updatedPhone = phoneController.text.trim();
-                          final updatedEmail = emailController.text.trim();
 
                           if (updatedName.isNotEmpty) {
                             final nameParts = updatedName.trim().split(' ');
@@ -556,7 +555,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                               } else {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text(res.message ?? AppLocalizations.of(context)!.failedToUpdateStatus),
+                                     content: Text(res.message.isNotEmpty ? res.message : AppLocalizations.of(context)!.failedToUpdateStatus),
                                     backgroundColor: Colors.red,
                                   ),
                                 );

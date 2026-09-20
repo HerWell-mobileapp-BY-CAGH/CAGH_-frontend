@@ -1,12 +1,9 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:cagh_frontend/shared/models/appointment.dart';
 import 'package:cagh_frontend/features/consultations/data/services/chat_api_service.dart';
 import 'package:cagh_frontend/features/consultations/data/services/chat_websocket_service.dart';
 import 'package:intl/intl.dart';
-import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cagh_frontend/features/notifications/presentation/providers/notification_provider.dart';
@@ -34,10 +31,10 @@ class _MidwifeChatScreenState extends ConsumerState<MidwifeChatScreen> {
   final ScrollController _scrollController = ScrollController();
   
   final List<Map<String, dynamic>> _messages = [];
-  bool _isLoading = true;
-  String? _myUserId;
   String? _roomId;
   String? _roomStatus;
+  String _myUserId = '';
+  bool _isLoading = true;
   ChatWebSocketService? _wsService;
   bool _isUploadingFile = false;
   Timer? _pollingTimer;
@@ -223,7 +220,7 @@ class _MidwifeChatScreenState extends ConsumerState<MidwifeChatScreen> {
     if (senderId != null) {
       // In same-browser testing, _myUserId from SharedPreferences can be overwritten. 
       // Safest way is to check if the sender is NOT the patient.
-      isMe = senderId != widget.patientId;
+      isMe = (_myUserId.isNotEmpty && senderId == _myUserId) || (senderId != widget.patientId);
     }
 
     return {
@@ -467,7 +464,7 @@ class _MidwifeChatScreenState extends ConsumerState<MidwifeChatScreen> {
                   ),
                 if (text.isNotEmpty && !hasImage) const SizedBox(height: 6),
               ],
-              if (text.isNotEmpty && (!hasImage || attachment == null))
+              if (text.isNotEmpty && (!hasImage))
                 Text(
                   text,
                   style: TextStyle(
@@ -517,7 +514,7 @@ class _MidwifeChatScreenState extends ConsumerState<MidwifeChatScreen> {
         title: Row(
           children: [
             CircleAvatar(
-              backgroundColor: Theme.of(context).appBarTheme.foregroundColor?.withOpacity(0.2) ?? Colors.white24,
+              backgroundColor: Theme.of(context).appBarTheme.foregroundColor?.withValues(alpha: 0.2) ?? Colors.white24,
               child: Text(
                 widget.patientName.isNotEmpty ? widget.patientName[0].toUpperCase() : 'P',
                 style: TextStyle(color: Theme.of(context).appBarTheme.foregroundColor),
@@ -534,7 +531,7 @@ class _MidwifeChatScreenState extends ConsumerState<MidwifeChatScreen> {
                   ),
                   Text(
                     _roomStatus == 'ACCEPTED' ? AppLocalizations.of(context)!.online : (_roomStatus == 'REQUESTED' ? 'Request Pending' : 'Offline'),
-                    style: TextStyle(fontSize: 12, color: Theme.of(context).appBarTheme.foregroundColor?.withOpacity(0.7)),
+                    style: TextStyle(fontSize: 12, color: Theme.of(context).appBarTheme.foregroundColor?.withValues(alpha: 0.7)),
                   ),
                 ],
               ),
@@ -542,9 +539,11 @@ class _MidwifeChatScreenState extends ConsumerState<MidwifeChatScreen> {
           ],
         ),
       ),
-      body: Column(
-        children: [
-          if (_roomStatus == 'REQUESTED')
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
+              children: [
+                if (_roomStatus == 'REQUESTED')
             Expanded(
               child: ListView.builder(
                 padding: const EdgeInsets.all(16),
@@ -625,7 +624,7 @@ class _MidwifeChatScreenState extends ConsumerState<MidwifeChatScreen> {
                 color: Theme.of(context).cardColor,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, -5),
                   ),

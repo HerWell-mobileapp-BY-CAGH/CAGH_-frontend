@@ -85,7 +85,6 @@ Widget buildStatusIndicator(BuildContext context, AppointmentStatus status) {
         text = 'MISSED';
         break;
       case AppointmentStatus.unknown:
-      default:
         text = l10n.statusDeclined;
         break;
     }

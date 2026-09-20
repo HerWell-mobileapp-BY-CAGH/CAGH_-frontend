@@ -1,13 +1,12 @@
 import 'package:cagh_frontend/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:cagh_frontend/core/services/language_service.dart';
 import 'package:cagh_frontend/shared/widgets/floating_glass_nav_bar.dart';
 
 class UserBottomNavBar extends StatelessWidget {
   final int selectedIndex;
   final Function(int index)? onTabSelected;
 
-  UserBottomNavBar({
+  const UserBottomNavBar({
     super.key,
     this.selectedIndex = 1, // Default to Consult tab (1)
     this.onTabSelected,

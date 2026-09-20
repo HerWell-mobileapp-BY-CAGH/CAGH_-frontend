@@ -198,7 +198,6 @@ class GlobalCallWebSocketManager {
           return;
         }
         try {
-          AppLogger.d('[GLOBAL_WS RECEIVED] Frame (Gen $gen): $message');
           final data = jsonDecode(message);
           final eventType = (data['type'] ?? data['action'] ?? data['event'] ?? '').toString();
           final typeLowerEarly = eventType.toLowerCase();
@@ -207,6 +206,8 @@ class GlobalCallWebSocketManager {
             return;
           }
           if (typeLowerEarly == 'ping') return;
+
+          AppLogger.d('[GLOBAL_WS RECEIVED] Frame (Gen $gen): $message');
 
           final typeLower = typeLowerEarly;
           final isTerminalSignal = typeLower.contains('ended') ||

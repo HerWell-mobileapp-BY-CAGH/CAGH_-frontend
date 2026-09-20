@@ -33,7 +33,6 @@ class PasswordStrengthIndicator extends StatelessWidget {
         label = 'Strong';
         break;
       case PasswordStrength.none:
-      default:
         score = 0;
         color = Colors.grey.shade300;
         label = 'Password strength';

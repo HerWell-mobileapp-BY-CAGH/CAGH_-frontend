@@ -9,7 +9,7 @@ import 'package:cagh_frontend/l10n/app_localizations.dart';
 class FacilityDetailsScreen extends StatelessWidget {
   final HealthcareFacility facility;
 
-  FacilityDetailsScreen({super.key, required this.facility});
+  const FacilityDetailsScreen({super.key, required this.facility});
 
   @override
   Widget build(BuildContext context) {

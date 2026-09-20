@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:cagh_frontend/core/services/language_service.dart';
 import 'package:cagh_frontend/core/services/global_call_service.dart';
 import 'package:cagh_frontend/core/utils/app_logger.dart';
 import 'package:cagh_frontend/core/services/fcm_service.dart';
@@ -89,6 +88,7 @@ class _SplashScreenState extends State<SplashScreen> {
     super.dispose();
   }
 
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF4F7F5), // off-white/light-green background
@@ -108,7 +108,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 border: Border.all(color: Colors.white, width: 8),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 15,
                     offset: const Offset(0, 5),
                   ),

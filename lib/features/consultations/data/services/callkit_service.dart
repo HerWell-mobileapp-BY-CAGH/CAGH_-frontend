@@ -4,10 +4,6 @@ import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
 import 'package:cagh_frontend/shared/utils/name_formatter.dart';
 import 'package:cagh_frontend/core/services/global_call_service.dart';
 import 'package:cagh_frontend/core/utils/app_logger.dart';
-// TODO: confirm the real import paths for these two and uncomment —
-// they are referenced below but were not imported in the original file.
-// import 'package:cagh_frontend/core/services/incoming_call_action_dispatcher.dart';
-// import 'package:cagh_frontend/core/services/call_navigation_coordinator.dart';
 
 enum CallKitPresentationOperation {
   none,

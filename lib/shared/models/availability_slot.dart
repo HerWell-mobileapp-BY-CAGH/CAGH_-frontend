@@ -113,7 +113,7 @@ class AvailabilitySlot {
       String period = hour >= 12 ? 'PM' : 'AM';
       int displayHour = hour % 12;
       if (displayHour == 0) displayHour = 12;
-      return '${displayHour}:${minute.toString().padLeft(2, '0')} $period';
+      return '$displayHour:${minute.toString().padLeft(2, '0')} $period';
     }
 
     return '${formatTime(startTime)}–${formatTime(endTime)}';

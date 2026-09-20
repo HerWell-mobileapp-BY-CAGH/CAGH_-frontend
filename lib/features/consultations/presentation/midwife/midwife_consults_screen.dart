@@ -27,7 +27,6 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
   
   final _appointmentRepository = AppointmentRepositoryImpl(AppointmentApiService());
   List<Appointment> _appointments = [];
-  List<dynamic> _chatRooms = [];
   bool _isLoading = true;
 
   @override
@@ -507,18 +506,5 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
         ),
       ),
     );
-  }
-
-  bool _hasUnreadChat(Appointment apt) {
-    for (var room in _chatRooms) {
-      String? userId = room['user'] is Map ? room['user']['id']?.toString() : room['user']?.toString();
-      String? patientId = room['patient'] is Map ? room['patient']['id']?.toString() : room['patient']?.toString();
-
-      if (userId == apt.userId.toString() || patientId == apt.userId.toString() || room.toString().contains(apt.userId.toString())) {
-        if (room['status'] == 'REQUESTED') return true;
-        if (room['unread_count'] != null && (int.tryParse(room['unread_count'].toString()) ?? 0) > 0) return true;
-      }
-    }
-    return false;
   }
 }
