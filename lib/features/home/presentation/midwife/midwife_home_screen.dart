@@ -15,6 +15,7 @@ import 'package:cagh_frontend/features/consultations/data/services/midwife_api_s
 import 'package:cagh_frontend/shared/widgets/floating_glass_nav_bar.dart';
 import 'package:cagh_frontend/features/notifications/presentation/widgets/notification_bell.dart';
 import 'package:cagh_frontend/features/learning/presentation/screens/learning_center_screen.dart';
+import 'package:intl/intl.dart';
 
 class MidwifeHomeScreen extends ConsumerStatefulWidget {
   const MidwifeHomeScreen({super.key});
@@ -185,6 +186,21 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
     }
   }
 
+  bool _isToday(String dateStr) {
+    if (dateStr.trim().isEmpty) return false;
+    try {
+      final now = DateTime.now();
+      final todayStr = DateFormat('yyyy-MM-dd').format(now);
+      final cleanDateStr = dateStr.trim();
+      if (cleanDateStr.startsWith(todayStr)) return true;
+
+      final parsed = DateTime.parse(cleanDateStr).toLocal();
+      return parsed.year == now.year && parsed.month == now.month && parsed.day == now.day;
+    } catch (_) {
+      return false;
+    }
+  }
+
   // TAB 0: HOME DASHBOARD
   Widget _buildHomeDashboardTab() {
     final appointmentRepo = AppointmentRepositoryImpl(AppointmentApiService());
@@ -193,7 +209,11 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
       future: appointmentRepo.getMidwifeAppointments(),
       builder: (context, snapshot) {
         final aptList = snapshot.data ?? [];
-        final upcomingApts = aptList.where((a) => a.status == AppointmentStatus.confirmed).toList();
+        final upcomingApts = aptList.where((a) {
+          final isConfirmed = a.status == AppointmentStatus.confirmed;
+          return isConfirmed && _isToday(a.date);
+        }).toList()
+          ..sort((a, b) => a.startTime.compareTo(b.startTime));
 
         return SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
