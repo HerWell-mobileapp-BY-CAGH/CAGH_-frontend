@@ -97,6 +97,44 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
     }).toList();
   }
 
+  Future<void> _toggleFavorite(MidwifeProfile mw) async {
+    final idx = _midwives.indexWhere((m) => m.id == mw.id);
+    if (idx != -1) {
+      final updated = MidwifeProfile(
+        id: mw.id,
+        userId: mw.userId,
+        username: mw.username,
+        firstName: mw.firstName,
+        lastName: mw.lastName,
+        email: mw.email,
+        avatarUrl: mw.avatarUrl,
+        hospitalId: mw.hospitalId,
+        hospitalName: mw.hospitalName,
+        hospitalAddress: mw.hospitalAddress,
+        specialty: mw.specialty,
+        experienceYears: mw.experienceYears,
+        languages: mw.languages,
+        bio: mw.bio,
+        offeredConsultationTypes: mw.offeredConsultationTypes,
+        ratingAverage: mw.ratingAverage,
+        ratingCount: mw.ratingCount,
+        isFavorite: !mw.isFavorite,
+        isAcceptingBookings: mw.isAcceptingBookings,
+        consultationFee: mw.consultationFee,
+        verificationStatus: mw.verificationStatus,
+      );
+      setState(() {
+        _midwives[idx] = updated;
+        _applyFilters();
+      });
+      try {
+        await _repository.toggleFavorite(mw.id);
+      } catch (_) {
+        _fetchMidwives();
+      }
+    }
+  }
+
   String _getLocalizedSpecialty(BuildContext context, String specialty) {
     final lower = specialty.toLowerCase();
     final l10n = AppLocalizations.of(context)!;
@@ -286,26 +324,42 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                                           const Icon(Icons.check_circle, color: Colors.green, size: 18),
                                         ],
                                       ),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.cream,
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            const Icon(Icons.star, color: AppColors.accentYellow, size: 14),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              mw.ratingAverage.toStringAsFixed(1),
-                                              style: TextStyle(
-                                                fontSize: 12.5,
-                                                fontWeight: FontWeight.bold,
-                                                color: Theme.of(context).textTheme.bodyMedium?.color,
+                                      Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                            decoration: BoxDecoration(
+                                              color: AppColors.cream,
+                                              borderRadius: BorderRadius.circular(12),
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                const Icon(Icons.star, color: AppColors.accentYellow, size: 14),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  mw.ratingAverage.toStringAsFixed(1),
+                                                  style: TextStyle(
+                                                    fontSize: 12.5,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          GestureDetector(
+                                            onTap: () => _toggleFavorite(mw),
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(4.0),
+                                              child: Icon(
+                                                mw.isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                                                color: mw.isFavorite ? Colors.red : Colors.grey.shade400,
+                                                size: 20,
                                               ),
                                             ),
-                                          ],
-                                        ),
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ),
@@ -406,7 +460,7 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                                           midwife: mw,
                                         ),
                                       ),
-                                    );
+                                    ).then((_) => _fetchMidwives());
                                   },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: AppColors.primaryGreen,

@@ -6,6 +6,7 @@ import 'package:cagh_frontend/core/services/language_service.dart';
 import 'package:cagh_frontend/features/onboarding/presentation/user_type_selection_screen.dart';
 import 'package:cagh_frontend/features/profile/presentation/personal_information_screen.dart';
 import 'package:cagh_frontend/features/profile/presentation/appearance_accessibility_screen.dart';
+import 'package:cagh_frontend/features/profile/presentation/favorite_midwives_screen.dart';
 import 'package:cagh_frontend/features/consultations/presentation/user/user_inbox_screen.dart';
 import 'package:cagh_frontend/features/consultations/presentation/user/consult_hub_screen.dart';
 import 'package:cagh_frontend/features/notifications/presentation/providers/notification_provider.dart';
@@ -295,6 +296,19 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                             ),
                           );
                         }
+                      },
+                    ),
+                    _buildDivider(),
+                    _buildListTile(
+                      icon: Icons.favorite_border_rounded,
+                      title: AppLocalizations.of(context)!.savedMidwives,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const FavoriteMidwivesScreen(),
+                          ),
+                        );
                       },
                     ),
 
