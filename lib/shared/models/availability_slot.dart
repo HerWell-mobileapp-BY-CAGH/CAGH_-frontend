@@ -47,8 +47,6 @@ class AvailabilitySlot {
 
     final inPersonRaw = json['is_in_person'] ?? json['in_person'] ?? json['isInPerson'] ?? json['inPerson'];
     final voiceCallRaw = json['is_voice_call'] ?? json['voice_call'] ?? json['isVoiceCall'] ?? json['voiceCall'];
-    final consultType = (json['consultation_type'] ?? json['appointment_type'] ?? json['type'] ?? '').toString().toUpperCase();
-    final rawTypes = json['offered_consultation_types'] ?? json['consultation_types'] ?? json['types'];
 
     bool? inPerson;
     bool? voiceCall;
@@ -60,28 +58,56 @@ class AvailabilitySlot {
       voiceCall = parseBool(voiceCallRaw, false);
     }
 
-    if (rawTypes is List && rawTypes.isNotEmpty) {
-      for (final t in rawTypes) {
-        final str = t.toString().toLowerCase();
-        if (str.contains('voice') || str.contains('call') || str.contains('virtual') || str.contains('phone')) {
-          voiceCall = true;
+    final listCandidates = [
+      json['consultation_methods'],
+      json['offered_consultation_types'],
+      json['consultation_types'],
+      json['types'],
+    ];
+
+    bool foundInList = false;
+    for (final candidate in listCandidates) {
+      if (candidate is List && candidate.isNotEmpty) {
+        foundInList = true;
+        bool listHasVoice = false;
+        bool listHasPerson = false;
+        for (final t in candidate) {
+          final str = t.toString().toUpperCase();
+          if (str == 'BOTH' || str.contains('VOICE_AND_IN_PERSON')) {
+            listHasVoice = true;
+            listHasPerson = true;
+          }
+          if (str.contains('VOICE') || str.contains('CALL') || str.contains('VIRTUAL') || str.contains('PHONE')) {
+            listHasVoice = true;
+          }
+          if (str.contains('PERSON') || str.contains('HOSPITAL') || str.contains('CLINIC')) {
+            listHasPerson = true;
+          }
         }
-        if (str.contains('person') || str.contains('hospital') || str.contains('clinic')) {
-          inPerson = true;
+        if (listHasVoice && listHasPerson) {
+          if (inPersonRaw == null) inPerson = true;
+          if (voiceCallRaw == null) voiceCall = true;
+        } else if (listHasVoice) {
+          if (voiceCallRaw == null) voiceCall = true;
+          if (inPersonRaw == null) inPerson = false;
+        } else if (listHasPerson) {
+          if (inPersonRaw == null) inPerson = true;
+          if (voiceCallRaw == null) voiceCall = false;
         }
       }
     }
 
+    final consultType = (json['consultation_type'] ?? json['appointment_type'] ?? json['type'] ?? '').toString().toUpperCase();
     if (consultType.isNotEmpty) {
-      if (consultType.contains('VOICE') || consultType.contains('VIRTUAL') || consultType.contains('PHONE')) {
-        voiceCall = true;
-      }
-      if (consultType.contains('PERSON') || consultType.contains('HOSPITAL') || consultType.contains('CLINIC')) {
-        inPerson = true;
-      }
-      if (consultType == 'BOTH' || consultType.contains('ALL')) {
-        inPerson = true;
-        voiceCall = true;
+      if (consultType == 'BOTH' || consultType.contains('ALL') || consultType.contains('VOICE_AND_IN_PERSON')) {
+        if (inPersonRaw == null && !foundInList) inPerson = true;
+        if (voiceCallRaw == null && !foundInList) voiceCall = true;
+      } else if (consultType == 'VOICE_CALL' || consultType == 'VOICE' || consultType == 'VIRTUAL_VOICE' || consultType == 'VIRTUAL') {
+        if (voiceCallRaw == null && !foundInList) voiceCall = true;
+        if (inPersonRaw == null && !foundInList) inPerson = false;
+      } else if (consultType == 'IN_PERSON' || consultType == 'PERSON') {
+        if (inPersonRaw == null && !foundInList) inPerson = true;
+        if (voiceCallRaw == null && !foundInList) voiceCall = false;
       }
     }
 
@@ -101,6 +127,16 @@ class AvailabilitySlot {
       isInPerson: finalInPerson,
       isVoiceCall: finalVoiceCall,
     );
+  }
+
+  String get consultationTypeTagText {
+    if (isInPerson && isVoiceCall) {
+      return 'Voice / In-Person';
+    } else if (isVoiceCall) {
+      return 'Voice Call';
+    } else {
+      return 'In-Person';
+    }
   }
 
   String get formattedTimeRange {

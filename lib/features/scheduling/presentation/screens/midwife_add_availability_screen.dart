@@ -134,19 +134,21 @@ class _MidwifeAddAvailabilityScreenState extends State<MidwifeAddAvailabilityScr
 
     setState(() => _isLoading = true);
     try {
-      final dayOfWeek = _selectedDate!.weekday - 1; // 0 = Monday, 6 = Sunday
-      
       final startStr = '${_startTime!.hour.toString().padLeft(2, '0')}:${_startTime!.minute.toString().padLeft(2, '0')}:00';
       final endStr = '${_endTime!.hour.toString().padLeft(2, '0')}:${_endTime!.minute.toString().padLeft(2, '0')}:00';
       
-      String consultType = 'VOICE_CALL';
+      String consultType = 'VIRTUAL_VOICE';
       if (_inPerson && _voiceCall) {
         consultType = 'BOTH';
       } else if (_inPerson) {
         consultType = 'IN_PERSON';
       } else if (_voiceCall) {
-        consultType = 'VOICE_CALL';
+        consultType = 'VIRTUAL_VOICE';
       }
+
+      final List<String> methodsList = [];
+      if (_voiceCall) methodsList.add('VIRTUAL_VOICE');
+      if (_inPerson) methodsList.add('IN_PERSON');
 
       final List<String> typesList = [];
       if (_inPerson) typesList.add('In-Person');
@@ -155,7 +157,6 @@ class _MidwifeAddAvailabilityScreenState extends State<MidwifeAddAvailabilityScr
       final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate!);
       final Map<String, dynamic> payload = {
         'date': dateStr,
-        'day_of_week': dayOfWeek,
         'start_time': startStr,
         'end_time': endStr,
         'is_in_person': _inPerson,
@@ -163,6 +164,7 @@ class _MidwifeAddAvailabilityScreenState extends State<MidwifeAddAvailabilityScr
         'in_person': _inPerson,
         'voice_call': _voiceCall,
         'consultation_type': consultType,
+        'consultation_methods': methodsList,
         'appointment_type': consultType,
         'offered_consultation_types': typesList,
         'is_active': true,

@@ -282,40 +282,85 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
               ),
               const SizedBox(height: 12),
 
-              // Manage Schedule Button
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const MidwifeManageScheduleScreen()),
-                    );
-                  },
-                  icon: Icon(Icons.calendar_month, color: isDark ? AppColors.darkPrimary : AppColors.primaryGreen),
-                  label: Text(
-                    AppLocalizations.of(context)!.manageAvailability,
-                    style: TextStyle(color: isDark ? AppColors.darkPrimary : AppColors.primaryGreen, fontWeight: FontWeight.bold),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    side: BorderSide(color: isDark ? AppColors.darkPrimary : AppColors.primaryGreen),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Builder(
-                builder: (context) {
-                  return Text(
-                    AppLocalizations.of(context)!.setDaysAndTimesPrompt,
-                    style: TextStyle(
-                      color: isDark ? AppColors.darkTextSecondary : Colors.black54,
-                      fontSize: 13,
-                      height: 1.4,
-                    ),
+              // Manage Availability Action Card
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const MidwifeManageScheduleScreen()),
                   );
                 },
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.darkSurface : Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isDark ? AppColors.darkBorder : AppColors.primaryGreen.withValues(alpha: 0.2),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: isDark
+                            ? Colors.black.withValues(alpha: 0.2)
+                            : AppColors.primaryGreen.withValues(alpha: 0.06),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? AppColors.darkSurfaceVariant
+                              : AppColors.primaryGreen.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.edit_calendar_rounded,
+                          color: isDark ? AppColors.darkPrimary : AppColors.primaryGreen,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              AppLocalizations.of(context)!.manageAvailability,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: isDark ? AppColors.darkTextPrimary : const Color(0xFF182335),
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              AppLocalizations.of(context)!.setDaysAndTimesPrompt,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isDark ? AppColors.darkTextSecondary : Colors.black54,
+                                height: 1.3,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        color: isDark ? AppColors.darkTextSecondary : AppColors.primaryGreen,
+                        size: 22,
+                      ),
+                    ],
+                  ),
+                ),
               ),
               const SizedBox(height: 24),
 

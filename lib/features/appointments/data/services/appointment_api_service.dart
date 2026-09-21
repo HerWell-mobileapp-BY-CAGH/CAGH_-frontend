@@ -349,7 +349,25 @@ class AppointmentApiService {
       String msg = 'Failed to set availability.';
       try {
         final body = jsonDecode(response.body);
-        msg = body['detail'] ?? body['message'] ?? body['error'] ?? 'Status: ${response.statusCode}';
+        if (body is Map) {
+          if (body.containsKey('detail')) {
+            msg = body['detail'].toString();
+          } else if (body.containsKey('message')) {
+            msg = body['message'].toString();
+          } else if (body.containsKey('non_field_errors')) {
+            final nfe = body['non_field_errors'];
+            msg = nfe is List ? nfe.join(', ') : nfe.toString();
+          } else {
+            final parts = <String>[];
+            body.forEach((k, v) {
+              final valStr = v is List ? v.join(', ') : v.toString();
+              parts.add('$k: $valStr');
+            });
+            if (parts.isNotEmpty) msg = parts.join('; ');
+          }
+        } else if (body is String) {
+          msg = body;
+        }
       } catch (_) {
         msg = 'Status: ${response.statusCode}, Body: ${response.body}';
       }
@@ -376,7 +394,32 @@ class AppointmentApiService {
       final decoded = jsonDecode(response.body);
       return decoded is Map ? Map<String, dynamic>.from(decoded) : {};
     } else {
-      throw Exception('Failed to update availability. Status: ${response.statusCode}');
+      String msg = 'Failed to update availability.';
+      try {
+        final body = jsonDecode(response.body);
+        if (body is Map) {
+          if (body.containsKey('detail')) {
+            msg = body['detail'].toString();
+          } else if (body.containsKey('message')) {
+            msg = body['message'].toString();
+          } else if (body.containsKey('non_field_errors')) {
+            final nfe = body['non_field_errors'];
+            msg = nfe is List ? nfe.join(', ') : nfe.toString();
+          } else {
+            final parts = <String>[];
+            body.forEach((k, v) {
+              final valStr = v is List ? v.join(', ') : v.toString();
+              parts.add('$k: $valStr');
+            });
+            if (parts.isNotEmpty) msg = parts.join('; ');
+          }
+        } else if (body is String) {
+          msg = body;
+        }
+      } catch (_) {
+        msg = 'Status: ${response.statusCode}, Body: ${response.body}';
+      }
+      throw Exception(msg);
     }
   }
 

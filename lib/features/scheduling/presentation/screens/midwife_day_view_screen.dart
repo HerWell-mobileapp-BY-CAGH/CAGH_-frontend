@@ -268,12 +268,8 @@ class _MidwifeDayViewScreenState extends State<MidwifeDayViewScreen> {
                                             ),
                                             const SizedBox(width: 6),
                                             Text(
-                                              slot.isInPerson && slot.isVoiceCall 
-                                                  ? AppLocalizations.of(context)!.inPersonAndVoiceCall
-                                                  : slot.isVoiceCall
-                                                      ? AppLocalizations.of(context)!.onlinePhoneCall
-                                                      : AppLocalizations.of(context)!.inPersonHospital, 
-                                              style: TextStyle(fontSize: 14, color: textSecondary),
+                                              slot.consultationTypeTagText,
+                                              style: TextStyle(fontSize: 14, color: textSecondary, fontWeight: FontWeight.w600),
                                             ),
                                           ],
                                         ),
