@@ -18,44 +18,77 @@ class NearbySearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Row(
       children: [
         Expanded(
           child: Container(
+            height: 50,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             decoration: BoxDecoration(
-              color: Colors.grey.shade100, // Gray background
-              borderRadius: BorderRadius.circular(14), // Rounded rectangle
+              color: isDark ? AppColors.darkSurfaceVariant : Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: isDark ? AppColors.darkBorder : Colors.grey.shade300,
+                width: 1,
+              ),
             ),
-            child: TextField(
-              controller: controller,
-              onChanged: onChanged,
-              decoration: InputDecoration(
-                hintText: AppLocalizations.of(context)!.searchHospitalsClinicsMidwives,
-                hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 14),
-                prefixIcon: const Icon(Icons.search, color: AppColors.primaryGreen, size: 22),
-                suffixIcon: controller.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear, color: Colors.grey),
-                        onPressed: onClear,
-                      )
-                    : null,
-                border: InputBorder.none,
+            child: Center(
+              child: TextField(
+                controller: controller,
+                onChanged: onChanged,
+                style: TextStyle(
+                  color: isDark ? AppColors.darkTextPrimary : AppColors.textDark,
+                  fontSize: 14,
+                ),
+                decoration: InputDecoration(
+                  hintText: AppLocalizations.of(context)!.searchHospitalsClinicsMidwives,
+                  hintStyle: TextStyle(
+                    color: isDark ? AppColors.darkTextSecondary : Colors.grey.shade500,
+                    fontSize: 14,
+                  ),
+                  prefixIcon: Icon(
+                    Icons.search,
+                    color: isDark ? AppColors.darkPrimary : AppColors.primaryGreen,
+                    size: 22,
+                  ),
+                  suffixIcon: controller.text.isNotEmpty
+                      ? IconButton(
+                          icon: Icon(
+                            Icons.clear,
+                            color: isDark ? AppColors.darkTextSecondary : Colors.grey,
+                          ),
+                          onPressed: onClear,
+                        )
+                      : null,
+                  border: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                  filled: false,
+                ),
               ),
             ),
           ),
         ),
         const SizedBox(width: 12),
         Container(
-          height: 48,
-          width: 48,
+          height: 50,
+          width: 50,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? AppColors.darkSurfaceVariant : Colors.white,
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.primaryGreen, width: 1.5),
+            border: Border.all(
+              color: isDark ? AppColors.darkBorder : AppColors.primaryGreen,
+              width: 1.5,
+            ),
           ),
           child: IconButton(
-            icon: const Icon(Icons.filter_alt_outlined, color: AppColors.primaryGreen),
+            icon: Icon(
+              Icons.filter_alt_outlined,
+              color: isDark ? AppColors.darkPrimary : AppColors.primaryGreen,
+            ),
             onPressed: onFilterTapped,
           ),
         ),

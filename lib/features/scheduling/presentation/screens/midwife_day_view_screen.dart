@@ -5,6 +5,7 @@ import 'package:cagh_frontend/features/scheduling/presentation/screens/midwife_a
 import 'package:cagh_frontend/features/appointments/data/services/appointment_api_service.dart';
 import 'package:cagh_frontend/shared/models/availability_slot.dart';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 class MidwifeDayViewScreen extends StatefulWidget {
   final DateTime date;
@@ -65,15 +66,26 @@ class _MidwifeDayViewScreenState extends State<MidwifeDayViewScreen> {
   @override
   Widget build(BuildContext context) {
     final currentLocale = Localizations.localeOf(context).languageCode;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final primaryColor = isDark ? AppColors.darkPrimary : AppColors.primaryGreen;
+    final headerBg = isDark ? AppColors.darkBackground : AppColors.primaryGreen;
+    final sheetBg = isDark ? AppColors.darkBackground : const Color(0xFFFDFDFD);
+    final textPrimary = isDark ? AppColors.darkTextPrimary : const Color(0xFF182335);
+    final textSecondary = isDark ? AppColors.darkTextSecondary : Colors.black54;
+    final cardBg = isDark ? AppColors.darkSurface : Colors.white;
+    final cardBorder = isDark ? AppColors.darkBorder : Colors.black.withValues(alpha: 0.06);
+    final badgeBg = isDark ? AppColors.darkSurfaceVariant : const Color(0xFFEBF3EA);
+    final iconColor = isDark ? AppColors.darkPrimary : const Color(0xFF385A2E);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF385A2E), // Dark green background for scaffold
+      backgroundColor: headerBg,
       body: Column(
         children: [
           // Top Green App Bar
           Container(
             width: double.infinity,
-            color: const Color(0xFF385A2E),
+            color: headerBg,
             child: SafeArea(
               bottom: false,
               child: Padding(
@@ -110,9 +122,9 @@ class _MidwifeDayViewScreenState extends State<MidwifeDayViewScreen> {
           
           Expanded(
             child: Container(
-              decoration: const BoxDecoration(
-                color: Color(0xFFFDFDFD), // Very light/white background
-                borderRadius: BorderRadius.only(
+              decoration: BoxDecoration(
+                color: sheetBg,
+                borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(24),
                   topRight: Radius.circular(24),
                 ),
@@ -124,20 +136,24 @@ class _MidwifeDayViewScreenState extends State<MidwifeDayViewScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            DateFormat('EEEE, MMMM d, yyyy', currentLocale).format(widget.date),
-                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Color(0xFF182335)),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            AppLocalizations.of(context)!.calendarEntries(_slots.length),
-                            style: const TextStyle(fontSize: 14, color: Colors.black54, fontWeight: FontWeight.w500),
-                          ),
-                        ],
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              DateFormat('EEEE, MMMM d, yyyy', currentLocale).format(widget.date),
+                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: textPrimary),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              AppLocalizations.of(context)!.calendarEntries(_slots.length),
+                              style: TextStyle(fontSize: 14, color: textSecondary, fontWeight: FontWeight.w500),
+                            ),
+                          ],
+                        ),
                       ),
+                      const SizedBox(width: 8),
                       if (!widget.date.isBefore(DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day)))
                         GestureDetector(
                           onTap: () {
@@ -152,10 +168,11 @@ class _MidwifeDayViewScreenState extends State<MidwifeDayViewScreen> {
                             width: 48,
                             height: 48,
                             decoration: BoxDecoration(
-                              color: const Color(0xFFEBF3EA), // Light green
+                              color: badgeBg,
                               borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: isDark ? AppColors.darkBorder : Colors.transparent),
                             ),
-                            child: const Icon(Icons.add, color: Color(0xFF385A2E), size: 28),
+                            child: Icon(Icons.add, color: iconColor, size: 28),
                           ),
                         )
                     ],
@@ -164,7 +181,7 @@ class _MidwifeDayViewScreenState extends State<MidwifeDayViewScreen> {
                   
                   Expanded(
                     child: _isLoading 
-                        ? const Center(child: CircularProgressIndicator(color: Color(0xFF385A2E)))
+                        ? Center(child: CircularProgressIndicator(color: primaryColor))
                         : _slots.isEmpty
                             ? Center(
                                 child: Column(
@@ -173,21 +190,21 @@ class _MidwifeDayViewScreenState extends State<MidwifeDayViewScreen> {
                                     Container(
                                       width: 80,
                                       height: 80,
-                                      decoration: const BoxDecoration(
-                                        color: Color(0xFFE8EFE8),
+                                      decoration: BoxDecoration(
+                                        color: badgeBg,
                                         shape: BoxShape.circle,
                                       ),
-                                      child: const Icon(Icons.access_time, size: 40, color: Color(0xFF385A2E)),
+                                      child: Icon(Icons.access_time, size: 40, color: iconColor),
                                     ),
                                     const SizedBox(height: 24),
                                     Text(
                                       AppLocalizations.of(context)!.noAvailabilityCreated,
-                                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1C2A3A)),
+                                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textPrimary),
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
                                       AppLocalizations.of(context)!.addTimeSlotPrompt,
-                                      style: const TextStyle(fontSize: 13, color: Colors.black54),
+                                      style: TextStyle(fontSize: 13, color: textSecondary),
                                     ),
                                     const SizedBox(height: 100),
                                   ],
@@ -201,8 +218,8 @@ class _MidwifeDayViewScreenState extends State<MidwifeDayViewScreen> {
                                     margin: const EdgeInsets.only(bottom: 16),
                                     padding: const EdgeInsets.all(20),
                                     decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+                                      color: cardBg,
+                                      border: Border.all(color: cardBorder),
                                       borderRadius: BorderRadius.circular(16),
                                     ),
                                     child: Column(
@@ -213,22 +230,23 @@ class _MidwifeDayViewScreenState extends State<MidwifeDayViewScreen> {
                                           children: [
                                             Text(
                                               slot.formattedTimeRange,
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 18,
-                                                color: Color(0xFF182335),
+                                                color: textPrimary,
                                               ),
                                             ),
                                             Container(
                                               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                                               decoration: BoxDecoration(
-                                                color: const Color(0xFFEBF3EA),
+                                                color: badgeBg,
                                                 borderRadius: BorderRadius.circular(20),
+                                                border: Border.all(color: isDark ? AppColors.darkBorder : Colors.transparent),
                                               ),
                                               child: Text(
                                                 AppLocalizations.of(context)!.available,
-                                                style: const TextStyle(
-                                                  color: Color(0xFF385A2E),
+                                                style: TextStyle(
+                                                  color: iconColor,
                                                   fontSize: 12,
                                                   fontWeight: FontWeight.bold,
                                                 ),
@@ -246,7 +264,7 @@ class _MidwifeDayViewScreenState extends State<MidwifeDayViewScreen> {
                                                       ? Icons.call_outlined
                                                       : Icons.location_on_outlined,
                                               size: 18,
-                                              color: const Color(0xFF385A2E),
+                                              color: iconColor,
                                             ),
                                             const SizedBox(width: 6),
                                             Text(
@@ -255,12 +273,12 @@ class _MidwifeDayViewScreenState extends State<MidwifeDayViewScreen> {
                                                   : slot.isVoiceCall
                                                       ? AppLocalizations.of(context)!.onlinePhoneCall
                                                       : AppLocalizations.of(context)!.inPersonHospital, 
-                                              style: const TextStyle(fontSize: 14, color: Colors.black54),
+                                              style: TextStyle(fontSize: 14, color: textSecondary),
                                             ),
                                           ],
                                         ),
                                         const SizedBox(height: 16),
-                                        const Divider(height: 1, color: Colors.black12),
+                                        Divider(height: 1, color: isDark ? AppColors.darkBorder : Colors.black12),
                                         const SizedBox(height: 16),
                                         Row(
                                           mainAxisAlignment: MainAxisAlignment.end,
@@ -279,13 +297,13 @@ class _MidwifeDayViewScreenState extends State<MidwifeDayViewScreen> {
                                               },
                                               child: Row(
                                                 children: [
-                                                  const Icon(Icons.edit_outlined, size: 16, color: Color(0xFF385A2E)),
+                                                  Icon(Icons.edit_outlined, size: 16, color: iconColor),
                                                   const SizedBox(width: 6),
                                                   Text(
                                                     AppLocalizations.of(context)!.edit,
-                                                    style: const TextStyle(
+                                                    style: TextStyle(
                                                       fontWeight: FontWeight.bold,
-                                                      color: Color(0xFF182335),
+                                                      color: textPrimary,
                                                       fontSize: 14,
                                                     ),
                                                   ),
@@ -293,7 +311,7 @@ class _MidwifeDayViewScreenState extends State<MidwifeDayViewScreen> {
                                               ),
                                             ),
                                             const SizedBox(width: 20),
-                                            Container(width: 1, height: 14, color: Colors.black26),
+                                            Container(width: 1, height: 14, color: isDark ? AppColors.darkBorder : Colors.black26),
                                             const SizedBox(width: 20),
                                             InkWell(
                                               onTap: () async {

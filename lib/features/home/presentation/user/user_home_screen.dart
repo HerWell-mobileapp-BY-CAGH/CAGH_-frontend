@@ -11,6 +11,7 @@ import 'package:cagh_frontend/features/ai_assistant/presentation/ai_assistant_sc
 import 'package:cagh_frontend/shared/widgets/hotline_fab.dart';
 import 'package:cagh_frontend/features/notifications/presentation/widgets/notification_bell.dart';
 import 'package:cagh_frontend/features/learning/presentation/screens/learning_center_screen.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 class UserHomeScreen extends StatefulWidget {
   const UserHomeScreen({super.key});
@@ -143,7 +144,8 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
 
   // TAB 0: HOME / FEED
   Widget _buildHomeTab() {
-    final primaryDarkGreen = const Color(0xFF385A2E);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryDarkGreen = isDark ? AppColors.darkPrimary : AppColors.primaryGreen;
     
     return MediaQuery.removePadding(
       context: context,
@@ -157,7 +159,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFFDF5),
+              color: isDark ? AppColors.darkSurfaceVariant : const Color(0xFFFFFDF5),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Row(
@@ -171,23 +173,23 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                         children: [
                           Text(
                             AppLocalizations.of(context)!.welcome,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.w800,
-                              color: Color(0xFF385A2E),
+                              color: isDark ? AppColors.darkPrimary : AppColors.primaryGreen,
                             ),
                           ),
                           const SizedBox(width: 8),
-                          Icon(Icons.favorite, color: primaryDarkGreen, size: 20),
+                          Icon(Icons.favorite, color: isDark ? AppColors.darkPrimary : AppColors.primaryGreen, size: 20),
                         ],
                       ),
                       const SizedBox(height: 8),
                       Text(
                         AppLocalizations.of(context)!.welcomeSubtitle,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
                           height: 1.4,
-                          color: Colors.black87,
+                          color: isDark ? AppColors.darkTextSecondary : AppColors.sageGrey,
                         ),
                       ),
                     ],
@@ -504,7 +506,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w700,
-              color: isDark ? Colors.white : const Color(0xFF385A2E),
+              color: isDark ? AppColors.darkTextPrimary : AppColors.primaryGreen,
               height: 1.2,
             ),
           ),
@@ -513,14 +515,14 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             subtitle,
             style: TextStyle(
               fontSize: 11,
-              color: isDark ? Colors.grey.shade400 : Colors.black87,
+              color: isDark ? AppColors.darkTextSecondary : AppColors.sageGrey,
               height: 1.3,
             ),
           ),
           const SizedBox(height: 12),
           Align(
             alignment: Alignment.bottomRight,
-            child: Icon(Icons.arrow_forward_ios, size: 12, color: isDark ? Colors.white70 : const Color(0xFF385A2E)),
+            child: Icon(Icons.arrow_forward_ios, size: 12, color: isDark ? AppColors.darkPrimary : AppColors.primaryGreen),
           ),
         ],
       ),
@@ -547,10 +549,10 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF2E4823).withValues(alpha: 0.3) : iconBg,
+              color: isDark ? AppColors.darkSurfaceVariant : iconBg,
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: isDark ? const Color(0xFF81C784) : iconColor, size: 18),
+            child: Icon(icon, color: isDark ? AppColors.darkPrimary : iconColor, size: 18),
           ),
           const SizedBox(width: 12),
           Text(
@@ -558,12 +560,12 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: isDark ? Colors.white : Colors.black87,
+              color: isDark ? AppColors.darkTextPrimary : AppColors.textDark,
               height: 1.2,
             ),
           ),
           const SizedBox(width: 12),
-          Icon(Icons.arrow_forward_ios, size: 12, color: isDark ? Colors.white60 : Colors.black54),
+          Icon(Icons.arrow_forward_ios, size: 12, color: isDark ? AppColors.darkTextSecondary : AppColors.sageGrey),
         ],
       ),
     );

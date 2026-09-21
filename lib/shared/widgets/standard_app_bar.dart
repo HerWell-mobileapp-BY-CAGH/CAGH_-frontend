@@ -24,8 +24,8 @@ class StandardAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : AppColors.textDark;
-    final iconColor = isDark ? Colors.white : Colors.black87;
+    final textColor = isDark ? AppColors.darkTextPrimary : AppColors.textDark;
+    final iconColor = isDark ? AppColors.darkTextPrimary : Colors.black87;
 
     return AppBar(
       backgroundColor: backgroundColor ?? Colors.transparent,

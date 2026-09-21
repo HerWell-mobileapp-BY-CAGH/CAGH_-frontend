@@ -124,6 +124,12 @@ class _FavoriteMidwivesScreenState extends State<FavoriteMidwivesScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.darkPrimary : AppColors.primaryGreen;
+    final buttonGreen = isDark ? AppColors.darkButtonGreen : AppColors.primaryGreen;
+    final cardBg = isDark ? AppColors.darkSurface : Colors.white;
+    final cardBorder = isDark ? AppColors.darkBorder : AppColors.borderGreenGray;
+    final textPrimary = isDark ? AppColors.darkTextPrimary : AppColors.textDark;
+    final textSecondary = isDark ? AppColors.darkTextSecondary : AppColors.sageGrey;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -133,7 +139,7 @@ class _FavoriteMidwivesScreenState extends State<FavoriteMidwivesScreen> {
         showLanguage: false,
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primaryGreen))
+          ? Center(child: CircularProgressIndicator(color: primaryColor))
           : _errorMessage != null
               ? Center(
                   child: Padding(
@@ -145,7 +151,7 @@ class _FavoriteMidwivesScreenState extends State<FavoriteMidwivesScreen> {
                         const SizedBox(height: 12),
                         Text(
                           _errorMessage!,
-                          style: TextStyle(fontSize: 14, color: Colors.grey.shade600, fontWeight: FontWeight.bold),
+                          style: TextStyle(fontSize: 14, color: textSecondary, fontWeight: FontWeight.bold),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 16),
@@ -154,7 +160,7 @@ class _FavoriteMidwivesScreenState extends State<FavoriteMidwivesScreen> {
                           icon: const Icon(Icons.refresh, color: Colors.white, size: 18),
                           label: const Text('Retry', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primaryGreen,
+                            backgroundColor: buttonGreen,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                           ),
                         ),
@@ -164,7 +170,7 @@ class _FavoriteMidwivesScreenState extends State<FavoriteMidwivesScreen> {
                 )
               : RefreshIndicator(
                   onRefresh: _fetchFavorites,
-                  color: AppColors.primaryGreen,
+                  color: primaryColor,
                   child: _favoriteMidwives.isEmpty
                       ? ListView(
                           physics: const AlwaysScrollableScrollPhysics(),
@@ -178,13 +184,13 @@ class _FavoriteMidwivesScreenState extends State<FavoriteMidwivesScreen> {
                                     Container(
                                       padding: const EdgeInsets.all(20),
                                       decoration: BoxDecoration(
-                                        color: isDark ? Colors.grey.shade900 : const Color(0xFFF1F8E9),
+                                        color: isDark ? AppColors.darkSurfaceVariant : const Color(0xFFF1F8E9),
                                         shape: BoxShape.circle,
                                       ),
-                                      child: const Icon(
+                                      child: Icon(
                                         Icons.favorite_border_rounded,
                                         size: 52,
-                                        color: AppColors.primaryGreen,
+                                        color: primaryColor,
                                       ),
                                     ),
                                     const SizedBox(height: 20),
@@ -193,7 +199,7 @@ class _FavoriteMidwivesScreenState extends State<FavoriteMidwivesScreen> {
                                       style: TextStyle(
                                         fontSize: 20,
                                         fontWeight: FontWeight.bold,
-                                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                        color: textPrimary,
                                       ),
                                     ),
                                     const SizedBox(height: 8),
@@ -202,7 +208,7 @@ class _FavoriteMidwivesScreenState extends State<FavoriteMidwivesScreen> {
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
                                         fontSize: 13.5,
-                                        color: isDark ? Colors.grey.shade400 : const Color(0xFF64748B),
+                                        color: textSecondary,
                                         height: 1.45,
                                       ),
                                     ),
@@ -224,7 +230,7 @@ class _FavoriteMidwivesScreenState extends State<FavoriteMidwivesScreen> {
                                           style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
                                         ),
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor: AppColors.primaryGreen,
+                                          backgroundColor: buttonGreen,
                                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                                           elevation: 0,
                                           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -247,15 +253,15 @@ class _FavoriteMidwivesScreenState extends State<FavoriteMidwivesScreen> {
                             return Container(
                               margin: const EdgeInsets.only(bottom: 16),
                               decoration: BoxDecoration(
-                                color: isDark ? Colors.grey.shade900 : Colors.white,
+                                color: cardBg,
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
-                                  color: isDark ? Colors.grey.shade800 : const Color(0xFFE2E8F0),
+                                  color: cardBorder,
                                   width: 1,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.03),
+                                    color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
                                     blurRadius: 10,
                                     offset: const Offset(0, 3),
                                   ),
@@ -278,10 +284,10 @@ class _FavoriteMidwivesScreenState extends State<FavoriteMidwivesScreen> {
                                           children: [
                                             CircleAvatar(
                                               radius: 26,
-                                              backgroundColor: const Color(0xFFE8F5E9),
+                                              backgroundColor: isDark ? AppColors.darkSurfaceVariant : const Color(0xFFE8F5E9),
                                               backgroundImage: mw.avatarUrl != null ? NetworkImage(mw.avatarUrl!) : null,
                                               child: mw.avatarUrl == null
-                                                  ? const Icon(Icons.person, color: AppColors.primaryGreen, size: 28)
+                                                  ? Icon(Icons.person, color: primaryColor, size: 28)
                                                   : null,
                                             ),
                                             const SizedBox(width: 14),
@@ -297,21 +303,21 @@ class _FavoriteMidwivesScreenState extends State<FavoriteMidwivesScreen> {
                                                           style: TextStyle(
                                                             fontSize: 16.5,
                                                             fontWeight: FontWeight.bold,
-                                                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                                            color: textPrimary,
                                                           ),
                                                           overflow: TextOverflow.ellipsis,
                                                         ),
                                                       ),
-                                                      const Icon(Icons.verified_rounded, color: AppColors.primaryGreen, size: 17),
+                                                      Icon(Icons.verified_rounded, color: primaryColor, size: 17),
                                                     ],
                                                   ),
                                                   const SizedBox(height: 3),
                                                   Text(
                                                     mw.specialty,
-                                                    style: const TextStyle(
+                                                    style: TextStyle(
                                                       fontSize: 13,
                                                       fontWeight: FontWeight.w600,
-                                                      color: AppColors.primaryGreen,
+                                                      color: primaryColor,
                                                     ),
                                                   ),
                                                   if (mw.hospitalName.isNotEmpty) ...[
@@ -320,7 +326,7 @@ class _FavoriteMidwivesScreenState extends State<FavoriteMidwivesScreen> {
                                                       mw.hospitalName,
                                                       style: TextStyle(
                                                         fontSize: 12,
-                                                        color: isDark ? Colors.grey.shade400 : const Color(0xFF64748B),
+                                                        color: textSecondary,
                                                       ),
                                                       overflow: TextOverflow.ellipsis,
                                                     ),
@@ -343,19 +349,19 @@ class _FavoriteMidwivesScreenState extends State<FavoriteMidwivesScreen> {
                                             Container(
                                               padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                                               decoration: BoxDecoration(
-                                                color: const Color(0xFFFFF8E1),
+                                                color: isDark ? AppColors.darkSurfaceVariant : const Color(0xFFFFF8E1),
                                                 borderRadius: BorderRadius.circular(10),
                                               ),
                                               child: Row(
                                                 children: [
-                                                  const Icon(Icons.star_rounded, color: AppColors.accentYellow, size: 15),
+                                                  Icon(Icons.star_rounded, color: isDark ? AppColors.darkAccentYellow : AppColors.accentYellow, size: 15),
                                                   const SizedBox(width: 4),
                                                   Text(
                                                     '${mw.ratingAverage.toStringAsFixed(1)} (${mw.ratingCount})',
-                                                    style: const TextStyle(
+                                                    style: TextStyle(
                                                       fontSize: 12,
                                                       fontWeight: FontWeight.bold,
-                                                      color: Color(0xFF5D4037),
+                                                      color: isDark ? AppColors.darkTextPrimary : const Color(0xFF5D4037),
                                                     ),
                                                   ),
                                                 ],
@@ -365,22 +371,22 @@ class _FavoriteMidwivesScreenState extends State<FavoriteMidwivesScreen> {
                                             Container(
                                               padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                                               decoration: BoxDecoration(
-                                                color: const Color(0xFFE8F5E9),
+                                                color: isDark ? AppColors.darkSurfaceVariant : const Color(0xFFE8F5E9),
                                                 borderRadius: BorderRadius.circular(10),
                                               ),
                                               child: Text(
                                                 '${mw.experienceYears}+ Yrs Exp',
-                                                style: const TextStyle(
+                                                style: TextStyle(
                                                   fontSize: 12,
                                                   fontWeight: FontWeight.bold,
-                                                  color: AppColors.primaryGreen,
+                                                  color: primaryColor,
                                                 ),
                                               ),
                                             ),
                                           ],
                                         ),
                                         const SizedBox(height: 16),
-                                        const Divider(height: 1),
+                                        Divider(height: 1, color: isDark ? AppColors.darkBorder : AppColors.borderGreenGray),
                                         const SizedBox(height: 12),
 
                                         // Action Buttons Row (Book & Chat)
@@ -399,8 +405,8 @@ class _FavoriteMidwivesScreenState extends State<FavoriteMidwivesScreen> {
                                                 icon: const Icon(Icons.chat_bubble_outline_rounded, size: 16),
                                                 label: const Text('Message', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                                                 style: OutlinedButton.styleFrom(
-                                                  foregroundColor: AppColors.primaryGreen,
-                                                  side: const BorderSide(color: AppColors.primaryGreen),
+                                                  foregroundColor: primaryColor,
+                                                  side: BorderSide(color: primaryColor),
                                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                                                   padding: const EdgeInsets.symmetric(vertical: 10),
                                                 ),
@@ -413,7 +419,7 @@ class _FavoriteMidwivesScreenState extends State<FavoriteMidwivesScreen> {
                                                 icon: const Icon(Icons.calendar_today_rounded, color: Colors.white, size: 16),
                                                 label: const Text('Book Profile', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
                                                 style: ElevatedButton.styleFrom(
-                                                  backgroundColor: AppColors.primaryGreen,
+                                                  backgroundColor: buttonGreen,
                                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                                                   elevation: 0,
                                                   padding: const EdgeInsets.symmetric(vertical: 10),

@@ -570,11 +570,11 @@ class _LearningCenterScreenState extends State<LearningCenterScreen> {
               onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
                 hintText: widget.isMidwife ? 'Search clinical guides & topics...' : 'Search health guides & topics...',
-                hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
-                prefixIcon: const Icon(Icons.search_rounded, color: AppColors.primaryGreen, size: 22),
+                hintStyle: TextStyle(color: isDark ? AppColors.darkTextSecondary : Colors.grey.shade400, fontSize: 14),
+                prefixIcon: Icon(Icons.search_rounded, color: isDark ? AppColors.darkPrimary : AppColors.primaryGreen, size: 22),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(Icons.close_rounded, size: 18, color: Colors.grey),
+                        icon: Icon(Icons.close_rounded, size: 18, color: isDark ? AppColors.darkTextSecondary : Colors.grey),
                         onPressed: () {
                           _searchController.clear();
                           setState(() {});
@@ -582,19 +582,19 @@ class _LearningCenterScreenState extends State<LearningCenterScreen> {
                       )
                     : null,
                 filled: true,
-                fillColor: isDark ? Colors.grey.shade900 : Colors.white,
+                fillColor: isDark ? AppColors.darkSurfaceVariant : Colors.white,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(color: isDark ? Colors.grey.shade800 : const Color(0xFFE2E8F0)),
+                  borderSide: BorderSide(color: isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0)),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(color: isDark ? Colors.grey.shade800 : const Color(0xFFE2E8F0)),
+                  borderSide: BorderSide(color: isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0)),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
-                  borderSide: const BorderSide(color: AppColors.primaryGreen, width: 1.5),
+                  borderSide: BorderSide(color: isDark ? AppColors.darkPrimary : AppColors.primaryGreen, width: 1.5),
                 ),
               ),
             ),
@@ -625,14 +625,14 @@ class _LearningCenterScreenState extends State<LearningCenterScreen> {
                         fontWeight: isSel ? FontWeight.bold : FontWeight.w500,
                         color: isSel
                             ? Colors.white
-                            : (isDark ? Colors.grey.shade300 : const Color(0xFF475569)),
+                            : (isDark ? AppColors.darkTextSecondary : const Color(0xFF475569)),
                       ),
-                      backgroundColor: isDark ? Colors.grey.shade900 : Colors.white,
-                      selectedColor: AppColors.primaryGreen,
+                      backgroundColor: isDark ? AppColors.darkSurfaceVariant : Colors.white,
+                      selectedColor: isDark ? AppColors.darkButtonGreen : AppColors.primaryGreen,
                       side: BorderSide(
                         color: isSel
-                            ? AppColors.primaryGreen
-                            : (isDark ? Colors.grey.shade800 : const Color(0xFFCBD5E1)),
+                            ? (isDark ? AppColors.darkButtonGreen : AppColors.primaryGreen)
+                            : (isDark ? AppColors.darkBorder : const Color(0xFFCBD5E1)),
                       ),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -650,20 +650,20 @@ class _LearningCenterScreenState extends State<LearningCenterScreen> {
                 child: Center(
                   child: Column(
                     children: [
-                      Icon(Icons.search_off_rounded, size: 48, color: Colors.grey.shade400),
+                      Icon(Icons.search_off_rounded, size: 48, color: isDark ? AppColors.darkTextSecondary : Colors.grey.shade400),
                       const SizedBox(height: 12),
                       Text(
                         'No learning modules found',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white70 : const Color(0xFF334155),
+                          color: isDark ? AppColors.darkTextPrimary : const Color(0xFF334155),
                         ),
                       ),
                       const SizedBox(height: 6),
                       Text(
                         'Try clearing your search query or selecting "All" categories.',
-                        style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
+                        style: TextStyle(fontSize: 13, color: isDark ? AppColors.darkTextSecondary : Colors.grey.shade500),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 16),
@@ -674,8 +674,8 @@ class _LearningCenterScreenState extends State<LearningCenterScreen> {
                             _selectedCategory = 'All';
                           });
                         },
-                        icon: const Icon(Icons.refresh_rounded, size: 16, color: AppColors.primaryGreen),
-                        label: const Text('Reset Filters', style: TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.bold)),
+                        icon: Icon(Icons.refresh_rounded, size: 16, color: isDark ? AppColors.darkPrimary : AppColors.primaryGreen),
+                        label: Text('Reset Filters', style: TextStyle(color: isDark ? AppColors.darkPrimary : AppColors.primaryGreen, fontWeight: FontWeight.bold)),
                       ),
                     ],
                   ),
@@ -696,10 +696,10 @@ class _LearningCenterScreenState extends State<LearningCenterScreen> {
                   return Container(
                     margin: const EdgeInsets.only(bottom: 14),
                     decoration: BoxDecoration(
-                      color: isDark ? Colors.grey.shade900 : Colors.white,
+                      color: isDark ? AppColors.darkSurface : Colors.white,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: isDark ? Colors.grey.shade800 : const Color(0xFFE2E8F0),
+                        color: isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
                         width: 1,
                       ),
                       boxShadow: [

@@ -221,7 +221,7 @@ class ConsultHubScreenState extends State<ConsultHubScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(18),
                           decoration: BoxDecoration(
-                            color: isDark ? Colors.grey.shade900 : AppColors.backgroundMintWhiteAlt,
+                            color: isDark ? AppColors.darkSurface : AppColors.backgroundMintWhiteAlt,
                             gradient: isDark ? null : const LinearGradient(
                               colors: [AppColors.backgroundMintWhiteAlt, AppColors.backgroundMintWhite],
                               begin: Alignment.topLeft,
@@ -229,12 +229,12 @@ class ConsultHubScreenState extends State<ConsultHubScreen> {
                             ),
                             borderRadius: BorderRadius.circular(18),
                             border: Border.all(
-                              color: isDark ? Colors.grey.shade800 : AppColors.borderGreenGray,
+                              color: isDark ? AppColors.darkBorder : AppColors.borderGreenGray,
                               width: 1.2,
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.primaryGreen.withValues(alpha: 0.08),
+                                color: isDark ? Colors.black.withValues(alpha: 0.2) : AppColors.primaryGreen.withValues(alpha: 0.08),
                                 blurRadius: 14,
                                 offset: const Offset(0, 4),
                               ),
@@ -249,11 +249,11 @@ class ConsultHubScreenState extends State<ConsultHubScreen> {
                                     width: 46,
                                     height: 46,
                                     decoration: BoxDecoration(
-                                      color: AppColors.primaryGreen,
+                                      color: isDark ? AppColors.darkButtonGreen : AppColors.primaryGreen,
                                       borderRadius: BorderRadius.circular(14),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: AppColors.primaryGreen.withValues(alpha: 0.25),
+                                          color: (isDark ? AppColors.darkPrimary : AppColors.primaryGreen).withValues(alpha: 0.25),
                                           blurRadius: 8,
                                           offset: const Offset(0, 3),
                                         ),
@@ -272,9 +272,9 @@ class ConsultHubScreenState extends State<ConsultHubScreen> {
                                       width: 10,
                                       height: 10,
                                       decoration: BoxDecoration(
-                                        color: AppColors.accentYellow,
+                                        color: isDark ? AppColors.darkAccentYellow : AppColors.accentYellow,
                                         shape: BoxShape.circle,
-                                        border: Border.all(color: Colors.white, width: 1.5),
+                                        border: Border.all(color: isDark ? AppColors.darkSurface : Colors.white, width: 1.5),
                                       ),
                                     ),
                                   ),
@@ -290,7 +290,7 @@ class ConsultHubScreenState extends State<ConsultHubScreen> {
                                       style: TextStyle(
                                         fontSize: 16.5,
                                         fontWeight: FontWeight.bold,
-                                        color: isDark ? Colors.white : AppColors.primaryGreenDarker,
+                                        color: isDark ? AppColors.darkTextPrimary : AppColors.primaryGreenDarker,
                                         letterSpacing: 0.2,
                                       ),
                                     ),
@@ -299,7 +299,7 @@ class ConsultHubScreenState extends State<ConsultHubScreen> {
                                       AppLocalizations.of(context)!.connectWithCertifiedMidwife,
                                       style: TextStyle(
                                         fontSize: 13,
-                                        color: isDark ? Colors.grey.shade400 : AppColors.sageGrey,
+                                        color: isDark ? AppColors.darkTextSecondary : AppColors.sageGrey,
                                         height: 1.35,
                                       ),
                                     ),
@@ -310,8 +310,8 @@ class ConsultHubScreenState extends State<ConsultHubScreen> {
                               Container(
                                 width: 32,
                                 height: 32,
-                                decoration: const BoxDecoration(
-                                  color: AppColors.primaryGreen,
+                                decoration: BoxDecoration(
+                                  color: isDark ? AppColors.darkButtonGreen : AppColors.primaryGreen,
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Icon(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/healthcare_facility.dart';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
 import 'midwife_booking_screen.dart';
 
 class MidwifeDetailScreen extends StatelessWidget {
@@ -11,20 +12,30 @@ class MidwifeDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final primaryColor = isDark ? AppColors.darkPrimary : const Color(0xFF385A2E);
+    final buttonGreen = isDark ? AppColors.darkButtonGreen : const Color(0xFF385A2E);
+    final textPrimary = isDark ? AppColors.darkTextPrimary : const Color(0xFF182335);
+    final textSecondary = isDark ? AppColors.darkTextSecondary : Colors.black54;
+    final labelColor = isDark ? AppColors.darkTextSecondary : Colors.black45;
+    final cardBg = isDark ? AppColors.darkSurface : const Color(0xFFEBF3EA);
+    final chipBg = isDark ? AppColors.darkSurfaceVariant : Colors.white;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAEB), // Very light pale green/yellow background
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: Container(
             padding: const EdgeInsets.all(8),
-            decoration: const BoxDecoration(
-              color: Colors.white,
+            decoration: BoxDecoration(
+              color: chipBg,
               shape: BoxShape.circle,
+              border: Border.all(color: isDark ? AppColors.darkBorder : Colors.transparent),
             ),
-            child: const Icon(Icons.arrow_back, color: Color(0xFF385A2E), size: 20),
+            child: Icon(Icons.arrow_back, color: primaryColor, size: 20),
           ),
           onPressed: () => Navigator.pop(context),
         ),
@@ -40,46 +51,47 @@ class MidwifeDetailScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEBF3EA),
+                      color: isDark ? AppColors.darkSurfaceVariant : const Color(0xFFEBF3EA),
                       borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: isDark ? AppColors.darkBorder : Colors.transparent),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.check_circle, color: Color(0xFF385A2E), size: 14),
+                        Icon(Icons.check_circle, color: primaryColor, size: 14),
                         const SizedBox(width: 4),
-                        Text(l10n.verifiedMidwife, style: const TextStyle(color: Color(0xFF385A2E), fontSize: 12, fontWeight: FontWeight.bold)),
+                        Text(l10n.verifiedMidwife, style: TextStyle(color: primaryColor, fontSize: 12, fontWeight: FontWeight.bold)),
                       ],
                     ),
                   ),
                 const SizedBox(height: 16),
                 Text(
                   facility.name.toLowerCase(),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.w800,
-                    color: Color(0xFF182335),
+                    color: textPrimary,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   l10n.maternalHealthSpecialist,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF385A2E),
+                    color: primaryColor,
                   ),
                 ),
                 const SizedBox(height: 32),
                 
                 Text(
                   l10n.aboutMidwife(facility.name.split(" ").first),
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF182335)),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textPrimary),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   l10n.dedicatedMidwifeDesc,
-                  style: const TextStyle(fontSize: 15, color: Colors.black54, height: 1.4),
+                  style: TextStyle(fontSize: 15, color: textSecondary, height: 1.4),
                 ),
                 const SizedBox(height: 32),
                 
@@ -90,17 +102,18 @@ class MidwifeDetailScreen extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEBF3EA), // Light green
+                          color: cardBg,
                           borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: isDark ? AppColors.darkBorder : Colors.transparent),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(l10n.hospital, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black45)),
+                            Text(l10n.hospital, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: labelColor)),
                             const SizedBox(height: 8),
                             Text(
                               facility.address.isNotEmpty ? facility.address : 'Tikur Anbessa',
-                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF182335)),
+                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: textPrimary),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -113,17 +126,18 @@ class MidwifeDetailScreen extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEBF3EA), // Light green
+                          color: cardBg,
                           borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: isDark ? AppColors.darkBorder : Colors.transparent),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(l10n.experience, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black45)),
+                            Text(l10n.experience, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: labelColor)),
                             const SizedBox(height: 8),
-                            const Text(
+                            Text(
                               '0+ Years',
-                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF182335)),
+                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: textPrimary),
                             ),
                           ],
                         ),
@@ -134,25 +148,25 @@ class MidwifeDetailScreen extends StatelessWidget {
                 const SizedBox(height: 32),
 
                 // Languages
-                Text(l10n.languages, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black45)),
+                Text(l10n.languages, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: labelColor)),
                 const SizedBox(height: 12),
                 Wrap(
                   spacing: 12,
                   children: [
-                    _buildLanguageChip('English'),
-                    _buildLanguageChip('አማርኛ'),
+                    _buildLanguageChip(context, 'English'),
+                    _buildLanguageChip(context, 'አማርኛ'),
                   ],
                 ),
                 const SizedBox(height: 32),
 
                 // Offered Consultations
-                Text(l10n.offeredConsultations, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black45)),
+                Text(l10n.offeredConsultations, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: labelColor)),
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    _buildConsultationChip(Icons.home_outlined, l10n.inPerson),
+                    _buildConsultationChip(context, Icons.home_outlined, l10n.inPerson),
                     const SizedBox(width: 12),
-                    _buildConsultationChip(Icons.videocam_outlined, l10n.voiceCall),
+                    _buildConsultationChip(context, Icons.videocam_outlined, l10n.voiceCall),
                   ],
                 ),
               ],
@@ -165,10 +179,10 @@ class MidwifeDetailScreen extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
               decoration: BoxDecoration(
-                color: const Color(0xFFF9FAEB),
+                color: isDark ? AppColors.darkSurface : const Color(0xFFF9FAEB),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFF9FAEB).withValues(alpha: 0.9),
+                    color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
                     blurRadius: 20,
                     spreadRadius: 10,
                     offset: const Offset(0, -10),
@@ -180,11 +194,11 @@ class MidwifeDetailScreen extends StatelessWidget {
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: () {},
-                      icon: const Icon(Icons.chat_bubble_outline, color: Color(0xFF385A2E), size: 20),
-                      label: Text(l10n.message, style: const TextStyle(color: Color(0xFF385A2E), fontSize: 16, fontWeight: FontWeight.bold)),
+                      icon: Icon(Icons.chat_bubble_outline, color: primaryColor, size: 20),
+                      label: Text(l10n.message, style: TextStyle(color: primaryColor, fontSize: 16, fontWeight: FontWeight.bold)),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        side: const BorderSide(color: Color(0xFF385A2E)),
+                        side: BorderSide(color: primaryColor),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                     ),
@@ -203,7 +217,7 @@ class MidwifeDetailScreen extends StatelessWidget {
                       icon: const Icon(Icons.calendar_month_outlined, color: Colors.white, size: 20),
                       label: Text(l10n.book, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF385A2E),
+                        backgroundColor: buttonGreen,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         elevation: 0,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -219,36 +233,47 @@ class MidwifeDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildLanguageChip(String lang) {
+  Widget _buildLanguageChip(BuildContext context, String lang) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.darkPrimary : const Color(0xFF385A2E);
+    final chipBg = isDark ? AppColors.darkSurfaceVariant : Colors.white;
+    final chipBorder = isDark ? AppColors.darkBorder : Colors.black12;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: chipBg,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.black12),
+        border: Border.all(color: chipBorder),
       ),
       child: Text(
         lang,
-        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF385A2E)),
+        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: primaryColor),
       ),
     );
   }
 
-  Widget _buildConsultationChip(IconData icon, String text) {
+  Widget _buildConsultationChip(BuildContext context, IconData icon, String text) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.darkPrimary : Colors.black87;
+    final chipBg = isDark ? AppColors.darkSurfaceVariant : Colors.white;
+    final chipBorder = isDark ? AppColors.darkBorder : Colors.transparent;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: chipBg,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: chipBorder),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 18, color: Colors.black87),
+          Icon(icon, size: 18, color: primaryColor),
           const SizedBox(width: 8),
           Text(
             text,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87),
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: primaryColor),
           ),
         ],
       ),

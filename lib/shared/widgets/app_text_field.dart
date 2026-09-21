@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 class AppTextField extends StatefulWidget {
   final TextEditingController controller;
@@ -31,12 +32,13 @@ class _AppTextFieldState extends State<AppTextField> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : const Color(0xFF1C1C1E);
-    final fillColor = isDark ? Colors.grey.shade900 : Colors.white;
-    final hintColor = isDark ? Colors.grey.shade500 : const Color(0xFFA0A59D);
-    final iconColor = isDark ? Colors.grey.shade400 : const Color(0xFF385A2E); // Dark green for prefix icons
-    final borderColor = isDark ? Colors.white12 : const Color(0xFFE2E7E1);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final textColor = theme.colorScheme.onSurface;
+    final fillColor = isDark ? AppColors.darkSurfaceVariant : Colors.white;
+    final hintColor = theme.colorScheme.onSurfaceVariant;
+    final iconColor = theme.colorScheme.primary;
+    final borderColor = theme.colorScheme.outline;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -74,7 +76,7 @@ class _AppTextFieldState extends State<AppTextField> {
                 ? IconButton(
                     icon: Icon(
                       _obscureText ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                      color: const Color(0xFF1C1C1E), // Eye icon is dark in the design
+                      color: theme.colorScheme.onSurfaceVariant,
                       size: 22,
                     ),
                     onPressed: () {

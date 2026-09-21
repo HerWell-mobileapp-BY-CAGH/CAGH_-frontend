@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 enum SnackBarType { success, error, warning, info }
 
@@ -14,7 +13,7 @@ class CustomSnackBar {
     SnackBarType? type,
     bool isError = false,
     bool isSuccess = false,
-    Duration duration = const Duration(seconds: 3),
+    Duration duration = const Duration(seconds: 4),
   }) {
     _dismissTimer?.cancel();
     _currentEntry?.remove();
@@ -31,7 +30,7 @@ class CustomSnackBar {
       final lower = message.toLowerCase();
       if (lower.contains('success') || lower.contains('confirmed') || lower.contains('approved') || lower.contains('verified')) {
         resolvedType = SnackBarType.success;
-      } else if (lower.contains('fail') || lower.contains('error') || lower.contains('denied') || lower.contains('invalid')) {
+      } else if (lower.contains('fail') || lower.contains('error') || lower.contains('denied') || lower.contains('invalid') || lower.contains('only') || lower.contains('cannot')) {
         resolvedType = SnackBarType.error;
       } else if (lower.contains('declined') || lower.contains('cancelled') || lower.contains('canceled') || lower.contains('warning')) {
         resolvedType = SnackBarType.warning;
@@ -48,24 +47,46 @@ class CustomSnackBar {
     }
 
     Color backgroundColor;
+    Color textColor;
+    Color iconColor;
+    Color closeIconColor;
+    Color borderColor;
     IconData icon;
-    Color iconColor = Colors.white;
 
     switch (resolvedType) {
       case SnackBarType.success:
-        backgroundColor = const Color(0xFF315E26); // Primary Green
+        backgroundColor = const Color(0xFF385A2E); // HerWell App Olive Green
+        textColor = Colors.white;
+        iconColor = Colors.white;
+        closeIconColor = Colors.white70;
+        borderColor = Colors.transparent;
         icon = Icons.check_circle_outline;
         break;
+
       case SnackBarType.error:
-        backgroundColor = AppColors.errorRed; // Red
+        backgroundColor = const Color(0xFFFFEBEE); // Soft Light Red
+        textColor = const Color(0xFFC62828); // Dark Crimson Red Text
+        iconColor = const Color(0xFFC62828);
+        closeIconColor = const Color(0xFFC62828).withValues(alpha: 0.7);
+        borderColor = const Color(0xFFEF9A9A); // Soft Red Border
         icon = Icons.error_outline;
         break;
+
       case SnackBarType.warning:
-        backgroundColor = AppColors.accentOrange; // Orange
+        backgroundColor = const Color(0xFFFFEBEE); // Soft Light Red for warnings/errors
+        textColor = const Color(0xFFC62828);
+        iconColor = const Color(0xFFC62828);
+        closeIconColor = const Color(0xFFC62828).withValues(alpha: 0.7);
+        borderColor = const Color(0xFFEF9A9A);
         icon = Icons.warning_amber_rounded;
         break;
+
       case SnackBarType.info:
-        backgroundColor = AppColors.accentBlue; // Blue
+        backgroundColor = const Color(0xFF385A2E); // HerWell App Olive Green (Replaced old blue)
+        textColor = Colors.white;
+        iconColor = Colors.white;
+        closeIconColor = Colors.white70;
+        borderColor = Colors.transparent;
         icon = Icons.info_outline;
         break;
     }
@@ -75,8 +96,11 @@ class CustomSnackBar {
       builder: (ctx) => _TopToastWidget(
         message: message,
         backgroundColor: backgroundColor,
+        textColor: textColor,
         icon: icon,
         iconColor: iconColor,
+        closeIconColor: closeIconColor,
+        borderColor: borderColor,
         duration: duration,
         onDismissed: () {
           if (_currentEntry == entry) {
@@ -98,22 +122,27 @@ class CustomSnackBar {
     Duration duration,
   ) {
     Color backgroundColor;
+    Color textColor;
     IconData icon;
     switch (type) {
       case SnackBarType.success:
-        backgroundColor = const Color(0xFF315E26);
+        backgroundColor = const Color(0xFF385A2E);
+        textColor = Colors.white;
         icon = Icons.check_circle_outline;
         break;
       case SnackBarType.error:
-        backgroundColor = AppColors.errorRed;
+        backgroundColor = const Color(0xFFFFEBEE);
+        textColor = const Color(0xFFC62828);
         icon = Icons.error_outline;
         break;
       case SnackBarType.warning:
-        backgroundColor = AppColors.accentOrange;
+        backgroundColor = const Color(0xFFFFEBEE);
+        textColor = const Color(0xFFC62828);
         icon = Icons.warning_amber_rounded;
         break;
       case SnackBarType.info:
-        backgroundColor = AppColors.accentBlue;
+        backgroundColor = const Color(0xFF385A2E);
+        textColor = Colors.white;
         icon = Icons.info_outline;
         break;
     }
@@ -122,9 +151,9 @@ class CustomSnackBar {
       SnackBar(
         content: Row(
           children: [
-            Icon(icon, color: Colors.white, size: 22),
+            Icon(icon, color: textColor, size: 22),
             const SizedBox(width: 12),
-            Expanded(child: Text(message, style: const TextStyle(color: Colors.white))),
+            Expanded(child: Text(message, style: TextStyle(color: textColor, fontWeight: FontWeight.bold))),
           ],
         ),
         backgroundColor: backgroundColor,
@@ -138,16 +167,22 @@ class CustomSnackBar {
 class _TopToastWidget extends StatefulWidget {
   final String message;
   final Color backgroundColor;
+  final Color textColor;
   final IconData icon;
   final Color iconColor;
+  final Color closeIconColor;
+  final Color borderColor;
   final Duration duration;
   final VoidCallback onDismissed;
 
   const _TopToastWidget({
     required this.message,
     required this.backgroundColor,
+    required this.textColor,
     required this.icon,
     required this.iconColor,
+    required this.closeIconColor,
+    required this.borderColor,
     required this.duration,
     required this.onDismissed,
   });
@@ -232,9 +267,10 @@ class _TopToastWidgetState extends State<_TopToastWidget>
                 decoration: BoxDecoration(
                   color: widget.backgroundColor,
                   borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: widget.borderColor),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.18),
+                      color: Colors.black.withValues(alpha: 0.12),
                       blurRadius: 16,
                       offset: const Offset(0, 6),
                     ),
@@ -248,8 +284,8 @@ class _TopToastWidgetState extends State<_TopToastWidget>
                     Expanded(
                       child: Text(
                         widget.message,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: widget.textColor,
                           fontSize: 14.5,
                           fontWeight: FontWeight.w600,
                           height: 1.3,
@@ -259,9 +295,9 @@ class _TopToastWidgetState extends State<_TopToastWidget>
                     const SizedBox(width: 8),
                     GestureDetector(
                       onTap: _dismiss,
-                      child: const Icon(
+                      child: Icon(
                         Icons.close,
-                        color: Colors.white70,
+                        color: widget.closeIconColor,
                         size: 18,
                       ),
                     ),

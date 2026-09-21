@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cagh_frontend/shared/widgets/globe_language_picker.dart';
 import 'package:cagh_frontend/features/notifications/presentation/widgets/notification_bell.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 /// A shared, consistent AppBar used across ALL inner/sub pages of the app.
 /// Matches the same dark-green style and width as the main tab AppBar.
@@ -12,26 +13,31 @@ PreferredSizeWidget buildInnerPageAppBar(
   bool showNotification = false,
   bool showLanguage = true,
 }) {
+  final theme = Theme.of(context);
+  final isDark = theme.brightness == Brightness.dark;
+  final bgColor = isDark ? AppColors.darkSurface : AppColors.primaryGreen;
+  final fgColor = isDark ? AppColors.darkTextPrimary : Colors.white;
+
   return AppBar(
-    backgroundColor: const Color(0xFF385A2E),
+    backgroundColor: bgColor,
     elevation: 0,
     centerTitle: true,
     leading: IconButton(
-      icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
+      icon: Icon(Icons.arrow_back_ios_new_rounded, color: fgColor, size: 20),
       onPressed: onBack ?? () => Navigator.pop(context),
     ),
     title: Text(
       title,
-      style: const TextStyle(
-        color: Colors.white,
+      style: TextStyle(
+        color: fgColor,
         fontSize: 18,
         fontWeight: FontWeight.w600,
         letterSpacing: 0.2,
       ),
     ),
     actions: [
-      if (showLanguage) const GlobeLanguagePicker(iconColor: Colors.white, iconSize: 22),
-      if (showNotification) const NotificationBell(iconColor: Colors.white),
+      if (showLanguage) GlobeLanguagePicker(iconColor: fgColor, iconSize: 22),
+      if (showNotification) NotificationBell(iconColor: fgColor),
       ...?extraActions,
       const SizedBox(width: 4),
     ],

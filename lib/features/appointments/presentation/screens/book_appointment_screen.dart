@@ -7,6 +7,8 @@ import 'package:cagh_frontend/shared/models/time_slot.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
+import 'package:cagh_frontend/shared/widgets/custom_snackbar.dart';
 
 class BookAppointmentScreen extends StatefulWidget {
   final MidwifeProfile midwife;
@@ -42,7 +44,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
     if (widget.midwife.supportsVoiceCall) {
       _consultationType = 'Voice Call';
     } else if (widget.midwife.supportsInPerson) {
-      _consultationType = AppLocalizations.of(context)!.inPerson;
+      _consultationType = 'In Person';
     } else {
       _consultationType = 'Voice Call';
     }
@@ -75,7 +77,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${AppLocalizations.of(context)!.failedToUpdateStatus}: $e')));
+        CustomSnackBar.show(context, message: '${AppLocalizations.of(context)!.failedToUpdateStatus}: $e', isError: true);
         setState(() {
           _isLoading = false;
           _timeSlots = null;
@@ -104,8 +106,10 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
 
   Future<void> _confirmBooking() async {
     if (_selectedSlotId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.selectTimeSlotFirst)),
+      CustomSnackBar.show(
+        context,
+        message: AppLocalizations.of(context)!.selectTimeSlotFirst,
+        isError: true,
       );
       return;
     }
@@ -115,21 +119,19 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
 
     final incompatibilityErr = _getIncompatibilityErrorMessage(slot, _consultationType);
     if (incompatibilityErr != null) {
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(incompatibilityErr),
-          backgroundColor: Colors.orange.shade900,
-          duration: const Duration(seconds: 4),
-        ),
+      CustomSnackBar.show(
+        context,
+        message: incompatibilityErr,
+        isError: true,
       );
       return;
     }
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator(color: Color(0xFF315E26))),
+      builder: (context) => Center(child: CircularProgressIndicator(color: isDark ? AppColors.darkPrimary : const Color(0xFF315E26))),
     );
 
     try {
@@ -158,21 +160,27 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
       if (mounted) Navigator.pop(context);
       final errStr = e.toString().replaceAll('Exception: ', '');
       final isConflict = errStr.contains('409') || errStr.toLowerCase().contains('conflict');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(isConflict ? 'This slot was just booked by someone else! Please choose another time.' : errStr),
-          backgroundColor: Colors.red
-        ),
+      CustomSnackBar.show(
+        context,
+        message: isConflict ? 'This slot was just booked by someone else! Please choose another time.' : errStr,
+        isError: true,
       );
       _fetchSchedule();
     }
   }
 
   void _showSuccessBottomSheet() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final sheetBg = isDark ? AppColors.darkSurface : Colors.white;
+    final primaryColor = isDark ? AppColors.darkPrimary : const Color(0xFF315E26);
+    final buttonGreen = isDark ? AppColors.darkButtonGreen : const Color(0xFF315E26);
+    final textPrimary = isDark ? AppColors.darkTextPrimary : const Color(0xFF315E26);
+    final textSecondary = isDark ? AppColors.darkTextSecondary : Colors.grey.shade700;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: sheetBg,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -184,26 +192,26 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
             children: [
               Container(
                 padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(
-                  color: Color(0xFFE8F5E9),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkSurfaceVariant : const Color(0xFFE8F5E9),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.schedule_send_rounded,
-                  color: Color(0xFF315E26),
+                  color: primaryColor,
                   size: 52,
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Appointment Request Sent',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF315E26)),
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: textPrimary),
               ),
               const SizedBox(height: 8),
               Text(
                 'Your request has been sent to ${widget.midwife.fullName}.\n\nWaiting for confirmation.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey.shade700, fontSize: 14, height: 1.4),
+                style: TextStyle(color: textSecondary, fontSize: 14, height: 1.4),
               ),
               const SizedBox(height: 24),
               SizedBox(
@@ -214,10 +222,10 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                     Navigator.popUntil(context, (route) => route.isFirst);
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF315E26),
+                    backgroundColor: buttonGreen,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
                   ),
-                  child: Text(AppLocalizations.of(context)!.returnToDashboard, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  child: Text(AppLocalizations.of(context)!.returnToDashboard, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
@@ -229,15 +237,23 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.darkPrimary : const Color(0xFF315E26);
+    final buttonGreen = isDark ? AppColors.darkButtonGreen : const Color(0xFF315E26);
+    final cardBg = isDark ? AppColors.darkSurface : Colors.white;
+    final cardBorder = isDark ? AppColors.darkBorder : Colors.grey.shade200;
+    final textPrimary = isDark ? AppColors.darkTextPrimary : const Color(0xFF182335);
+    final textSecondary = isDark ? AppColors.darkTextSecondary : Colors.grey.shade600;
+
     final morningSlots = _timeSlots?.morningSlots.where((s) => s.isAvailable).toList() ?? [];
     final afternoonSlots = _timeSlots?.afternoonSlots.where((s) => s.isAvailable).toList() ?? [];
     final eveningSlots = _timeSlots?.eveningSlots.where((s) => s.isAvailable).toList() ?? [];
     final hasSlots = morningSlots.isNotEmpty || afternoonSlots.isNotEmpty || eveningSlots.isNotEmpty;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F9F9),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF315E26),
+        backgroundColor: isDark ? AppColors.darkBackground : const Color(0xFF315E26),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -252,9 +268,9 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
             padding: const EdgeInsets.only(right: 16),
             child: CircleAvatar(
               radius: 14,
-              backgroundColor: const Color(0xFFE8F5E9),
+              backgroundColor: isDark ? AppColors.darkSurfaceVariant : const Color(0xFFE8F5E9),
               backgroundImage: widget.midwife.avatarUrl != null ? NetworkImage(widget.midwife.avatarUrl!) : null,
-              child: widget.midwife.avatarUrl == null ? const Icon(Icons.person, color: Color(0xFF315E26), size: 16) : null,
+              child: widget.midwife.avatarUrl == null ? Icon(Icons.person, color: primaryColor, size: 16) : null,
             ),
           ),
         ],
@@ -267,16 +283,16 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
             // CONSULTATION TYPE Section
             Text(
               AppLocalizations.of(context)!.consultationType,
-              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: Colors.grey.shade600),
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: textSecondary),
             ),
             const SizedBox(height: 12),
             if (!widget.midwife.supportsVoiceCall && !widget.midwife.supportsInPerson)
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.orange.shade50,
+                  color: isDark ? AppColors.darkSurfaceVariant : Colors.orange.shade50,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.orange.shade200),
+                  border: Border.all(color: isDark ? AppColors.darkBorder : Colors.orange.shade200),
                 ),
                 child: Row(
                   children: [
@@ -285,7 +301,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                     Expanded(
                       child: Text(
                         'This midwife is not currently offering consultation options.',
-                        style: TextStyle(color: Colors.orange.shade900, fontSize: 13, fontWeight: FontWeight.bold),
+                        style: TextStyle(color: isDark ? AppColors.darkTextPrimary : Colors.orange.shade900, fontSize: 13, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ],
@@ -297,7 +313,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                   if (widget.midwife.supportsVoiceCall)
                     _buildConsultationTypeCard('Voice Call', Icons.call),
                   if (widget.midwife.supportsVoiceCall && widget.midwife.supportsInPerson)
-                    SizedBox(width: 12),
+                    const SizedBox(width: 12),
                   if (widget.midwife.supportsInPerson)
                     _buildConsultationTypeCard(AppLocalizations.of(context)!.inPerson, Icons.home_outlined),
                 ],
@@ -308,71 +324,91 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: cardBg,
                 borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: cardBorder),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
+                  if (!isDark)
+                    BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
                 ],
               ),
               child: TableCalendar(
-                firstDay: DateTime.now(),
+                firstDay: DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day),
                 lastDay: DateTime.now().add(const Duration(days: 90)),
                 focusedDay: _focusedDay,
                 selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
                 onDaySelected: (selectedDay, focusedDay) {
+                  final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+                  if (selectedDay.isBefore(today)) return;
                   setState(() {
                     _selectedDay = selectedDay;
                     _focusedDay = focusedDay;
                   });
                   _fetchSchedule();
                 },
-                headerStyle: const HeaderStyle(
+                headerStyle: HeaderStyle(
                   formatButtonVisible: false,
                   titleCentered: true,
-                  leftChevronIcon: Icon(Icons.chevron_left, color: Colors.grey),
-                  rightChevronIcon: Icon(Icons.chevron_right, color: Colors.grey),
-                  titleTextStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  leftChevronIcon: Icon(Icons.chevron_left, color: textSecondary),
+                  rightChevronIcon: Icon(Icons.chevron_right, color: textSecondary),
+                  titleTextStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textPrimary),
+                ),
+                daysOfWeekStyle: DaysOfWeekStyle(
+                  weekdayStyle: TextStyle(color: textSecondary, fontWeight: FontWeight.bold, fontSize: 12),
+                  weekendStyle: TextStyle(color: textSecondary, fontWeight: FontWeight.bold, fontSize: 12),
                 ),
                 calendarStyle: CalendarStyle(
-                  selectedDecoration: const BoxDecoration(
-                    color: Color(0xFF315E26),
-                    shape: BoxShape.rectangle,
-                    borderRadius: BorderRadius.all(Radius.circular(8)),
+                  disabledTextStyle: TextStyle(
+                    color: isDark ? AppColors.darkTextSecondary.withValues(alpha: 0.35) : Colors.grey.shade400,
+                    decoration: TextDecoration.lineThrough,
+                    fontSize: 13,
                   ),
-                  todayDecoration: BoxDecoration(
-                    color: Colors.grey.shade200,
+                  disabledDecoration: BoxDecoration(
+                    color: isDark ? AppColors.darkSurfaceVariant.withValues(alpha: 0.2) : Colors.grey.shade100.withValues(alpha: 0.5),
                     shape: BoxShape.rectangle,
                     borderRadius: const BorderRadius.all(Radius.circular(8)),
                   ),
-                  defaultDecoration: const BoxDecoration(
+                  selectedDecoration: BoxDecoration(
+                    color: buttonGreen,
                     shape: BoxShape.rectangle,
+                    borderRadius: const BorderRadius.all(Radius.circular(8)),
                   ),
-                  weekendDecoration: const BoxDecoration(
+                  selectedTextStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  todayDecoration: BoxDecoration(
+                    color: isDark ? AppColors.darkPrimary.withValues(alpha: 0.2) : const Color(0xFFE8F5E9),
+                    border: Border.all(color: primaryColor, width: 1.5),
                     shape: BoxShape.rectangle,
+                    borderRadius: const BorderRadius.all(Radius.circular(8)),
                   ),
+                  todayTextStyle: TextStyle(color: primaryColor, fontWeight: FontWeight.bold),
+                  defaultTextStyle: TextStyle(color: textPrimary, fontWeight: FontWeight.w600),
+                  weekendTextStyle: TextStyle(color: textPrimary, fontWeight: FontWeight.w600),
+                  outsideTextStyle: TextStyle(color: isDark ? textSecondary.withValues(alpha: 0.35) : Colors.grey.shade400),
+                  defaultDecoration: const BoxDecoration(shape: BoxShape.rectangle),
+                  weekendDecoration: const BoxDecoration(shape: BoxShape.rectangle),
                 ),
               ),
             ),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
 
             // AVAILABLE TIMES Section
             Text(
               AppLocalizations.of(context)!.availableTimes,
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: Colors.grey.shade700),
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: textSecondary),
             ),
             const SizedBox(height: 16),
 
             if (_isLoading)
-              const Center(child: Padding(padding: EdgeInsets.all(20.0), child: CircularProgressIndicator(color: Color(0xFF315E26))))
+              Center(child: Padding(padding: const EdgeInsets.all(20.0), child: CircularProgressIndicator(color: primaryColor)))
             else if (!hasSlots)
               Center(
                 child: Padding(
                   padding: const EdgeInsets.all(20.0), 
                   child: Column(
                     children: [
-                      Icon(Icons.event_busy, color: Colors.grey.shade400, size: 40),
+                      Icon(Icons.event_busy, color: textSecondary, size: 40),
                       const SizedBox(height: 12),
-                      Text(AppLocalizations.of(context)!.noSlotsFound, style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.bold)),
+                      Text(AppLocalizations.of(context)!.noSlotsFound, style: TextStyle(color: textSecondary, fontWeight: FontWeight.bold)),
                     ],
                   )
                 )
@@ -381,9 +417,9 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
               if (morningSlots.isNotEmpty) ...[
                 Row(
                   children: [
-                    const Icon(Icons.wb_sunny_outlined, color: Color(0xFF315E26), size: 18),
+                    Icon(Icons.wb_sunny_outlined, color: primaryColor, size: 18),
                     const SizedBox(width: 8),
-                    Text(AppLocalizations.of(context)!.morning, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF315E26))),
+                    Text(AppLocalizations.of(context)!.morning, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: primaryColor)),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -396,9 +432,9 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
               if (afternoonSlots.isNotEmpty) ...[
                 Row(
                   children: [
-                    const Icon(Icons.wb_sunny_outlined, color: Color(0xFF315E26), size: 18),
+                    Icon(Icons.wb_sunny_outlined, color: primaryColor, size: 18),
                     const SizedBox(width: 8),
-                    Text(AppLocalizations.of(context)!.afternoon, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF315E26))),
+                    Text(AppLocalizations.of(context)!.afternoon, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: primaryColor)),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -411,9 +447,9 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
               if (eveningSlots.isNotEmpty) ...[
                 Row(
                   children: [
-                    const Icon(Icons.nights_stay_outlined, color: Color(0xFF315E26), size: 18),
+                    Icon(Icons.nights_stay_outlined, color: primaryColor, size: 18),
                     const SizedBox(width: 8),
-                    Text(AppLocalizations.of(context)!.evening, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF315E26))),
+                    Text(AppLocalizations.of(context)!.evening, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: primaryColor)),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -429,29 +465,30 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
             const SizedBox(height: 16),
             Text(
               AppLocalizations.of(context)!.reasonForVisit,
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: Colors.grey.shade700),
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: textSecondary),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _reasonController,
               maxLines: 3,
+              style: TextStyle(color: textPrimary),
               decoration: InputDecoration(
                 hintText: AppLocalizations.of(context)!.describeSymptoms,
-                hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
+                hintStyle: TextStyle(color: textSecondary, fontSize: 13),
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: isDark ? AppColors.darkSurfaceVariant : Colors.white,
                 contentPadding: const EdgeInsets.all(16),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
+                  borderSide: BorderSide(color: cardBorder),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(color: Colors.grey.shade200),
+                  borderSide: BorderSide(color: cardBorder),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
-                  borderSide: const BorderSide(color: Color(0xFF315E26), width: 1.5),
+                  borderSide: BorderSide(color: primaryColor, width: 1.5),
                 ),
               ),
             ),
@@ -469,7 +506,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                   style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF315E26),
+                  backgroundColor: buttonGreen,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
                   elevation: 0,
                 ),
@@ -481,17 +518,18 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFFF1F8E9),
+                color: isDark ? AppColors.darkSurfaceVariant : const Color(0xFFF1F8E9),
                 borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: isDark ? AppColors.darkBorder : Colors.transparent),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.shield_outlined, color: Color(0xFF315E26), size: 16),
+                  Icon(Icons.shield_outlined, color: primaryColor, size: 16),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       "Your health data is encrypted and handled according to strict privacy standards.",
-                      style: TextStyle(fontSize: 11, color: Colors.grey.shade700, height: 1.3),
+                      style: TextStyle(fontSize: 11, color: textSecondary, height: 1.3),
                     ),
                   ),
                 ],
@@ -505,7 +543,15 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
   }
 
   Widget _buildConsultationTypeCard(String title, IconData icon) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.darkPrimary : const Color(0xFF385A2E);
+    final cardBg = isDark ? AppColors.darkSurface : Colors.white;
+
     final isSelected = _consultationType == title;
+    final cardBorder = isSelected
+        ? primaryColor
+        : (isDark ? AppColors.darkBorder : Colors.grey.shade200);
+
     return Expanded(
       child: GestureDetector(
         onTap: () {
@@ -518,23 +564,23 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 20),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: cardBg,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isSelected ? const Color(0xFF385A2E) : Colors.grey.shade200,
+              color: cardBorder,
               width: isSelected ? 2 : 1,
             ),
           ),
           child: Column(
             children: [
-              Icon(icon, color: isSelected ? const Color(0xFF385A2E) : Colors.grey.shade500, size: 28),
+              Icon(icon, color: isSelected ? primaryColor : (isDark ? AppColors.darkTextSecondary : Colors.grey.shade500), size: 28),
               const SizedBox(height: 8),
               Text(
                 title,
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
-                  color: isSelected ? const Color(0xFF385A2E) : Colors.grey.shade600,
+                  color: isSelected ? primaryColor : (isDark ? AppColors.darkTextSecondary : Colors.grey.shade600),
                 ),
               ),
             ],
@@ -563,7 +609,17 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
     required TimeSlot slot,
     required String sessionTitle,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.darkPrimary : const Color(0xFF385A2E);
     final isSelected = slot.startTime == _selectedSlotTime;
+
+    final cardBg = isSelected 
+        ? (isDark ? AppColors.darkSurfaceVariant : const Color(0xFFF1F8E9))
+        : (isDark ? AppColors.darkSurface : Colors.white);
+    final cardBorder = isSelected
+        ? primaryColor
+        : (isDark ? AppColors.darkBorder : Colors.black12);
+
     final start12 = slot.displayTime.isNotEmpty ? slot.displayTime : _formatTime12h(slot.startTime);
     final end12 = slot.endTime.isNotEmpty ? _formatTime12h(slot.endTime) : '';
     final typeTagText = slot.consultationTypeTagText;
@@ -573,13 +629,13 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
     final cat = slot.consultationTypeCategory;
     if (cat == 'in_person') {
       typeIcon = Icons.home_outlined;
-      tagColor = const Color(0xFF1565C0);
+      tagColor = isDark ? const Color(0xFF64B5F6) : const Color(0xFF1565C0);
     } else if (cat == 'voice') {
       typeIcon = Icons.phone_in_talk_outlined;
-      tagColor = const Color(0xFF2E7D32);
+      tagColor = isDark ? AppColors.darkPrimary : const Color(0xFF2E7D32);
     } else {
       typeIcon = Icons.medical_services_outlined;
-      tagColor = const Color(0xFF385A2E);
+      tagColor = isDark ? AppColors.darkPrimary : const Color(0xFF385A2E);
     }
 
     return GestureDetector(
@@ -587,13 +643,10 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
           ? () {
               final err = _getIncompatibilityErrorMessage(slot, _consultationType);
               if (err != null) {
-                ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(err),
-                    backgroundColor: Colors.orange.shade900,
-                    duration: const Duration(seconds: 4),
-                  ),
+                CustomSnackBar.show(
+                  context,
+                  message: err,
+                  isError: true,
                 );
                 return;
               }
@@ -607,18 +660,19 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
         margin: const EdgeInsets.only(bottom: 14),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFF1F8E9) : Colors.white,
+          color: cardBg,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? const Color(0xFF385A2E) : Colors.black12,
+            color: cardBorder,
             width: isSelected ? 2 : 1,
           ),
           boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
-            ),
+            if (!isDark)
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.03),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
           ],
         ),
         child: Column(
@@ -631,23 +685,20 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
-                    color: isSelected ? const Color(0xFF385A2E) : const Color(0xFF182335),
+                    color: isSelected ? primaryColor : (isDark ? AppColors.darkTextPrimary : const Color(0xFF182335)),
                   ),
                 ),
-                const Text(
-                  '+',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF385A2E),
-                  ),
+                Icon(
+                  Icons.add,
+                  size: 18,
+                  color: primaryColor,
                 ),
                 Text(
                   end12.isNotEmpty ? end12 : start12,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
-                    color: isSelected ? const Color(0xFF385A2E) : const Color(0xFF182335),
+                    color: isSelected ? primaryColor : (isDark ? AppColors.darkTextPrimary : const Color(0xFF182335)),
                   ),
                 ),
               ],
@@ -663,7 +714,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: tagColor.withValues(alpha: 0.1),
+                        color: tagColor.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -679,7 +730,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF385A2E),
+                          color: primaryColor,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Row(
@@ -701,12 +752,12 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
-                              color: slot.isAvailable ? const Color(0xFF385A2E) : Colors.grey,
+                              color: slot.isAvailable ? primaryColor : (isDark ? AppColors.darkTextSecondary : Colors.grey),
                             ),
                           ),
                           if (slot.isAvailable) ...[
                             const SizedBox(width: 2),
-                            const Icon(Icons.arrow_forward, size: 13, color: Color(0xFF385A2E)),
+                            Icon(Icons.arrow_forward, size: 13, color: primaryColor),
                           ],
                         ],
                       ),

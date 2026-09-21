@@ -88,6 +88,7 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
         ? 'Amharic (አማርኛ)'
         : 'English (US)';
     final isVerified = status == 'VERIFIED';
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -142,22 +143,22 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
                                   radius: 42,
                                 ),
                               ),
-                                Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(color: const Color(0xFFF0F0F0), width: 1),
-                                  ),
-                                  child: const Icon(
-                                    Icons.camera_alt_outlined,
-                                    size: 18,
-                                    color: Color(0xFF385A2E),
-                                  ),
+                              Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: isDark ? AppColors.darkSurfaceVariant : Colors.white,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: isDark ? AppColors.darkBorder : const Color(0xFFF0F0F0), width: 1),
                                 ),
-                              ],
-                            ),
+                                child: Icon(
+                                  Icons.camera_alt_outlined,
+                                  size: 18,
+                                  color: isDark ? AppColors.darkPrimary : const Color(0xFF385A2E),
+                                ),
+                              ),
+                            ],
                           ),
+                        ),
                         const SizedBox(height: 12),
 
                         Text(
@@ -183,7 +184,7 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
                               ).then((_) => _fetchProfile());
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primaryGreen,
+                              backgroundColor: isDark ? AppColors.darkButtonGreen : AppColors.primaryGreen,
                               elevation: 0,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(22),
@@ -228,8 +229,8 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
                       badge: ref.watch(notificationProvider).unreadMessagesCount > 0
                           ? Container(
                               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                              decoration: const BoxDecoration(
-                                color: AppColors.primaryGreen,
+                              decoration: BoxDecoration(
+                                color: isDark ? AppColors.darkPrimary : AppColors.primaryGreen,
                                 shape: BoxShape.circle,
                               ),
                               child: Text(
@@ -282,17 +283,18 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
                       trailing: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 3),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFE8F5E9),
+                          color: isDark ? AppColors.darkSurfaceVariant : const Color(0xFFE8F5E9),
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: const Color(0xFFA5D6A7), width: 1.2),
+                          border: Border.all(color: isDark ? AppColors.darkBorder : const Color(0xFFA5D6A7), width: 1.2),
                         ),
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<String>(
                             value: LanguageService.currentLanguage.value,
                             isDense: true,
-                            icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: Color(0xFF2E5E2A)),
-                            style: const TextStyle(
-                              color: Color(0xFF2E5E2A),
+                            dropdownColor: isDark ? AppColors.darkSurface : Colors.white,
+                            icon: Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: isDark ? AppColors.darkPrimary : const Color(0xFF2E5E2A)),
+                            style: TextStyle(
+                              color: isDark ? AppColors.darkTextPrimary : const Color(0xFF2E5E2A),
                               fontSize: 13.5,
                               fontWeight: FontWeight.w600,
                             ),
@@ -336,8 +338,6 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
 
                   const SizedBox(height: 24),
 
-
-
                   // Logout Button
                   SizedBox(
                     width: double.infinity,
@@ -355,18 +355,18 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
                           );
                         }
                       },
-                      icon: const Icon(Icons.logout, color: Colors.red),
+                      icon: Icon(Icons.logout, color: isDark ? AppColors.errorRedLight : Colors.red),
                       label: Text(
                         AppLocalizations.of(context)!.logout,
-                        style: const TextStyle(
-                          color: Colors.red,
+                        style: TextStyle(
+                          color: isDark ? AppColors.errorRedLight : Colors.red,
                           fontWeight: FontWeight.w600,
                           fontSize: 16,
                         ),
                       ),
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: AppColors.borderRedSoft, width: 1.5),
-                        backgroundColor: AppColors.backgroundPinkWhite,
+                        side: BorderSide(color: isDark ? AppColors.darkBorder : AppColors.borderRedSoft, width: 1.5),
+                        backgroundColor: isDark ? AppColors.darkRed : AppColors.backgroundPinkWhite,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30),
@@ -450,7 +450,7 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
     return ListTile(
       onTap: onTap,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-      leading: Icon(icon, color: AppColors.primaryGreen, size: 22),
+      leading: Icon(icon, color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkPrimary : AppColors.primaryGreen, size: 22),
       title: Text(
         title,
         style: TextStyle(

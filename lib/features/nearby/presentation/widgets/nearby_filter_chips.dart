@@ -29,6 +29,8 @@ class NearbyFilterChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -37,29 +39,43 @@ class NearbyFilterChips extends StatelessWidget {
           final isSelected = category == selectedCategory;
           final isEmergency = category == AppLocalizations.of(context)!.emergency;
           
+          final unselectedTextColor = isEmergency
+              ? Colors.red
+              : (isDark ? AppColors.darkPrimary : AppColors.primaryGreen);
+
+          final chipSelectedColor = isEmergency
+              ? Colors.red
+              : (isDark ? AppColors.darkButtonGreen : AppColors.primaryGreen);
+
+          final chipBg = isEmergency
+              ? (isDark ? Colors.red.shade900.withValues(alpha: 0.3) : Colors.red.shade50)
+              : (isDark ? AppColors.darkSurfaceVariant : Colors.white);
+
+          final chipBorderColor = isSelected
+              ? Colors.transparent
+              : (isEmergency
+                  ? Colors.red.shade300
+                  : (isDark ? AppColors.darkBorder : AppColors.primaryGreen.withValues(alpha: 0.3)));
+
           return Padding(
             padding: const EdgeInsets.only(right: 8),
             child: ChoiceChip(
               label: Text(
                 _getLocalizedCategory(context, category),
                 style: TextStyle(
-                  color: isSelected 
-                      ? Colors.white 
-                      : (isEmergency ? Colors.red : AppColors.primaryGreen),
+                  color: isSelected ? Colors.white : unselectedTextColor,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 ),
               ),
               selected: isSelected,
               showCheckmark: false,
               onSelected: (_) => onSelected(category),
-              selectedColor: isEmergency ? Colors.red : AppColors.primaryGreen,
-              backgroundColor: isEmergency ? Colors.red.shade50 : Colors.white,
+              selectedColor: chipSelectedColor,
+              backgroundColor: chipBg,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
                 side: BorderSide(
-                  color: isSelected 
-                      ? Colors.transparent 
-                      : (isEmergency ? Colors.red.shade200 : AppColors.primaryGreen.withValues(alpha: 0.3)),
+                  color: chipBorderColor,
                 ),
               ),
             ),

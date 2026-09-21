@@ -52,6 +52,10 @@ class _NearbyHealthcareScreenState extends ConsumerState<NearbyHealthcareScreen>
     if (title == 'Clinic') displayTitle = AppLocalizations.of(context)!.clinic;
     if (title == 'Pharmacy') displayTitle = AppLocalizations.of(context)!.pharmacy;
 
+    final chipBg = isDark ? AppColors.darkSurfaceVariant : Colors.white;
+    final chipBorder = isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0);
+    final chipColor = isDark ? AppColors.darkPrimary : AppColors.primaryGreen;
+
     return GestureDetector(
       onTap: () {
         // Map UI category string to API category string if necessary
@@ -68,24 +72,26 @@ class _NearbyHealthcareScreenState extends ConsumerState<NearbyHealthcareScreen>
         margin: const EdgeInsets.only(right: 12),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: isDark ? Colors.grey.shade800 : Colors.white,
+          color: chipBg,
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: chipBorder),
           boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
+            if (!isDark)
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
           ],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: AppColors.primaryGreen, size: 20),
+            Icon(icon, color: chipColor, size: 20),
             const SizedBox(width: 8),
             Text(
               displayTitle,
-              style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.primaryGreen),
+              style: TextStyle(fontWeight: FontWeight.w600, color: chipColor),
             ),
           ],
         ),
@@ -118,17 +124,17 @@ class _NearbyHealthcareScreenState extends ConsumerState<NearbyHealthcareScreen>
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text(AppLocalizations.of(context)!.healthcareNearYou, style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
+        title: Text(AppLocalizations.of(context)!.healthcareNearYou, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 8.0),
             child: TextButton.icon(
               onPressed: () => _navigateToFindNearby(),
-              icon: Icon(Icons.location_on, color: Colors.white, size: 16),
-              label: Text(AppLocalizations.of(context)!.findNearby, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+              icon: const Icon(Icons.location_on, color: Colors.white, size: 16),
+              label: Text(AppLocalizations.of(context)!.findNearby, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
               style: TextButton.styleFrom(
                 backgroundColor: AppColors.buttonGreen, // slightly lighter green for the button
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -174,10 +180,10 @@ class _NearbyHealthcareScreenState extends ConsumerState<NearbyHealthcareScreen>
                         alignment: Alignment.centerRight,
                         child: TextButton.icon(
                           onPressed: () => _navigateToFindNearby(),
-                          icon: Icon(Icons.location_on, color: AppColors.primaryGreen, size: 16),
-                          label: Text(AppLocalizations.of(context)!.findNearby, style: TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.bold, fontSize: 13)),
+                          icon: Icon(Icons.location_on, color: isDark ? AppColors.darkPrimary : AppColors.primaryGreen, size: 16),
+                          label: Text(AppLocalizations.of(context)!.findNearby, style: TextStyle(color: isDark ? AppColors.darkPrimary : AppColors.primaryGreen, fontWeight: FontWeight.bold, fontSize: 13)),
                           style: TextButton.styleFrom(
-                            backgroundColor: AppColors.primaryGreen.withValues(alpha: 0.1),
+                            backgroundColor: isDark ? AppColors.darkPrimary.withValues(alpha: 0.15) : AppColors.primaryGreen.withValues(alpha: 0.1),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
                           ),
@@ -188,18 +194,19 @@ class _NearbyHealthcareScreenState extends ConsumerState<NearbyHealthcareScreen>
                   // Top Section
                   Container(
                     width: double.infinity,
+                    margin: const EdgeInsets.fromLTRB(20, 12, 20, 0),
                     decoration: BoxDecoration(
-                      color: isDark ? Colors.grey.shade900 : Colors.white,
-                      borderRadius: const BorderRadius.only(
-                        bottomLeft: Radius.circular(24),
-                        bottomRight: Radius.circular(24),
+                      color: isDark ? AppColors.darkSurfaceVariant : Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isDark ? AppColors.darkBorder : Colors.grey.shade200,
                       ),
                     ),
-                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
                     child: Text(
                       AppLocalizations.of(context)!.findTrustedMaternal,
                       style: TextStyle(
-                          color: isDark ? Colors.grey.shade300 : Colors.grey.shade800, 
+                          color: isDark ? AppColors.darkTextSecondary : Colors.grey.shade800, 
                           fontSize: 14, 
                           height: 1.4),
                     ),

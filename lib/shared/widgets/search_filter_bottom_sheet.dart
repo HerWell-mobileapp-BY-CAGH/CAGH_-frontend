@@ -101,11 +101,16 @@ class _SearchFilterBottomSheetState extends State<SearchFilterBottomSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.darkPrimary : AppColors.primaryGreen;
+    final buttonColor = isDark ? AppColors.darkButtonGreen : AppColors.primaryGreen;
+    final textColor = theme.colorScheme.onSurface;
 
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
+      decoration: BoxDecoration(
+        color: theme.cardColor,
+        borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(24),
           topRight: Radius.circular(24),
         ),
@@ -126,7 +131,7 @@ class _SearchFilterBottomSheetState extends State<SearchFilterBottomSheet> {
               width: 40,
               height: 5,
               decoration: BoxDecoration(
-                color: Colors.grey.shade300,
+                color: isDark ? AppColors.darkBorder : Colors.grey.shade300,
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
@@ -138,15 +143,15 @@ class _SearchFilterBottomSheetState extends State<SearchFilterBottomSheet> {
             children: [
               Text(
                 l10n.filters,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textDark,
+                  color: textColor,
                 ),
               ),
               TextButton(
                 onPressed: _reset,
-                child: Text(l10n.reset, style: const TextStyle(color: AppColors.primaryGreen)),
+                child: Text(l10n.reset, style: TextStyle(color: primaryColor)),
               )
             ],
           ),
@@ -156,7 +161,7 @@ class _SearchFilterBottomSheetState extends State<SearchFilterBottomSheet> {
             // ── MIDWIFE FILTERS ──
 
             // Specialization
-            Text(l10n.specialization, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            Text(l10n.specialization, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textColor)),
             const SizedBox(height: 12),
             Wrap(
               spacing: 8,
@@ -169,15 +174,15 @@ class _SearchFilterBottomSheetState extends State<SearchFilterBottomSheet> {
                   onSelected: (val) {
                     if (val) setState(() => _selectedSpecialization = spec);
                   },
-                  selectedColor: AppColors.primaryGreen,
-                  labelStyle: TextStyle(color: isSelected ? Colors.white : AppColors.textDark, fontSize: 13),
+                  selectedColor: buttonColor,
+                  labelStyle: TextStyle(color: isSelected ? Colors.white : textColor, fontSize: 13),
                 );
               }).toList(),
             ),
             const SizedBox(height: 24),
 
             // Consultation Method
-            Text(l10n.consultationMethod, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            Text(l10n.consultationMethod, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textColor)),
             const SizedBox(height: 12),
             Wrap(
               spacing: 8,
@@ -190,15 +195,15 @@ class _SearchFilterBottomSheetState extends State<SearchFilterBottomSheet> {
                   onSelected: (val) {
                     if (val) setState(() => _selectedConsultationType = type);
                   },
-                  selectedColor: AppColors.primaryGreen,
-                  labelStyle: TextStyle(color: isSelected ? Colors.white : AppColors.textDark),
+                  selectedColor: buttonColor,
+                  labelStyle: TextStyle(color: isSelected ? Colors.white : textColor),
                 );
               }).toList(),
             ),
             const SizedBox(height: 24),
 
             // Rating
-            Text(l10n.rating, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            Text(l10n.rating, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textColor)),
             const SizedBox(height: 12),
             Wrap(
               spacing: 8,
@@ -211,8 +216,8 @@ class _SearchFilterBottomSheetState extends State<SearchFilterBottomSheet> {
                   onSelected: (val) {
                     if (val) setState(() => _selectedRating = rating);
                   },
-                  selectedColor: AppColors.primaryGreen,
-                  labelStyle: TextStyle(color: isSelected ? Colors.white : AppColors.textDark),
+                  selectedColor: buttonColor,
+                  labelStyle: TextStyle(color: isSelected ? Colors.white : textColor),
                 );
               }).toList(),
             ),
@@ -224,16 +229,16 @@ class _SearchFilterBottomSheetState extends State<SearchFilterBottomSheet> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(l10n.distance, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                Text('${_distance.toInt()} km', style: const TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.bold)),
+                Text(l10n.distance, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textColor)),
+                Text('${_distance.toInt()} km', style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
               ],
             ),
             Slider(
               value: _distance,
               min: 1.0,
               max: 50.0,
-              activeColor: AppColors.primaryGreen,
-              inactiveColor: Colors.green.shade100,
+              activeColor: primaryColor,
+              inactiveColor: isDark ? AppColors.darkBorder : Colors.green.shade100,
               onChanged: (val) {
                 setState(() => _distance = val);
               },
@@ -241,7 +246,7 @@ class _SearchFilterBottomSheetState extends State<SearchFilterBottomSheet> {
             const SizedBox(height: 20),
 
             // Rating
-            Text(l10n.rating, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            Text(l10n.rating, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textColor)),
             const SizedBox(height: 12),
             Wrap(
               spacing: 8,
@@ -254,15 +259,15 @@ class _SearchFilterBottomSheetState extends State<SearchFilterBottomSheet> {
                   onSelected: (val) {
                     if (val) setState(() => _selectedRating = rating);
                   },
-                  selectedColor: AppColors.primaryGreen,
-                  labelStyle: TextStyle(color: isSelected ? Colors.white : AppColors.textDark),
+                  selectedColor: buttonColor,
+                  labelStyle: TextStyle(color: isSelected ? Colors.white : textColor),
                 );
               }).toList(),
             ),
             const SizedBox(height: 24),
 
             // Availability
-            Text(l10n.availability, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            Text(l10n.availability, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textColor)),
             const SizedBox(height: 12),
             Wrap(
               spacing: 8,
@@ -275,8 +280,8 @@ class _SearchFilterBottomSheetState extends State<SearchFilterBottomSheet> {
                   onSelected: (val) {
                     if (val) setState(() => _selectedAvailability = time);
                   },
-                  selectedColor: AppColors.primaryGreen,
-                  labelStyle: TextStyle(color: isSelected ? Colors.white : AppColors.textDark),
+                  selectedColor: buttonColor,
+                  labelStyle: TextStyle(color: isSelected ? Colors.white : textColor),
                 );
               }).toList(),
             ),
@@ -300,7 +305,7 @@ class _SearchFilterBottomSheetState extends State<SearchFilterBottomSheet> {
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryGreen,
+                backgroundColor: buttonColor,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(25),
                 ),

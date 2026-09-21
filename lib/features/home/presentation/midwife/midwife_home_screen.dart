@@ -15,6 +15,7 @@ import 'package:cagh_frontend/features/consultations/data/services/midwife_api_s
 import 'package:cagh_frontend/shared/widgets/floating_glass_nav_bar.dart';
 import 'package:cagh_frontend/features/notifications/presentation/widgets/notification_bell.dart';
 import 'package:cagh_frontend/features/learning/presentation/screens/learning_center_screen.dart';
+import 'package:cagh_frontend/shared/constants/app_colors.dart';
 import 'package:intl/intl.dart';
 
 class MidwifeHomeScreen extends ConsumerStatefulWidget {
@@ -204,6 +205,7 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
   // TAB 0: HOME DASHBOARD
   Widget _buildHomeDashboardTab() {
     final appointmentRepo = AppointmentRepositoryImpl(AppointmentApiService());
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     
     return FutureBuilder<List<Appointment>>(
       future: appointmentRepo.getMidwifeAppointments(),
@@ -225,7 +227,7 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF315E26),
+                  color: isDark ? AppColors.darkSurfaceVariant : AppColors.primaryGreen,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
@@ -238,8 +240,8 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
                             _getFirstName(midwifeName).isEmpty
                                 ? AppLocalizations.of(context)!.welcome
                                 : AppLocalizations.of(context)!.welcomeUser(_getFirstName(midwifeName)),
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: isDark ? AppColors.darkTextPrimary : Colors.white,
                               fontSize: 22,
                               fontWeight: FontWeight.w700,
                             ),
@@ -250,14 +252,14 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
                                 ? AppLocalizations.of(context)!.midwifeBookingsAppearHere
                                 : AppLocalizations.of(context)!.patientConsultationBookingsPending(upcomingApts.length),
                             style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.87),
+                              color: isDark ? AppColors.darkTextSecondary : Colors.white.withValues(alpha: 0.87),
                               fontSize: 14,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const Icon(Icons.volunteer_activism_outlined, color: Colors.white, size: 48),
+                    Icon(Icons.volunteer_activism_outlined, color: isDark ? AppColors.darkPrimary : Colors.white, size: 48),
                   ],
                 ),
               ),
@@ -290,14 +292,14 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
                       MaterialPageRoute(builder: (_) => const MidwifeManageScheduleScreen()),
                     );
                   },
-                  icon: const Icon(Icons.calendar_month, color: Color(0xFF315E26)),
+                  icon: Icon(Icons.calendar_month, color: isDark ? AppColors.darkPrimary : AppColors.primaryGreen),
                   label: Text(
                     AppLocalizations.of(context)!.manageAvailability,
-                    style: const TextStyle(color: Color(0xFF315E26), fontWeight: FontWeight.bold),
+                    style: TextStyle(color: isDark ? AppColors.darkPrimary : AppColors.primaryGreen, fontWeight: FontWeight.bold),
                   ),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    side: const BorderSide(color: Color(0xFF315E26)),
+                    side: BorderSide(color: isDark ? AppColors.darkPrimary : AppColors.primaryGreen),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
@@ -305,11 +307,10 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
               const SizedBox(height: 12),
               Builder(
                 builder: (context) {
-                  final isDark = Theme.of(context).brightness == Brightness.dark;
                   return Text(
                     AppLocalizations.of(context)!.setDaysAndTimesPrompt,
                     style: TextStyle(
-                      color: isDark ? Colors.grey.shade400 : Colors.black54,
+                      color: isDark ? AppColors.darkTextSecondary : Colors.black54,
                       fontSize: 13,
                       height: 1.4,
                     ),
@@ -319,7 +320,7 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
               const SizedBox(height: 24),
 
               if (snapshot.connectionState == ConnectionState.waiting)
-                const Center(child: CircularProgressIndicator(color: Color(0xFF315E26)))
+                Center(child: CircularProgressIndicator(color: isDark ? AppColors.darkPrimary : AppColors.primaryGreen))
               else if (upcomingApts.isEmpty)
                 Container(
                   width: double.infinity,
@@ -331,17 +332,24 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
                   ),
                   child: Column(
                     children: [
-                      Icon(Icons.calendar_today, size: 42, color: Theme.of(context).iconTheme.color?.withValues(alpha: 0.5)),
-                      const SizedBox(height: 16),
+                      Icon(Icons.event_available_outlined, size: 48, color: isDark ? AppColors.darkTextSecondary : Colors.grey.shade400),
+                      const SizedBox(height: 12),
                       Text(
-                        AppLocalizations.of(context)!.noAppointmentsToday,
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).textTheme.bodyLarge?.color),
+                        AppLocalizations.of(context)!.noUpcomingConsultations,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
+                        ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       Text(
-                        AppLocalizations.of(context)!.whenGirlBooksConsultation,
+                        'Any confirmed appointments scheduled for today will appear here.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color, fontSize: 13, height: 1.4),
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Theme.of(context).textTheme.bodySmall?.color,
+                        ),
                       ),
                     ],
                   ),
@@ -371,6 +379,7 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
     required Appointment appointment,
     required VoidCallback onCompleted,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final patientName = appointment.userFullName ?? 'Patient';
     final type = appointment.appointmentType == 'VIRTUAL_VOICE' ? 'Voice Call' : 'Video Call';
     final dateStr = '${appointment.date} • ${appointment.startTime}';
@@ -379,8 +388,8 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
       title: patientName,
       subtitle: '$type • $dateStr',
       badgeLabel: appointment.status.name.toUpperCase(),
-      badgeColor: const Color(0xFFE8F5E9),
-      badgeTextColor: const Color(0xFF315E26),
+      badgeColor: isDark ? AppColors.darkSurfaceVariant : const Color(0xFFE8F5E9),
+      badgeTextColor: isDark ? AppColors.darkPrimary : AppColors.primaryGreen,
     );
   }
 
@@ -390,12 +399,14 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
   }
 
   Widget _buildScheduleItem({required String time, required String title, required String subtitle, required String badgeLabel, required Color badgeColor, required Color badgeTextColor}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
-        border: const Border(left: BorderSide(color: Color(0xFF315E26), width: 4)),
+        border: Border(left: BorderSide(color: isDark ? AppColors.darkPrimary : AppColors.primaryGreen, width: 4)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,

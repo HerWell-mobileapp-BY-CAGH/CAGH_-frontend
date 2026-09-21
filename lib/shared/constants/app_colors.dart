@@ -111,4 +111,21 @@ class AppColors {
   static const String primaryGreenHex = '#315E26';
   static const String accentYellowHex = '#FFD22B';
   static const String accentGreenHex = '#4CAF50';
+
+  // Intentional Dark Mode Tokens (Botanical Slate & Soothing Emerald)
+  static const Color darkBackground = Color(0xFF0F1712);
+  static const Color darkSurface = Color(0xFF18221B);
+  static const Color darkSurfaceVariant = Color(0xFF222F26);
+  static const Color darkBorder = Color(0xFF2C3E32);
+  static const Color darkPrimary = Color(0xFF52B75A);
+  static const Color darkButtonGreen = Color(0xFF2E5E2A);
+  static const Color darkTextPrimary = Color(0xFFF0F5F1);
+  static const Color darkTextSecondary = Color(0xFF9EB1A3);
+  static const Color darkAccentYellow = Color(0xFFFFD54F);
+  static const Color darkAccentPurple = Color(0xFFC594E8);
+  static const Color darkPurpleSurface = Color(0xFF2D2338);
+
+  // High-contrast text gold token for light backgrounds
+  static const Color textGold = Color(0xFFB78103);
 }
+
