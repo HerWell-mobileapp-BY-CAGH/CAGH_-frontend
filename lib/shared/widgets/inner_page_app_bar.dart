@@ -28,11 +28,12 @@ PreferredSizeWidget buildInnerPageAppBar(
     ),
     title: Text(
       title,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
       style: TextStyle(
         color: fgColor,
         fontSize: 18,
         fontWeight: FontWeight.w600,
-        letterSpacing: 0.2,
       ),
     ),
     actions: [

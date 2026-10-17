@@ -291,7 +291,6 @@ class ConsultHubScreenState extends State<ConsultHubScreen> {
                                         fontSize: 16.5,
                                         fontWeight: FontWeight.bold,
                                         color: isDark ? AppColors.darkTextPrimary : AppColors.primaryGreenDarker,
-                                        letterSpacing: 0.2,
                                       ),
                                     ),
                                     const SizedBox(height: 3),

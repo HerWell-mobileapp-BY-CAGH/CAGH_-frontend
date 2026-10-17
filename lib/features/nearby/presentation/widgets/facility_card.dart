@@ -165,7 +165,9 @@ class FacilityCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            facility.isOpen ? 'Open' : 'Closed',
+                            facility.isOpen 
+                                ? (Localizations.localeOf(context).languageCode == 'am' ? 'ክፍት' : 'Open') 
+                                : (Localizations.localeOf(context).languageCode == 'am' ? 'ዝግ' : 'Closed'),
                             style: TextStyle(
                               fontSize: 12,
                               color: facility.isOpen ? Colors.green : Colors.red,
@@ -230,7 +232,13 @@ class FacilityCard extends StatelessWidget {
                         foregroundColor: AppColors.primaryGreen, side: const BorderSide(color: AppColors.primaryGreen),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       ),
-                      child: Text(AppLocalizations.of(context)!.details),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          AppLocalizations.of(context)!.details,
+                          maxLines: 1,
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -253,7 +261,13 @@ class FacilityCard extends StatelessWidget {
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       ),
-                      child: Text(AppLocalizations.of(context)!.directions),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          AppLocalizations.of(context)!.directions,
+                          maxLines: 1,
+                        ),
+                      ),
                     ),
                   ),
                 ],

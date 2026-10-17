@@ -265,62 +265,69 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
     final cardBg = isDark ? AppColors.darkSurface : const Color(0xFFF1F8E9);
     final labelColor = isDark ? AppColors.darkTextSecondary : Colors.grey.shade600;
 
-    return Row(
-      children: [
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: cardBg,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: isDark ? AppColors.darkBorder : Colors.transparent),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(Icons.local_hospital_outlined, color: primaryColor, size: 24),
-                const SizedBox(height: 8),
-                Text(
-                  AppLocalizations.of(context)!.hospital,
-                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.5, color: labelColor),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  widget.midwife.hospitalName.isNotEmpty ? widget.midwife.hospitalName : 'Independent',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: primaryColor),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: cardBg,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: isDark ? AppColors.darkBorder : Colors.transparent),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(Icons.verified_user_outlined, color: primaryColor, size: 24),
-                const SizedBox(height: 8),
-                Text(
-                  AppLocalizations.of(context)!.experience,
-                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.5, color: labelColor),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${widget.midwife.experienceYears}+ Years',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: primaryColor),
-                ),
-              ],
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: cardBg,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: isDark ? AppColors.darkBorder : Colors.transparent),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.local_hospital_outlined, color: primaryColor, size: 24),
+                  const SizedBox(height: 8),
+                  Text(
+                    AppLocalizations.of(context)!.hospital,
+                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: labelColor),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    widget.midwife.hospitalName.isNotEmpty ? widget.midwife.hospitalName : 'Independent',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: primaryColor),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-      ],
+          const SizedBox(width: 16),
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: cardBg,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: isDark ? AppColors.darkBorder : Colors.transparent),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.verified_user_outlined, color: primaryColor, size: 24),
+                  const SizedBox(height: 8),
+                  Text(
+                    AppLocalizations.of(context)!.experience,
+                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: labelColor),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${widget.midwife.experienceYears}+ Years',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: primaryColor),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -337,7 +344,7 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
       children: [
         Text(
           AppLocalizations.of(context)!.languages,
-          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: labelColor),
+          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: labelColor),
         ),
         const SizedBox(height: 12),
         Wrap(
@@ -373,7 +380,7 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
       children: [
         Text(
           AppLocalizations.of(context)!.offeredConsultations,
-          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: labelColor),
+          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: labelColor),
         ),
         const SizedBox(height: 12),
         if (!widget.midwife.supportsVoiceCall && !widget.midwife.supportsInPerson)

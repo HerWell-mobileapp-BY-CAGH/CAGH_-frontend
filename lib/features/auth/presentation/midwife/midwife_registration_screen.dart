@@ -543,11 +543,15 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                                 strokeWidth: 2.5,
                               ),
                             )
-                          : Text(
-                              AppLocalizations.of(context)!.register,
-                              style: const TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w600,
+                          : FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                AppLocalizations.of(context)!.register,
+                                style: const TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                maxLines: 1,
                               ),
                             ),
                     ),

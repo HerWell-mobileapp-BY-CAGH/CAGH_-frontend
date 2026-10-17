@@ -352,20 +352,27 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                                       Row(
                                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: [
-                                          Row(
-                                            children: [
-                                              Text(
-                                                mw.fullName,
-                                                style: TextStyle(
-                                                  fontSize: 16.5,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: textPrimary,
+                                          Expanded(
+                                            child: Row(
+                                              children: [
+                                                Flexible(
+                                                  child: Text(
+                                                    mw.fullName,
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
+                                                    style: TextStyle(
+                                                      fontSize: 16.5,
+                                                      fontWeight: FontWeight.bold,
+                                                      color: textPrimary,
+                                                    ),
+                                                  ),
                                                 ),
-                                              ),
-                                              const SizedBox(width: 6),
-                                              Icon(Icons.check_circle, color: primaryColor, size: 18),
-                                            ],
+                                                const SizedBox(width: 6),
+                                                Icon(Icons.check_circle, color: primaryColor, size: 18),
+                                              ],
+                                            ),
                                           ),
+                                          const SizedBox(width: 8),
                                           Row(
                                             children: [
                                               Container(
@@ -415,7 +422,9 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                                         ),
                                       ),
                                       const SizedBox(height: 10),
-                                      Row(
+                                      Wrap(
+                                        spacing: 8,
+                                        runSpacing: 6,
                                         children: [
                                           Container(
                                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -425,6 +434,7 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                                               border: Border.all(color: tagBorder),
                                             ),
                                             child: Row(
+                                              mainAxisSize: MainAxisSize.min,
                                               children: [
                                                 Icon(Icons.home_outlined, size: 14, color: tagColor),
                                                 const SizedBox(width: 4),
@@ -432,7 +442,6 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                                               ],
                                             ),
                                           ),
-                                          const SizedBox(width: 8),
                                           Container(
                                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                             decoration: BoxDecoration(
@@ -441,6 +450,7 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                                               border: Border.all(color: tagBorder),
                                             ),
                                             child: Row(
+                                              mainAxisSize: MainAxisSize.min,
                                               children: [
                                                 Icon(Icons.videocam_outlined, size: 14, color: tagColor),
                                                 const SizedBox(width: 4),
@@ -474,11 +484,15 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                                         );
                                       },
                                       icon: const Icon(Icons.chat_bubble_outline_rounded, size: 16),
-                                      label: Text(
-                                        AppLocalizations.of(context)!.requestChat,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 13,
+                                      label: FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Text(
+                                          AppLocalizations.of(context)!.requestChat,
+                                          maxLines: 1,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 13,
+                                          ),
                                         ),
                                       ),
                                       style: OutlinedButton.styleFrom(
@@ -513,20 +527,24 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                                           borderRadius: BorderRadius.circular(12),
                                         ),
                                       ),
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            AppLocalizations.of(context)!.viewProfile,
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 13,
+                                      child: FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              AppLocalizations.of(context)!.viewProfile,
+                                              maxLines: 1,
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 13,
+                                              ),
                                             ),
-                                          ),
-                                          const SizedBox(width: 4),
-                                          const Icon(Icons.chevron_right, color: Colors.white, size: 18),
-                                        ],
+                                            const SizedBox(width: 4),
+                                            const Icon(Icons.chevron_right, color: Colors.white, size: 18),
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   ),

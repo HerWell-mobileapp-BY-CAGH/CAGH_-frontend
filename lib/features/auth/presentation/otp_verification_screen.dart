@@ -163,16 +163,20 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          SizedBox(
+                          const SizedBox(
                             width: 18, height: 18,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
                               color: AppColors.primaryGreen,
                             ),
                           ),
-                          SizedBox(width: 10),
-                          Text(AppLocalizations.of(context)!.sendingVerificationCode,
-                              style: TextStyle(color: AppColors.primaryGreen, fontSize: 13)),
+                          const SizedBox(width: 10),
+                          Flexible(
+                            child: Text(
+                              AppLocalizations.of(context)!.sendingVerificationCode,
+                              style: const TextStyle(color: AppColors.primaryGreen, fontSize: 13),
+                            ),
+                          ),
                         ],
                       ),
                     )
@@ -225,53 +229,56 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
                   // OTP Boxes
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(6, (index) {
-                      return SizedBox(
-                        width: 48,
-                        height: 56,
-                        child: TextField(
-                          controller: _controllers[index],
-                          focusNode: _focusNodes[index],
-                          textAlign: TextAlign.center,
-                          keyboardType: TextInputType.number,
-                          maxLength: 1,
-                          style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          decoration: InputDecoration(
-                            counterText: '',
-                            filled: true,
-                            fillColor: Colors.white,
-                            contentPadding: EdgeInsets.zero,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.grey.shade300),
+                      return Flexible(
+                        child: Container(
+                          constraints: const BoxConstraints(maxWidth: 48),
+                          height: 56,
+                          margin: const EdgeInsets.symmetric(horizontal: 3),
+                          child: TextField(
+                            controller: _controllers[index],
+                            focusNode: _focusNodes[index],
+                            textAlign: TextAlign.center,
+                            keyboardType: TextInputType.number,
+                            maxLength: 1,
+                            style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w600,
                             ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.grey.shade300),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: AppColors.primaryGreen,
-                                width: 2,
+                            decoration: InputDecoration(
+                              counterText: '',
+                              filled: true,
+                              fillColor: Colors.white,
+                              contentPadding: EdgeInsets.zero,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: Colors.grey.shade300),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: Colors.grey.shade300),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: AppColors.primaryGreen,
+                                  width: 2,
+                                ),
                               ),
                             ),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
+                            onChanged: (value) {
+                              if (value.isNotEmpty && index < 5) {
+                                _focusNodes[index + 1].requestFocus();
+                              }
+                              if (value.isEmpty && index > 0) {
+                                _focusNodes[index - 1].requestFocus();
+                              }
+                            },
                           ),
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                          ],
-                          onChanged: (value) {
-                            if (value.isNotEmpty && index < 5) {
-                              _focusNodes[index + 1].requestFocus();
-                            }
-                            if (value.isEmpty && index > 0) {
-                              _focusNodes[index - 1].requestFocus();
-                            }
-                          },
                         ),
                       );
                     }),
@@ -405,11 +412,15 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                                 strokeWidth: 2.5,
                               ),
                             )
-                          : Text(
-                              '${AppLocalizations.of(context)!.verify}  →',
-                              style: const TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w600,
+                          : FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                '${AppLocalizations.of(context)!.verify}  →',
+                                style: const TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                maxLines: 1,
                               ),
                             ),
                     ),

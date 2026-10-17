@@ -48,6 +48,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       child: Text(
                         AppLocalizations.of(context)!.forgotPassword,
                         textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 18,
@@ -194,11 +196,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                 strokeWidth: 2.5,
                               ),
                             )
-                          : Text(
-                              AppLocalizations.of(context)!.sendCode,
-                              style: const TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w600,
+                          : FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                AppLocalizations.of(context)!.sendCode,
+                                style: const TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                maxLines: 1,
                               ),
                             ),
                     ),

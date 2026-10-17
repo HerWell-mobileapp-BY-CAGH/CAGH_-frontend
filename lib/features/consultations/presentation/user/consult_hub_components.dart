@@ -108,7 +108,6 @@ Widget buildStatusIndicator(BuildContext context, AppointmentStatus status) {
           fontSize: 11,
           fontWeight: FontWeight.w700,
           color: dotColor,
-          letterSpacing: 0.6,
         ),
       ),
     ],
@@ -635,13 +634,20 @@ Widget buildMinimalTabBar({
                   ),
                 ),
               ),
-              child: Text(
-                tabs[index],
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                  color: isSelected ? AppColors.primaryGreen : (isDark ? Colors.grey.shade400 : const Color(0xFF64748B)),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    tabs[index],
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                      color: isSelected ? AppColors.primaryGreen : (isDark ? Colors.grey.shade400 : const Color(0xFF64748B)),
+                    ),
+                  ),
                 ),
               ),
             ),

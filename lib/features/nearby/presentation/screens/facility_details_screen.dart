@@ -119,7 +119,9 @@ class FacilityDetailsScreen extends StatelessWidget {
                   ],
                   _buildInfoRow(
                     Icons.access_time, 
-                    facility.isOpen ? 'Currently Open' : 'Closed', 
+                    facility.isOpen
+                        ? (Localizations.localeOf(context).languageCode == 'am' ? 'ክፍት ነው' : 'Currently Open')
+                        : (Localizations.localeOf(context).languageCode == 'am' ? 'ዝግ ነው' : 'Closed'), 
                     facility.operatingHours ?? 'Not specified',
                     iconColor: facility.isOpen ? Colors.green : Colors.red,
                   ),
@@ -183,7 +185,14 @@ class FacilityDetailsScreen extends StatelessWidget {
                         launchUrl(uri, mode: LaunchMode.externalApplication);
                       },
                       icon: Icon(Icons.directions, color: Colors.white),
-                      label: Text(AppLocalizations.of(context)!.getDirections, style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                      label: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          AppLocalizations.of(context)!.getDirections,
+                          maxLines: 1,
+                          style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primaryGreen,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -202,7 +211,14 @@ class FacilityDetailsScreen extends StatelessWidget {
                           launchUrl(uri);
                         },
                         icon: Icon(Icons.call, color: AppColors.primaryGreen),
-                        label: Text(AppLocalizations.of(context)!.callFacility, style: TextStyle(color: AppColors.primaryGreen, fontSize: 16, fontWeight: FontWeight.bold)),
+                        label: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            AppLocalizations.of(context)!.callFacility,
+                            maxLines: 1,
+                            style: const TextStyle(color: AppColors.primaryGreen, fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                        ),
                         style: OutlinedButton.styleFrom(
                           side: const BorderSide(color: AppColors.primaryGreen),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

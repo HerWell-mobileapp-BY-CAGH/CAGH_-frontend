@@ -488,7 +488,6 @@ class _MidwifePersonalInformationScreenState extends State<MidwifePersonalInform
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
-                      letterSpacing: 0.8,
                       color: Colors.grey.shade600,
                     ),
                   ),

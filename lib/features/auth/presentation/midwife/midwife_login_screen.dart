@@ -39,8 +39,28 @@ class _MidwifeLoginScreenState extends State<MidwifeLoginScreen> {
     final password = _passwordController.text;
 
     setState(() {
-      _emailError = identifier.isEmpty ? AppLocalizations.of(context)!.valEmailPhoneReq : null;
-      _passwordError = password.isEmpty ? AppLocalizations.of(context)!.valPasswordReq : null;
+      if (identifier.isEmpty) {
+        _emailError = AppLocalizations.of(context)!.valEmailPhoneReq;
+      } else {
+        final emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+        final cleanPhone = identifier.replaceAll(RegExp(r'[\s\-()]'), '');
+        final ethPhoneRegExp = RegExp(r'^(?:\+251|0)?[97]\d{8}$');
+        final genericPhoneRegExp = RegExp(r'^\+?\d{8,15}$');
+
+        if (!emailRegExp.hasMatch(identifier) &&
+            !ethPhoneRegExp.hasMatch(cleanPhone) &&
+            !genericPhoneRegExp.hasMatch(cleanPhone)) {
+          _emailError =
+              AppLocalizations.of(context)?.valInvalidEmailPhone ??
+              'Please enter a valid email or phone number';
+        } else {
+          _emailError = null;
+        }
+      }
+
+      _passwordError = password.isEmpty
+          ? AppLocalizations.of(context)!.valPasswordReq
+          : null;
     });
 
     if (_emailError != null || _passwordError != null) return;
@@ -64,9 +84,9 @@ class _MidwifeLoginScreenState extends State<MidwifeLoginScreen> {
       );
 
       if (!mounted) return;
-      
+
       final userRole = result.data?['user']?['role']?.toString().toUpperCase();
-      
+
       if (userRole != null && userRole.isNotEmpty && userRole != 'MIDWIFE') {
         CustomSnackBar.show(
           context,
@@ -81,11 +101,13 @@ class _MidwifeLoginScreenState extends State<MidwifeLoginScreen> {
         final repo = MidwifeRepositoryImpl(MidwifeApiService());
         final profile = await repo.getMyProfile();
         if (!mounted) return;
-        
+
         if (profile == null) {
           Navigator.pushAndRemoveUntil(
             context,
-            MaterialPageRoute(builder: (context) => const MidwifeSetupProfileScreen()),
+            MaterialPageRoute(
+              builder: (context) => const MidwifeSetupProfileScreen(),
+            ),
             (route) => false,
           );
         } else {
@@ -106,8 +128,14 @@ class _MidwifeLoginScreenState extends State<MidwifeLoginScreen> {
     } else {
       String err = result.message;
       final lowerErr = err.toLowerCase();
-      if (lowerErr.contains('incorrect email or password') || lowerErr.contains('invalid credentials') || lowerErr.contains('no active account') || lowerErr.contains('unauthorized')) {
-        err = AppLocalizations.of(context)?.invalidCredentials ?? 'Incorrect email or password. Please try again.';
+      if (lowerErr.contains('incorrect email or password') ||
+          lowerErr.contains('incorrect email') ||
+          lowerErr.contains('invalid credentials') ||
+          lowerErr.contains('no active account') ||
+          lowerErr.contains('unauthorized')) {
+        err =
+            AppLocalizations.of(context)?.invalidCredentials ??
+            'Incorrect email, phone number, or password. Please try again.';
       }
       setState(() {
         _passwordError = err;
@@ -118,9 +146,14 @@ class _MidwifeLoginScreenState extends State<MidwifeLoginScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark ? Theme.of(context).scaffoldBackgroundColor : Colors.white;
+    final bgColor = isDark
+        ? Theme.of(context).scaffoldBackgroundColor
+        : Colors.white;
     final cardColor = isDark ? Theme.of(context).cardColor : Colors.white;
     final textColor = isDark ? Colors.white : AppColors.textDark;
+    final linkColor = isDark
+        ? const Color(0xFF66BB6A)
+        : const Color(0xFF1B5E20);
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -148,47 +181,71 @@ class _MidwifeLoginScreenState extends State<MidwifeLoginScreen> {
                   ],
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Center(
-                      child: Container(
-                        width: 80,
-                        height: 80,
-                        margin: const EdgeInsets.only(bottom: 16),
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: ClipOval(
-                            child: Image.asset(
-                              'assets/images/logo.png',
-                              width: 60,
-                              height: 60,
-                              fit: BoxFit.cover,
+                    Container(
+                      width: 64,
+                      height: 64,
+                      margin: const EdgeInsets.only(bottom: 24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          if (!isDark)
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.06),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
                             ),
+                        ],
+                      ),
+                      child: Center(
+                        child: ClipOval(
+                          child: Image.asset(
+                            'assets/images/logo.png',
+                            width: 44,
+                            height: 44,
+                            fit: BoxFit.contain,
+                            errorBuilder: (_, _, _) {
+                              return const Icon(Icons.spa, color: AppColors.primaryGreen, size: 28);
+                            },
                           ),
                         ),
                       ),
                     ),
                     Text(
                       AppLocalizations.of(context)!.welcomeBack,
+                      textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
                         color: textColor,
                       ),
                     ),
-                    SizedBox(height: 28),
+                    const SizedBox(height: 32),
 
                     AppTextField(
                       controller: _emailController,
                       labelText: AppLocalizations.of(context)!.emailPhone,
-                      hintText: AppLocalizations.of(context)!.enterContactDetails,
+                      hintText: AppLocalizations.of(
+                        context,
+                      )!.enterContactDetails,
                       keyboardType: TextInputType.emailAddress,
                       errorText: _emailError,
+                      prefixIcon: Icon(
+                        _emailController.text.trim().startsWith(
+                              RegExp(r'[\d+]'),
+                            )
+                            ? Icons.phone_outlined
+                            : Icons.alternate_email,
+                      ),
+                      onChanged: (val) {
+                        setState(() {
+                          if (_emailError != null) _emailError = null;
+                        });
+                      },
                     ),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
 
                     AppTextField(
                       controller: _passwordController,
@@ -206,20 +263,27 @@ class _MidwifeLoginScreenState extends State<MidwifeLoginScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => ForgotPasswordScreen(isMidwife: true),
+                              builder: (_) =>
+                                  const ForgotPasswordScreen(isMidwife: true),
                             ),
                           );
                         },
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
                         child: Text(
                           AppLocalizations.of(context)!.forgotPassword,
                           style: TextStyle(
-                            color: Theme.of(context).primaryColor,
-                            fontWeight: FontWeight.w500,
+                            color: linkColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
                           ),
                         ),
                       ),
                     ),
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
                     PrimaryButton(
                       text: AppLocalizations.of(context)!.login,
@@ -229,29 +293,37 @@ class _MidwifeLoginScreenState extends State<MidwifeLoginScreen> {
                   ],
                 ),
               ),
-              SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+              const SizedBox(height: 24),
+              Wrap(
+                alignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 6,
+                runSpacing: 4,
                 children: [
                   Text(
                     AppLocalizations.of(context)!.dontHaveAccount,
-                    style: TextStyle(color: isDark ? Colors.grey.shade400 : Colors.grey.shade800),
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: isDark
+                          ? Colors.grey.shade400
+                          : Colors.grey.shade800,
+                    ),
                   ),
-                  const SizedBox(width: 4),
                   GestureDetector(
                     onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => MidwifeRegistrationScreen(),
+                          builder: (_) => const MidwifeRegistrationScreen(),
                         ),
                       );
                     },
                     child: Text(
                       AppLocalizations.of(context)!.register,
                       style: TextStyle(
-                        color: Theme.of(context).primaryColor,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                        color: linkColor,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),

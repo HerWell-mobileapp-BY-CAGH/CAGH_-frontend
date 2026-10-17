@@ -190,12 +190,16 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
                                 borderRadius: BorderRadius.circular(22),
                               ),
                             ),
-                            child: const Text(
-                              'Edit Profile',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                AppLocalizations.of(context)!.editProfile,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
+                                maxLines: 1,
                               ),
                             ),
                           ),

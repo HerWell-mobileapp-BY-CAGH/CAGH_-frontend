@@ -42,11 +42,11 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
   void initState() {
     super.initState();
     if (widget.midwife.supportsVoiceCall) {
-      _consultationType = 'Voice Call';
+      _consultationType = 'VOICE';
     } else if (widget.midwife.supportsInPerson) {
-      _consultationType = 'In Person';
+      _consultationType = 'IN_PERSON';
     } else {
-      _consultationType = 'Voice Call';
+      _consultationType = 'VOICE';
     }
     _fetchSchedule();
   }
@@ -86,9 +86,9 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
     }
   }
 
-  String? _getIncompatibilityErrorMessage(TimeSlot slot, String selectedTypeTitle) {
-    final isVoiceSelected = selectedTypeTitle.toLowerCase().contains('voice');
-    final isPersonSelected = !isVoiceSelected;
+  String? _getIncompatibilityErrorMessage(TimeSlot slot, String selectedType) {
+    final isVoiceSelected = selectedType == 'VOICE' || selectedType.toLowerCase().contains('voice');
+    final isPersonSelected = selectedType == 'IN_PERSON' || !isVoiceSelected;
     final category = slot.consultationTypeCategory;
 
     if (category == 'both') return null; // Always compatible
@@ -137,12 +137,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
     try {
       final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDay);
           
-      String apptType = 'VIRTUAL_VOICE';
-      if (_consultationType.toLowerCase().contains('voice')) {
-        apptType = 'VIRTUAL_VOICE';
-      } else if (_consultationType == AppLocalizations.of(context)!.inPerson) {
-        apptType = 'IN_PERSON';
-      }
+      final apptType = _consultationType == 'IN_PERSON' ? 'IN_PERSON' : 'VIRTUAL_VOICE';
 
       await _appointmentRepository.requestAppointment({
         'midwife': widget.midwife.id,
@@ -283,7 +278,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
             // CONSULTATION TYPE Section
             Text(
               AppLocalizations.of(context)!.consultationType,
-              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: textSecondary),
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: textSecondary),
             ),
             const SizedBox(height: 12),
             if (!widget.midwife.supportsVoiceCall && !widget.midwife.supportsInPerson)
@@ -311,11 +306,19 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
               Row(
                 children: [
                   if (widget.midwife.supportsVoiceCall)
-                    _buildConsultationTypeCard('Voice Call', Icons.call),
+                    _buildConsultationTypeCard(
+                      typeKey: 'VOICE',
+                      title: AppLocalizations.of(context)!.voiceCall,
+                      icon: Icons.call,
+                    ),
                   if (widget.midwife.supportsVoiceCall && widget.midwife.supportsInPerson)
                     const SizedBox(width: 12),
                   if (widget.midwife.supportsInPerson)
-                    _buildConsultationTypeCard(AppLocalizations.of(context)!.inPerson, Icons.home_outlined),
+                    _buildConsultationTypeCard(
+                      typeKey: 'IN_PERSON',
+                      title: AppLocalizations.of(context)!.inPerson,
+                      icon: Icons.home_outlined,
+                    ),
                 ],
               ),
             const SizedBox(height: 24),
@@ -394,7 +397,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
             // AVAILABLE TIMES Section
             Text(
               AppLocalizations.of(context)!.availableTimes,
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: textSecondary),
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: textSecondary),
             ),
             const SizedBox(height: 16),
 
@@ -465,7 +468,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
             const SizedBox(height: 16),
             Text(
               AppLocalizations.of(context)!.reasonForVisit,
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: textSecondary),
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: textSecondary),
             ),
             const SizedBox(height: 12),
             TextField(
@@ -501,9 +504,13 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
               child: ElevatedButton.icon(
                 onPressed: _confirmBooking,
                 icon: const Icon(Icons.calendar_today, color: Colors.white, size: 18),
-                label: Text(
-                  AppLocalizations.of(context)!.confirmBooking,
-                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                label: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    AppLocalizations.of(context)!.confirmBooking,
+                    style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                    maxLines: 1,
+                  ),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: buttonGreen,
@@ -542,12 +549,16 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
     );
   }
 
-  Widget _buildConsultationTypeCard(String title, IconData icon) {
+  Widget _buildConsultationTypeCard({
+    required String typeKey,
+    required String title,
+    required IconData icon,
+  }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryColor = isDark ? AppColors.darkPrimary : const Color(0xFF385A2E);
     final cardBg = isDark ? AppColors.darkSurface : Colors.white;
 
-    final isSelected = _consultationType == title;
+    final isSelected = _consultationType == typeKey;
     final cardBorder = isSelected
         ? primaryColor
         : (isDark ? AppColors.darkBorder : Colors.grey.shade200);
@@ -556,13 +567,13 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
       child: GestureDetector(
         onTap: () {
           setState(() {
-            _consultationType = title;
+            _consultationType = typeKey;
             _selectedSlotId = null;
             _selectedSlotTime = null;
           });
         },
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 20),
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 8),
           decoration: BoxDecoration(
             color: cardBg,
             borderRadius: BorderRadius.circular(16),
@@ -572,15 +583,20 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
             ),
           ),
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(icon, color: isSelected ? primaryColor : (isDark ? AppColors.darkTextSecondary : Colors.grey.shade500), size: 28),
               const SizedBox(height: 8),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  color: isSelected ? primaryColor : (isDark ? AppColors.darkTextSecondary : Colors.grey.shade600),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: isSelected ? primaryColor : (isDark ? AppColors.darkTextSecondary : Colors.grey.shade600),
+                  ),
+                  maxLines: 1,
                 ),
               ),
             ],

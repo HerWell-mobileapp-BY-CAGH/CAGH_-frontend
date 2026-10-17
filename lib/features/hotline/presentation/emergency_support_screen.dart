@@ -292,13 +292,15 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+        constraints: const BoxConstraints(minHeight: 88),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: AppColors.primaryGreen, width: 1.0), // Dark green border
         ),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Container(
               padding: const EdgeInsets.all(12),
@@ -311,6 +313,7 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
             const SizedBox(width: 16),
             Expanded(
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
@@ -321,6 +324,8 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
                       color: Colors.black87,
                       height: 1.2,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   if (subtitle.isNotEmpty) ...[
                     const SizedBox(height: 4),
@@ -330,6 +335,8 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
                         fontSize: 12,
                         color: Colors.grey.shade700,
                       ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ],

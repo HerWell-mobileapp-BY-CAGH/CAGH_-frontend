@@ -8,14 +8,12 @@ void main() async {
     'password': '!1234abcd#'
   };
 
-// ignore: avoid_print
-  print('Sending request to backend...');
   try {
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(payload),
-    ).timeout(Duration(seconds: 60));
+    ).timeout(const Duration(seconds: 45));
 
     // ignore: avoid_print
     print('Status Code: ${response.statusCode}');

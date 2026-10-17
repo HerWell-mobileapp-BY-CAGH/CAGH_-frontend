@@ -859,7 +859,6 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> with TickerProviderSt
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
-                            letterSpacing: 0.5,
                           ),
                         ),
 
@@ -1088,7 +1087,6 @@ class _VoiceCallScreenState extends State<VoiceCallScreen> with TickerProviderSt
             color: Colors.white,
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            letterSpacing: 0.3,
           ),
         ),
       ],

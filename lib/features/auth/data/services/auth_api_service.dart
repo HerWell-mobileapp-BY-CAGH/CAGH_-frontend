@@ -54,15 +54,25 @@ class AuthService {
     required String password,
     String? role,
   }) async {
+    final trimmed = identifier.trim();
     final isMidwife =
-        identifier.toLowerCase().contains('midwife') || _lastRole == 'MIDWIFE' || role == 'MIDWIFE';
+        trimmed.toLowerCase().contains('midwife') || _lastRole == 'MIDWIFE' || role == 'MIDWIFE';
     final activeRole = role ?? (isMidwife ? 'MIDWIFE' : 'PATIENT');
     _lastRole = activeRole;
 
-    final derivedName = _deriveDisplayName(identifier, isMidwife);
-    final userEmail =
-        identifier.contains('@') ? identifier : '$identifier@example.com';
-    final userPhone = identifier.contains('@') ? '' : identifier;
+    final isEmail = trimmed.contains('@');
+    final cleanPhone = trimmed.replaceAll(RegExp(r'[\s\-()]'), '');
+    final normalizedPhone = cleanPhone.startsWith('+251')
+        ? cleanPhone
+        : (cleanPhone.startsWith('0')
+            ? '+251${cleanPhone.substring(1)}'
+            : (cleanPhone.length == 9 && (cleanPhone.startsWith('9') || cleanPhone.startsWith('7'))
+                ? '+251$cleanPhone'
+                : cleanPhone));
+
+    final derivedName = _deriveDisplayName(trimmed, isMidwife);
+    final userEmail = isEmail ? trimmed : '$cleanPhone@example.com';
+    final userPhone = isEmail ? '' : normalizedPhone;
 
     final userObj = {
       'id': '101',
@@ -76,17 +86,53 @@ class AuthService {
 
     final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.login}');
     try {
-      final response = await http
-          .post(
-            url,
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({
-              'email': identifier,
-              'password': password,
-              'role': activeRole,
-            }),
-          )
-          .timeout(const Duration(seconds: 45));
+      Future<http.Response> postLogin(Map<String, dynamic> payload) {
+        return http
+            .post(
+              url,
+              headers: {'Content-Type': 'application/json'},
+              body: jsonEncode(payload),
+            )
+            .timeout(const Duration(seconds: 45));
+      }
+
+      http.Response response;
+      if (isEmail) {
+        response = await postLogin({
+          'email': trimmed.toLowerCase(),
+          'login': trimmed,
+          'username': trimmed,
+          'password': password,
+          'role': activeRole,
+          'expected_role': activeRole,
+        });
+      } else {
+        // Attempt 1: Authenticate using normalized phone number (+251...)
+        response = await postLogin({
+          'phone_number': normalizedPhone,
+          'login': normalizedPhone,
+          'username': normalizedPhone,
+          'password': password,
+          'role': activeRole,
+          'expected_role': activeRole,
+        });
+
+        // Attempt 2: If attempt 1 failed with 400/401 and clean format differs, retry with cleanPhone (e.g. 09...)
+        if ((response.statusCode == 400 || response.statusCode == 401) &&
+            cleanPhone != normalizedPhone) {
+          final retryResponse = await postLogin({
+            'phone_number': cleanPhone,
+            'login': cleanPhone,
+            'username': cleanPhone,
+            'password': password,
+            'role': activeRole,
+            'expected_role': activeRole,
+          });
+          if (retryResponse.statusCode == 200 || retryResponse.statusCode == 201) {
+            response = retryResponse;
+          }
+        }
+      }
 
       final body = jsonDecode(response.body);
 
@@ -104,7 +150,7 @@ class AuthService {
             ? body['user'] as Map<String, dynamic>
             : userObj;
 
-        // Role enforcement: 1 email for 1 role only
+        // Role enforcement: 1 account for 1 role only
         final serverRole = (finalUserObj['role'] ?? body['role'] ?? '').toString().toUpperCase();
         if (role != null && serverRole.isNotEmpty && serverRole != role.toUpperCase()) {
           await prefs.remove(_accessTokenKey);
@@ -115,12 +161,12 @@ class AuthService {
           if (role.toUpperCase() == 'MIDWIFE' && serverRole == 'PATIENT') {
             return ApiResponse(
               success: false,
-              message: 'This email is registered as an adolescent/patient account. Please use the User login.',
+              message: 'This account is registered as an adolescent/patient account. Please use the User login.',
             );
           } else if (role.toUpperCase() == 'PATIENT' && serverRole == 'MIDWIFE') {
             return ApiResponse(
               success: false,
-              message: 'This email is registered as a healthcare provider/midwife account. Please use the Midwife login.',
+              message: 'This account is registered as a healthcare provider/midwife account. Please use the Midwife login.',
             );
           } else {
             return ApiResponse(

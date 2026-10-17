@@ -33,15 +33,19 @@ class GlobeLanguagePicker extends StatelessWidget {
               value: lang.code,
               child: Row(
                 children: [
-                  Text(
-                    '${lang.nativeName} (${lang.name})',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                      color: isSelected ? AppColors.primaryGreen : Colors.black87,
+                  Expanded(
+                    child: Text(
+                      '${lang.nativeName} (${lang.name})',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        color: isSelected ? AppColors.primaryGreen : Colors.black87,
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 8),
                   if (isSelected)
                     const Icon(Icons.check_circle_rounded, color: AppColors.primaryGreen, size: 18),
                 ],

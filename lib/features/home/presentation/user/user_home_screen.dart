@@ -86,6 +86,8 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                       child: Text(
                         _getTabTitle(context),
                         textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 18,
@@ -169,19 +171,24 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Text(
-                            AppLocalizations.of(context)!.welcome,
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w800,
-                              color: isDark ? AppColors.darkPrimary : AppColors.primaryGreen,
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              AppLocalizations.of(context)!.welcome,
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w800,
+                                color: isDark ? AppColors.darkPrimary : AppColors.primaryGreen,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          Icon(Icons.favorite, color: isDark ? AppColors.darkPrimary : AppColors.primaryGreen, size: 20),
-                        ],
+                            const SizedBox(width: 8),
+                            Icon(Icons.favorite, color: isDark ? AppColors.darkPrimary : AppColors.primaryGreen, size: 20),
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Text(

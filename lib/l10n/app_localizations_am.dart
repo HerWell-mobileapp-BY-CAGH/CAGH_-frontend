@@ -9,7 +9,7 @@ class AppLocalizationsAm extends AppLocalizations {
   AppLocalizationsAm([String locale = 'am']) : super(locale);
 
   @override
-  String get appTitle => 'ዲጂታል አዋላጅ';
+  String get appTitle => 'ዲጂታል ሚድዋይፍ';
 
   @override
   String get chooseLanguage => 'ቋንቋዎን ይምረጡ';
@@ -78,7 +78,7 @@ class AppLocalizationsAm extends AppLocalizations {
   String get chooseJourney => 'ጉዞዎን ይምረጡ';
 
   @override
-  String get subUserType => 'ተሞክሮዎን ለማስተካከል ዲጂታል አዋላጅን እንዴት እንደሚጠቀሙ ይምረጡ።';
+  String get subUserType => 'ተሞክሮዎን ለማስተካከል ዲጂታል ሚድዋይፍን እንዴት እንደሚጠቀሙ ይምረጡ።';
 
   @override
   String get userTitle => 'ተጠቃሚ';
@@ -87,13 +87,13 @@ class AppLocalizationsAm extends AppLocalizations {
   String get userSubtitle => 'እርዳታ እና እንክብካቤ እፈልጋለሁ';
 
   @override
-  String get midwifeTitle => 'አዋላጅ';
+  String get midwifeTitle => 'ሚድዋይፍ';
 
   @override
   String get midwifeSubtitle => 'እኔ የጤና ባለሙያ ነኝ';
 
   @override
-  String get enterContactDetails => 'የመገናኛ ዝርዝሩን ያስገቡ';
+  String get enterContactDetails => 'ኢሜይል ወይም ስልክ ቁጥር ያስገቡ';
 
   @override
   String get enterPassword => 'የይለፍ ቃልዎን ያስገቡ';
@@ -114,7 +114,7 @@ class AppLocalizationsAm extends AppLocalizations {
   String get joinOurTeam => 'ቡድናችንን የተቀላቀሉ';
 
   @override
-  String get createAccountSubtitle => 'ለሴቶች ጤና እና አዋላጅ ድጋፍ ታማኝ አጋርዎ';
+  String get createAccountSubtitle => 'ለሴቶች ጤና እና ሚድዋይፍ ድጋፍ ታማኝ አጋርዎ';
 
   @override
   String get agreeTerms => 'በአገልግሎት ውሎች እና በግላዊነት ፖሊሲ እስማማለሁ።';
@@ -140,7 +140,7 @@ class AppLocalizationsAm extends AppLocalizations {
   String get sendCode => 'ኮድ ላክ';
 
   @override
-  String get midwifeLogin => 'አዋላጅ መግቢያ';
+  String get midwifeLogin => 'ሚድዋይፍ መግቢያ';
 
   @override
   String get todaysAppointments => 'የዛሬ ቀጠሮዎች';
@@ -227,13 +227,13 @@ class AppLocalizationsAm extends AppLocalizations {
   String get needToSeeSomeone => 'የጤና ባለሙያ ማናገር ይፈልጋሉ?';
 
   @override
-  String get ourMidwivesAvailable => 'አዋላጆቻችን በማንኛውም ጊዜ ለእርስዎ ዝግጁ ናቸው።';
+  String get ourMidwivesAvailable => 'ሚድዋይፎቻችን በማንኛውም ጊዜ ለእርስዎ ዝግጁ ናቸው።';
 
   @override
   String get bookAppointment => 'ቀጠሮ ይያዙ';
 
   @override
-  String get findAMidwife => 'አዋላጅ ፈልግ';
+  String get findAMidwife => 'ሚድዋይፍ ፈልግ';
 
   @override
   String get personalInformation => 'የግል መረጃ';
@@ -245,7 +245,7 @@ class AppLocalizationsAm extends AppLocalizations {
   String get changeProfilePhoto => 'የመገለጫ ፎቶ ይቀይሩ';
 
   @override
-  String get savedMidwives => 'የተቀመጡ አዋላጆች';
+  String get savedMidwives => 'የተቀመጡ ሚድዋይፎች';
 
   @override
   String get settings => 'ቅንብሮች';
@@ -269,7 +269,7 @@ class AppLocalizationsAm extends AppLocalizations {
   String get searchConversations => 'ውይይቶችን ፈልግ...';
 
   @override
-  String get onlineVerifiedMidwife => 'ኦንላይን • የተረጋገጠ አዋላጅ';
+  String get onlineVerifiedMidwife => 'ኦንላይን • የተረጋገጠ ሚድዋይፍ';
 
   @override
   String get valEmailPhoneReq => 'ኢሜይል ወይም ስልክ ቁጥር ያስፈልጋል።';
@@ -287,8 +287,11 @@ class AppLocalizationsAm extends AppLocalizations {
   String get valInvalidPhone => 'እባክዎ ትክክለኛ የስልክ ቁጥር ያስገቡ።';
 
   @override
+  String get valInvalidEmailPhone => 'እባክዎ ትክክለኛ ኢሜይል ወይም ስልክ ቁጥር ያስገቡ።';
+
+  @override
   String get invalidCredentials =>
-      'የተሳሳተ ኢሜይል ወይም የይለፍ ቃል አስገብተዋል። እባክዎ እንደገና ይሞክሩ።';
+      'የተሳሳተ ኢሜይል/ስልክ ቁጥር ወይም የይለፍ ቃል አስገብተዋል። እባክዎ እንደገና ይሞክሩ።';
 
   @override
   String get valPasswordReq => 'የይለፍ ቃል ያስፈልጋል።';
@@ -391,7 +394,7 @@ class AppLocalizationsAm extends AppLocalizations {
   String get waitingForConfirmation => 'ማረጋገጫ በመጠባበቅ ላይ።';
 
   @override
-  String get yourMidwife => 'አዋላጅዎ';
+  String get yourMidwife => 'ሚድዋይፍዎ';
 
   @override
   String get reasonForVisit => 'የጉብኝት ምክንያት';
@@ -459,7 +462,7 @@ class AppLocalizationsAm extends AppLocalizations {
   String get signInNewPassword => 'አሁን በአዲሱ የይለፍ ቃልዎ\\nመግባት ይችላሉ።';
 
   @override
-  String get midwifeRegistration => 'የአዋላጅ ምዝገባ';
+  String get midwifeRegistration => 'የሚድዋይፍ ምዝገባ';
 
   @override
   String get yearsOfExperience => 'የስራ ልምድ ዓመታት';
@@ -543,13 +546,13 @@ class AppLocalizationsAm extends AppLocalizations {
   String get cancelRequest => 'ጥያቄን ይሰርዙ';
 
   @override
-  String get certifiedMidwife => 'የተረጋገጠ አዋላጅ';
+  String get certifiedMidwife => 'የተረጋገጠ ሚድዋይፍ';
 
   @override
   String get keepAppointment => 'ቀጠሮውን አቆይ';
 
   @override
-  String get noMidwivesAvailable => 'በአሁኑ ጊዜ ምንም አዋላጆች አይገኙም።';
+  String get noMidwivesAvailable => 'በአሁኑ ጊዜ ምንም ሚድዋይፎች አይገኙም።';
 
   @override
   String get availableToday => 'ዛሬ ይገኛል';
@@ -561,7 +564,7 @@ class AppLocalizationsAm extends AppLocalizations {
   String get message => 'መልእክት';
 
   @override
-  String get verifiedMidwife => 'የተረጋገጠ አዋላጅ';
+  String get verifiedMidwife => 'የተረጋገጠ ሚድዋይፍ';
 
   @override
   String get hospital => 'ሆስፒታል';
@@ -810,7 +813,8 @@ class AppLocalizationsAm extends AppLocalizations {
   String get tomorrowAt10AM => 'ነገ ጠዋት 4:00 • ሲስተር ማርታ';
 
   @override
-  String get searchHospitalsClinicsMidwives => 'ሆስፒታሎች፣ ክሊኒኮች እና አዋላጆች ይፈልጉ...';
+  String get searchHospitalsClinicsMidwives =>
+      'ሆስፒታሎች፣ ክሊኒኮች እና ሚድዋይፎች ይፈልጉ...';
 
   @override
   String get clinic => 'ክሊኒክ';
@@ -828,7 +832,7 @@ class AppLocalizationsAm extends AppLocalizations {
   String get noPastConsultations => 'ምንም ያለፉ ውይይቶች የሉም';
 
   @override
-  String get connectWithCertifiedMidwife => 'ለምክር ከተረጋገጠ አዋላጅ ጋር ይገናኙ';
+  String get connectWithCertifiedMidwife => 'ለምክር ከተረጋገጠ ሚድዋይፍ ጋር ይገናኙ';
 
   @override
   String get messages => 'መልእክቶች';
@@ -947,7 +951,7 @@ class AppLocalizationsAm extends AppLocalizations {
   String get earpiece => 'ኢርፒስ';
 
   @override
-  String get digitalMidwife => 'ዲጂታል አዋላጅ';
+  String get digitalMidwife => 'ዲጂታል ሚድዋይፍ';
 
   @override
   String get systemDefault => 'የስርዓቱ ነባሪ';
@@ -1089,7 +1093,7 @@ class AppLocalizationsAm extends AppLocalizations {
   String get failedToLoadNotifications => 'ማሳወቂያዎችን መጫን አልተሳካም';
 
   @override
-  String get failedToLoadMidwives => 'አዋላጆችን መጫን አልተሳካም';
+  String get failedToLoadMidwives => 'ሚድዋይፎችን መጫን አልተሳካም';
 
   @override
   String get unableToConnectConsultation =>
@@ -1103,7 +1107,7 @@ class AppLocalizationsAm extends AppLocalizations {
 
   @override
   String get waitForMidwifeAccept =>
-      'ተጨማሪ መልእክት ከመላክዎ በፊት አዋላጇ ጥያቄውን እስክታረጋግጥ ይጠብቁ።';
+      'ተጨማሪ መልእክት ከመላክዎ በፊት ሚድዋይፏ ጥያቄውን እስክታረጋግጥ ይጠብቁ።';
 
   @override
   String get waitForChatConnected => 'ውይይቱ እስኪገናኝ ይጠብቁ።';
@@ -1155,10 +1159,10 @@ class AppLocalizationsAm extends AppLocalizations {
 
   @override
   String get connectAndMessageDirectly =>
-      'ከተረጋገጡ የጤና አጠባበቅ አዋላጆቻችን ጋር በቀጥታ ይገናኙ እና ይወያዩ።';
+      'ከተረጋገጡ የጤና አጠባበቅ ሚድዋይፎቻችን ጋር በቀጥታ ይገናኙ እና ይወያዩ።';
 
   @override
-  String get startChatWithMidwife => 'ከአዋላጅ ጋር ውይይት ጀምር';
+  String get startChatWithMidwife => 'ከሚድዋይፍ ጋር ውይይት ጀምር';
 
   @override
   String get upcomingConsultation => 'የሚመጣ ምክክር';
@@ -1395,26 +1399,26 @@ class AppLocalizationsAm extends AppLocalizations {
   }
 
   @override
-  String get dedicatedMidwifeDesc => 'ምርጥ እንክብካቤ ለመስጠት ቁርጠኛ የሆነች አዋላጅ።';
+  String get dedicatedMidwifeDesc => 'ምርጥ እንክብካቤ ለመስጠት ቁርጠኛ የሆነች ሚድዋይፍ።';
 
   @override
   String get noMidwivesMatchFilters =>
-      'ምንም አዋላጅ ከማጣሪያዎችዎ ጋር አይዛመድም። ዳግም ለማስጀመር ይሞክሩ።';
+      'ምንም ሚድዋይፍ ከማጣሪያዎችዎ ጋር አይዛመድም። ዳግም ለማስጀመር ይሞክሩ።';
 
   @override
   String get userRegistration => 'የተጠቃሚ ምዝገባ';
 
   @override
-  String get seekingCareTitle => 'እርዳታ እና እንክብካቤ እፈልጋለሁ';
+  String get seekingCareTitle => 'እርዳታ ፈላጊ ነኝ';
 
   @override
-  String get seekingCareSubtitle => 'የጤና መረጃ፣ ድጋፍ እና አገልግሎቶችን እፈልጋለሁ።';
+  String get seekingCareSubtitle => 'የጤና መረጃ፣ ድጋፍ እና\nአገልግሎቶችን እፈልጋለሁ።';
 
   @override
-  String get midwifeRoleTitle => 'እኔ አዋላጅ ነኝ';
+  String get midwifeRoleTitle => 'እኔ ሚድዋይፍ ነኝ';
 
   @override
-  String get midwifeRoleSubtitle => 'ደንበኞችን የምደግፍ የጤና ባለሙያ ነኝ።';
+  String get midwifeRoleSubtitle => 'ደንበኞችን የምደግፍ\nየጤና ባለሙያ ነኝ።';
 
   @override
   String get selectDateOfBirth => 'የትውልድ ቀንዎን ይምረጡ';
@@ -1568,7 +1572,7 @@ class AppLocalizationsAm extends AppLocalizations {
 
   @override
   String get roleMismatchPatientError =>
-      'ይህ ኢሜይል የተመዘገበው እንደ አዋላጅ/ባለሙያ መለያ ነው። እባክዎ በአዋላጅ መግቢያ ይጠቀሙ።';
+      'ይህ ኢሜይል የተመዘገበው እንደ ሚድዋይፍ/ባለሙያ መለያ ነው። እባክዎ በሚድዋይፍ መግቢያ ይጠቀሙ።';
 
   @override
   String get startTimeCannotBeInPast => 'የመጀመሪያ ሰዓት ለዛሬ ካለፈው ሰዓት መሆን የለበትም';

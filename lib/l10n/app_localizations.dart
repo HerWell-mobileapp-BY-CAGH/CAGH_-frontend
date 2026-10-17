@@ -269,7 +269,7 @@ abstract class AppLocalizations {
   /// No description provided for @enterContactDetails.
   ///
   /// In en, this message translates to:
-  /// **'Enter your contact details'**
+  /// **'Enter your email or phone number'**
   String get enterContactDetails;
 
   /// No description provided for @enterPassword.
@@ -650,10 +650,16 @@ abstract class AppLocalizations {
   /// **'Please enter a valid phone number.'**
   String get valInvalidPhone;
 
+  /// No description provided for @valInvalidEmailPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid email or phone number.'**
+  String get valInvalidEmailPhone;
+
   /// No description provided for @invalidCredentials.
   ///
   /// In en, this message translates to:
-  /// **'Incorrect email or password. Please try again.'**
+  /// **'Incorrect email, phone number, or password. Please try again.'**
   String get invalidCredentials;
 
   /// No description provided for @valPasswordReq.

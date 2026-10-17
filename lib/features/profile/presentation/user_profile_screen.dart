@@ -420,12 +420,16 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                         }
                       },
                       icon: const Icon(Icons.logout, color: Colors.red),
-                      label: Text(
-                        AppLocalizations.of(context)!.logout,
-                        style: const TextStyle(
-                          color: Colors.red,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16,
+                      label: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          AppLocalizations.of(context)!.logout,
+                          maxLines: 1,
+                          style: const TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                          ),
                         ),
                       ),
                       style: OutlinedButton.styleFrom(
@@ -517,6 +521,8 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
       leading: Icon(icon, color: AppColors.primaryGreen, size: 22),
       title: Text(
         title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
         style: TextStyle(
           fontSize: 14.5,
           fontWeight: FontWeight.w600,
@@ -526,6 +532,8 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
       subtitle: subtitle != null
           ? Text(
               subtitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color),
             )
           : null,

@@ -121,12 +121,17 @@ class _SearchFilterBottomSheetState extends State<SearchFilterBottomSheet> {
         top: 16,
         bottom: MediaQuery.of(context).viewInsets.bottom + 24,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Drag handle
-          Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Drag handle
+              Center(
             child: Container(
               width: 40,
               height: 5,
@@ -310,10 +315,19 @@ class _SearchFilterBottomSheetState extends State<SearchFilterBottomSheet> {
                   borderRadius: BorderRadius.circular(25),
                 ),
               ),
-              child: Text(l10n.applyFilters, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  l10n.applyFilters,
+                  maxLines: 1,
+                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
             ),
           ),
         ],
+      ),
+        ),
       ),
     );
   }

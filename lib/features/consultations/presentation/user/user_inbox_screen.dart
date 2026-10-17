@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:async';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
@@ -247,11 +247,23 @@ class _UserInboxScreenState extends ConsumerState<UserInboxScreen> with SingleTi
           tabs: [
             Tab(
               icon: const Icon(Icons.forum_outlined, size: 20),
-              text: AppLocalizations.of(context)!.conversationsCount(_rooms.length),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  AppLocalizations.of(context)!.conversationsCount(_rooms.length),
+                  maxLines: 1,
+                ),
+              ),
             ),
             Tab(
               icon: const Icon(Icons.people_outline, size: 20),
-              text: AppLocalizations.of(context)!.midwivesCount(_midwives.length),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  AppLocalizations.of(context)!.midwivesCount(_midwives.length),
+                  maxLines: 1,
+                ),
+              ),
             ),
           ],
         ),
@@ -614,9 +626,13 @@ class _UserInboxScreenState extends ConsumerState<UserInboxScreen> with SingleTi
                             ElevatedButton.icon(
                               onPressed: () => _openChatWithMidwife(mw),
                               icon: const Icon(Icons.chat_outlined, size: 16, color: Colors.white),
-                              label: Text(
-                                AppLocalizations.of(context)!.message,
-                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                              label: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  AppLocalizations.of(context)!.message,
+                                  maxLines: 1,
+                                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                                ),
                               ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppColors.primaryGreen,

@@ -64,7 +64,6 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                         fontSize: 26,
                         fontWeight: FontWeight.w800,
                         color: isDark ? Colors.white : const Color(0xFF1C1C1E),
-                        letterSpacing: -0.5,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -175,11 +174,15 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            AppLocalizations.of(context)!.continueBtn,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
+                          Flexible(
+                            child: Text(
+                              AppLocalizations.of(context)!.continueBtn,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           const SizedBox(width: 8),

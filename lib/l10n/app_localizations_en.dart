@@ -95,7 +95,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get midwifeSubtitle => 'I am a healthcare provider';
 
   @override
-  String get enterContactDetails => 'Enter your contact details';
+  String get enterContactDetails => 'Enter your email or phone number';
 
   @override
   String get enterPassword => 'Enter your password';
@@ -294,8 +294,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get valInvalidPhone => 'Please enter a valid phone number.';
 
   @override
+  String get valInvalidEmailPhone =>
+      'Please enter a valid email or phone number.';
+
+  @override
   String get invalidCredentials =>
-      'Incorrect email or password. Please try again.';
+      'Incorrect email, phone number, or password. Please try again.';
 
   @override
   String get valPasswordReq => 'Password is required.';
