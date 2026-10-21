@@ -6,6 +6,8 @@ import 'package:cagh_frontend/shared/constants/app_colors.dart';
 import 'package:cagh_frontend/shared/widgets/custom_snackbar.dart';
 import 'package:cagh_frontend/core/utils/app_logger.dart';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
+import 'package:cagh_frontend/shared/utils/ethiopian_date_time.dart';
+import 'package:cagh_frontend/shared/widgets/ethiopian_pickers.dart';
 
 class MidwifeManageScheduleScreen extends StatefulWidget {
   const MidwifeManageScheduleScreen({super.key});
@@ -103,6 +105,7 @@ class _MidwifeManageScheduleScreenState extends State<MidwifeManageScheduleScree
     final cardBorder = isDark ? AppColors.darkBorder : Colors.black12;
     final textPrimary = isDark ? AppColors.darkTextPrimary : const Color(0xFF182335);
     final textSecondary = isDark ? AppColors.darkTextSecondary : Colors.black54;
+    final currentLocale = Localizations.localeOf(context).languageCode;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -229,13 +232,18 @@ class _MidwifeManageScheduleScreenState extends State<MidwifeManageScheduleScree
                                 context,
                                 label: AppLocalizations.of(context)!.startTime,
                                 time: _startTime,
+                                locale: currentLocale,
                                 isDark: isDark,
                                 primaryColor: primaryColor,
                                 cardBorder: cardBorder,
                                 textPrimary: textPrimary,
                                 textSecondary: textSecondary,
                                 onTap: () async {
-                                  final time = await showTimePicker(context: context, initialTime: _startTime);
+                                  final time = await showEthiopianTimePicker(
+                                    context: context,
+                                    initialTime: _startTime,
+                                    locale: currentLocale,
+                                  );
                                   if (time != null) setState(() => _startTime = time);
                                 },
                               ),
@@ -246,13 +254,18 @@ class _MidwifeManageScheduleScreenState extends State<MidwifeManageScheduleScree
                                 context,
                                 label: AppLocalizations.of(context)!.endTime,
                                 time: _endTime,
+                                locale: currentLocale,
                                 isDark: isDark,
                                 primaryColor: primaryColor,
                                 cardBorder: cardBorder,
                                 textPrimary: textPrimary,
                                 textSecondary: textSecondary,
                                 onTap: () async {
-                                  final time = await showTimePicker(context: context, initialTime: _endTime);
+                                  final time = await showEthiopianTimePicker(
+                                    context: context,
+                                    initialTime: _endTime,
+                                    locale: currentLocale,
+                                  );
                                   if (time != null) setState(() => _endTime = time);
                                 },
                               ),
@@ -364,7 +377,7 @@ class _MidwifeManageScheduleScreenState extends State<MidwifeManageScheduleScree
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    '${avail.startTime} – ${avail.endTime}',
+                                    avail.formattedEthiopianTimeRange(currentLocale),
                                     style: TextStyle(fontSize: 13, color: textSecondary, fontWeight: FontWeight.w500),
                                   ),
                                 ],
@@ -400,6 +413,7 @@ class _MidwifeManageScheduleScreenState extends State<MidwifeManageScheduleScree
     BuildContext context, {
     required String label,
     required TimeOfDay time,
+    required String locale,
     required bool isDark,
     required Color primaryColor,
     required Color cardBorder,
@@ -407,6 +421,7 @@ class _MidwifeManageScheduleScreenState extends State<MidwifeManageScheduleScree
     required Color textSecondary,
     required VoidCallback onTap,
   }) {
+    final ethTime = EthiopianTime.fromTimeOfDay(time);
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -425,7 +440,7 @@ class _MidwifeManageScheduleScreenState extends State<MidwifeManageScheduleScree
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  time.format(context),
+                  ethTime.format(locale),
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: textPrimary),
                 ),
                 Icon(Icons.access_time_rounded, size: 18, color: primaryColor),

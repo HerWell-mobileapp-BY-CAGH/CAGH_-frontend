@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:table_calendar/table_calendar.dart';
 import 'package:cagh_frontend/features/scheduling/presentation/screens/midwife_add_availability_screen.dart';
 import 'package:cagh_frontend/features/scheduling/presentation/screens/midwife_day_view_screen.dart';
 import 'package:cagh_frontend/features/appointments/data/services/appointment_api_service.dart';
 import 'package:cagh_frontend/shared/models/availability_slot.dart';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
+import 'package:cagh_frontend/shared/utils/ethiopian_date_time.dart';
+import 'package:cagh_frontend/shared/widgets/ethiopian_calendar_view.dart';
 
 class MidwifeScheduleScreen extends StatefulWidget {
   const MidwifeScheduleScreen({super.key});
@@ -153,7 +154,7 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      DateFormat('MMMM yyyy', currentLocale).format(_focusedDay),
+                                      '${EthiopianDate.fromGregorian(_focusedDay).getMonthName(currentLocale)} ${EthiopianDate.fromGregorian(_focusedDay).year}',
                                       style: TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.bold,
@@ -195,7 +196,7 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                                     GestureDetector(
                                       onTap: () {
                                         setState(() {
-                                          _focusedDay = DateTime(_focusedDay.year, _focusedDay.month - 1);
+                                          final eth = EthiopianDate.fromGregorian(_focusedDay); int m = eth.month - 1; int y = eth.year; if (m < 1) { m = 13; y -= 1; } _focusedDay = EthiopianDate(y, m, 1).toGregorian();
                                         });
                                       },
                                       child: Padding(
@@ -209,7 +210,7 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                                     GestureDetector(
                                       onTap: () {
                                         setState(() {
-                                          _focusedDay = DateTime(_focusedDay.year, _focusedDay.month + 1);
+                                          final eth = EthiopianDate.fromGregorian(_focusedDay); int m = eth.month + 1; int y = eth.year; if (m > 13) { m = 1; y += 1; } _focusedDay = EthiopianDate(y, m, 1).toGregorian();
                                         });
                                       },
                                       child: Padding(
@@ -226,24 +227,19 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                             ),
                             const SizedBox(height: 16),
                             
-                            TableCalendar(
+                            EthiopianCalendarView(
                               locale: currentLocale,
-                              firstDay: DateTime.now().subtract(const Duration(days: 365)),
-                              lastDay: DateTime.now().add(const Duration(days: 365 * 2)),
                               focusedDay: _focusedDay,
-                              currentDay: DateTime.now(),
-                              headerVisible: false,
+                              showHeader: false,
                               enabledDayPredicate: (day) {
                                 final now = DateTime.now();
                                 final today = DateTime(now.year, now.month, now.day);
                                 return !day.isBefore(today);
                               },
                               onPageChanged: (focusedDay) {
-                                _focusedDay = focusedDay;
+                                setState(() => _focusedDay = focusedDay);
                               },
-                              selectedDayPredicate: (day) {
-                                return false;
-                              },
+                              eventLoader: (day) => _getAvailabilitiesForDay(day),
                               onDaySelected: (selectedDay, focusedDay) {
                                 final now = DateTime.now();
                                 final today = DateTime(now.year, now.month, now.day);
@@ -257,98 +253,6 @@ class _MidwifeScheduleScreenState extends State<MidwifeScheduleScreen> {
                                   ),
                                 ).then((_) => _fetchData());
                               },
-                              calendarBuilders: CalendarBuilders(
-                                disabledBuilder: (context, day, focusedDay) {
-                                  return Container(
-                                    margin: const EdgeInsets.all(6),
-                                    alignment: Alignment.center,
-                                    child: Text(
-                                      '${day.day}',
-                                      style: TextStyle(
-                                        color: isDark ? Colors.white24 : Colors.grey.shade300,
-                                        fontWeight: FontWeight.normal,
-                                      ),
-                                    ),
-                                  );
-                                },
-                                outsideBuilder: (context, day, focusedDay) {
-                                  return Container(
-                                    margin: const EdgeInsets.all(6),
-                                    alignment: Alignment.center,
-                                    child: Text(
-                                      '${day.day}',
-                                      style: TextStyle(
-                                        color: isDark ? Colors.white24 : Colors.grey.shade300,
-                                        fontWeight: FontWeight.normal,
-                                      ),
-                                    ),
-                                  );
-                                },
-                                defaultBuilder: (context, day, focusedDay) {
-                                  final hasAvail = _getAvailabilitiesForDay(day).isNotEmpty;
-                                  if (hasAvail) {
-                                    return Container(
-                                      margin: const EdgeInsets.all(6),
-                                      alignment: Alignment.center,
-                                      decoration: const BoxDecoration(
-                                        color: Color(0xFF385A2E),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Text(
-                                        '${day.day}',
-                                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                                      ),
-                                    );
-                                  }
-                                  return Container(
-                                    margin: const EdgeInsets.all(6),
-                                    alignment: Alignment.center,
-                                    child: Text(
-                                      '${day.day}',
-                                      style: TextStyle(
-                                        color: isDark ? Colors.white : Colors.black87, 
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  );
-                                },
-                                todayBuilder: (context, day, focusedDay) {
-                                  final hasAvail = _getAvailabilitiesForDay(day).isNotEmpty;
-                                  if (hasAvail) {
-                                    return Container(
-                                      margin: const EdgeInsets.all(6),
-                                      alignment: Alignment.center,
-                                      decoration: const BoxDecoration(
-                                        color: Color(0xFF385A2E),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Text(
-                                        '${day.day}',
-                                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                                      ),
-                                    );
-                                  }
-                                  return Container(
-                                    margin: const EdgeInsets.all(6),
-                                    alignment: Alignment.center,
-                                    decoration: BoxDecoration(
-                                      border: Border.all(color: const Color(0xFF385A2E), width: 1.5),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Text(
-                                      '${day.day}',
-                                      style: TextStyle(
-                                        color: isDark ? Colors.white : const Color(0xFF385A2E), 
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                              daysOfWeekStyle: DaysOfWeekStyle(
-                                weekdayStyle: TextStyle(color: isDark ? Colors.grey.shade400 : Colors.black54, fontSize: 13),
-                                weekendStyle: TextStyle(color: isDark ? Colors.grey.shade400 : Colors.black54, fontSize: 13),
-                              ),
                             ),
                             
                             Divider(height: 32, color: Theme.of(context).dividerColor),

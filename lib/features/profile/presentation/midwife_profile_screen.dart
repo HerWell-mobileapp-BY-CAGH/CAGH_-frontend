@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
-import 'package:cagh_frontend/core/services/language_service.dart';
+import 'package:cagh_frontend/app/localization/language_service.dart';
 import 'package:cagh_frontend/features/onboarding/presentation/user_type_selection_screen.dart';
 import 'package:cagh_frontend/features/profile/presentation/midwife_personal_information_screen.dart';
 import 'package:cagh_frontend/features/profile/presentation/midwife_notification_settings_screen.dart';
@@ -18,10 +18,15 @@ import 'package:cagh_frontend/core/utils/app_logger.dart';
 class MidwifeProfileScreen extends ConsumerStatefulWidget {
   final VoidCallback? onBackTap;
   final bool showAppBar;
-  const MidwifeProfileScreen({super.key, this.onBackTap, this.showAppBar = false});
+  const MidwifeProfileScreen({
+    super.key,
+    this.onBackTap,
+    this.showAppBar = false,
+  });
 
   @override
-  ConsumerState<MidwifeProfileScreen> createState() => _MidwifeProfileScreenState();
+  ConsumerState<MidwifeProfileScreen> createState() =>
+      _MidwifeProfileScreenState();
 }
 
 class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
@@ -30,7 +35,7 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
   String email = '';
   String status = 'PENDING';
   String title = 'Certified Midwife';
-  
+
   final _repository = MidwifeRepositoryImpl(MidwifeApiService());
 
   @override
@@ -45,18 +50,32 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
       if (mounted) {
         setState(() {
           final u = localData['user'] is Map ? localData['user'] : localData;
-          final p = u['profile'] is Map ? u['profile'] : (localData['profile'] is Map ? localData['profile'] : {});
-          
-          final fName = p['first_name']?.toString() ?? u['first_name']?.toString() ?? localData['first_name']?.toString() ?? '';
-          final lName = p['last_name']?.toString() ?? u['last_name']?.toString() ?? localData['last_name']?.toString() ?? '';
+          final p = u['profile'] is Map
+              ? u['profile']
+              : (localData['profile'] is Map ? localData['profile'] : {});
+
+          final fName =
+              p['first_name']?.toString() ??
+              u['first_name']?.toString() ??
+              localData['first_name']?.toString() ??
+              '';
+          final lName =
+              p['last_name']?.toString() ??
+              u['last_name']?.toString() ??
+              localData['last_name']?.toString() ??
+              '';
           if (fName.isNotEmpty || lName.isNotEmpty) {
             fullName = '$fName $lName'.trim();
           }
-          final emailVal = localData['email']?.toString() ?? u['email']?.toString() ?? '';
+          final emailVal =
+              localData['email']?.toString() ?? u['email']?.toString() ?? '';
           if (emailVal.isNotEmpty) {
             email = emailVal;
           } else {
-            final phone = localData['phone_number']?.toString() ?? u['phone_number']?.toString() ?? '';
+            final phone =
+                localData['phone_number']?.toString() ??
+                u['phone_number']?.toString() ??
+                '';
             if (phone.isNotEmpty) email = phone;
           }
         });
@@ -68,7 +87,9 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
           if (p != null) {
             if (p.fullName.isNotEmpty) fullName = p.fullName;
             if (p.specialty.isNotEmpty) title = p.specialty;
-            status = p.verificationStatus.toUpperCase() == 'APPROVED' ? 'VERIFIED' : 'PENDING';
+            status = p.verificationStatus.toUpperCase() == 'APPROVED'
+                ? 'VERIFIED'
+                : 'PENDING';
           }
         });
       }
@@ -77,7 +98,7 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
     }
     if (mounted) {
       setState(() {
-         isLoading = false;
+        isLoading = false;
       });
     }
   }
@@ -92,23 +113,30 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: widget.showAppBar ? AppBar(
-        elevation: 0,
-        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
-        automaticallyImplyLeading: widget.onBackTap != null,
-        leading: widget.onBackTap != null ? IconButton(
-          icon: Icon(Icons.arrow_back, color: Theme.of(context).appBarTheme.foregroundColor),
-          onPressed: widget.onBackTap,
-        ) : null,
-        title: Text(
-          AppLocalizations.of(context)!.profile,
-          style: TextStyle(
-            fontSize: 19,
-            fontWeight: FontWeight.w700,
-            color: Theme.of(context).appBarTheme.foregroundColor,
-          ),
-        ),
-      ) : null,
+      appBar: widget.showAppBar
+          ? AppBar(
+              elevation: 0,
+              backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+              automaticallyImplyLeading: widget.onBackTap != null,
+              leading: widget.onBackTap != null
+                  ? IconButton(
+                      icon: Icon(
+                        Icons.arrow_back,
+                        color: Theme.of(context).appBarTheme.foregroundColor,
+                      ),
+                      onPressed: widget.onBackTap,
+                    )
+                  : null,
+              title: Text(
+                AppLocalizations.of(context)!.profile,
+                style: TextStyle(
+                  fontSize: 19,
+                  fontWeight: FontWeight.w700,
+                  color: Theme.of(context).appBarTheme.foregroundColor,
+                ),
+              ),
+            )
+          : null,
       body: isLoading
           ? const Center(
               child: CircularProgressIndicator(color: AppColors.primaryGreen),
@@ -126,7 +154,8 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const MidwifePersonalInformationScreen(),
+                                builder: (context) =>
+                                    const MidwifePersonalInformationScreen(),
                               ),
                             ).then((_) => _fetchProfile());
                           },
@@ -137,23 +166,32 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
                                 padding: const EdgeInsets.all(3),
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: isVerified ? AppColors.accentPurpleStrong : Colors.orange,
+                                  color: isVerified
+                                      ? AppColors.accentPurpleStrong
+                                      : Colors.orange,
                                 ),
-                                child: const AppProfileAvatar(
-                                  radius: 42,
-                                ),
+                                child: const AppProfileAvatar(radius: 42),
                               ),
                               Container(
                                 padding: const EdgeInsets.all(4),
                                 decoration: BoxDecoration(
-                                  color: isDark ? AppColors.darkSurfaceVariant : Colors.white,
+                                  color: isDark
+                                      ? AppColors.darkSurfaceVariant
+                                      : Colors.white,
                                   shape: BoxShape.circle,
-                                  border: Border.all(color: isDark ? AppColors.darkBorder : const Color(0xFFF0F0F0), width: 1),
+                                  border: Border.all(
+                                    color: isDark
+                                        ? AppColors.darkBorder
+                                        : const Color(0xFFF0F0F0),
+                                    width: 1,
+                                  ),
                                 ),
                                 child: Icon(
                                   Icons.camera_alt_outlined,
                                   size: 18,
-                                  color: isDark ? AppColors.darkPrimary : const Color(0xFF385A2E),
+                                  color: isDark
+                                      ? AppColors.darkPrimary
+                                      : const Color(0xFF385A2E),
                                 ),
                               ),
                             ],
@@ -170,7 +208,7 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        
+
                         SizedBox(
                           width: 140,
                           height: 36,
@@ -179,12 +217,15 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const MidwifePersonalInformationScreen(),
+                                  builder: (context) =>
+                                      const MidwifePersonalInformationScreen(),
                                 ),
                               ).then((_) => _fetchProfile());
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: isDark ? AppColors.darkButtonGreen : AppColors.primaryGreen,
+                              backgroundColor: isDark
+                                  ? AppColors.darkButtonGreen
+                                  : AppColors.primaryGreen,
                               elevation: 0,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(22),
@@ -211,7 +252,9 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
                   const SizedBox(height: 24),
 
                   // 1. Account & Records
-                  _buildSectionHeader(AppLocalizations.of(context)!.accountAndRecords),
+                  _buildSectionHeader(
+                    AppLocalizations.of(context)!.accountAndRecords,
+                  ),
                   const SizedBox(height: 10),
                   _buildGroupedCard([
                     _buildListTile(
@@ -221,7 +264,8 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => MidwifePersonalInformationScreen(),
+                            builder: (context) =>
+                                MidwifePersonalInformationScreen(),
                           ),
                         ).then((_) => _fetchProfile());
                       },
@@ -230,15 +274,25 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
                     _buildListTile(
                       icon: Icons.chat_bubble_outline,
                       title: AppLocalizations.of(context)!.myMessages,
-                      badge: ref.watch(notificationProvider).unreadMessagesCount > 0
+                      badge:
+                          ref.watch(notificationProvider).unreadMessagesCount >
+                              0
                           ? Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 7,
+                                vertical: 2,
+                              ),
                               decoration: BoxDecoration(
-                                color: isDark ? AppColors.darkPrimary : AppColors.primaryGreen,
+                                color: isDark
+                                    ? AppColors.darkPrimary
+                                    : AppColors.primaryGreen,
                                 shape: BoxShape.circle,
                               ),
                               child: Text(
-                                ref.watch(notificationProvider).unreadMessagesCount.toString(),
+                                ref
+                                    .watch(notificationProvider)
+                                    .unreadMessagesCount
+                                    .toString(),
                                 style: const TextStyle(
                                   fontSize: 10.5,
                                   fontWeight: FontWeight.bold,
@@ -250,9 +304,13 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => const MidwifeInboxScreen()),
+                          MaterialPageRoute(
+                            builder: (context) => const MidwifeInboxScreen(),
+                          ),
                         ).then((_) {
-                          ref.read(notificationProvider.notifier).refreshNotifications();
+                          ref
+                              .read(notificationProvider.notifier)
+                              .refreshNotifications();
                         });
                       },
                     ),
@@ -266,13 +324,16 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
                   _buildGroupedCard([
                     _buildListTile(
                       icon: Icons.palette_outlined,
-                      title: AppLocalizations.of(context)!.appearanceAccessibility,
+                      title: AppLocalizations.of(
+                        context,
+                      )!.appearanceAccessibility,
                       subtitle: AppLocalizations.of(context)!.themeAndTextSize,
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const AppearanceAccessibilityScreen(),
+                            builder: (context) =>
+                                const AppearanceAccessibilityScreen(),
                           ),
                         ).then((_) {
                           if (mounted) setState(() {});
@@ -285,28 +346,60 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
                       title: AppLocalizations.of(context)!.languageSettings,
                       subtitle: activeLang,
                       trailing: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
-                          color: isDark ? AppColors.darkSurfaceVariant : const Color(0xFFE8F5E9),
+                          color: isDark
+                              ? AppColors.darkSurfaceVariant
+                              : const Color(0xFFE8F5E9),
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: isDark ? AppColors.darkBorder : const Color(0xFFA5D6A7), width: 1.2),
+                          border: Border.all(
+                            color: isDark
+                                ? AppColors.darkBorder
+                                : const Color(0xFFA5D6A7),
+                            width: 1.2,
+                          ),
                         ),
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<String>(
                             value: LanguageService.currentLanguage.value,
                             isDense: true,
-                            dropdownColor: isDark ? AppColors.darkSurface : Colors.white,
-                            icon: Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: isDark ? AppColors.darkPrimary : const Color(0xFF2E5E2A)),
+                            dropdownColor: isDark
+                                ? AppColors.darkSurface
+                                : Colors.white,
+                            icon: Icon(
+                              Icons.keyboard_arrow_down_rounded,
+                              size: 18,
+                              color: isDark
+                                  ? AppColors.darkPrimary
+                                  : const Color(0xFF2E5E2A),
+                            ),
                             style: TextStyle(
-                              color: isDark ? AppColors.darkTextPrimary : const Color(0xFF2E5E2A),
+                              color: isDark
+                                  ? AppColors.darkTextPrimary
+                                  : const Color(0xFF2E5E2A),
                               fontSize: 13.5,
                               fontWeight: FontWeight.w600,
                             ),
                             items: const [
-                              DropdownMenuItem(value: 'en', child: Text('English')),
-                              DropdownMenuItem(value: 'am', child: Text('አማርኛ')),
-                              DropdownMenuItem(value: 'om', child: Text('Afaan Oromoo')),
-                              DropdownMenuItem(value: 'so', child: Text('Somali')),
+                              DropdownMenuItem(
+                                value: 'en',
+                                child: Text('English'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'am',
+                                child: Text('አማርኛ'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'om',
+                                child: Text('Afaan Oromoo'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'so',
+                                child: Text('Somali'),
+                              ),
                             ],
                             onChanged: (lang) async {
                               if (lang != null) {
@@ -327,7 +420,8 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const MidwifeNotificationSettingsScreen(),
+                            builder: (context) =>
+                                const MidwifeNotificationSettingsScreen(),
                           ),
                         );
                       },
@@ -353,13 +447,17 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
                           Navigator.pushAndRemoveUntil(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const UserTypeSelectionScreen(),
+                              builder: (context) =>
+                                  const UserTypeSelectionScreen(),
                             ),
                             (route) => false,
                           );
                         }
                       },
-                      icon: Icon(Icons.logout, color: isDark ? AppColors.errorRedLight : Colors.red),
+                      icon: Icon(
+                        Icons.logout,
+                        color: isDark ? AppColors.errorRedLight : Colors.red,
+                      ),
                       label: Text(
                         AppLocalizations.of(context)!.logout,
                         style: TextStyle(
@@ -369,8 +467,15 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
                         ),
                       ),
                       style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: isDark ? AppColors.darkBorder : AppColors.borderRedSoft, width: 1.5),
-                        backgroundColor: isDark ? AppColors.darkRed : AppColors.backgroundPinkWhite,
+                        side: BorderSide(
+                          color: isDark
+                              ? AppColors.darkBorder
+                              : AppColors.borderRedSoft,
+                          width: 1.5,
+                        ),
+                        backgroundColor: isDark
+                            ? AppColors.darkRed
+                            : AppColors.backgroundPinkWhite,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30),
@@ -382,7 +487,7 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
                   const SizedBox(height: 12),
 
                   Text(
-                    AppLocalizations.of(context)!.appVersion('2.4.1', '890'),
+                    AppLocalizations.of(context)!.appVersion('1.0.0', '1'),
                     style: TextStyle(
                       fontSize: 11.5,
                       color: Colors.grey.shade500,
@@ -454,7 +559,13 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
     return ListTile(
       onTap: onTap,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-      leading: Icon(icon, color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkPrimary : AppColors.primaryGreen, size: 22),
+      leading: Icon(
+        icon,
+        color: Theme.of(context).brightness == Brightness.dark
+            ? AppColors.darkPrimary
+            : AppColors.primaryGreen,
+        size: 22,
+      ),
       title: Text(
         title,
         style: TextStyle(
@@ -466,16 +577,24 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
       subtitle: subtitle != null
           ? Text(
               subtitle,
-              style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color),
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).textTheme.bodySmall?.color,
+              ),
             )
           : null,
-      trailing: trailing ??
+      trailing:
+          trailing ??
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               ?badge,
               if (badge != null) const SizedBox(width: 8),
-              Icon(Icons.chevron_right, color: Theme.of(context).dividerColor, size: 22),
+              Icon(
+                Icons.chevron_right,
+                color: Theme.of(context).dividerColor,
+                size: 22,
+              ),
             ],
           ),
     );

@@ -6,6 +6,7 @@ import 'package:cagh_frontend/features/appointments/data/services/appointment_ap
 import 'package:cagh_frontend/shared/models/availability_slot.dart';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
+import 'package:cagh_frontend/shared/utils/ethiopian_date_time.dart';
 
 class MidwifeDayViewScreen extends StatefulWidget {
   final DateTime date;
@@ -141,7 +142,7 @@ class _MidwifeDayViewScreenState extends State<MidwifeDayViewScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              DateFormat('EEEE, MMMM d, yyyy', currentLocale).format(widget.date),
+                              EthiopianDateHelper.formatEthiopianDate(widget.date, locale: currentLocale, includeWeekday: true),
                               style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: textPrimary),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -215,12 +216,20 @@ class _MidwifeDayViewScreenState extends State<MidwifeDayViewScreen> {
                                 itemBuilder: (context, index) {
                                   final slot = _slots[index];
                                   return Container(
-                                    margin: const EdgeInsets.only(bottom: 16),
-                                    padding: const EdgeInsets.all(20),
+                                    margin: const EdgeInsets.only(bottom: 12),
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                                     decoration: BoxDecoration(
                                       color: cardBg,
                                       border: Border.all(color: cardBorder),
                                       borderRadius: BorderRadius.circular(16),
+                                      boxShadow: [
+                                        if (!isDark)
+                                          BoxShadow(
+                                            color: Colors.black.withValues(alpha: 0.03),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                      ],
                                     ),
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -228,33 +237,37 @@ class _MidwifeDayViewScreenState extends State<MidwifeDayViewScreen> {
                                         Row(
                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: [
-                                            Text(
-                                              slot.formattedTimeRange,
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 18,
-                                                color: textPrimary,
+                                            Expanded(
+                                              child: Text(
+                                                slot.formattedEthiopianTimeRange(currentLocale),
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 16,
+                                                  color: textPrimary,
+                                                  letterSpacing: -0.2,
+                                                ),
                                               ),
                                             ),
+                                            const SizedBox(width: 8),
                                             Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                               decoration: BoxDecoration(
                                                 color: badgeBg,
-                                                borderRadius: BorderRadius.circular(20),
+                                                borderRadius: BorderRadius.circular(12),
                                                 border: Border.all(color: isDark ? AppColors.darkBorder : Colors.transparent),
                                               ),
                                               child: Text(
                                                 AppLocalizations.of(context)!.available,
                                                 style: TextStyle(
                                                   color: iconColor,
-                                                  fontSize: 12,
+                                                  fontSize: 11,
                                                   fontWeight: FontWeight.bold,
                                                 ),
                                               ),
                                             ),
                                           ],
                                         ),
-                                        const SizedBox(height: 12),
+                                        const SizedBox(height: 8),
                                         Row(
                                           children: [
                                             Icon(
@@ -263,23 +276,28 @@ class _MidwifeDayViewScreenState extends State<MidwifeDayViewScreen> {
                                                   : slot.isVoiceCall
                                                       ? Icons.call_outlined
                                                       : Icons.location_on_outlined,
-                                              size: 18,
+                                              size: 15,
                                               color: iconColor,
                                             ),
                                             const SizedBox(width: 6),
                                             Text(
                                               slot.consultationTypeTagText,
-                                              style: TextStyle(fontSize: 14, color: textSecondary, fontWeight: FontWeight.w600),
+                                              style: TextStyle(
+                                                fontSize: 13,
+                                                color: textSecondary,
+                                                fontWeight: FontWeight.w500,
+                                              ),
                                             ),
                                           ],
                                         ),
-                                        const SizedBox(height: 16),
-                                        Divider(height: 1, color: isDark ? AppColors.darkBorder : Colors.black12),
-                                        const SizedBox(height: 16),
+                                        const SizedBox(height: 12),
+                                        Divider(height: 1, color: isDark ? AppColors.darkBorder : Colors.black.withValues(alpha: 0.06)),
+                                        const SizedBox(height: 10),
                                         Row(
                                           mainAxisAlignment: MainAxisAlignment.end,
                                           children: [
                                             InkWell(
+                                              borderRadius: BorderRadius.circular(8),
                                               onTap: () {
                                                 Navigator.push(
                                                   context,
@@ -291,44 +309,133 @@ class _MidwifeDayViewScreenState extends State<MidwifeDayViewScreen> {
                                                   ),
                                                 ).then((_) => _fetchData());
                                               },
-                                              child: Row(
-                                                children: [
-                                                  Icon(Icons.edit_outlined, size: 16, color: iconColor),
-                                                  const SizedBox(width: 6),
-                                                  Text(
-                                                    AppLocalizations.of(context)!.edit,
-                                                    style: TextStyle(
-                                                      fontWeight: FontWeight.bold,
-                                                      color: textPrimary,
-                                                      fontSize: 14,
+                                              child: Padding(
+                                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                child: Row(
+                                                  children: [
+                                                    Icon(Icons.edit_outlined, size: 15, color: iconColor),
+                                                    const SizedBox(width: 5),
+                                                    Text(
+                                                      AppLocalizations.of(context)!.edit,
+                                                      style: TextStyle(
+                                                        fontWeight: FontWeight.w600,
+                                                        color: textPrimary,
+                                                        fontSize: 13,
+                                                      ),
                                                     ),
-                                                  ),
-                                                ],
+                                                  ],
+                                                ),
                                               ),
                                             ),
-                                            const SizedBox(width: 20),
-                                            Container(width: 1, height: 14, color: isDark ? AppColors.darkBorder : Colors.black26),
-                                            const SizedBox(width: 20),
+                                            const SizedBox(width: 8),
+                                            Container(width: 1, height: 12, color: isDark ? AppColors.darkBorder : Colors.black12),
+                                            const SizedBox(width: 8),
                                             InkWell(
+                                              borderRadius: BorderRadius.circular(8),
                                               onTap: () async {
                                                 final confirm = await showDialog<bool>(
                                                   context: context,
-                                                  builder: (context) => AlertDialog(
-                                                    title: Text(AppLocalizations.of(context)!.deleteSlot),
-                                                    content: Text(AppLocalizations.of(context)!.deleteSlotConfirm),
-                                                    actions: [
-                                                      TextButton(
-                                                        onPressed: () => Navigator.pop(context, false),
-                                                        child: Text(AppLocalizations.of(context)!.cancel),
-                                                      ),
-                                                      TextButton(
-                                                        onPressed: () => Navigator.pop(context, true),
-                                                        child: Text(
-                                                          AppLocalizations.of(context)!.delete,
-                                                          style: const TextStyle(color: Colors.red),
+                                                  builder: (dialogCtx) => Dialog(
+                                                    backgroundColor: cardBg,
+                                                    elevation: 0,
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius: BorderRadius.circular(20),
+                                                    ),
+                                                    insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                                                    child: ConstrainedBox(
+                                                      constraints: const BoxConstraints(maxWidth: 320),
+                                                      child: Padding(
+                                                        padding: const EdgeInsets.fromLTRB(20, 22, 20, 18),
+                                                        child: Column(
+                                                          mainAxisSize: MainAxisSize.min,
+                                                          children: [
+                                                            Container(
+                                                              width: 48,
+                                                              height: 48,
+                                                              decoration: BoxDecoration(
+                                                                color: isDark ? AppColors.darkRed : const Color(0xFFFEEBEB),
+                                                                shape: BoxShape.circle,
+                                                              ),
+                                                              child: const Icon(
+                                                                Icons.delete_outline_rounded,
+                                                                color: AppColors.errorRed,
+                                                                size: 24,
+                                                              ),
+                                                            ),
+                                                            const SizedBox(height: 14),
+                                                            Text(
+                                                              AppLocalizations.of(dialogCtx)!.deleteSlot,
+                                                              textAlign: TextAlign.center,
+                                                              style: TextStyle(
+                                                                fontSize: 17,
+                                                                fontWeight: FontWeight.bold,
+                                                                color: textPrimary,
+                                                                letterSpacing: -0.2,
+                                                              ),
+                                                            ),
+                                                            const SizedBox(height: 8),
+                                                            Text(
+                                                              AppLocalizations.of(dialogCtx)!.deleteSlotConfirm,
+                                                              textAlign: TextAlign.center,
+                                                              style: TextStyle(
+                                                                fontSize: 13,
+                                                                height: 1.4,
+                                                                color: textSecondary,
+                                                              ),
+                                                            ),
+                                                            const SizedBox(height: 20),
+                                                            Row(
+                                                              children: [
+                                                                Expanded(
+                                                                  child: OutlinedButton(
+                                                                    onPressed: () => Navigator.pop(dialogCtx, false),
+                                                                    style: OutlinedButton.styleFrom(
+                                                                      padding: const EdgeInsets.symmetric(vertical: 11),
+                                                                      side: BorderSide(
+                                                                        color: isDark ? AppColors.darkBorder : Colors.black12,
+                                                                      ),
+                                                                      shape: RoundedRectangleBorder(
+                                                                        borderRadius: BorderRadius.circular(12),
+                                                                      ),
+                                                                    ),
+                                                                    child: Text(
+                                                                      AppLocalizations.of(dialogCtx)!.cancel,
+                                                                      style: TextStyle(
+                                                                        fontSize: 13,
+                                                                        fontWeight: FontWeight.w600,
+                                                                        color: textPrimary,
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                                const SizedBox(width: 10),
+                                                                Expanded(
+                                                                  child: ElevatedButton(
+                                                                    onPressed: () => Navigator.pop(dialogCtx, true),
+                                                                    style: ElevatedButton.styleFrom(
+                                                                      backgroundColor: AppColors.errorRed,
+                                                                      foregroundColor: Colors.white,
+                                                                      elevation: 0,
+                                                                      padding: const EdgeInsets.symmetric(vertical: 11),
+                                                                      shape: RoundedRectangleBorder(
+                                                                        borderRadius: BorderRadius.circular(12),
+                                                                      ),
+                                                                    ),
+                                                                    child: Text(
+                                                                      AppLocalizations.of(dialogCtx)!.delete,
+                                                                      style: const TextStyle(
+                                                                        fontSize: 13,
+                                                                        fontWeight: FontWeight.bold,
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          ],
                                                         ),
                                                       ),
-                                                    ],
+                                                    ),
                                                   ),
                                                 );
                                                 if (confirm == true) {
@@ -346,19 +453,22 @@ class _MidwifeDayViewScreenState extends State<MidwifeDayViewScreen> {
                                                   }
                                                 }
                                               },
-                                              child: Row(
-                                                children: [
-                                                  const Icon(Icons.delete_outline, size: 16, color: Colors.red),
-                                                  const SizedBox(width: 6),
-                                                  Text(
-                                                    AppLocalizations.of(context)!.delete,
-                                                    style: const TextStyle(
-                                                      fontWeight: FontWeight.bold,
-                                                      color: Colors.red,
-                                                      fontSize: 14,
+                                              child: Padding(
+                                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                child: Row(
+                                                  children: [
+                                                    const Icon(Icons.delete_outline, size: 15, color: AppColors.errorRed),
+                                                    const SizedBox(width: 5),
+                                                    Text(
+                                                      AppLocalizations.of(context)!.delete,
+                                                      style: const TextStyle(
+                                                        fontWeight: FontWeight.w600,
+                                                        color: AppColors.errorRed,
+                                                        fontSize: 13,
+                                                      ),
                                                     ),
-                                                  ),
-                                                ],
+                                                  ],
+                                                ),
                                               ),
                                             ),
                                           ],

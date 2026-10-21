@@ -1,3 +1,5 @@
+import 'package:cagh_frontend/shared/utils/ethiopian_date_time.dart';
+
 class TimeSlot {
   final String id;
   final String date;
@@ -40,6 +42,17 @@ class TimeSlot {
       consultationMethods: methods,
     );
   }
+
+  /// Returns Ethiopian traditional time string (e.g. `2:00 morning` or `2:00 ጠዋት`).
+  String ethiopianDisplayTime([String? locale]) {
+    return EthiopianDateHelper.formatEthiopianTime(startTime, locale: locale ?? 'en');
+  }
+
+  /// Returns Ethiopian traditional time range (e.g. `2:00 – 3:00 morning`).
+  String ethiopianDisplayTimeRange([String? locale]) {
+    return EthiopianDateHelper.formatEthiopianTimeRange(startTime, endTime, locale: locale ?? 'en');
+  }
+
 
   bool get supportsInPerson {
     if (consultationMethods.isEmpty) return true;

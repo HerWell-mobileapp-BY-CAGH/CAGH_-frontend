@@ -1,3 +1,5 @@
+import 'package:cagh_frontend/shared/utils/ethiopian_date_time.dart';
+
 class WorkingHours {
   final String id;
   final int? dayOfWeek; // 0 = Monday, 6 = Sunday
@@ -45,21 +47,12 @@ class WorkingHours {
     return date ?? 'Scheduled Day';
   }
 
-  String get formattedTimeRange {
-    String formatTime(String t) {
-      if (t.isEmpty) return '';
-      final parts = t.split(':');
-      if (parts.length < 2) return t;
-      int hour = int.tryParse(parts[0]) ?? 0;
-      int minute = int.tryParse(parts[1]) ?? 0;
-      String period = hour >= 12 ? 'PM' : 'AM';
-      int displayHour = hour % 12;
-      if (displayHour == 0) displayHour = 12;
-      return '${displayHour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')} $period';
-    }
+  String get formattedTimeRange => formattedEthiopianTimeRange();
 
-    return '${formatTime(startTime)} - ${formatTime(endTime)}';
+  String formattedEthiopianTimeRange([String? locale]) {
+    return EthiopianDateHelper.formatEthiopianTimeRange(startTime, endTime, locale: locale ?? 'en');
   }
+
 
   Map<String, dynamic> toJson() {
     return {

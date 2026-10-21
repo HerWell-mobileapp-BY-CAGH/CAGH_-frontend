@@ -6,6 +6,8 @@ import 'package:cagh_frontend/shared/widgets/custom_snackbar.dart';
 import 'package:cagh_frontend/shared/widgets/globe_language_picker.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
+import 'package:cagh_frontend/shared/utils/ethiopian_date_time.dart';
+import 'package:cagh_frontend/shared/widgets/ethiopian_pickers.dart';
 
 class MidwifeAddAvailabilityScreen extends StatefulWidget {
   final DateTime? initialDate;
@@ -66,11 +68,12 @@ class _MidwifeAddAvailabilityScreenState extends State<MidwifeAddAvailabilityScr
     final today = DateTime(now.year, now.month, now.day);
     final initial = (_selectedDate != null && !_selectedDate!.isBefore(today)) ? _selectedDate! : today;
 
-    final date = await showDatePicker(
+    final date = await showEthiopianDatePicker(
       context: context,
       initialDate: initial,
       firstDate: today,
       lastDate: today.add(const Duration(days: 365)),
+      locale: Localizations.localeOf(context).languageCode,
     );
     if (date != null) {
       setState(() {
@@ -80,9 +83,11 @@ class _MidwifeAddAvailabilityScreenState extends State<MidwifeAddAvailabilityScr
   }
 
   Future<void> _selectTime(bool isStart) async {
-    final time = await showTimePicker(
+    final currentLocale = Localizations.localeOf(context).languageCode;
+    final time = await showEthiopianTimePicker(
       context: context,
       initialTime: (isStart ? _startTime : _endTime) ?? TimeOfDay.now(),
+      locale: currentLocale,
     );
     if (time != null) {
       setState(() {
@@ -155,8 +160,15 @@ class _MidwifeAddAvailabilityScreenState extends State<MidwifeAddAvailabilityScr
       if (_voiceCall) typesList.add('Voice Call');
 
       final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate!);
+      final dayOfWeek = _selectedDate!.weekday - 1; // 0 = Monday, 6 = Sunday
+      const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+      final dayName = days[dayOfWeek];
+
       final Map<String, dynamic> payload = {
         'date': dateStr,
+        'day_of_week': dayOfWeek,
+        'day': dayOfWeek,
+        'day_name': dayName,
         'start_time': startStr,
         'end_time': endStr,
         'is_in_person': _inPerson,
@@ -312,7 +324,7 @@ class _MidwifeAddAvailabilityScreenState extends State<MidwifeAddAvailabilityScr
                       context: context,
                       icon: Icons.calendar_today,
                       text: _selectedDate != null 
-                        ? DateFormat('MMM d, yyyy', Localizations.localeOf(context).languageCode).format(_selectedDate!) 
+                        ? EthiopianDateHelper.formatEthiopianDate(_selectedDate!, locale: Localizations.localeOf(context).languageCode, includeWeekday: true) 
                         : AppLocalizations.of(context)!.selectDatePrompt,
                       onTap: _selectDate,
                     ),
@@ -322,7 +334,9 @@ class _MidwifeAddAvailabilityScreenState extends State<MidwifeAddAvailabilityScr
                     _buildSelectorField(
                       context: context,
                       icon: Icons.access_time,
-                      text: _startTime != null ? _startTime!.format(context) : AppLocalizations.of(context)!.selectStartTimePrompt,
+                      text: _startTime != null 
+                        ? EthiopianTime.fromTimeOfDay(_startTime!).format(Localizations.localeOf(context).languageCode) 
+                        : AppLocalizations.of(context)!.selectStartTimePrompt,
                       onTap: () => _selectTime(true),
                     ),
                     const SizedBox(height: 16),
@@ -331,7 +345,9 @@ class _MidwifeAddAvailabilityScreenState extends State<MidwifeAddAvailabilityScr
                     _buildSelectorField(
                       context: context,
                       icon: Icons.access_time,
-                      text: _endTime != null ? _endTime!.format(context) : AppLocalizations.of(context)!.selectEndTimePrompt,
+                      text: _endTime != null 
+                        ? EthiopianTime.fromTimeOfDay(_endTime!).format(Localizations.localeOf(context).languageCode) 
+                        : AppLocalizations.of(context)!.selectEndTimePrompt,
                       onTap: () => _selectTime(false),
                     ),
                     const SizedBox(height: 32),

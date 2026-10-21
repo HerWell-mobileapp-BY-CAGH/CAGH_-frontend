@@ -15,6 +15,8 @@ import 'package:cagh_frontend/features/consultations/data/services/midwife_api_s
 import 'package:cagh_frontend/shared/widgets/floating_glass_nav_bar.dart';
 import 'package:cagh_frontend/features/notifications/presentation/widgets/notification_bell.dart';
 import 'package:cagh_frontend/features/learning/presentation/screens/learning_center_screen.dart';
+import 'package:cagh_frontend/features/consultations/presentation/midwife/midwife_inbox_screen.dart';
+import 'package:cagh_frontend/shared/widgets/custom_snackbar.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
 import 'package:intl/intl.dart';
 
@@ -103,51 +105,55 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
   }
 
   String _getFirstName(String fullName) {
-    if (fullName.isEmpty) return 'Midwife';
+    final defaultTitle = AppLocalizations.of(context)?.midwifeTitle ?? 'Midwife';
+    if (fullName.isEmpty) return defaultTitle;
     // If it happens to be an email, take the part before @
     if (fullName.contains('@')) {
       fullName = fullName.split('@').first;
     }
     // Return just the first name
-    return fullName.trim().split(' ').first;
+    final name = fullName.trim().split(' ').first;
+    return name.isEmpty ? defaultTitle : name;
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       extendBody: true,
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: isDark ? AppColors.darkBackground : const Color(0xFFF7F9F7),
       body: Column(
         children: [
           // ===== GREEN APP BAR (Applied to all tabs) =====
           Container(
             width: double.infinity,
-            color: const Color(0xFF385A2E),
+            color: const Color(0xFF2C5927),
             child: SafeArea(
               bottom: false,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                child: Row(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Stack(
+                  alignment: Alignment.center,
                   children: [
-                    // Left spacer — same width as the right icons to keep title centered
-                    const SizedBox(width: 88),
-                    // Centered title
-                    Expanded(
-                      child: Text(
-                        _getAppBarTitle(selectedIndex),
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                        ),
+                    Text(
+                      _getAppBarTitle(selectedIndex),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.2,
                       ),
                     ),
-                    // Right icons — globe + notification bell
-                    const GlobeLanguagePicker(iconColor: Colors.white, iconSize: 24),
-                    const NotificationBell(iconColor: Colors.white),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: const [
+                        GlobeLanguagePicker(iconColor: Colors.white, iconSize: 22),
+                        SizedBox(width: 8),
+                        NotificationBell(iconColor: Colors.white),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -208,11 +214,14 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
   Widget _buildHomeDashboardTab() {
     final appointmentRepo = AppointmentRepositoryImpl(AppointmentApiService());
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return FutureBuilder<List<Appointment>>(
       future: appointmentRepo.getMidwifeAppointments(),
       builder: (context, snapshot) {
         final aptList = snapshot.data ?? [];
+        final pendingRequests = aptList.where((a) => a.status == AppointmentStatus.pending).toList();
+        final pendingCount = pendingRequests.length;
+
         final upcomingApts = aptList.where((a) {
           final isConfirmed = a.status == AppointmentStatus.confirmed;
           return isConfirmed && _isToday(a.date);
@@ -224,13 +233,23 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Welcome Banner
+              // 1. WELCOME CARD
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkSurfaceVariant : AppColors.primaryGreen,
-                  borderRadius: BorderRadius.circular(20),
+                  color: isDark ? AppColors.darkSurface : Colors.white,
+                  borderRadius: BorderRadius.circular(22),
+                  border: Border.all(
+                    color: isDark ? AppColors.darkBorder : Colors.black.withValues(alpha: 0.04),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.03),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: Row(
                   children: [
@@ -238,170 +257,319 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            _getFirstName(midwifeName).isEmpty
-                                ? AppLocalizations.of(context)!.welcome
-                                : AppLocalizations.of(context)!.welcomeUser(_getFirstName(midwifeName)),
-                            style: TextStyle(
-                              color: isDark ? AppColors.darkTextPrimary : Colors.white,
-                              fontSize: 22,
-                              fontWeight: FontWeight.w700,
-                            ),
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  'Welcome, ${_getFirstName(midwifeName)}',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w800,
+                                    color: isDark ? AppColors.darkTextPrimary : const Color(0xFF182335),
+                                    letterSpacing: -0.3,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              const Text('💖', style: TextStyle(fontSize: 16)),
+                            ],
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            upcomingApts.isEmpty
-                                ? AppLocalizations.of(context)!.midwifeBookingsAppearHere
-                                : AppLocalizations.of(context)!.patientConsultationBookingsPending(upcomingApts.length),
+                            'Ready to support adolescent girls today with confidential healthcare.',
                             style: TextStyle(
-                              color: isDark ? AppColors.darkTextSecondary : Colors.white.withValues(alpha: 0.87),
-                              fontSize: 14,
+                              fontSize: 12.5,
+                              height: 1.35,
+                              color: isDark ? AppColors.darkTextSecondary : const Color(0xFF6B7280),
                             ),
                           ),
                         ],
                       ),
                     ),
-                    Icon(Icons.volunteer_activism_outlined, color: isDark ? AppColors.darkPrimary : Colors.white, size: 48),
+                    const SizedBox(width: 14),
+                    Container(
+                      width: 62,
+                      height: 62,
+                      decoration: BoxDecoration(
+                        color: isDark ? AppColors.darkSurfaceVariant : const Color(0xFFE8F2E6),
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: Icon(
+                        Icons.how_to_reg_rounded,
+                        size: 32,
+                        color: isDark ? AppColors.darkPrimary : const Color(0xFF3B6E32),
+                      ),
+                    ),
                   ],
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
 
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    AppLocalizations.of(context)!.todaysAppointments,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-                  ),
-                  if (upcomingApts.isNotEmpty)
-                    Text(
-                      AppLocalizations.of(context)!.totalCount(upcomingApts.length),
-                      style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color, fontSize: 12.5),
+              // 2. PENDING REQUESTS HERO CARD
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2C5927),
+                  borderRadius: BorderRadius.circular(22),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF2C5927).withValues(alpha: 0.28),
+                      blurRadius: 14,
+                      offset: const Offset(0, 6),
                     ),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              // Manage Availability Action Card
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const MidwifeManageScheduleScreen()),
-                  );
-                },
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: isDark ? AppColors.darkSurface : Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: isDark ? AppColors.darkBorder : AppColors.primaryGreen.withValues(alpha: 0.2),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: isDark
-                            ? Colors.black.withValues(alpha: 0.2)
-                            : AppColors.primaryGreen.withValues(alpha: 0.06),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? AppColors.darkSurfaceVariant
-                              : AppColors.primaryGreen.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 36,
+                          height: 36,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF5B814C),
+                            shape: BoxShape.circle,
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            '$pendingCount',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                            ),
+                          ),
                         ),
-                        child: Icon(
-                          Icons.edit_calendar_rounded,
-                          color: isDark ? AppColors.darkPrimary : AppColors.primaryGreen,
-                          size: 24,
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Pending Requests',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                pendingCount > 0
+                                    ? 'Action required for consultation slots'
+                                    : 'No pending requests at this time',
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.85),
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              AppLocalizations.of(context)!.manageAvailability,
+                        if (pendingCount > 0)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF5BD1A),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Text(
+                              'New',
                               style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                                color: isDark ? AppColors.darkTextPrimary : const Color(0xFF182335),
+                                color: Colors.black,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 11,
                               ),
                             ),
-                            const SizedBox(height: 3),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 46,
+                      child: ElevatedButton(
+                        onPressed: _openPendingRequestsAndSchedule,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: const Color(0xFF2C5927),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(25),
+                          ),
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.calendar_month_outlined, size: 19, color: Color(0xFF2C5927)),
+                            SizedBox(width: 8),
                             Text(
-                              AppLocalizations.of(context)!.setDaysAndTimesPrompt,
+                              'Review Requests & Schedule',
                               style: TextStyle(
-                                fontSize: 12,
-                                color: isDark ? AppColors.darkTextSecondary : Colors.black54,
-                                height: 1.3,
+                                color: Color(0xFF2C5927),
+                                fontWeight: FontWeight.w700,
+                                fontSize: 14,
                               ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Icon(
-                        Icons.chevron_right_rounded,
-                        color: isDark ? AppColors.darkTextSecondary : AppColors.primaryGreen,
-                        size: 22,
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 22),
+
+              // 3. MIDWIFE WORKFLOWS & TOOLS
+              _buildSectionHeader('Midwife Workflows & Tools'),
+              const SizedBox(height: 12),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildWorkflowCard(
+                      title: 'Manage Hours',
+                      subtitle: 'Set daily availability slots',
+                      icon: Icons.access_time_rounded,
+                      iconBgColor: const Color(0xFFE8F5E9),
+                      iconColor: const Color(0xFF2E7D32),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const MidwifeManageScheduleScreen()),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: _buildWorkflowCard(
+                      title: 'Client Messages',
+                      subtitle: 'Direct non-urgent chat',
+                      icon: Icons.chat_bubble_outline_rounded,
+                      iconBgColor: const Color(0xFFE8F0FE),
+                      iconColor: const Color(0xFF1976D2),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const MidwifeInboxScreen()),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildWorkflowCard(
+                      title: 'Publish Tips',
+                      subtitle: 'Share health guidelines',
+                      icon: Icons.description_outlined,
+                      iconBgColor: const Color(0xFFFFF3E0),
+                      iconColor: const Color(0xFFE65100),
+                      onTap: () => _showPublishTipsModal(context),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: _buildWorkflowCard(
+                      title: 'Consult Calendar',
+                      subtitle: 'View confirmed sessions',
+                      icon: Icons.calendar_month_outlined,
+                      iconBgColor: const Color(0xFFF3E5F5),
+                      iconColor: const Color(0xFF7B1FA2),
+                      onTap: () {
+                        setState(() => selectedIndex = 1);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 22),
+
+              // 4. CLINICAL PROTOCOLS
+              _buildSectionHeader('Clinical Protocols'),
+              const SizedBox(height: 12),
+
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => _showProtocolDetailsModal(context),
+                  borderRadius: BorderRadius.circular(20),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    decoration: BoxDecoration(
+                      color: isDark ? AppColors.darkSurface : Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: isDark ? AppColors.darkBorder : Colors.black.withValues(alpha: 0.04),
                       ),
-                    ],
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.03),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: isDark ? AppColors.darkSurfaceVariant : const Color(0xFFE8F3E6),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Icon(
+                            Icons.verified_user_outlined,
+                            color: isDark ? AppColors.darkPrimary : const Color(0xFF2E7D32),
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Adolescent Care Protocol 2026',
+                                style: TextStyle(
+                                  fontSize: 14.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: isDark ? AppColors.darkTextPrimary : const Color(0xFF1E293B),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Standard guidelines for confidential consultations, menstrual health education, and adolescent counseling.',
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  height: 1.35,
+                                  color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
 
-              if (snapshot.connectionState == ConnectionState.waiting)
-                Center(child: CircularProgressIndicator(color: isDark ? AppColors.darkPrimary : AppColors.primaryGreen))
-              else if (upcomingApts.isEmpty)
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).cardColor,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Theme.of(context).dividerColor),
-                  ),
-                  child: Column(
-                    children: [
-                      Icon(Icons.event_available_outlined, size: 48, color: isDark ? AppColors.darkTextSecondary : Colors.grey.shade400),
-                      const SizedBox(height: 12),
-                      Text(
-                        AppLocalizations.of(context)!.noUpcomingConsultations,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).textTheme.bodyLarge?.color,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        'Any confirmed appointments scheduled for today will appear here.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Theme.of(context).textTheme.bodySmall?.color,
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              else
+              // 5. TODAY'S CONFIRMED CONSULTATIONS (if any)
+              if (upcomingApts.isNotEmpty) ...[
+                const SizedBox(height: 24),
+                _buildSectionHeader('Today\'s Confirmed Consultations'),
+                const SizedBox(height: 12),
                 ...upcomingApts.map((apt) {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 12),
@@ -412,6 +580,7 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
                     ),
                   );
                 }),
+              ],
 
               const SizedBox(height: 90),
             ],
@@ -421,14 +590,519 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
     );
   }
 
+  void _openPendingRequestsAndSchedule() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const MidwifeConsultsScreen(showAppBar: true, initialTab: 0),
+      ),
+    ).then((_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  Widget _buildSectionHeader(String title) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Row(
+      children: [
+        Container(
+          width: 4,
+          height: 16,
+          decoration: BoxDecoration(
+            color: const Color(0xFFE59828),
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+            color: isDark ? AppColors.darkTextPrimary : const Color(0xFF1E293B),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWorkflowCard({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color iconBgColor,
+    required Color iconColor,
+    required VoidCallback onTap,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkSurface : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isDark ? AppColors.darkBorder : Colors.black.withValues(alpha: 0.04),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.03),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkSurfaceVariant : iconBgColor,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  icon,
+                  color: isDark ? AppColors.darkPrimary : iconColor,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? AppColors.darkTextPrimary : const Color(0xFF1E293B),
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 11.5,
+                  color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
+                  height: 1.25,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showPublishTipsModal(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final categories = [
+      'Menstrual Health',
+      'Nutrition & Diet',
+      'Hygiene & Care',
+      'Emotional Well-being',
+      'Reproductive Health',
+    ];
+    String selectedCategory = categories.first;
+    final titleController = TextEditingController();
+    final contentController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (modalCtx) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 20,
+                bottom: 24 + MediaQuery.of(modalCtx).viewInsets.bottom,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withValues(alpha: 0.3),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFF3E0),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(Icons.edit_note_rounded, color: Color(0xFFE65100), size: 24),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Publish Health Tip',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? AppColors.darkTextPrimary : const Color(0xFF1E293B),
+                                ),
+                              ),
+                              Text(
+                                'Share clinical advice directly with adolescent girls',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 18),
+                    Text(
+                      'Topic Category',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? AppColors.darkTextPrimary : const Color(0xFF334155),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: categories.map((cat) {
+                          final isSel = selectedCategory == cat;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: ChoiceChip(
+                              label: Text(cat),
+                              selected: isSel,
+                              onSelected: (val) {
+                                if (val) setModalState(() => selectedCategory = cat);
+                              },
+                              selectedColor: const Color(0xFF2C5927),
+                              labelStyle: TextStyle(
+                                color: isSel ? Colors.white : (isDark ? Colors.white70 : const Color(0xFF334155)),
+                                fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
+                                fontSize: 12,
+                              ),
+                              backgroundColor: isDark ? AppColors.darkSurfaceVariant : const Color(0xFFF1F5F1),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    TextField(
+                      controller: titleController,
+                      decoration: InputDecoration(
+                        labelText: 'Tip Title',
+                        hintText: 'e.g. Managing menstrual cramps with warmth & hydration',
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: contentController,
+                      maxLines: 3,
+                      decoration: InputDecoration(
+                        labelText: 'Guideline & Advice',
+                        hintText: 'Provide practical, supportive, non-judgmental guidance...',
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 46,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          final title = titleController.text.trim();
+                          final content = contentController.text.trim();
+                          if (title.isEmpty || content.isEmpty) {
+                            CustomSnackBar.show(context, message: 'Please enter both a title and guidelines', isError: true);
+                            return;
+                          }
+                          Navigator.pop(modalCtx);
+                          CustomSnackBar.show(
+                            context,
+                            message: 'Health tip published successfully to Adolescent Learning Hub!',
+                            isSuccess: true,
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF2C5927),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                        ),
+                        child: const Text('Publish Health Tip', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.5)),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Center(
+                      child: TextButton.icon(
+                        onPressed: () {
+                          Navigator.pop(modalCtx);
+                          setState(() => selectedIndex = 3);
+                        },
+                        icon: const Icon(Icons.library_books_outlined, size: 18, color: Color(0xFF2C5927)),
+                        label: const Text(
+                          'Browse All Published Guides',
+                          style: TextStyle(color: Color(0xFF2C5927), fontWeight: FontWeight.w600, fontSize: 13),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showProtocolDetailsModal(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (modalCtx) {
+        return Padding(
+          padding: const EdgeInsets.all(22),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: isDark ? AppColors.darkSurfaceVariant : const Color(0xFFE8F3E6),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Icon(Icons.verified_user_outlined, color: Color(0xFF2E7D32), size: 28),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  'Adolescent Care Protocol',
+                                  style: TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark ? AppColors.darkTextPrimary : const Color(0xFF1E293B),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFE59828).withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: const Text(
+                                  '2026',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFFB46E08),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            'MOH & WHO Clinical Standard for Youth Consultations',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                const Divider(),
+                const SizedBox(height: 12),
+                _buildProtocolItem(
+                  icon: Icons.lock_outline_rounded,
+                  title: '1. Strict Confidentiality & Safe Environment',
+                  desc: 'Adolescent health queries and consultations must remain completely confidential without stigmatization.',
+                  isDark: isDark,
+                ),
+                const SizedBox(height: 12),
+                _buildProtocolItem(
+                  icon: Icons.water_drop_outlined,
+                  title: '2. Menstrual Health Education & Pain Management',
+                  desc: 'Educate on normal cycle variation, hygiene management, and non-pharmacological & safe pharmacological pain relief.',
+                  isDark: isDark,
+                ),
+                const SizedBox(height: 12),
+                _buildProtocolItem(
+                  icon: Icons.chat_bubble_outline_rounded,
+                  title: '3. Empathetic, Non-Judgmental Counseling',
+                  desc: 'Use active listening, open-ended questions, and affirm bodily autonomy and emotional well-being.',
+                  isDark: isDark,
+                ),
+                const SizedBox(height: 12),
+                _buildProtocolItem(
+                  icon: Icons.emergency_outlined,
+                  title: '4. Red Flag Identification & Referral Escalation',
+                  desc: 'Immediate clinical triage and referral for severe acute abdominal pain, abnormal heavy bleeding, or distress.',
+                  isDark: isDark,
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  height: 46,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(modalCtx);
+                      setState(() => selectedIndex = 3);
+                    },
+                    icon: const Icon(Icons.menu_book_rounded, size: 20),
+                    label: const Text('Open Full Learning & Protocols Center', style: TextStyle(fontWeight: FontWeight.bold)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2C5927),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildProtocolItem({
+    required IconData icon,
+    required String title,
+    required String desc,
+    required bool isDark,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(7),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkSurfaceVariant : const Color(0xFFF1F6F0),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, size: 17, color: const Color(0xFF2E7D32)),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13.5,
+                  color: isDark ? AppColors.darkTextPrimary : const Color(0xFF1E293B),
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                desc,
+                style: TextStyle(
+                  fontSize: 12,
+                  height: 1.35,
+                  color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildConsultationCard(
     BuildContext context, {
     required Appointment appointment,
     required VoidCallback onCompleted,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final patientName = appointment.userFullName ?? 'Patient';
-    final type = appointment.appointmentType == 'VIRTUAL_VOICE' ? 'Voice Call' : 'Video Call';
+    final patientName = appointment.userFullName ?? (AppLocalizations.of(context)?.patient ?? 'Patient');
+    String type;
+    switch (appointment.appointmentType.toUpperCase().trim()) {
+      case 'VIRTUAL_VOICE':
+        type = 'Voice Call';
+        break;
+      case 'VIRTUAL_VIDEO':
+        type = 'Video Call';
+        break;
+      case 'IN_PERSON':
+        type = 'In Person';
+        break;
+      case 'CHAT':
+        type = 'Chat';
+        break;
+      default:
+        type = appointment.appointmentType.isNotEmpty ? appointment.appointmentType : 'Consultation';
+    }
     final dateStr = '${appointment.date} • ${appointment.startTime}';
     return _buildScheduleItem(
       time: appointment.startTime.isNotEmpty ? appointment.startTime : 'Scheduled',
