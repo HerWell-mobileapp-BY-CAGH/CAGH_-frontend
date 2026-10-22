@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cagh_frontend/features/notifications/data/models/notification_model.dart';
 import 'package:cagh_frontend/features/notifications/data/repositories/notification_repository.dart';
 import 'package:cagh_frontend/features/consultations/data/services/chat_api_service.dart';
@@ -57,6 +58,8 @@ class NotificationStateNotifier extends StateNotifier<NotificationState> {
   final AppointmentRepositoryImpl _appointmentRepository =
       AppointmentRepositoryImpl(AppointmentApiService());
 
+  static const String _prefsKeyReadSynthetic = 'read_synthetic_notifications';
+
   NotificationStateNotifier(this._repository) : super(NotificationState()) {
     loadNotifications();
   }
@@ -72,7 +75,10 @@ class NotificationStateNotifier extends StateNotifier<NotificationState> {
 
   Future<void> _fetchAndSynthesize({bool isSilent = false}) async {
     try {
-      // 1. Fetch backend notifications, chat rooms, and user data concurrently
+      final prefs = await SharedPreferences.getInstance();
+      final readSyntheticIds = (prefs.getStringList(_prefsKeyReadSynthetic) ?? []).toSet();
+
+      // 1. Fetch backend notifications, chat rooms, and user profile concurrently
       final results = await Future.wait([
         _repository.getNotifications().catchError((_) => <NotificationModel>[]),
         ChatApiService.getChatRooms().catchError((_) => <Map<String, dynamic>>[]),
@@ -83,7 +89,7 @@ class NotificationStateNotifier extends StateNotifier<NotificationState> {
       final chatRooms = results[1] as List<dynamic>;
       final userData = results[2] as Map<String, dynamic>;
 
-      // 2. Compute unread messages
+      // 2. Compute unread chat messages & notification items
       int totalUnreadMessages = 0;
       final List<NotificationModel> chatNotifications = [];
       for (var room in chatRooms) {
@@ -92,6 +98,7 @@ class NotificationStateNotifier extends StateNotifier<NotificationState> {
 
         if (roomUnread > 0) {
           final roomId = room['id']?.toString() ?? '';
+          final synId = 'chat_$roomId';
           final mw = room['midwife_detail'] ?? room['midwife'];
           final user = room['user_detail'] ?? room['user'] ?? room['patient'];
           String partnerName = 'Healthcare Provider';
@@ -117,12 +124,12 @@ class NotificationStateNotifier extends StateNotifier<NotificationState> {
 
           chatNotifications.add(
             NotificationModel(
-              id: 'chat_$roomId',
+              id: synId,
               recipientId: '',
               type: 'message',
               title: partnerName,
               body: preview,
-              isRead: false,
+              isRead: readSyntheticIds.contains(synId),
               createdAt: msgTime,
               relatedId: roomId,
               relatedType: 'conversation',
@@ -131,7 +138,7 @@ class NotificationStateNotifier extends StateNotifier<NotificationState> {
         }
       }
 
-      // 3. Fetch user/midwife appointments to compute upcoming consultation events
+      // 3. Fetch appointments for upcoming consultations and pending requests
       int totalUpcoming = 0;
       final List<NotificationModel> appointmentNotifications = [];
       try {
@@ -149,39 +156,62 @@ class NotificationStateNotifier extends StateNotifier<NotificationState> {
           if (apt.status == AppointmentStatus.confirmed && !apt.isPast) {
             totalUpcoming++;
 
-            // Create notification item if within 48 hours or upcoming
-            String partnerName = userType == 'MIDWIFE' 
-                ? (apt.userFullName ?? 'Patient') 
-                : (apt.midwifeName ?? 'Midwife');
-            
-            String title = '$partnerName • Virtual Consultation';
-            String body = '${apt.date} at ${apt.startTime}';
-            if (apt.reason != null && apt.reason!.isNotEmpty) {
-              body = '$body (${apt.reason})';
-            }
+            // Only synthesize an immediate reminder notification if consultation starts within next 2 hours
+            DateTime? startDt;
+            try {
+              final parts = apt.date.split('-');
+              if (parts.length >= 3) {
+                final y = int.parse(parts[0]);
+                final m = int.parse(parts[1]);
+                final d = int.parse(parts[2]);
+                int hr = 0, min = 0;
+                if (apt.startTime.isNotEmpty) {
+                  final tp = apt.startTime.split(':');
+                  if (tp.length >= 2) {
+                    hr = int.parse(tp[0]);
+                    min = int.parse(tp[1]);
+                  }
+                }
+                startDt = DateTime(y, m, d, hr, min);
+              }
+            } catch (_) {}
 
-            appointmentNotifications.add(
-              NotificationModel(
-                id: 'apt_${apt.appointmentId}',
-                recipientId: '',
-                type: 'consultation_upcoming',
-                title: title,
-                body: body,
-                isRead: false,
-                createdAt: apt.createdAt ?? now,
-                relatedId: apt.appointmentId,
-                relatedType: 'consultation',
-              ),
-            );
+            if (startDt != null) {
+              final diff = startDt.difference(now);
+              if (diff.inMinutes >= 0 && diff.inMinutes <= 120) {
+                final synId = 'apt_soon_${apt.appointmentId}';
+                final isRead = readSyntheticIds.contains(synId);
+                String partnerName = userType == 'MIDWIFE' 
+                    ? (apt.userFullName ?? 'Patient') 
+                    : (apt.midwifeName ?? 'Midwife');
+
+                appointmentNotifications.add(
+                  NotificationModel(
+                    id: synId,
+                    recipientId: '',
+                    type: 'consultation_upcoming',
+                    title: 'Upcoming Consultation in ${diff.inMinutes} mins',
+                    body: '$partnerName • Today at ${apt.startTime}',
+                    isRead: isRead,
+                    createdAt: apt.createdAt ?? now,
+                    relatedId: apt.appointmentId,
+                    relatedType: 'consultation',
+                  ),
+                );
+              }
+            }
           } else if (apt.status == AppointmentStatus.pending && userType == 'MIDWIFE') {
+            // Pending requests are genuine actionable notifications for midwives
+            final synId = 'apt_req_${apt.appointmentId}';
+            final isRead = readSyntheticIds.contains(synId);
             appointmentNotifications.add(
               NotificationModel(
-                id: 'apt_req_${apt.appointmentId}',
+                id: synId,
                 recipientId: '',
                 type: 'consultation_request',
                 title: 'New Consultation Request',
                 body: '${apt.userFullName ?? "Patient"} requested ${apt.date} at ${apt.startTime}',
-                isRead: false,
+                isRead: isRead,
                 createdAt: apt.createdAt ?? now,
                 relatedId: apt.appointmentId,
                 relatedType: 'consultation',
@@ -193,20 +223,20 @@ class NotificationStateNotifier extends StateNotifier<NotificationState> {
         // Appointments fetch fallback
       }
 
-      // 4. Combine backend notifications + dynamic real-time synthesized notifications
+      // 4. Combine notifications into unified list
       final Map<String, NotificationModel> mergedMap = {};
       
-      // Add backend items first
+      // Backend notifications first (genuine server alerts)
       for (var n in backendNotifications) {
         mergedMap[n.id] = n;
       }
       
-      // Merge chat notifications (override or add if unread exists)
+      // Merge chat notifications
       for (var n in chatNotifications) {
         mergedMap[n.id] = n;
       }
 
-      // Merge consultation notifications
+      // Merge urgent consultation notifications
       for (var n in appointmentNotifications) {
         mergedMap[n.id] = n;
       }
@@ -245,8 +275,16 @@ class NotificationStateNotifier extends StateNotifier<NotificationState> {
         unreadCount: newUnreadCount,
       );
 
-      // If it's a backend notification id (not synthetic chat/apt prefix), sync with backend
-      if (!id.startsWith('chat_') && !id.startsWith('apt_')) {
+      // Persist synthetic notification read status locally
+      if (id.startsWith('chat_') || id.startsWith('apt_')) {
+        final prefs = await SharedPreferences.getInstance();
+        final readList = prefs.getStringList(_prefsKeyReadSynthetic) ?? [];
+        if (!readList.contains(id)) {
+          readList.add(id);
+          await prefs.setStringList(_prefsKeyReadSynthetic, readList);
+        }
+      } else {
+        // Backend notification: sync read status to server
         await _repository.markAsRead(id);
       }
     }
@@ -261,6 +299,17 @@ class NotificationStateNotifier extends StateNotifier<NotificationState> {
       unreadCount: 0,
     );
 
+    // Save all synthetic notifications as read in SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    final readSet = (prefs.getStringList(_prefsKeyReadSynthetic) ?? []).toSet();
+    for (var n in currentNotifications) {
+      if (n.id.startsWith('chat_') || n.id.startsWith('apt_')) {
+        readSet.add(n.id);
+      }
+    }
+    await prefs.setStringList(_prefsKeyReadSynthetic, readSet.toList());
+
+    // Mark all read in backend
     await _repository.markAllAsRead();
   }
 }

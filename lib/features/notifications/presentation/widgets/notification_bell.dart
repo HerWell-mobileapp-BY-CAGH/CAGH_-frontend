@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cagh_frontend/features/notifications/presentation/providers/notification_provider.dart';
 import 'package:cagh_frontend/features/notifications/presentation/notifications_screen.dart';
@@ -17,6 +18,7 @@ class NotificationBell extends ConsumerWidget {
       clipBehavior: Clip.none,
       children: [
         IconButton(
+          tooltip: 'Notifications',
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
           constraints: const BoxConstraints(),
           icon: Icon(
@@ -25,6 +27,7 @@ class NotificationBell extends ConsumerWidget {
             size: 24,
           ),
           onPressed: () {
+            HapticFeedback.lightImpact();
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const NotificationsScreen()),
@@ -40,14 +43,14 @@ class NotificationBell extends ConsumerWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
               decoration: BoxDecoration(
-                color: Colors.red.shade600,
+                color: const Color(0xFFE53935),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: Colors.white, width: 1.5),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.2),
+                    color: Colors.black.withValues(alpha: 0.25),
                     blurRadius: 4,
-                    offset: const Offset(0, 2),
+                    offset: const Offset(0, 1.5),
                   ),
                 ],
               ),

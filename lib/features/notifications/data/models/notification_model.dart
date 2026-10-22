@@ -24,21 +24,29 @@ class NotificationModel {
   });
 
   factory NotificationModel.fromJson(Map<String, dynamic> json) {
+    final rawRead = json['is_read'] ?? json['read'] ?? json['status'];
+    final bool isRead = rawRead == true ||
+        rawRead == 1 ||
+        rawRead?.toString().toLowerCase() == 'true' ||
+        rawRead?.toString().toUpperCase() == 'READ';
+
     return NotificationModel(
       id: json['id']?.toString() ?? '',
-      recipientId: json['recipient_id']?.toString() ?? '',
-      type: json['type']?.toString() ?? '',
+      recipientId: json['recipient_id']?.toString() ?? json['user']?.toString() ?? '',
+      type: json['type']?.toString() ?? json['notification_type']?.toString() ?? 'system',
       title: json['title']?.toString() ?? '',
-      body: json['body']?.toString() ?? '',
-      isRead: json['is_read'] == true,
+      body: json['body']?.toString() ?? json['message']?.toString() ?? json['content']?.toString() ?? '',
+      isRead: isRead,
       createdAt: json['created_at'] != null 
-          ? DateTime.tryParse(json['created_at'].toString()) ?? DateTime.now() 
-          : DateTime.now(),
+          ? DateTime.tryParse(json['created_at'].toString())?.toLocal() ?? DateTime.now() 
+          : (json['timestamp'] != null
+              ? DateTime.tryParse(json['timestamp'].toString())?.toLocal() ?? DateTime.now()
+              : DateTime.now()),
       readAt: json['read_at'] != null 
-          ? DateTime.tryParse(json['read_at'].toString()) 
+          ? DateTime.tryParse(json['read_at'].toString())?.toLocal() 
           : null,
-      relatedId: json['related_id']?.toString(),
-      relatedType: json['related_type']?.toString(),
+      relatedId: json['reference_id']?.toString() ?? json['related_id']?.toString(),
+      relatedType: json['action']?.toString() ?? json['related_type']?.toString() ?? json['type']?.toString(),
     );
   }
 
@@ -52,8 +60,8 @@ class NotificationModel {
       'is_read': isRead,
       'created_at': createdAt.toIso8601String(),
       if (readAt != null) 'read_at': readAt!.toIso8601String(),
-      if (relatedId != null) 'related_id': relatedId,
-      if (relatedType != null) 'related_type': relatedType,
+      if (relatedId != null) 'reference_id': relatedId,
+      if (relatedType != null) 'action': relatedType,
     };
   }
 
