@@ -4,8 +4,52 @@ import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
 import 'package:cagh_frontend/features/hotline/data/services/sos_api_service.dart';
+import 'package:cagh_frontend/features/hotline/domain/models/hotline.dart';
 import 'package:cagh_frontend/shared/widgets/custom_snackbar.dart';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
+
+class RedCrossLogo extends StatelessWidget {
+  final double size;
+  final Color? color;
+
+  const RedCrossLogo({
+    super.key,
+    this.size = 20,
+    this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final crossColor = color ?? (isDark ? const Color(0xFFFF6B6B) : const Color(0xFFC62828));
+    final barThickness = size * 0.35;
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            width: barThickness,
+            height: size,
+            decoration: BoxDecoration(
+              color: crossColor,
+              borderRadius: BorderRadius.circular(1.5),
+            ),
+          ),
+          Container(
+            width: size,
+            height: barThickness,
+            decoration: BoxDecoration(
+              color: crossColor,
+              borderRadius: BorderRadius.circular(1.5),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class HotlineItem {
   final String title;
@@ -16,6 +60,7 @@ class HotlineItem {
   final IconData icon;
   final Color color;
   final Color bgColor;
+  final Widget? customIcon;
 
   const HotlineItem({
     required this.title,
@@ -26,6 +71,7 @@ class HotlineItem {
     required this.icon,
     required this.color,
     required this.bgColor,
+    this.customIcon,
   });
 }
 
@@ -55,8 +101,8 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
       callUrl: 'tel:907',
       category: 'Medical',
       icon: Icons.medical_services_rounded,
-      color: Color(0xFF8B4B48),
-      bgColor: Color(0xFFF9F3F2),
+      color: Color(0xFFD32F2F), // Ethiopian National EMS Crimson Red
+      bgColor: Color(0xFFFFEBEE), // Crisp Soft Red/Rose
     ),
     HotlineItem(
       title: 'Police & Security Services',
@@ -65,8 +111,8 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
       callUrl: 'tel:911',
       category: 'Security',
       icon: Icons.local_police_rounded,
-      color: Color(0xFF455A64),
-      bgColor: Color(0xFFF0F4F5),
+      color: Color(0xFF1565C0), // Ethiopian Federal Police Cobalt/Navy Blue
+      bgColor: Color(0xFFE3F2FD), // Crisp Soft Ice Blue
     ),
     HotlineItem(
       title: 'Red Cross Ambulance',
@@ -74,9 +120,10 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
       number: '939',
       callUrl: 'tel:939',
       category: 'Medical',
-      icon: Icons.emergency_rounded,
-      color: Color(0xFF8B4B48),
-      bgColor: Color(0xFFF9F3F2),
+      icon: Icons.add_rounded,
+      customIcon: RedCrossLogo(),
+      color: Color(0xFFC62828), // Official Red Cross Red
+      bgColor: Color(0xFFFFEBEE), // Crisp Soft Red/Rose
     ),
     HotlineItem(
       title: 'Women & Child Protection',
@@ -84,9 +131,9 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
       number: '8044',
       callUrl: 'tel:8044',
       category: 'Support',
-      icon: Icons.shield_rounded,
-      color: Color(0xFF6B5366),
-      bgColor: Color(0xFFF5F0F4),
+      icon: Icons.family_restroom_rounded, // Family & Women/Child protection
+      color: Color(0xFF7B1FA2), // MoWSA Official Royal Purple
+      bgColor: Color(0xFFF3E5F5), // Soft Crisp Lavender
     ),
     HotlineItem(
       title: 'Public Health Advisory (EPHI)',
@@ -94,9 +141,9 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
       number: '8335',
       callUrl: 'tel:8335',
       category: 'Medical',
-      icon: Icons.health_and_safety_rounded,
-      color: Color(0xFF385A2E),
-      bgColor: Color(0xFFEFF5ED),
+      icon: Icons.health_and_safety_rounded, // EPHI Health Shield
+      color: Color(0xFF00796B), // EPHI Official Deep Teal
+      bgColor: Color(0xFFE0F2F1), // Soft Crisp Mint/Teal
     ),
     HotlineItem(
       title: 'Fire & Rescue Services',
@@ -104,9 +151,9 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
       number: '991',
       callUrl: 'tel:991',
       category: 'Security',
-      icon: Icons.fire_extinguisher_rounded,
-      color: Color(0xFF8C5835),
-      bgColor: Color(0xFFF7F2EE),
+      icon: Icons.local_fire_department_rounded, // Fire & Rescue Flame Emblem
+      color: Color(0xFFE65100), // Fire & Rescue Flame Orange
+      bgColor: Color(0xFFFFF3E0), // Soft Crisp Amber
     ),
   ];
 
@@ -205,26 +252,138 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
     }
   }
 
+  HotlineItem _buildDynamicHotlineItem(Hotline h) {
+    final nameLower = h.name.toLowerCase();
+    final cleanNum = h.number.replaceAll(RegExp(r'\D'), '');
+
+    // Women, Children & GBV
+    if (nameLower.contains('women') ||
+        nameLower.contains('child') ||
+        nameLower.contains('girl') ||
+        nameLower.contains('ሴቶች') ||
+        nameLower.contains('ህፃናት') ||
+        nameLower.contains('gender') ||
+        nameLower.contains('gbv') ||
+        cleanNum == '8044' ||
+        cleanNum == '6886') {
+      return HotlineItem(
+        title: h.name,
+        subtitle: 'Toll-free helpline (${h.number})',
+        number: h.number,
+        callUrl: h.callUrl.isNotEmpty ? h.callUrl : 'tel:${h.number}',
+        category: 'Support',
+        icon: Icons.family_restroom_rounded,
+        color: const Color(0xFF7B1FA2),
+        bgColor: const Color(0xFFF3E5F5),
+      );
+    }
+
+    // Police & Security
+    if (nameLower.contains('police') ||
+        nameLower.contains('security') ||
+        nameLower.contains('ፖሊስ') ||
+        nameLower.contains('defense') ||
+        nameLower.contains('crime') ||
+        cleanNum == '911' ||
+        cleanNum == '997') {
+      return HotlineItem(
+        title: h.name,
+        subtitle: 'Emergency security line (${h.number})',
+        number: h.number,
+        callUrl: h.callUrl.isNotEmpty ? h.callUrl : 'tel:${h.number}',
+        category: 'Security',
+        icon: Icons.local_police_rounded,
+        color: const Color(0xFF1565C0),
+        bgColor: const Color(0xFFE3F2FD),
+      );
+    }
+
+    // Fire & Rescue
+    if (nameLower.contains('fire') ||
+        nameLower.contains('rescue') ||
+        nameLower.contains('እሳት') ||
+        nameLower.contains('disaster') ||
+        cleanNum == '991') {
+      return HotlineItem(
+        title: h.name,
+        subtitle: 'Civil emergency & rescue (${h.number})',
+        number: h.number,
+        callUrl: h.callUrl.isNotEmpty ? h.callUrl : 'tel:${h.number}',
+        category: 'Security',
+        icon: Icons.local_fire_department_rounded,
+        color: const Color(0xFFE65100),
+        bgColor: const Color(0xFFFFF3E0),
+      );
+    }
+
+    // Red Cross
+    if (nameLower.contains('red cross') ||
+        nameLower.contains('ቀይ መስቀል') ||
+        cleanNum == '939') {
+      return HotlineItem(
+        title: h.name,
+        subtitle: 'Emergency first aid & transport (${h.number})',
+        number: h.number,
+        callUrl: h.callUrl.isNotEmpty ? h.callUrl : 'tel:${h.number}',
+        category: 'Medical',
+        icon: Icons.add_rounded,
+        customIcon: const RedCrossLogo(),
+        color: const Color(0xFFC62828),
+        bgColor: const Color(0xFFFFEBEE),
+      );
+    }
+
+    // Medical, Ambulance & Health
+    if (nameLower.contains('ambulance') ||
+        nameLower.contains('health') ||
+        nameLower.contains('medical') ||
+        nameLower.contains('hospital') ||
+        nameLower.contains('clinic') ||
+        nameLower.contains('አምቡላንስ') ||
+        nameLower.contains('ጤና') ||
+        cleanNum == '907' ||
+        cleanNum == '8335') {
+      final isEphi = nameLower.contains('ephi') || cleanNum == '8335';
+      return HotlineItem(
+        title: h.name,
+        subtitle: 'Toll-free health helpline (${h.number})',
+        number: h.number,
+        callUrl: h.callUrl.isNotEmpty ? h.callUrl : 'tel:${h.number}',
+        category: 'Medical',
+        icon: isEphi ? Icons.health_and_safety_rounded : Icons.medical_services_rounded,
+        color: isEphi ? const Color(0xFF00796B) : const Color(0xFFD32F2F),
+        bgColor: isEphi ? const Color(0xFFE0F2F1) : const Color(0xFFFFEBEE),
+      );
+    }
+
+    // Default Support Helpline
+    return HotlineItem(
+      title: h.name,
+      subtitle: 'Toll-free helpline (${h.number})',
+      number: h.number,
+      callUrl: h.callUrl.isNotEmpty ? h.callUrl : 'tel:${h.number}',
+      category: 'Support',
+      icon: Icons.phone_in_talk_rounded,
+      color: AppColors.primaryGreen,
+      bgColor: const Color(0xFFE8F5E9),
+    );
+  }
+
   Future<void> _fetchDynamicHotlines() async {
     try {
       final data = await _apiService.getHotlines();
       if (mounted && data.hotlines.isNotEmpty) {
         setState(() {
           for (final h in data.hotlines) {
-            final exists = _hotlines.any((item) => item.number == h.number);
-            if (!exists && h.number.isNotEmpty && h.number != _caghHotlineNumber) {
-              _hotlines.add(
-                HotlineItem(
-                  title: h.name,
-                  subtitle: 'Toll-free helpline (${h.number})',
-                  number: h.number,
-                  callUrl: h.callUrl.isNotEmpty ? h.callUrl : 'tel:${h.number}',
-                  category: 'Support',
-                  icon: Icons.phone_in_talk_rounded,
-                  color: AppColors.primaryGreen,
-                  bgColor: const Color(0xFFE8F5E9),
-                ),
-              );
+            final cleanHNum = h.number.replaceAll(RegExp(r'\D'), '');
+            final exists = _hotlines.any((item) {
+              final cleanItemNum = item.number.replaceAll(RegExp(r'\D'), '');
+              return (cleanHNum.isNotEmpty && cleanHNum == cleanItemNum) ||
+                  (cleanHNum.isEmpty && item.number == h.number) ||
+                  item.title.trim().toLowerCase() == h.name.trim().toLowerCase();
+            });
+            if (!exists && h.number.isNotEmpty && cleanHNum != _caghHotlineNumber) {
+              _hotlines.add(_buildDynamicHotlineItem(h));
             }
           }
         });
@@ -357,40 +516,22 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
         },
       );
 
-      bool launched = false;
       try {
         if (await canLaunchUrl(smsUri)) {
           await launchUrl(smsUri);
-          launched = true;
         } else {
           final fallbackUri = Uri.parse(
             'sms:$_caghHotlineNumber?body=${Uri.encodeComponent(dispatchText)}',
           );
           if (await canLaunchUrl(fallbackUri)) {
             await launchUrl(fallbackUri);
-            launched = true;
           }
         }
       } catch (_) {}
 
+      // 7. Show modal bottom sheet with coordinates and 1-tap actions
       if (mounted) {
-        if (launched) {
-          CustomSnackBar.show(
-            context,
-            message: isAm
-                ? 'የመገኛ ቦታ መረጃ ወደ $_caghHotlineDisplay ተልኳል እንዲሁም ተቀድቷል!'
-                : 'Location dispatched to $_caghHotlineDisplay and copied to clipboard!',
-            type: SnackBarType.success,
-          );
-        } else {
-          CustomSnackBar.show(
-            context,
-            message: isAm
-                ? 'የጂፒኤስ መገኛ ($cleanCoords) ተቀድቷል! ለ$_caghHotlineDisplay መላክ ይችላሉ።'
-                : 'Emergency GPS coordinates ($cleanCoords) copied to clipboard for $_caghHotlineDisplay!',
-            type: SnackBarType.info,
-          );
-        }
+        _showEmergencyDispatchSheet(cleanCoords, mapsLink, dispatchText, isAm);
       }
     } catch (e) {
       if (mounted) {
@@ -405,6 +546,216 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
         setState(() => _isSharingLocation = false);
       }
     }
+  }
+
+  void _showEmergencyDispatchSheet(
+    String cleanCoords,
+    String mapsLink,
+    String dispatchText,
+    bool isAm,
+  ) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkSurface : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.2),
+              blurRadius: 20,
+              offset: const Offset(0, -4),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Handle bar
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkBorder : Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+
+            // Header Row
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE8F5E9),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.share_location_rounded,
+                    color: AppColors.primaryGreen,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isAm ? 'የአደጋ ጊዜ መገኛ ቦታ ተዘጋጅቷል' : 'Emergency GPS Location Ready',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: isDark ? Colors.white : const Color(0xFF1E293B),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        isAm
+                            ? 'መጋጠሚያዎች ተቀድተዋል • ለ$_caghHotlineDisplay ይደውሉ ወይም ኤስኤምኤስ ይላኩ'
+                            : 'Coordinates copied to clipboard • Ready for hotline call or SMS',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+
+            // Coordinates Display Box
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.darkSurfaceVariant : const Color(0xFFF4F8F3),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: isDark ? AppColors.darkBorder : const Color(0xFFD6E3D3),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isAm ? 'የጂፒኤስ መጋጠሚያዎች (GPS)' : 'GPS Coordinates',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? AppColors.darkTextSecondary : const Color(0xFF4A5545),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        cleanCoords,
+                        style: TextStyle(
+                          fontSize: 19,
+                          fontWeight: FontWeight.w900,
+                          color: isDark ? AppColors.darkTextPrimary : const Color(0xFF1B3E19),
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      HapticFeedback.lightImpact();
+                      Clipboard.setData(ClipboardData(text: cleanCoords));
+                      CustomSnackBar.show(
+                        context,
+                        message: isAm ? '$cleanCoords ተቀድቷል!' : 'Coordinates copied to clipboard!',
+                        type: SnackBarType.success,
+                      );
+                    },
+                    icon: const Icon(Icons.copy_rounded, size: 16),
+                    label: Text(isAm ? 'ቅዳ' : 'Copy'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: isDark ? AppColors.darkPrimary : AppColors.primaryGreen,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Call Hotline Button
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pop(ctx);
+                _callHotline('tel:$_caghHotlineNumber', _caghHotlineNumber);
+              },
+              icon: const Icon(Icons.call_rounded, size: 20),
+              label: Text(
+                isAm ? 'ወደ $_caghHotlineDisplay ይደውሉ' : 'Call Hotline ($_caghHotlineDisplay)',
+                style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w800),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryGreen,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            // Send via SMS Button
+            OutlinedButton.icon(
+              onPressed: () async {
+                final Uri smsUri = Uri(
+                  scheme: 'sms',
+                  path: _caghHotlineNumber,
+                  queryParameters: <String, String>{
+                    'body': dispatchText,
+                  },
+                );
+                try {
+                  if (await canLaunchUrl(smsUri)) {
+                    await launchUrl(smsUri);
+                  }
+                } catch (_) {}
+              },
+              icon: const Icon(Icons.sms_rounded, size: 18),
+              label: Text(
+                isAm ? 'በኤስኤምኤስ (SMS) ይላኩ' : 'Send via SMS to Hotline',
+                style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: isDark ? Colors.white : AppColors.primaryGreen,
+                side: BorderSide(
+                  color: isDark ? AppColors.darkBorder : AppColors.primaryGreen,
+                  width: 1.2,
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _copyToClipboard(String text, String label) {
@@ -1046,6 +1397,29 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
     );
   }
 
+  Color _getAdaptiveColor(Color color, bool isDark) {
+    if (!isDark) return color;
+    if (color == const Color(0xFFD32F2F) || color == const Color(0xFFC62828)) {
+      return const Color(0xFFFF6B6B);
+    }
+    if (color == const Color(0xFF1565C0)) {
+      return const Color(0xFF64B5F6);
+    }
+    if (color == const Color(0xFF7B1FA2)) {
+      return const Color(0xFFCE93D8);
+    }
+    if (color == const Color(0xFF00796B)) {
+      return const Color(0xFF4DB6AC);
+    }
+    if (color == const Color(0xFFE65100)) {
+      return const Color(0xFFFFB74D);
+    }
+    if (color == const Color(0xFF385A2E)) {
+      return const Color(0xFFA5D6A7);
+    }
+    return color;
+  }
+
   // Clean, visually premium hotline card with direct call action
   Widget _buildHotlineCard(bool isDark, HotlineItem item, AppLocalizations? l10n) {
     final title = _getHotlineTitle(item, l10n);
@@ -1069,7 +1443,7 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
       ),
       child: Row(
         children: [
-          // Icon badge in refined nude/earth container
+          // Icon badge in authentic brand container
           Container(
             width: 44,
             height: 44,
@@ -1081,10 +1455,13 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
                 width: 0.8,
               ),
             ),
-            child: Icon(
-              item.icon,
-              color: isDark ? (item.color == const Color(0xFF385A2E) ? const Color(0xFFA5D6A7) : item.color) : item.color,
-              size: 22,
+            child: Center(
+              child: item.customIcon ??
+                  Icon(
+                    item.icon,
+                    color: _getAdaptiveColor(item.color, isDark),
+                    size: 22,
+                  ),
             ),
           ),
           const SizedBox(width: 12),
@@ -1124,7 +1501,7 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w800,
-                          color: isDark ? (item.color == const Color(0xFF385A2E) ? const Color(0xFFA5D6A7) : item.color) : item.color,
+                          color: _getAdaptiveColor(item.color, isDark),
                         ),
                       ),
                     ),
