@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:cagh_frontend/core/services/global_call_service.dart';
 import 'package:cagh_frontend/core/utils/app_logger.dart';
 import 'package:cagh_frontend/core/services/fcm_service.dart';
 import 'language_selection_screen.dart';
@@ -40,11 +39,10 @@ class _SplashScreenState extends State<SplashScreen> {
   void _onTimerFired() async {
     if (!mounted) return;
 
-    final isCallActiveOrPending = CallNavigationCoordinator.hasCallNavigationActiveOrPending;
     final isCurrentRoute = ModalRoute.of(context)?.isCurrent ?? true;
 
-    if (isCallActiveOrPending || !isCurrentRoute) {
-      AppLogger.d('[SPLASH] Delaying/Aborting splash navigation: callActiveOrPending=$isCallActiveOrPending isCurrentRoute=$isCurrentRoute');
+    if (!isCurrentRoute) {
+      AppLogger.d('[SPLASH] Delaying/Aborting splash navigation: isCurrentRoute=$isCurrentRoute');
       _timer = Timer(const Duration(milliseconds: 500), _onTimerFired);
       return;
     }
@@ -58,12 +56,8 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
 
     if (isValid) {
-      AppLogger.d('[SPLASH] Valid session found. Syncing user call listener and FCM device token.');
+      AppLogger.d('[SPLASH] Valid session found. Syncing FCM device token.');
       
-      // Background non-blocking background initialization
-      unawaited(GlobalCallService.initUserCallListener().catchError((e) {
-        AppLogger.d('[SPLASH] Notice initializing user call listener: $e');
-      }));
       unawaited(Future.microtask(() => FcmService.registerDeviceToken(force: true)));
 
       final role = (userData['role'] ?? '').toString().toUpperCase();

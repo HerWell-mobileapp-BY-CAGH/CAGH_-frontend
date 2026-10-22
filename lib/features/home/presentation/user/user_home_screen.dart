@@ -11,6 +11,8 @@ import 'package:cagh_frontend/features/ai_assistant/presentation/ai_assistant_sc
 import 'package:cagh_frontend/shared/widgets/hotline_fab.dart';
 import 'package:cagh_frontend/features/notifications/presentation/widgets/notification_bell.dart';
 import 'package:cagh_frontend/features/learning/presentation/screens/learning_center_screen.dart';
+import 'package:cagh_frontend/features/appointments/presentation/screens/my_appointments_screen.dart';
+import 'package:cagh_frontend/features/hotline/presentation/emergency_support_screen.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
 
 class UserHomeScreen extends StatefulWidget {
@@ -115,7 +117,14 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                   _buildNearbyTab(),
                   UserProfileScreen(
                     onBackTap: () => setState(() => _currentIndex = 0),
-                    onAppointmentsTap: () => setState(() => _currentIndex = 1),
+                    onAppointmentsTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const MyAppointmentsScreen(),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -219,90 +228,111 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
           const SizedBox(height: 24),
 
           // 2. Need urgent help? Card
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: primaryDarkGreen,
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const EmergencySupportScreen(),
+                  ),
+                );
+              },
               borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              children: [
-                Row(
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: primaryDarkGreen,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
                   children: [
-                    Stack(
-                      clipBehavior: Clip.none,
+                    Row(
                       children: [
-                        Container(
-                          width: 52,
-                          height: 52,
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(Icons.phone, color: primaryDarkGreen, size: 28),
+                        Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Container(
+                              width: 52,
+                              height: 52,
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(Icons.phone, color: primaryDarkGreen, size: 28),
+                            ),
+                            Positioned(
+                              right: -4,
+                              top: -4,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.red,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Text(
+                                  '24/7',
+                                  style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        Positioned(
-                          right: -4,
-                          top: -4,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: const Text(
-                              '24/7',
-                              style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                            ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                AppLocalizations.of(context)!.needUrgentHelp,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                AppLocalizations.of(context)!.talkToProfessionalNow,
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.9),
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            AppLocalizations.of(context)!.needUrgentHelp,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const EmergencySupportScreen(),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            AppLocalizations.of(context)!.talkToProfessionalNow,
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.9),
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
+                          );
+                        },
+                        icon: Icon(Icons.phone_in_talk_rounded, color: primaryDarkGreen, size: 18),
+                        label: Text(
+                          AppLocalizations.of(context)!.startQuickConsultation,
+                          style: TextStyle(color: primaryDarkGreen, fontWeight: FontWeight.w700),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                          elevation: 0,
+                        ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton.icon(
-                    onPressed: () {},
-                    icon: Icon(Icons.chat, color: primaryDarkGreen, size: 18),
-                    label: Text(
-                      AppLocalizations.of(context)!.startQuickConsultation,
-                      style: TextStyle(color: primaryDarkGreen, fontWeight: FontWeight.w700),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                      elevation: 0,
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
           
@@ -705,7 +735,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
 
               // Key Topics Header
               Text(
-                'Key Topics Covered',
+                AppLocalizations.of(context)!.keyTopicsCovered,
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
@@ -764,14 +794,14 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                           borderRadius: BorderRadius.circular(14),
                         ),
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.menu_book_rounded, size: 16),
-                          SizedBox(width: 8),
+                          const Icon(Icons.menu_book_rounded, size: 16),
+                          const SizedBox(width: 8),
                           Text(
-                            'Explore in Learn Center',
-                            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                            AppLocalizations.of(context)!.exploreInLearnCenter,
+                            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
                           ),
                         ],
                       ),

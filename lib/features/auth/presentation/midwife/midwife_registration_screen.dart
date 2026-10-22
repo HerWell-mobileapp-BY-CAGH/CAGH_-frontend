@@ -22,6 +22,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _dobController = TextEditingController();
+  final _hospitalController = TextEditingController();
 
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
@@ -46,6 +47,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     _dobController.dispose();
+    _hospitalController.dispose();
     super.dispose();
   }
 
@@ -277,6 +279,13 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                         suffixIcon: const Icon(Icons.calendar_today_outlined, color: Colors.grey, size: 20),
                       ),
                       const SizedBox(height: 16),
+                      _buildLabel(AppLocalizations.of(context)!.hospitalAffiliationOptional),
+                      _buildTextField(
+                        controller: _hospitalController,
+                        hint: 'e.g. Black Lion Hospital, St. Paul\'s, or Health Center',
+                        prefixIcon: const Icon(Icons.local_hospital_outlined, color: AppColors.primaryGreen, size: 20),
+                      ),
+                      const SizedBox(height: 16),
                       _buildLabel(AppLocalizations.of(context)!.password),
                       _buildTextField(
                         controller: _passwordController,
@@ -491,6 +500,8 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                             ? phone
                             : (phone.startsWith('0') ? '+251${phone.substring(1)}' : '+251$phone');
 
+                        final hospital = _hospitalController.text.trim();
+
                         final result = await AuthService.register(
                           email: email,
                           password: password,
@@ -499,6 +510,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
                           lastName: lastName,
                           role: 'MIDWIFE',
                           phone: phone.isNotEmpty ? fullPhone : null,
+                          hospitalName: hospital.isNotEmpty ? hospital : null,
                         );
 
                         if (!mounted) return;
@@ -648,6 +660,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
     required String hint,
     TextInputType? keyboardType,
     bool obscureText = false,
+    Widget? prefixIcon,
     Widget? suffixIcon,
     String? errorText,
     ValueChanged<String>? onChanged,
@@ -664,6 +677,7 @@ class _MidwifeRegistrationScreenState extends State<MidwifeRegistrationScreen> {
         fillColor: Colors.grey.shade50,
         contentPadding:
         const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        prefixIcon: prefixIcon,
         suffixIcon: suffixIcon,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),

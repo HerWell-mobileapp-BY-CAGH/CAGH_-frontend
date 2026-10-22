@@ -4,7 +4,7 @@ import 'package:cagh_frontend/features/notifications/presentation/providers/noti
 import 'package:cagh_frontend/features/notifications/data/models/notification_model.dart';
 import 'package:cagh_frontend/features/consultations/presentation/user/chat_screen.dart';
 import 'package:cagh_frontend/features/consultations/presentation/midwife/midwife_chat_screen.dart';
-import 'package:cagh_frontend/features/consultations/presentation/user/consult_hub_screen.dart';
+import 'package:cagh_frontend/features/appointments/presentation/screens/my_appointments_screen.dart';
 import 'package:cagh_frontend/features/consultations/presentation/midwife/midwife_consults_screen.dart';
 import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
@@ -173,7 +173,7 @@ class NotificationsScreen extends ConsumerWidget {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => const ConsultHubScreen(isActive: true),
+              builder: (context) => const MyAppointmentsScreen(),
             ),
           ).then((_) => ref.read(notificationProvider.notifier).refreshNotifications());
         }

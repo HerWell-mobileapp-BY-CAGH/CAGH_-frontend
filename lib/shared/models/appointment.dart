@@ -65,6 +65,7 @@ class Appointment {
   String? midwifeName;
   final String? midwifePhone;
   final String? midwifeUserId;
+  final Map<String, dynamic>? callEligibility;
 
   Appointment({
     required this.appointmentId,
@@ -86,6 +87,7 @@ class Appointment {
     this.midwifeName,
     this.midwifePhone,
     this.midwifeUserId,
+    this.callEligibility,
   });
 
   DateTime? get scheduledDateTime {
@@ -178,7 +180,8 @@ class Appointment {
     AppLogger.d('Appointment JSON: $json');
 
     // Extract Patient Name
-    String? parsedPatientName = extractPersonFullName(json['user_full_name'] ?? json['patient_name'] ?? json['patient_full_name']);
+    String? parsedPatientName = extractPersonFullName(
+        json['user_full_name'] ?? json['user_name'] ?? json['patient_name'] ?? json['patient_full_name']);
     String? parsedPatientPhone = json['patient_phone'] ?? json['user_phone'];
 
     if (parsedPatientName == null) {
@@ -272,6 +275,7 @@ class Appointment {
       midwifeName: parsedMidwifeName,
       midwifePhone: parsedMidwifePhone,
       midwifeUserId: safeMidwifeUserId,
+      callEligibility: json['call_eligibility'] is Map ? Map<String, dynamic>.from(json['call_eligibility'] as Map) : null,
     );
   }
 

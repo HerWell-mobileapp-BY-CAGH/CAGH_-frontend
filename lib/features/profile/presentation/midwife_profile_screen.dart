@@ -3,12 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
-import 'package:cagh_frontend/app/localization/language_service.dart';
+import 'package:cagh_frontend/core/services/language_service.dart';
 import 'package:cagh_frontend/features/onboarding/presentation/user_type_selection_screen.dart';
 import 'package:cagh_frontend/features/profile/presentation/midwife_personal_information_screen.dart';
 import 'package:cagh_frontend/features/profile/presentation/midwife_notification_settings_screen.dart';
 import 'package:cagh_frontend/features/profile/presentation/appearance_accessibility_screen.dart';
 import 'package:cagh_frontend/features/consultations/presentation/midwife/midwife_inbox_screen.dart';
+import 'package:cagh_frontend/features/consultations/presentation/midwife/midwife_consults_screen.dart';
+import 'package:cagh_frontend/features/learning/presentation/screens/my_bookmarks_screen.dart';
+import 'package:cagh_frontend/features/profile/presentation/change_password_screen.dart';
 import 'package:cagh_frontend/features/consultations/data/repositories/midwife_repository_impl.dart';
 import 'package:cagh_frontend/features/consultations/data/services/midwife_api_service.dart';
 import 'package:cagh_frontend/features/notifications/presentation/providers/notification_provider.dart';
@@ -314,6 +317,34 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
                         });
                       },
                     ),
+                    _buildDivider(),
+                    _buildListTile(
+                      icon: Icons.calendar_today_outlined,
+                      title: AppLocalizations.of(context)!.myAppointments,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                const MidwifeConsultsScreen(showAppBar: true),
+                          ),
+                        );
+                      },
+                    ),
+                    _buildDivider(),
+                    _buildListTile(
+                      icon: Icons.bookmarks_outlined,
+                      title: AppLocalizations.of(context)!.myBookmarks,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                const MyBookmarksScreen(isMidwife: true),
+                          ),
+                        );
+                      },
+                    ),
                   ]),
 
                   const SizedBox(height: 24),
@@ -422,6 +453,20 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
                           MaterialPageRoute(
                             builder: (context) =>
                                 const MidwifeNotificationSettingsScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    _buildDivider(),
+                    _buildListTile(
+                      icon: Icons.lock_outline_rounded,
+                      title: AppLocalizations.of(context)!.changePassword,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                const ChangePasswordScreen(),
                           ),
                         );
                       },

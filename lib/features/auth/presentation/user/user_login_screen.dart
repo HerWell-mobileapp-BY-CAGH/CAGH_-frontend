@@ -7,6 +7,8 @@ import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart'
 import 'package:cagh_frontend/shared/widgets/custom_snackbar.dart';
 import 'package:cagh_frontend/shared/widgets/app_text_field.dart';
 import 'package:cagh_frontend/shared/widgets/standard_app_bar.dart';
+import 'package:cagh_frontend/features/onboarding/presentation/language_selection_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class UserLoginScreen extends StatefulWidget {
   const UserLoginScreen({super.key});
@@ -19,8 +21,24 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _rememberMe = true;
   String? _emailError;
   String? _passwordError;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRememberMe();
+  }
+
+  Future<void> _loadRememberMe() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted && prefs.containsKey('remember_me')) {
+      setState(() {
+        _rememberMe = prefs.getBool('remember_me') ?? true;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -70,6 +88,7 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
       identifier: identifier,
       password: password,
       role: 'PATIENT',
+      rememberMe: _rememberMe,
     );
 
     if (!mounted) return;
@@ -124,12 +143,27 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
     final primaryDarkGreen = const Color(0xFF385A2E);
     final linkColor = isDark ? const Color(0xFF66BB6A) : const Color(0xFF1B5E20);
 
-    return Scaffold(
-      backgroundColor: bgColor,
-      appBar: StandardAppBar(
-        title: AppLocalizations.of(context)!.login,
-        showLanguagePicker: true,
-      ),
+    void navigateToLanguageSelection() {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const LanguageSelectionScreen()),
+        (route) => false,
+      );
+    }
+
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        navigateToLanguageSelection();
+      },
+      child: Scaffold(
+        backgroundColor: bgColor,
+        appBar: StandardAppBar(
+          title: AppLocalizations.of(context)!.login,
+          showLanguagePicker: true,
+          onBack: navigateToLanguageSelection,
+        ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -225,33 +259,84 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
                         if (_passwordError != null) setState(() => _passwordError = null);
                       },
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 12),
 
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const ForgotPasswordScreen(isMidwife: false),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: InkWell(
+                            onTap: () {
+                              setState(() {
+                                _rememberMe = !_rememberMe;
+                              });
+                            },
+                            borderRadius: BorderRadius.circular(6),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  SizedBox(
+                                    width: 22,
+                                    height: 22,
+                                    child: Checkbox(
+                                      value: _rememberMe,
+                                      onChanged: (val) {
+                                        setState(() {
+                                          _rememberMe = val ?? false;
+                                        });
+                                      },
+                                      activeColor: isDark ? const Color(0xFF66BB6A) : const Color(0xFF385A2E),
+                                      checkColor: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Flexible(
+                                    child: Text(
+                                      AppLocalizations.of(context)!.keepMeLoggedIn,
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: textColor.withValues(alpha: 0.85),
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          );
-                        },
-                        style: TextButton.styleFrom(
-                          padding: EdgeInsets.zero,
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        child: Text(
-                          AppLocalizations.of(context)!.forgotPassword,
-                          style: TextStyle(
-                            color: linkColor,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15,
                           ),
                         ),
-                      ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const ForgotPasswordScreen(isMidwife: false),
+                              ),
+                            );
+                          },
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: Text(
+                            AppLocalizations.of(context)!.forgotPassword,
+                            style: TextStyle(
+                              color: linkColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 24),
 
@@ -329,6 +414,7 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

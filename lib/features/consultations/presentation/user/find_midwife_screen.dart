@@ -136,11 +136,16 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
   }
 
   String _getLocalizedSpecialty(BuildContext context, String specialty) {
-    final lower = specialty.toLowerCase();
+    final trimmed = specialty.trim();
+    if (trimmed.isEmpty) return '';
+    final lower = trimmed.toLowerCase();
+    if (lower == 'maternal health specialist' ||
+        lower == 'maternal health' ||
+        lower == 'null') {
+      return '';
+    }
     final l10n = AppLocalizations.of(context)!;
-    if (lower.contains('maternal') || lower.isEmpty) {
-      return l10n.maternalHealthSpecialist;
-    } else if (lower.contains('prenatal')) {
+    if (lower.contains('prenatal')) {
       return l10n.prenatalCare;
     } else if (lower.contains('postnatal')) {
       return l10n.postnatalCare;
@@ -148,8 +153,10 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
       return l10n.laborAndDelivery;
     } else if (lower.contains('family planning')) {
       return l10n.familyPlanning;
+    } else if (lower.contains('maternal')) {
+      return ''; // Suppress generic maternal health specialist tag
     }
-    return specialty;
+    return trimmed;
   }
 
   @override
@@ -412,20 +419,41 @@ class _FindMidwifeScreenState extends State<FindMidwifeScreen> {
                                           ),
                                         ],
                                       ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        _getLocalizedSpecialty(context, mw.specialty),
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          color: primaryColor,
-                                          fontWeight: FontWeight.w600,
+                                      if (_getLocalizedSpecialty(context, mw.specialty).isNotEmpty) ...[
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          _getLocalizedSpecialty(context, mw.specialty),
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            color: primaryColor,
+                                            fontWeight: FontWeight.w600,
+                                          ),
                                         ),
-                                      ),
+                                      ],
                                       const SizedBox(height: 10),
                                       Wrap(
                                         spacing: 8,
                                         runSpacing: 6,
                                         children: [
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                            decoration: BoxDecoration(
+                                              color: tagBg,
+                                              borderRadius: BorderRadius.circular(8),
+                                              border: Border.all(color: tagBorder),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(Icons.local_hospital_outlined, size: 14, color: tagColor),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  mw.hospitalName.isNotEmpty ? mw.hospitalName : AppLocalizations.of(context)!.generalHealthCenter,
+                                                  style: TextStyle(fontSize: 12, color: tagColor, fontWeight: FontWeight.w600),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
                                           Container(
                                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                             decoration: BoxDecoration(

@@ -16,7 +16,6 @@ import 'package:cagh_frontend/shared/widgets/floating_glass_nav_bar.dart';
 import 'package:cagh_frontend/features/notifications/presentation/widgets/notification_bell.dart';
 import 'package:cagh_frontend/features/learning/presentation/screens/learning_center_screen.dart';
 import 'package:cagh_frontend/features/consultations/presentation/midwife/midwife_inbox_screen.dart';
-import 'package:cagh_frontend/shared/widgets/custom_snackbar.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
 import 'package:intl/intl.dart';
 
@@ -32,18 +31,12 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
   bool isLoadingProfile = true;
   int selectedIndex = 0;
 
-  final TextEditingController _learnSearchController = TextEditingController();
+  AppLocalizations get l10n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
     super.initState();
     _fetchProfile();
-  }
-
-  @override
-  void dispose() {
-    _learnSearchController.dispose();
-    super.dispose();
   }
 
   Future<void> _fetchProfile() async {
@@ -261,7 +254,7 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
                             children: [
                               Flexible(
                                 child: Text(
-                                  'Welcome, ${_getFirstName(midwifeName)}',
+                                  l10n.welcomeMidwife(_getFirstName(midwifeName)),
                                   style: TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.w800,
@@ -271,12 +264,11 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
                                 ),
                               ),
                               const SizedBox(width: 4),
-                              const Text('💖', style: TextStyle(fontSize: 16)),
                             ],
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            'Ready to support adolescent girls today with confidential healthcare.',
+                            l10n.midwifeDailySupportSubtitle,
                             style: TextStyle(
                               fontSize: 12.5,
                               height: 1.35,
@@ -347,9 +339,9 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                'Pending Requests',
-                                style: TextStyle(
+                              Text(
+                                l10n.pendingRequests,
+                                style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w700,
                                   fontSize: 16,
@@ -358,8 +350,8 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
                               const SizedBox(height: 2),
                               Text(
                                 pendingCount > 0
-                                    ? 'Action required for consultation slots'
-                                    : 'No pending requests at this time',
+                                    ? l10n.actionRequiredForConsultations
+                                    : l10n.noPendingRequestsAtThisTime,
                                 style: TextStyle(
                                   color: Colors.white.withValues(alpha: 0.85),
                                   fontSize: 12,
@@ -375,9 +367,9 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
                               color: const Color(0xFFF5BD1A),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Text(
-                              'New',
-                              style: TextStyle(
+                            child: Text(
+                              l10n.badgeNew,
+                              style: const TextStyle(
                                 color: Colors.black,
                                 fontWeight: FontWeight.w800,
                                 fontSize: 11,
@@ -400,14 +392,14 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
                             borderRadius: BorderRadius.circular(25),
                           ),
                         ),
-                        child: const Row(
+                        child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.calendar_month_outlined, size: 19, color: Color(0xFF2C5927)),
-                            SizedBox(width: 8),
+                            const Icon(Icons.calendar_month_outlined, size: 19, color: Color(0xFF2C5927)),
+                            const SizedBox(width: 8),
                             Text(
-                              'Review Requests & Schedule',
-                              style: TextStyle(
+                              l10n.reviewRequestsAndSchedule,
+                              style: const TextStyle(
                                 color: Color(0xFF2C5927),
                                 fontWeight: FontWeight.w700,
                                 fontSize: 14,
@@ -424,15 +416,15 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
               const SizedBox(height: 22),
 
               // 3. MIDWIFE WORKFLOWS & TOOLS
-              _buildSectionHeader('Midwife Workflows & Tools'),
+              _buildSectionHeader(l10n.midwifeWorkflowsAndTools),
               const SizedBox(height: 12),
 
               Row(
                 children: [
                   Expanded(
                     child: _buildWorkflowCard(
-                      title: 'Manage Hours',
-                      subtitle: 'Set daily availability slots',
+                      title: l10n.manageHours,
+                      subtitle: l10n.manageHoursSubtitle,
                       icon: Icons.access_time_rounded,
                       iconBgColor: const Color(0xFFE8F5E9),
                       iconColor: const Color(0xFF2E7D32),
@@ -440,15 +432,17 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(builder: (_) => const MidwifeManageScheduleScreen()),
-                        );
+                        ).then((_) {
+                          if (mounted) setState(() {});
+                        });
                       },
                     ),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
                     child: _buildWorkflowCard(
-                      title: 'Client Messages',
-                      subtitle: 'Direct non-urgent chat',
+                      title: l10n.clientMessages,
+                      subtitle: l10n.clientMessagesSubtitle,
                       icon: Icons.chat_bubble_outline_rounded,
                       iconBgColor: const Color(0xFFE8F0FE),
                       iconColor: const Color(0xFF1976D2),
@@ -462,39 +456,29 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildWorkflowCard(
-                      title: 'Publish Tips',
-                      subtitle: 'Share health guidelines',
-                      icon: Icons.description_outlined,
-                      iconBgColor: const Color(0xFFFFF3E0),
-                      iconColor: const Color(0xFFE65100),
-                      onTap: () => _showPublishTipsModal(context),
+              const SizedBox(height: 12),
+              _buildWideWorkflowCard(
+                title: l10n.consultCalendar,
+                subtitle: l10n.consultCalendarSubtitle,
+                icon: Icons.calendar_month_outlined,
+                iconBgColor: const Color(0xFFF3E5F5),
+                iconColor: const Color(0xFF7B1FA2),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const MidwifeConsultsScreen(showAppBar: true, initialTab: 1),
                     ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: _buildWorkflowCard(
-                      title: 'Consult Calendar',
-                      subtitle: 'View confirmed sessions',
-                      icon: Icons.calendar_month_outlined,
-                      iconBgColor: const Color(0xFFF3E5F5),
-                      iconColor: const Color(0xFF7B1FA2),
-                      onTap: () {
-                        setState(() => selectedIndex = 1);
-                      },
-                    ),
-                  ),
-                ],
+                  ).then((_) {
+                    if (mounted) setState(() {});
+                  });
+                },
               ),
 
               const SizedBox(height: 22),
 
               // 4. CLINICAL PROTOCOLS
-              _buildSectionHeader('Clinical Protocols'),
+              _buildSectionHeader(l10n.clinicalProtocols),
               const SizedBox(height: 12),
 
               Material(
@@ -540,7 +524,7 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Adolescent Care Protocol 2026',
+                                l10n.adolescentCareProtocolTitle,
                                 style: TextStyle(
                                   fontSize: 14.5,
                                   fontWeight: FontWeight.w700,
@@ -549,7 +533,7 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Standard guidelines for confidential consultations, menstrual health education, and adolescent counseling.',
+                                l10n.adolescentCareProtocolDesc,
                                 style: TextStyle(
                                   fontSize: 11.5,
                                   height: 1.35,
@@ -568,7 +552,7 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
               // 5. TODAY'S CONFIRMED CONSULTATIONS (if any)
               if (upcomingApts.isNotEmpty) ...[
                 const SizedBox(height: 24),
-                _buildSectionHeader('Today\'s Confirmed Consultations'),
+                _buildSectionHeader(l10n.todaysConfirmedConsultations),
                 const SizedBox(height: 12),
                 ...upcomingApts.map((apt) {
                   return Padding(
@@ -700,192 +684,95 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
     );
   }
 
-  void _showPublishTipsModal(BuildContext context) {
+  Widget _buildWideWorkflowCard({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color iconBgColor,
+    required Color iconColor,
+    required VoidCallback onTap,
+  }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final categories = [
-      'Menstrual Health',
-      'Nutrition & Diet',
-      'Hygiene & Care',
-      'Emotional Well-being',
-      'Reproductive Health',
-    ];
-    String selectedCategory = categories.first;
-    final titleController = TextEditingController();
-    final contentController = TextEditingController();
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (modalCtx) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Padding(
-              padding: EdgeInsets.only(
-                left: 20,
-                right: 20,
-                top: 20,
-                bottom: 24 + MediaQuery.of(modalCtx).viewInsets.bottom,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkSurface : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isDark ? AppColors.darkBorder : Colors.black.withValues(alpha: 0.04),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.03),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
-              child: SingleChildScrollView(
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkSurfaceVariant : iconBgColor,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(
+                  icon,
+                  color: isDark ? AppColors.darkPrimary : iconColor,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Center(
-                      child: Container(
-                        width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: Colors.grey.withValues(alpha: 0.3),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFF3E0),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(Icons.edit_note_rounded, color: Color(0xFFE65100), size: 24),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Publish Health Tip',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: isDark ? AppColors.darkTextPrimary : const Color(0xFF1E293B),
-                                ),
-                              ),
-                              Text(
-                                'Share clinical advice directly with adolescent girls',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 18),
                     Text(
-                      'Topic Category',
+                      title,
                       style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: isDark ? AppColors.darkTextPrimary : const Color(0xFF334155),
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w700,
+                        color: isDark ? AppColors.darkTextPrimary : const Color(0xFF1E293B),
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: categories.map((cat) {
-                          final isSel = selectedCategory == cat;
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 8),
-                            child: ChoiceChip(
-                              label: Text(cat),
-                              selected: isSel,
-                              onSelected: (val) {
-                                if (val) setModalState(() => selectedCategory = cat);
-                              },
-                              selectedColor: const Color(0xFF2C5927),
-                              labelStyle: TextStyle(
-                                color: isSel ? Colors.white : (isDark ? Colors.white70 : const Color(0xFF334155)),
-                                fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
-                                fontSize: 12,
-                              ),
-                              backgroundColor: isDark ? AppColors.darkSurfaceVariant : const Color(0xFFF1F5F1),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                            ),
-                          );
-                        }).toList(),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
                       ),
-                    ),
-                    const SizedBox(height: 14),
-                    TextField(
-                      controller: titleController,
-                      decoration: InputDecoration(
-                        labelText: 'Tip Title',
-                        hintText: 'e.g. Managing menstrual cramps with warmth & hydration',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: contentController,
-                      maxLines: 3,
-                      decoration: InputDecoration(
-                        labelText: 'Guideline & Advice',
-                        hintText: 'Provide practical, supportive, non-judgmental guidance...',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 46,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          final title = titleController.text.trim();
-                          final content = contentController.text.trim();
-                          if (title.isEmpty || content.isEmpty) {
-                            CustomSnackBar.show(context, message: 'Please enter both a title and guidelines', isError: true);
-                            return;
-                          }
-                          Navigator.pop(modalCtx);
-                          CustomSnackBar.show(
-                            context,
-                            message: 'Health tip published successfully to Adolescent Learning Hub!',
-                            isSuccess: true,
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF2C5927),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-                        ),
-                        child: const Text('Publish Health Tip', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.5)),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Center(
-                      child: TextButton.icon(
-                        onPressed: () {
-                          Navigator.pop(modalCtx);
-                          setState(() => selectedIndex = 3);
-                        },
-                        icon: const Icon(Icons.library_books_outlined, size: 18, color: Color(0xFF2C5927)),
-                        label: const Text(
-                          'Browse All Published Guides',
-                          style: TextStyle(color: Color(0xFF2C5927), fontWeight: FontWeight.w600, fontSize: 13),
-                        ),
-                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
               ),
-            );
-          },
-        );
-      },
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.all(7),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkSurfaceVariant : iconBgColor.withValues(alpha: 0.5),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 13,
+                  color: isDark ? AppColors.darkPrimary : iconColor,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

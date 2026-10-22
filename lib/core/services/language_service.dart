@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:cagh_frontend/core/services/remote_translation_service.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -31,6 +33,7 @@ class LanguageService {
     final prefs = await SharedPreferences.getInstance();
     final savedCode = prefs.getString(_languageKey) ?? 'en';
     currentLanguage.value = savedCode;
+    await RemoteTranslationService.init(initialLanguage: savedCode);
   }
 
   /// Change language ('en', 'am', 'om', 'so', 'ti') and save to SharedPreferences permanently
@@ -38,26 +41,34 @@ class LanguageService {
     currentLanguage.value = code;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_languageKey, code);
+    await RemoteTranslationService.syncTranslations(code);
+    unawaited(RemoteTranslationService.syncUserPreference(code));
   }
 
   /// Helper to translate key string based on current selected language.
   /// Passing BuildContext ensures the widget rebuilds when language changes.
-  static String tr(BuildContext context, String key) {
+  static String tr(BuildContext context, String key, {String? defaultText}) {
     try {
       // This tells Flutter to rebuild this widget whenever the Locale changes
       Localizations.localeOf(context);
     } catch (e) {
       debugPrint('LanguageService: Error resolving locale: $e');
     }
+    final remote = RemoteTranslationService.lookup(key);
+    if (remote != null) return remote;
+
     final lang = currentLanguage.value;
-    return _translations[lang]?[key] ?? _translations['en']?[key] ?? key;
+    return _translations[lang]?[key] ?? _translations['en']?[key] ?? defaultText ?? key;
   }
 
   /// Helper to translate backend API errors or keys outside of the widget tree.
   /// Does not cause a widget rebuild.
-  static String trStatic(String key) {
+  static String trStatic(String key, {String? defaultText}) {
+    final remote = RemoteTranslationService.lookup(key);
+    if (remote != null) return remote;
+
     final lang = currentLanguage.value;
-    return _translations[lang]?[key] ?? _translations['en']?[key] ?? key;
+    return _translations[lang]?[key] ?? _translations['en']?[key] ?? defaultText ?? key;
   }
 
   static const Map<String, Map<String, String>> _translations = {

@@ -83,6 +83,64 @@ class MidwifeProfile {
     final consultTypes = (rawTypes is List && rawTypes.isNotEmpty)
         ? rawTypes.map((e) => e.toString()).toList()
         : ['In-Person', 'Voice Call'];
+    // Extract genuine qualification, title, or non-default specialty
+    String extractedSpecialty = '';
+
+    // 1. Check qualifications list from backend
+    if (json['qualifications'] is List && (json['qualifications'] as List).isNotEmpty) {
+      final firstQ = (json['qualifications'] as List).first;
+      if (firstQ is Map && firstQ['title'] != null && firstQ['title'].toString().trim().isNotEmpty) {
+        extractedSpecialty = firstQ['title'].toString().trim();
+      } else if (firstQ is String && firstQ.trim().isNotEmpty) {
+        extractedSpecialty = firstQ.trim();
+      }
+    }
+
+    // 2. Check expertises list from backend
+    if (extractedSpecialty.isEmpty && json['expertises'] is List && (json['expertises'] as List).isNotEmpty) {
+      final firstE = (json['expertises'] as List).first;
+      if (firstE is Map && firstE['name'] != null && firstE['name'].toString().trim().isNotEmpty) {
+        extractedSpecialty = firstE['name'].toString().trim();
+      } else if (firstE is String && firstE.trim().isNotEmpty) {
+        extractedSpecialty = firstE.trim();
+      }
+    }
+
+    // 3. Check explicit qualification, title, or professional_title
+    if (extractedSpecialty.isEmpty) {
+      final titleCandidates = [
+        json['qualification'],
+        json['title'],
+        json['professional_title'],
+        userProfile['qualification'],
+        userProfile['title'],
+        userProfile['professional_title'],
+      ];
+      for (final t in titleCandidates) {
+        if (t != null && t.toString().trim().isNotEmpty && t.toString().trim().toLowerCase() != 'null') {
+          extractedSpecialty = t.toString().trim();
+          break;
+        }
+      }
+    }
+
+    // 4. Check explicit specialty from backend (suppress generic placeholder "Maternal Health Specialist")
+    if (extractedSpecialty.isEmpty) {
+      final rawSpec = (json['specialty'] ?? userProfile['specialty'])?.toString().trim() ?? '';
+      if (rawSpec.isNotEmpty &&
+          rawSpec.toLowerCase() != 'null' &&
+          rawSpec.toLowerCase() != 'maternal health specialist' &&
+          rawSpec.toLowerCase() != 'maternal health') {
+        extractedSpecialty = rawSpec;
+      }
+    }
+
+    // 5. Final sanitation: completely blank if only the placeholder was provided
+    if (extractedSpecialty.toLowerCase() == 'maternal health specialist' ||
+        extractedSpecialty.toLowerCase() == 'maternal health' ||
+        extractedSpecialty.toLowerCase() == 'null') {
+      extractedSpecialty = '';
+    }
 
     return MidwifeProfile(
       id: json['id']?.toString() ?? '',
@@ -94,10 +152,23 @@ class MidwifeProfile {
       avatarUrl: (userProfile['profile_image'] ?? user['avatar_url'] ?? json['avatar_url'])?.toString(),
       
       hospitalId: hospital['id']?.toString() ?? json['hospital_id']?.toString() ?? '',
-      hospitalName: hospital['name']?.toString() ?? json['hospital_name']?.toString() ?? (json['hospital'] is String ? json['hospital'].toString() : ''),
+      hospitalName: (hospital['name'] ??
+              json['hospital_name'] ??
+              json['hospital_affiliation'] ??
+              json['health_center'] ??
+              json['workplace'] ??
+              json['clinic'] ??
+              userProfile['hospital_affiliation'] ??
+              userProfile['hospital_name'] ??
+              userProfile['health_center'] ??
+              userProfile['hospital'] ??
+              (json['hospital'] is String ? json['hospital'] : '') ??
+              '')
+          .toString()
+          .trim(),
       hospitalAddress: hospital['address']?.toString() ?? json['hospital_address']?.toString() ?? '',
 
-      specialty: json['specialty']?.toString() ?? 'Maternal Health Specialist',
+      specialty: extractedSpecialty,
       experienceYears: int.tryParse((json['years_of_experience'] ?? json['experience_years'] ?? userProfile['years_of_experience'] ?? userProfile['experience_years'])?.toString() ?? '') ?? 0,
       languages: json['languages'] is List
           ? (json['languages'] as List).map((e) => e.toString()).toList()

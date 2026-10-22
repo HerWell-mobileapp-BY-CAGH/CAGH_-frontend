@@ -43,8 +43,9 @@ class FloatingGlassNavBar extends StatelessWidget {
     final borderColor = isDark
         ? AppColors.darkBorder
         : const Color(0xFFE2E8F0).withValues(alpha: 0.85);
-    final unselectedColor =
-        isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B);
+    final unselectedColor = isDark
+        ? AppColors.darkTextSecondary
+        : const Color(0xFF64748B);
     final activeColor = isDark ? AppColors.darkPrimary : AppColors.primaryGreen;
 
     return SafeArea(
@@ -77,8 +78,9 @@ class FloatingGlassNavBar extends StatelessWidget {
                         painter: _DropletNavBarPainter(
                           activePosition: animPosition,
                           itemCount: items.length,
-                          backgroundColor:
-                              bgContainerColor.withValues(alpha: isDark ? 0.94 : 0.97),
+                          backgroundColor: bgContainerColor.withValues(
+                            alpha: isDark ? 0.94 : 0.97,
+                          ),
                           borderColor: borderColor,
                           activeColor: activeColor,
                           isDark: isDark,
@@ -126,7 +128,8 @@ class FloatingGlassNavBar extends StatelessWidget {
                                                 size: 22,
                                                 color: unselectedColor,
                                               ),
-                                              if (item.showBadge && iconOpacity > 0.5)
+                                              if (item.showBadge &&
+                                                  iconOpacity > 0.5)
                                                 Positioned(
                                                   right: -3,
                                                   top: -2,
@@ -134,7 +137,8 @@ class FloatingGlassNavBar extends StatelessWidget {
                                                     width: 7,
                                                     height: 7,
                                                     decoration: BoxDecoration(
-                                                      color: AppColors.accentYellow,
+                                                      color: AppColors
+                                                          .accentYellow,
                                                       shape: BoxShape.circle,
                                                       border: Border.all(
                                                         color: bgContainerColor,
@@ -151,7 +155,9 @@ class FloatingGlassNavBar extends StatelessWidget {
                                     const SizedBox(height: 6),
                                     // Label (perfectly aligned baseline across all tabs)
                                     Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 2),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 2,
+                                      ),
                                       child: FittedBox(
                                         fit: BoxFit.scaleDown,
                                         child: Text(
@@ -164,7 +170,9 @@ class FloatingGlassNavBar extends StatelessWidget {
                                             fontWeight: isCurrentTab
                                                 ? FontWeight.w700
                                                 : FontWeight.w500,
-                                            letterSpacing: isCurrentTab ? 0.2 : 0.1,
+                                            letterSpacing: isCurrentTab
+                                                ? 0.2
+                                                : 0.1,
                                           ),
                                         ),
                                       ),
@@ -201,12 +209,20 @@ class FloatingGlassNavBar extends StatelessWidget {
                                       end: Alignment.bottomCenter,
                                       colors: isDark
                                           ? [
-                                              activeColor.withValues(alpha: 0.32),
-                                              activeColor.withValues(alpha: 0.10),
+                                              activeColor.withValues(
+                                                alpha: 0.32,
+                                              ),
+                                              activeColor.withValues(
+                                                alpha: 0.10,
+                                              ),
                                             ]
                                           : [
-                                              activeColor.withValues(alpha: 0.20),
-                                              activeColor.withValues(alpha: 0.05),
+                                              activeColor.withValues(
+                                                alpha: 0.20,
+                                              ),
+                                              activeColor.withValues(
+                                                alpha: 0.05,
+                                              ),
                                             ],
                                     ),
                                     border: Border.all(
@@ -256,7 +272,9 @@ class FloatingGlassNavBar extends StatelessWidget {
                                         offset: const Offset(0, 3),
                                       ),
                                       BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.15),
+                                        color: Colors.black.withValues(
+                                          alpha: 0.15,
+                                        ),
                                         blurRadius: 2,
                                         offset: const Offset(0, 1),
                                       ),
@@ -272,7 +290,9 @@ class FloatingGlassNavBar extends StatelessWidget {
                                       color: Colors.white,
                                       shadows: [
                                         Shadow(
-                                          color: Colors.black.withValues(alpha: 0.32),
+                                          color: Colors.black.withValues(
+                                            alpha: 0.32,
+                                          ),
                                           blurRadius: 2,
                                           offset: const Offset(0, 1),
                                         ),

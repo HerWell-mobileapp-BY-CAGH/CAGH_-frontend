@@ -8,9 +8,7 @@ import 'package:cagh_frontend/core/network/api_config.dart';
 import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
 import 'package:cagh_frontend/shared/constants/app_durations.dart';
 import 'package:cagh_frontend/core/utils/app_logger.dart';
-import 'package:cagh_frontend/core/services/global_call_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:cagh_frontend/core/services/ringtone_service.dart';
 
 class FcmService {
   static bool _isInitialized = false;
@@ -25,16 +23,6 @@ class FcmService {
     importance: Importance.max,
   );
 
-  static const AndroidNotificationChannel _incomingCallChannel =
-      AndroidNotificationChannel(
-    'incoming_call_channel', // id
-    'Incoming Calls', // title
-    description:
-        'Heads-up notification shown when an incoming voice call rings.', // description
-    importance: Importance.max,
-  );
-
-  static const int _incomingCallNotificationId = 7761;
   static bool _localNotificationsReady = false;
 
   static Future<void> initialize() async {
@@ -132,7 +120,6 @@ class FcmService {
             .resolvePlatformSpecificImplementation<
                 AndroidFlutterLocalNotificationsPlugin>();
         await androidImpl?.createNotificationChannel(_channel);
-        await androidImpl?.createNotificationChannel(_incomingCallChannel);
       }
       _localNotificationsReady = true;
       AppLogger.d('[FCM SERVICE] Local notifications ready (ready=$_localNotificationsReady)');
@@ -143,53 +130,10 @@ class FcmService {
 
   static void _onNotificationTap(NotificationResponse response) {
     AppLogger.d('[FCM SERVICE] Notification tapped: ${response.actionId} id=${response.id}');
-    _localNotificationsPlugin.cancel(id: _incomingCallNotificationId);
     if (response.payload == null || response.payload!.isEmpty) return;
     try {
       final data = Map<String, dynamic>.from(jsonDecode(response.payload!));
-
-      // Action buttons: Accept / Decline act on the call directly.
-      final actionId = response.actionId;
-      if (actionId == 'accept') {
-        AppLogger.d('[FCM SERVICE] Notification ACCEPT action pressed');
-        final consultationId =
-            (data['consultation_id'] ?? data['call_id'] ?? '').toString();
-        if (consultationId.isNotEmpty && consultationId != 'null') {
-          IncomingCallActionDispatcher.dispatchAccept(
-            consultationId,
-            consultationId,
-            data,
-            source: 'NOTIFICATION_ACCEPT',
-          );
-        }
-        return;
-      }
-      if (actionId == 'decline') {
-        AppLogger.d('[FCM SERVICE] Notification DECLINE action pressed');
-        final consultationId =
-            (data['consultation_id'] ?? data['call_id'] ?? '').toString();
-        if (consultationId.isNotEmpty && consultationId != 'null') {
-          RingtoneService.stopRingtone();
-          IncomingCallActionDispatcher.dispatchDecline(consultationId, consultationId);
-        }
-        return;
-      }
-
-      if (GlobalCallService.isCallActive || GlobalCallService.isRingingShown) {
-        AppLogger.d('[FCM SERVICE] Notification tap ignored - call already active/ringing');
-        return;
-      }
-      final action =
-          (data['action'] ?? data['type'] ?? data['event'] ?? '').toString().toLowerCase();
-      if (action.contains('offer') ||
-          action.contains('incoming') ||
-          action.contains('initiated')) {
-        GlobalCallService.showIncomingCallModal(
-          data,
-          defaultConsultationId:
-              (data['consultation_id'] ?? data['call_id'] ?? '').toString(),
-        );
-      }
+      AppLogger.d('[FCM SERVICE] Notification tapped with payload: $data');
     } catch (e) {
       AppLogger.d('[FCM SERVICE] Notification tap payload parse notice: $e');
     }
@@ -200,144 +144,7 @@ class FcmService {
     _onNotificationTap(response);
   }
 
-  /// Looks up a caller avatar URL in the incoming-call frame payload. The FCM
-  /// payload is a flat map, so try every plausible sender-avatar key.
-  static String? _extractCallerAvatarUrl(Map<String, dynamic> data) {
-    const List<String> keys = [
-      'sender_image_url', 'caller_image_url', 'sender_avatar_url', 'caller_avatar_url',
-      'sender_image', 'caller_image', 'sender_avatar', 'caller_avatar',
-      'sender_profile_image', 'caller_profile_image', 'profile_image', 'avatar',
-    ];
-    for (final key in keys) {
-      final value = data[key];
-      if (value == null) continue;
-      final raw = value.toString().trim();
-      if (raw.isEmpty || raw == 'null' || raw == '<null>') continue;
-      if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
-      // Relative API paths (e.g. /media/avatar/x.png) are resolved against the
-      // backend base URL.
-      if (raw.startsWith('/')) return '${ApiConfig.baseUrl}$raw';
-      if (raw.contains('/') && raw.contains('.')) {
-        return '${ApiConfig.baseUrl}/${raw.replaceFirst(RegExp(r'^/'), '')}';
-      }
-    }
-    return null;
-  }
 
-  /// Downloads the avatar image bytes for use as the large notification icon.
-  /// Returns null on any failure (slow network, not an image, etc.), letting
-  /// the notification fall back to the stock app icon.
-  static Future<Uint8List?> _loadAvatarBytes(String? url) async {
-    if (url == null || url.isEmpty) return null;
-    try {
-      final response = await http
-          .get(Uri.parse(url))
-          .timeout(const Duration(seconds: 6));
-      if (response.statusCode != 200 || response.bodyBytes.isEmpty) return null;
-      // Sanity check: a plausible binary image (JPEG/PNG).
-      final head = response.bodyBytes.length >= 4
-          ? response.bodyBytes.sublist(0, 4)
-          : response.bodyBytes;
-      final bytes = List<int>.from(head);
-      final isJpeg = bytes.length == 4 && bytes[0] == 0xFF && bytes[1] == 0xD8;
-      final isPng = bytes.length == 4 && bytes[0] == 0x89 && bytes[1] == 0x50;
-      if (!isJpeg && !isPng) return null;
-      return response.bodyBytes;
-    } catch (e) {
-      AppLogger.d('[FCM SERVICE] Avatar fetch notice: $e');
-      return null;
-    }
-  }
-
-  /// Shows a heads-up incoming-call notification (Android) / alert (iOS) so the
-  /// device visibly rings with a status-bar banner while the in-app caller UI
-  /// is displayed. Uses a call category + full-screen intent so it renders like
-  /// a real phone call on supported Android versions. Renders the caller as a
-  /// large avatar and exposes working Accept / Decline action buttons.
-  static Future<void> showIncomingCallNotification({
-    String title = 'Incoming Call',
-    required String body,
-    required Map<String, dynamic> data,
-  }) async {
-    if (kIsWeb) return;
-    await _ensureLocalNotificationsReady();
-
-    final avatarUrl = _extractCallerAvatarUrl(data);
-    final avatarBytes = await _loadAvatarBytes(avatarUrl);
-    if (avatarBytes != null) {
-      AppLogger.d('[FCM SERVICE] Caller avatar loaded (${avatarBytes.length} bytes).');
-    }
-
-    try {
-      await _localNotificationsPlugin.show(
-        id: _incomingCallNotificationId,
-        title: title,
-        body: body,
-        notificationDetails: NotificationDetails(
-          android: AndroidNotificationDetails(
-            'incoming_call_channel',
-            'Incoming Calls',
-            channelDescription:
-                'Heads-up notification shown when an incoming voice call rings.',
-            icon: '@mipmap/ic_launcher',
-            largeIcon: avatarBytes != null
-                ? ByteArrayAndroidBitmap(avatarBytes)
-                : null,
-            importance: Importance.max,
-            priority: Priority.high,
-            category: AndroidNotificationCategory.call,
-            fullScreenIntent: true,
-            playSound: true,
-            visibility: NotificationVisibility.public,
-            ongoing: true,
-            autoCancel: false,
-            actions: <AndroidNotificationAction>[
-              AndroidNotificationAction(
-                'accept',
-                'Accept',
-                showsUserInterface: true,
-                cancelNotification: true,
-              ),
-              AndroidNotificationAction(
-                'decline',
-                'Decline',
-                showsUserInterface: true,
-                cancelNotification: true,
-              ),
-            ],
-          ),
-          iOS: DarwinNotificationDetails(
-            presentAlert: true,
-            presentSound: true,
-            presentBadge: true,
-            categoryIdentifier: 'incoming_call',
-          ),
-        ),
-        payload: jsonEncode(data),
-      );
-      AppLogger.d('[FCM SERVICE] Incoming-call heads-up notification shown.');
-    } catch (e) {
-      AppLogger.d('[FCM SERVICE] Incoming-call notification show notice: $e');
-    }
-  }
-
-  /// Dismisses the incoming-call heads-up notification (on accept/decline/end).
-  static Future<void> dismissIncomingCallNotification() async {
-    if (kIsWeb) return;
-    AppLogger.d('[FCM SERVICE] Dismiss incoming-call notification start (ready=$_localNotificationsReady id=$_incomingCallNotificationId)');
-    for (int attempt = 1; attempt <= 2; attempt++) {
-      try {
-        await _localNotificationsPlugin.cancel(id: _incomingCallNotificationId);
-        AppLogger.d('[FCM SERVICE] Dismiss incoming-call notification OK id=$_incomingCallNotificationId attempt=$attempt');
-        break;
-      } catch (e) {
-        AppLogger.d('[FCM SERVICE] Incoming-call notification dismiss notice (attempt $attempt): $e');
-      }
-      if (attempt == 1) {
-        await Future<void>.delayed(const Duration(milliseconds: 400));
-      }
-    }
-  }
 
   static Future<void> registerDeviceToken({
     String? overrideToken,

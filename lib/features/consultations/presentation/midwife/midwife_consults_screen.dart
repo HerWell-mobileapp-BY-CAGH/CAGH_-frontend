@@ -4,8 +4,7 @@ import 'package:cagh_frontend/features/appointments/data/services/appointment_ap
 import 'package:cagh_frontend/features/appointments/data/repositories/appointment_repository_impl.dart';
 import 'package:cagh_frontend/shared/models/appointment.dart';
 import 'package:cagh_frontend/shared/models/working_hours.dart';
-import 'package:cagh_frontend/features/consultations/data/services/consultation_api_service.dart';
-import 'package:cagh_frontend/features/consultations/presentation/common/voice_call_screen.dart';
+import 'package:cagh_frontend/features/appointments/presentation/widgets/sim_call_bottom_sheet.dart';
 import 'package:cagh_frontend/features/consultations/presentation/user/consult_hub_components.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
 import 'package:cagh_frontend/core/utils/app_logger.dart';
@@ -38,7 +37,6 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
   List<Appointment> _appointments = [];
   bool _isLoading = true;
   bool _hasActiveHours = true;
-  bool _isJoiningCall = false;
 
   @override
   void initState() {
@@ -101,52 +99,8 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
     }
   }
 
-  Future<void> _startConsultation(BuildContext context, Appointment apt) async {
-    if (_isJoiningCall) return;
-    _isJoiningCall = true;
-
-    try {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(child: CircularProgressIndicator(color: AppColors.primaryGreen)),
-      );
-
-      final consultationApiService = ConsultationApiService();
-      final sessionData = await consultationApiService.getConsultationByAppointment(apt.appointmentId);
-
-      if (context.mounted) Navigator.pop(context);
-
-      if (context.mounted) {
-        final consultId = sessionData['id']?.toString() ?? apt.appointmentId.toString();
-        final result = await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => VoiceCallScreen(
-              appointment: apt,
-              consultationId: consultId,
-              isCaller: true,
-            ),
-          ),
-        );
-        if (result == true) {
-          _fetchAppointments();
-        }
-      }
-    } catch (e) {
-      AppLogger.d('Error starting midwife consultation: $e');
-      if (context.mounted) Navigator.pop(context);
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context)?.unableToConnectConsultation ?? 'Unable to connect to consultation'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      _isJoiningCall = false;
-    }
+  void _startConsultation(BuildContext context, Appointment apt) {
+    SimCallBottomSheet.show(context, apt, isMidwifeCalling: true);
   }
 
   void _showMidwifeDetailsModal(BuildContext context, Appointment apt) {
@@ -242,7 +196,7 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
   String _formatStatusLabel(AppointmentStatus status, bool isPast) {
     switch (status) {
       case AppointmentStatus.pending:
-        return 'Pending';
+        return isPast ? 'Expired' : 'Pending';
       case AppointmentStatus.confirmed:
         return isPast ? 'Past' : 'Confirmed';
       case AppointmentStatus.completed:
@@ -291,8 +245,10 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
       case 2:
         return "Today's Schedule";
       case 3:
-      default:
         return 'Completed Schedule';
+      case 4:
+      default:
+        return 'Expired & Past Requests';
     }
   }
 
@@ -302,7 +258,8 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
 
     final list = _appointments.where((a) {
       if (_selectedTab == 0) {
-        return a.status == AppointmentStatus.pending;
+        // Active pending requests only (future dates)
+        return a.status == AppointmentStatus.pending && !a.isPast;
       } else if (_selectedTab == 1) {
         return a.status == AppointmentStatus.confirmed && !a.isPast;
       } else if (_selectedTab == 2) {
@@ -315,11 +272,14 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
           return true;
         }
         return false;
+      } else if (_selectedTab == 3) {
+        return a.status == AppointmentStatus.completed;
       } else {
-        return a.status == AppointmentStatus.completed ||
+        // Tab 4: Expired / Missed requests (past pending, missed, cancelled, declined, or past confirmed)
+        return (a.status == AppointmentStatus.pending && a.isPast) ||
+            a.status == AppointmentStatus.missed ||
             a.status == AppointmentStatus.cancelled ||
             a.status == AppointmentStatus.declined ||
-            a.status == AppointmentStatus.missed ||
             (a.status == AppointmentStatus.confirmed && a.isPast);
       }
     }).toList();
@@ -328,7 +288,7 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
       final dtA = a.scheduledDateTime;
       final dtB = b.scheduledDateTime;
       if (dtA != null && dtB != null) {
-        if (_selectedTab == 3) {
+        if (_selectedTab == 3 || _selectedTab == 4) {
           return dtB.compareTo(dtA);
         }
         return dtA.compareTo(dtB);
@@ -342,8 +302,10 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isAm = Localizations.localeOf(context).languageCode.startsWith('am');
     final filteredList = _getFilteredList();
-    final pendingCount = _appointments.where((a) => a.status == AppointmentStatus.pending).length;
+    final pendingCount = _appointments.where((a) => a.status == AppointmentStatus.pending && !a.isPast).length;
+    final expiredCount = _appointments.where((a) => (a.status == AppointmentStatus.pending && a.isPast) || a.status == AppointmentStatus.missed).length;
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : const Color(0xFFF7F9F7),
@@ -399,7 +361,7 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
                     child: _buildActiveStatusCard(isDark),
                   ),
 
-                  // 2. Filter Chips Row: Pending Requests, Confirmed, Today, Completed
+                  // 2. Filter Chips Row: Pending Requests, Confirmed, Today, Completed, Expired
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -407,26 +369,33 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
                       children: [
                         _buildFilterChip(
                           tabIndex: 0,
-                          label: 'Pending Requests',
+                          label: isAm ? 'በመጠባበቅ ላይ' : 'Pending Requests',
                           badgeCount: pendingCount,
                           isDark: isDark,
                         ),
                         const SizedBox(width: 8),
                         _buildFilterChip(
                           tabIndex: 1,
-                          label: 'Confirmed',
+                          label: isAm ? 'የተረጋገጡ' : 'Confirmed',
                           isDark: isDark,
                         ),
                         const SizedBox(width: 8),
                         _buildFilterChip(
                           tabIndex: 2,
-                          label: 'Today',
+                          label: isAm ? 'የዛሬ' : 'Today',
                           isDark: isDark,
                         ),
                         const SizedBox(width: 8),
                         _buildFilterChip(
                           tabIndex: 3,
-                          label: 'Completed',
+                          label: isAm ? 'የተጠናቀቁ' : 'Completed',
+                          isDark: isDark,
+                        ),
+                        const SizedBox(width: 8),
+                        _buildFilterChip(
+                          tabIndex: 4,
+                          label: isAm ? 'ያለፈባቸው' : 'Expired',
+                          badgeCount: expiredCount > 0 ? expiredCount : null,
                           isDark: isDark,
                         ),
                       ],
@@ -680,7 +649,8 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
 
   Widget _buildAppointmentCard(Appointment apt, bool isDark) {
     final isUpcoming = apt.status == AppointmentStatus.confirmed && !apt.isPast;
-    final isPending = apt.status == AppointmentStatus.pending;
+    final isPending = apt.status == AppointmentStatus.pending && !apt.isPast;
+    final isExpiredPending = apt.status == AppointmentStatus.pending && apt.isPast;
 
     final String patientDisplayName = (apt.userFullName != null &&
             apt.userFullName!.trim().isNotEmpty &&
@@ -773,9 +743,58 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
               ],
             ),
 
-
             // Action Buttons
-            if (isPending) ...[
+            if (isExpiredPending) ...[
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF261D12) : const Color(0xFFFFF7ED),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isDark ? const Color(0xFF7C4A15) : const Color(0xFFFFEDD5),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.history_toggle_off_rounded,
+                      size: 16,
+                      color: isDark ? const Color(0xFFFDBA74) : const Color(0xFFC2410C),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        Localizations.localeOf(context).languageCode.startsWith('am')
+                            ? 'የቀጠሮው ቀንና ሰዓት ያለፈ በመሆኑ ምላሽ አልተሰጠበትም'
+                            : 'Request expired: scheduled time passed without confirmation.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDark ? const Color(0xFFFDBA74) : const Color(0xFFC2410C),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  onPressed: () => _showMidwifeDetailsModal(context, apt),
+                  icon: const Icon(Icons.info_outline, size: 16),
+                  label: Text(
+                    AppLocalizations.of(context)?.viewDetails ?? 'View Details',
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                  ),
+                  style: TextButton.styleFrom(
+                    foregroundColor: isDark ? Colors.grey.shade300 : const Color(0xFF64748B),
+                  ),
+                ),
+              ),
+            ] else if (isPending) ...[
               const SizedBox(height: 14),
               Row(
                 children: [
@@ -826,15 +845,16 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
                 children: [
                   ElevatedButton.icon(
                     onPressed: () => _startConsultation(context, apt),
-                    icon: const Icon(Icons.call_outlined, color: Colors.white, size: 15),
-                    label: Text(
-                      AppLocalizations.of(context)?.startCall ?? 'Start Call',
-                      style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+                    icon: const Icon(Icons.phone_in_talk_rounded, color: Colors.white, size: 16),
+                    label: const Text(
+                      'Call Patient (SIM)',
+                      style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF2C5927),
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
+                      elevation: 1,
+                      shadowColor: const Color(0xFF2C5927).withOpacity(0.35),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                     ),
                   ),
@@ -955,9 +975,15 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
       bg = isDark ? const Color(0xFF1B3820) : const Color(0xFFE8F5E9);
       text = isDark ? const Color(0xFF86EFAC) : const Color(0xFF2E7D32);
     } else if (apt.status == AppointmentStatus.pending) {
-      label = 'Pending';
-      bg = isDark ? const Color(0xFF3E2C10) : const Color(0xFFFFF8E1);
-      text = isDark ? const Color(0xFFFCD34D) : const Color(0xFFD97706);
+      if (apt.isPast) {
+        label = Localizations.localeOf(context).languageCode.startsWith('am') ? 'ያለፈበት' : 'Expired';
+        bg = isDark ? const Color(0xFF332014) : const Color(0xFFFFF3E0);
+        text = isDark ? const Color(0xFFFFB74D) : const Color(0xFFE65100);
+      } else {
+        label = 'Pending';
+        bg = isDark ? const Color(0xFF3E2C10) : const Color(0xFFFFF8E1);
+        text = isDark ? const Color(0xFFFCD34D) : const Color(0xFFD97706);
+      }
     } else if (apt.status == AppointmentStatus.cancelled) {
       label = 'Cancelled';
       bg = isDark ? const Color(0xFF3A1717) : const Color(0xFFFFEBEE);
@@ -1011,10 +1037,15 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
         emptyIcon = Icons.today_outlined;
         break;
       case 3:
-      default:
         emptyTitle = 'No Completed Consultations';
-        emptySubtitle = 'Past completed or archived consultations will appear here';
+        emptySubtitle = 'Past completed consultations will appear here';
         emptyIcon = Icons.history_outlined;
+        break;
+      case 4:
+      default:
+        emptyTitle = 'No Expired Requests';
+        emptySubtitle = 'Expired or unanswered past requests will appear here';
+        emptyIcon = Icons.history_toggle_off_rounded;
         break;
     }
 

@@ -6,8 +6,9 @@ import 'package:cagh_frontend/features/appointments/data/services/appointment_ap
 import 'package:cagh_frontend/features/appointments/data/repositories/appointment_repository_impl.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
+import 'package:cagh_frontend/shared/utils/ethiopian_date_time.dart';
 
-String formatAppointmentDateTime(String dateStr, String startTimeStr) {
+String formatAppointmentDateTime(String dateStr, String startTimeStr, [String? locale]) {
   if (dateStr.isEmpty) return '';
   try {
     final parts = dateStr.split('-');
@@ -27,6 +28,18 @@ String formatAppointmentDateTime(String dateStr, String startTimeStr) {
       }
 
       final dt = DateTime(year, month, day, hour, minute);
+      final isAm = (locale ?? '').toLowerCase().startsWith('am');
+
+      if (isAm) {
+        final ethDate = EthiopianDate.fromGregorian(dt);
+        final ethMonth = ethDate.getMonthName('am');
+        final ethTime = EthiopianDateHelper.formatEthiopianTime(
+          '$hour:${minute.toString().padLeft(2, '0')}',
+          locale: 'am',
+        );
+        return '$ethMonth ${ethDate.day}, ${ethDate.year} · $ethTime';
+      }
+
       final weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
       final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       
@@ -60,17 +73,22 @@ Color getStatusColor(AppointmentStatus status) {
   }
 }
 
-Widget buildStatusIndicator(BuildContext context, AppointmentStatus status) {
-  final dotColor = getStatusColor(status);
+Widget buildStatusIndicator(BuildContext context, AppointmentStatus status, {bool isPast = false}) {
+  Color dotColor = getStatusColor(status);
   final l10n = AppLocalizations.of(context);
+  final isAm = Localizations.localeOf(context).languageCode.startsWith('am');
   String text = status.name.toUpperCase();
-  if (l10n != null) {
+
+  if (status == AppointmentStatus.pending && isPast) {
+    dotColor = const Color(0xFFC2410C);
+    text = isAm ? 'ያለፈበት' : 'EXPIRED';
+  } else if (l10n != null) {
     switch (status) {
       case AppointmentStatus.pending:
         text = l10n.statusPending;
         break;
       case AppointmentStatus.confirmed:
-        text = l10n.statusConfirmed;
+        text = isPast ? 'PAST' : l10n.statusConfirmed;
         break;
       case AppointmentStatus.completed:
         text = l10n.statusCompleted;
@@ -669,7 +687,8 @@ Widget buildAppointmentCard(
   VoidCallback? onChat,
 }) {
   final isUpcoming = apt.status == AppointmentStatus.confirmed && !apt.isPast;
-  final isPending = apt.status == AppointmentStatus.pending;
+  final isPending = apt.status == AppointmentStatus.pending && !apt.isPast;
+  final isExpiredPending = apt.status == AppointmentStatus.pending && apt.isPast;
   final formattedDateTime = formatAppointmentDateTime(apt.date, apt.startTime);
 
   final String midwifeDisplayName = (apt.midwifeName != null &&
@@ -703,7 +722,7 @@ Widget buildAppointmentCard(
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              buildStatusIndicator(context, apt.status),
+              buildStatusIndicator(context, apt.status, isPast: apt.isPast),
               if (isUpcoming)
                 PopupMenuButton<String>(
                   icon: const Icon(Icons.more_vert, color: Color(0xFF64748B), size: 20),
@@ -809,12 +828,16 @@ Widget buildAppointmentCard(
               children: [
                 ElevatedButton.icon(
                   onPressed: onJoinCall,
-                  icon: const Icon(Icons.call_outlined, color: Colors.white, size: 15),
-                  label: Text(AppLocalizations.of(context)!.joinCall, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+                  icon: const Icon(Icons.phone_in_talk_rounded, color: Colors.white, size: 16),
+                  label: const Text(
+                    'Call Midwife (SIM)',
+                    style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryGreen,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                    elevation: 1,
+                    shadowColor: AppColors.primaryGreen.withOpacity(0.35),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                   ),
                 ),
@@ -836,6 +859,39 @@ Widget buildAppointmentCard(
                   child: Text(AppLocalizations.of(context)!.viewDetails, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
                 ),
               ],
+            )
+          ] else if (isExpiredPending) ...[
+            Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF261D12) : const Color(0xFFFFF7ED),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: isDark ? const Color(0xFF7C4A15) : const Color(0xFFFFEDD5)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.history_toggle_off_rounded, size: 14, color: isDark ? const Color(0xFFFDBA74) : const Color(0xFFC2410C)),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      Localizations.localeOf(context).languageCode.startsWith('am')
+                          ? 'የቀጠሮው ቀንና ሰዓት ያለፈ በመሆኑ ምላሽ አልተሰጠበትም'
+                          : 'Request expired: appointment date passed without confirmation.',
+                      style: TextStyle(fontSize: 11, color: isDark ? const Color(0xFFFDBA74) : const Color(0xFFC2410C)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            TextButton(
+              onPressed: onViewDetails,
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF475569),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              ),
+              child: Text(AppLocalizations.of(context)!.viewDetails, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
             )
           ] else if (isPending) ...[
             TextButton(

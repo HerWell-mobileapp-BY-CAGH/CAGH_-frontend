@@ -140,6 +140,12 @@ abstract class AppLocalizations {
   /// **'Login'**
   String get login;
 
+  /// No description provided for @keepMeLoggedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep me logged in'**
+  String get keepMeLoggedIn;
+
   /// No description provided for @register.
   ///
   /// In en, this message translates to:
@@ -1541,7 +1547,7 @@ abstract class AppLocalizations {
   /// No description provided for @sos.
   ///
   /// In en, this message translates to:
-  /// **'SOS'**
+  /// **'Emergency Help'**
   String get sos;
 
   /// No description provided for @emergencyHotlines.
@@ -1559,14 +1565,158 @@ abstract class AppLocalizations {
   /// No description provided for @useSosButton.
   ///
   /// In en, this message translates to:
-  /// **'Use the SOS button above to notify contacts.'**
+  /// **'Your emergency contacts will receive an urgent SMS with your live GPS location.'**
   String get useSosButton;
 
   /// No description provided for @lifeThreateningEmergency.
   ///
   /// In en, this message translates to:
-  /// **'If this is a life-threatening medical\\nemergency, tap SOS immediately.'**
+  /// **'If you are in danger or need immediate medical attention, send an emergency alert or call the hotlines below.'**
   String get lifeThreateningEmergency;
+
+  /// No description provided for @emergencyHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency Help'**
+  String get emergencyHelp;
+
+  /// No description provided for @pressAndHold.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold 2s for Help'**
+  String get pressAndHold;
+
+  /// No description provided for @directEmergencyLines.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct Emergency Lines'**
+  String get directEmergencyLines;
+
+  /// No description provided for @tollFree.
+  ///
+  /// In en, this message translates to:
+  /// **'Toll-Free'**
+  String get tollFree;
+
+  /// No description provided for @callNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Call'**
+  String get callNow;
+
+  /// No description provided for @allHotlines.
+  ///
+  /// In en, this message translates to:
+  /// **'All Emergency Hotlines'**
+  String get allHotlines;
+
+  /// No description provided for @gpsLocationActive.
+  ///
+  /// In en, this message translates to:
+  /// **'GPS Active • Accurate location ready'**
+  String get gpsLocationActive;
+
+  /// No description provided for @sendAlertNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Send Alert Now'**
+  String get sendAlertNow;
+
+  /// No description provided for @sendingAlertIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending alert in {seconds}s...'**
+  String sendingAlertIn(int seconds);
+
+  /// No description provided for @cancelAlert.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel Alert'**
+  String get cancelAlert;
+
+  /// No description provided for @alertSentSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency Alert Sent Successfully!'**
+  String get alertSentSuccess;
+
+  /// No description provided for @alertSentDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Your emergency contacts have been notified with your GPS coordinates and an urgent SMS.'**
+  String get alertSentDescription;
+
+  /// No description provided for @iAmSafe.
+  ///
+  /// In en, this message translates to:
+  /// **'I am Safe Now'**
+  String get iAmSafe;
+
+  /// No description provided for @ambulance907Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Ambulance & Medical'**
+  String get ambulance907Title;
+
+  /// No description provided for @ambulance907Sub.
+  ///
+  /// In en, this message translates to:
+  /// **'National Health Hotline (907)'**
+  String get ambulance907Sub;
+
+  /// No description provided for @police911Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Police & Security'**
+  String get police911Title;
+
+  /// No description provided for @police911Sub.
+  ///
+  /// In en, this message translates to:
+  /// **'Immediate Emergency Response (911)'**
+  String get police911Sub;
+
+  /// No description provided for @redCross939Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Red Cross Ambulance'**
+  String get redCross939Title;
+
+  /// No description provided for @redCross939Sub.
+  ///
+  /// In en, this message translates to:
+  /// **'First Aid & Medical Transport (939)'**
+  String get redCross939Sub;
+
+  /// No description provided for @helpline8044Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Helpline & Protection'**
+  String get helpline8044Title;
+
+  /// No description provided for @helpline8044Sub.
+  ///
+  /// In en, this message translates to:
+  /// **'Women & Youth Support (8044)'**
+  String get helpline8044Sub;
+
+  /// No description provided for @emergencyContactsAlert.
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency Contacts Alert'**
+  String get emergencyContactsAlert;
+
+  /// No description provided for @contactsConfiguredCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} contacts configured to receive alert'**
+  String contactsConfiguredCount(String count);
+
+  /// No description provided for @previewContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'View Contacts'**
+  String get previewContacts;
 
   /// No description provided for @accountAndRecords.
   ///
@@ -2039,8 +2189,14 @@ abstract class AppLocalizations {
   /// No description provided for @hospitalAffiliationOptional.
   ///
   /// In en, this message translates to:
-  /// **'Hospital Affiliation (Optional)'**
+  /// **'Hospital / Health Center (Optional)'**
   String get hospitalAffiliationOptional;
+
+  /// No description provided for @generalHealthCenter.
+  ///
+  /// In en, this message translates to:
+  /// **'General Health Center'**
+  String get generalHealthCenter;
 
   /// No description provided for @completeYourProfile.
   ///
@@ -3109,6 +3265,462 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Start time cannot be in the past for today'**
   String get startTimeCannotBeInPast;
+
+  /// No description provided for @verifiedMaternalCare.
+  ///
+  /// In en, this message translates to:
+  /// **'VERIFIED MATERNAL CARE'**
+  String get verifiedMaternalCare;
+
+  /// No description provided for @certifiedMidwivesNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Certified Midwives Network'**
+  String get certifiedMidwivesNetwork;
+
+  /// No description provided for @heroConsultGuidance.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct 1-on-1 consultations, prenatal guidance & trusted care.'**
+  String get heroConsultGuidance;
+
+  /// No description provided for @searchMidwivesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name, hospital, or specialty...'**
+  String get searchMidwivesHint;
+
+  /// No description provided for @noMidwivesFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No midwives found'**
+  String get noMidwivesFound;
+
+  /// No description provided for @tryAdjustingSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Try adjusting your search query.'**
+  String get tryAdjustingSearch;
+
+  /// No description provided for @clearSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get clearSearch;
+
+  /// No description provided for @certifiedHealthcareMidwife.
+  ///
+  /// In en, this message translates to:
+  /// **'Certified Healthcare Midwife'**
+  String get certifiedHealthcareMidwife;
+
+  /// No description provided for @bookConsultation.
+  ///
+  /// In en, this message translates to:
+  /// **'Book Consultation'**
+  String get bookConsultation;
+
+  /// No description provided for @noConversationsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No conversations yet'**
+  String get noConversationsYet;
+
+  /// No description provided for @startConsultationHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a message to a certified midwife to start a consultation.'**
+  String get startConsultationHint;
+
+  /// No description provided for @emptyPendingAppointmentsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'When you book an appointment, it will appear here awaiting midwife confirmation.'**
+  String get emptyPendingAppointmentsSubtitle;
+
+  /// No description provided for @emptyUpcomingAppointmentsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You have no upcoming consultations scheduled at this time.'**
+  String get emptyUpcomingAppointmentsSubtitle;
+
+  /// No description provided for @emptyPastAppointmentsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed and cancelled appointments will appear here.'**
+  String get emptyPastAppointmentsSubtitle;
+
+  /// Welcome message for midwife
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome, {name}'**
+  String welcomeMidwife(String name);
+
+  /// No description provided for @midwifeDailySupportSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to support adolescent girls today with confidential healthcare.'**
+  String get midwifeDailySupportSubtitle;
+
+  /// No description provided for @reviewRequestsAndSchedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Review Requests & Schedule'**
+  String get reviewRequestsAndSchedule;
+
+  /// No description provided for @adolescentCareProtocolTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Adolescent Care Protocol 2026'**
+  String get adolescentCareProtocolTitle;
+
+  /// No description provided for @adolescentCareProtocolDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard guidelines for confidential consultations, menstrual health education, and adolescent counseling.'**
+  String get adolescentCareProtocolDesc;
+
+  /// No description provided for @publishHealthTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Publish Health Tip'**
+  String get publishHealthTip;
+
+  /// No description provided for @publishHealthTipSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share clinical advice directly with adolescent girls'**
+  String get publishHealthTipSubtitle;
+
+  /// No description provided for @keyTopicsCovered.
+  ///
+  /// In en, this message translates to:
+  /// **'Key Topics Covered'**
+  String get keyTopicsCovered;
+
+  /// No description provided for @exploreInLearnCenter.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore in Learn Center'**
+  String get exploreInLearnCenter;
+
+  /// No description provided for @myBookmarks.
+  ///
+  /// In en, this message translates to:
+  /// **'My Bookmarks'**
+  String get myBookmarks;
+
+  /// No description provided for @changePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Password'**
+  String get changePassword;
+
+  /// No description provided for @currentPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Password'**
+  String get currentPassword;
+
+  /// No description provided for @enterCurrentPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your current password'**
+  String get enterCurrentPassword;
+
+  /// No description provided for @enterNewPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter new password (min. 8 characters)'**
+  String get enterNewPassword;
+
+  /// No description provided for @reEnterNewPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-enter new password'**
+  String get reEnterNewPassword;
+
+  /// No description provided for @passwordChangedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Password changed successfully.'**
+  String get passwordChangedSuccessfully;
+
+  /// No description provided for @passwordsDoNotMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'New passwords do not match'**
+  String get passwordsDoNotMatch;
+
+  /// No description provided for @currentPasswordRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your current password'**
+  String get currentPasswordRequired;
+
+  /// No description provided for @noBookmarksYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No Bookmarks Yet'**
+  String get noBookmarksYet;
+
+  /// No description provided for @noBookmarksDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Save educational guides and clinical materials to read anytime.'**
+  String get noBookmarksDesc;
+
+  /// No description provided for @exploreLearningModules.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore Learning Modules'**
+  String get exploreLearningModules;
+
+  /// No description provided for @startReading.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Reading Module'**
+  String get startReading;
+
+  /// No description provided for @accessClinicalGuide.
+  ///
+  /// In en, this message translates to:
+  /// **'Access Clinical Guide'**
+  String get accessClinicalGuide;
+
+  /// No description provided for @actionRequiredForConsultations.
+  ///
+  /// In en, this message translates to:
+  /// **'Action required for consultation slots'**
+  String get actionRequiredForConsultations;
+
+  /// No description provided for @noPendingRequestsAtThisTime.
+  ///
+  /// In en, this message translates to:
+  /// **'No pending requests at this time'**
+  String get noPendingRequestsAtThisTime;
+
+  /// No description provided for @badgeNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
+  String get badgeNew;
+
+  /// No description provided for @midwifeWorkflowsAndTools.
+  ///
+  /// In en, this message translates to:
+  /// **'Midwife Workflows & Tools'**
+  String get midwifeWorkflowsAndTools;
+
+  /// No description provided for @manageHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Hours'**
+  String get manageHours;
+
+  /// No description provided for @manageHoursSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set daily availability slots'**
+  String get manageHoursSubtitle;
+
+  /// No description provided for @clientMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Client Messages'**
+  String get clientMessages;
+
+  /// No description provided for @clientMessagesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct non-urgent chat'**
+  String get clientMessagesSubtitle;
+
+  /// No description provided for @consultCalendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Consult Calendar'**
+  String get consultCalendar;
+
+  /// No description provided for @consultCalendarSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'View confirmed sessions'**
+  String get consultCalendarSubtitle;
+
+  /// No description provided for @clinicalProtocols.
+  ///
+  /// In en, this message translates to:
+  /// **'Clinical Protocols'**
+  String get clinicalProtocols;
+
+  /// No description provided for @todaysConfirmedConsultations.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s Confirmed Consultations'**
+  String get todaysConfirmedConsultations;
+
+  /// No description provided for @caghEmergencyHotlineBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'CAGH EMERGENCY • 24/7'**
+  String get caghEmergencyHotlineBadge;
+
+  /// No description provided for @priorityBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'PRIORITY'**
+  String get priorityBadge;
+
+  /// No description provided for @adolescentEmergencyHelpline.
+  ///
+  /// In en, this message translates to:
+  /// **'Adolescent Emergency Helpline'**
+  String get adolescentEmergencyHelpline;
+
+  /// No description provided for @caghHotlineDescAdolescent.
+  ///
+  /// In en, this message translates to:
+  /// **'24/7 confidential helpline for adolescent girls facing acute health emergencies, sudden pain, or needing urgent clinical guidance.'**
+  String get caghHotlineDescAdolescent;
+
+  /// No description provided for @callNowAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Call Now'**
+  String get callNowAction;
+
+  /// No description provided for @shareLocationAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Share Location'**
+  String get shareLocationAction;
+
+  /// No description provided for @locatingAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Locating...'**
+  String get locatingAction;
+
+  /// No description provided for @yourLocationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Location'**
+  String get yourLocationTitle;
+
+  /// No description provided for @acquiringGps.
+  ///
+  /// In en, this message translates to:
+  /// **'Acquiring coordinates...'**
+  String get acquiringGps;
+
+  /// No description provided for @nationalEmergencyServices.
+  ///
+  /// In en, this message translates to:
+  /// **'National Emergency Services'**
+  String get nationalEmergencyServices;
+
+  /// No description provided for @categoryAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get categoryAll;
+
+  /// No description provided for @categoryMedical.
+  ///
+  /// In en, this message translates to:
+  /// **'Medical'**
+  String get categoryMedical;
+
+  /// No description provided for @categorySecurity.
+  ///
+  /// In en, this message translates to:
+  /// **'Security'**
+  String get categorySecurity;
+
+  /// No description provided for @categorySupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Support'**
+  String get categorySupport;
+
+  /// No description provided for @nationalAmbulanceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'National Ambulance & Health'**
+  String get nationalAmbulanceTitle;
+
+  /// No description provided for @nationalAmbulanceSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Free emergency & urgent health response (24/7)'**
+  String get nationalAmbulanceSubtitle;
+
+  /// No description provided for @policeSecurityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Police & Security Services'**
+  String get policeSecurityTitle;
+
+  /// No description provided for @policeSecuritySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'National emergency security response'**
+  String get policeSecuritySubtitle;
+
+  /// No description provided for @redCrossTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Red Cross Ambulance'**
+  String get redCrossTitle;
+
+  /// No description provided for @redCrossSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency first aid and patient transport'**
+  String get redCrossSubtitle;
+
+  /// No description provided for @womenChildTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Women & Child Protection'**
+  String get womenChildTitle;
+
+  /// No description provided for @womenChildSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Helpline for adolescent girls & youth support'**
+  String get womenChildSubtitle;
+
+  /// No description provided for @publicHealthTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Public Health Advisory (EPHI)'**
+  String get publicHealthTitle;
+
+  /// No description provided for @publicHealthSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'National disease & health advisory helpline'**
+  String get publicHealthSubtitle;
+
+  /// No description provided for @fireRescueTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fire & Rescue Services'**
+  String get fireRescueTitle;
+
+  /// No description provided for @fireRescueSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Civil emergency, fire and disaster response'**
+  String get fireRescueSubtitle;
+
+  /// No description provided for @emergencyLinesNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'All national emergency lines listed are toll-free and accessible 24/7 without credit across Ethio Telecom and Safaricom networks. For CAGH Hotline (0996 71 77 44), standard mobile rates or toll-free assistance applies.'**
+  String get emergencyLinesNotice;
 }
 
 class _AppLocalizationsDelegate

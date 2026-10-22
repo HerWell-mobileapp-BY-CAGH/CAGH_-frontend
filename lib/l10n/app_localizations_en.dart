@@ -31,6 +31,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get login => 'Login';
 
   @override
+  String get keepMeLoggedIn => 'Keep me logged in';
+
+  @override
   String get register => 'Register';
 
   @override
@@ -763,7 +766,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get emergency => 'Emergency';
 
   @override
-  String get sos => 'SOS';
+  String get sos => 'Emergency Help';
 
   @override
   String get emergencyHotlines => 'Emergency Hotlines';
@@ -772,11 +775,89 @@ class AppLocalizationsEn extends AppLocalizations {
   String get areYouOkay => 'Are you okay?';
 
   @override
-  String get useSosButton => 'Use the SOS button above to notify contacts.';
+  String get useSosButton =>
+      'Your emergency contacts will receive an urgent SMS with your live GPS location.';
 
   @override
   String get lifeThreateningEmergency =>
-      'If this is a life-threatening medical\\nemergency, tap SOS immediately.';
+      'If you are in danger or need immediate medical attention, send an emergency alert or call the hotlines below.';
+
+  @override
+  String get emergencyHelp => 'Emergency Help';
+
+  @override
+  String get pressAndHold => 'Hold 2s for Help';
+
+  @override
+  String get directEmergencyLines => 'Direct Emergency Lines';
+
+  @override
+  String get tollFree => 'Toll-Free';
+
+  @override
+  String get callNow => 'Call';
+
+  @override
+  String get allHotlines => 'All Emergency Hotlines';
+
+  @override
+  String get gpsLocationActive => 'GPS Active • Accurate location ready';
+
+  @override
+  String get sendAlertNow => 'Send Alert Now';
+
+  @override
+  String sendingAlertIn(int seconds) {
+    return 'Sending alert in ${seconds}s...';
+  }
+
+  @override
+  String get cancelAlert => 'Cancel Alert';
+
+  @override
+  String get alertSentSuccess => 'Emergency Alert Sent Successfully!';
+
+  @override
+  String get alertSentDescription =>
+      'Your emergency contacts have been notified with your GPS coordinates and an urgent SMS.';
+
+  @override
+  String get iAmSafe => 'I am Safe Now';
+
+  @override
+  String get ambulance907Title => 'Ambulance & Medical';
+
+  @override
+  String get ambulance907Sub => 'National Health Hotline (907)';
+
+  @override
+  String get police911Title => 'Police & Security';
+
+  @override
+  String get police911Sub => 'Immediate Emergency Response (911)';
+
+  @override
+  String get redCross939Title => 'Red Cross Ambulance';
+
+  @override
+  String get redCross939Sub => 'First Aid & Medical Transport (939)';
+
+  @override
+  String get helpline8044Title => 'Helpline & Protection';
+
+  @override
+  String get helpline8044Sub => 'Women & Youth Support (8044)';
+
+  @override
+  String get emergencyContactsAlert => 'Emergency Contacts Alert';
+
+  @override
+  String contactsConfiguredCount(String count) {
+    return '$count contacts configured to receive alert';
+  }
+
+  @override
+  String get previewContacts => 'View Contacts';
 
   @override
   String get accountAndRecords => 'Account & Records';
@@ -1027,7 +1108,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get specialty => 'Specialty';
 
   @override
-  String get hospitalAffiliationOptional => 'Hospital Affiliation (Optional)';
+  String get hospitalAffiliationOptional =>
+      'Hospital / Health Center (Optional)';
+
+  @override
+  String get generalHealthCenter => 'General Health Center';
 
   @override
   String get completeYourProfile => 'Complete Your Profile';
@@ -1614,4 +1699,250 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get startTimeCannotBeInPast =>
       'Start time cannot be in the past for today';
+
+  @override
+  String get verifiedMaternalCare => 'VERIFIED MATERNAL CARE';
+
+  @override
+  String get certifiedMidwivesNetwork => 'Certified Midwives Network';
+
+  @override
+  String get heroConsultGuidance =>
+      'Direct 1-on-1 consultations, prenatal guidance & trusted care.';
+
+  @override
+  String get searchMidwivesHint => 'Search by name, hospital, or specialty...';
+
+  @override
+  String get noMidwivesFound => 'No midwives found';
+
+  @override
+  String get tryAdjustingSearch => 'Try adjusting your search query.';
+
+  @override
+  String get clearSearch => 'Clear search';
+
+  @override
+  String get certifiedHealthcareMidwife => 'Certified Healthcare Midwife';
+
+  @override
+  String get bookConsultation => 'Book Consultation';
+
+  @override
+  String get noConversationsYet => 'No conversations yet';
+
+  @override
+  String get startConsultationHint =>
+      'Send a message to a certified midwife to start a consultation.';
+
+  @override
+  String get emptyPendingAppointmentsSubtitle =>
+      'When you book an appointment, it will appear here awaiting midwife confirmation.';
+
+  @override
+  String get emptyUpcomingAppointmentsSubtitle =>
+      'You have no upcoming consultations scheduled at this time.';
+
+  @override
+  String get emptyPastAppointmentsSubtitle =>
+      'Completed and cancelled appointments will appear here.';
+
+  @override
+  String welcomeMidwife(String name) {
+    return 'Welcome, $name';
+  }
+
+  @override
+  String get midwifeDailySupportSubtitle =>
+      'Ready to support adolescent girls today with confidential healthcare.';
+
+  @override
+  String get reviewRequestsAndSchedule => 'Review Requests & Schedule';
+
+  @override
+  String get adolescentCareProtocolTitle => 'Adolescent Care Protocol 2026';
+
+  @override
+  String get adolescentCareProtocolDesc =>
+      'Standard guidelines for confidential consultations, menstrual health education, and adolescent counseling.';
+
+  @override
+  String get publishHealthTip => 'Publish Health Tip';
+
+  @override
+  String get publishHealthTipSubtitle =>
+      'Share clinical advice directly with adolescent girls';
+
+  @override
+  String get keyTopicsCovered => 'Key Topics Covered';
+
+  @override
+  String get exploreInLearnCenter => 'Explore in Learn Center';
+
+  @override
+  String get myBookmarks => 'My Bookmarks';
+
+  @override
+  String get changePassword => 'Change Password';
+
+  @override
+  String get currentPassword => 'Current Password';
+
+  @override
+  String get enterCurrentPassword => 'Enter your current password';
+
+  @override
+  String get enterNewPassword => 'Enter new password (min. 8 characters)';
+
+  @override
+  String get reEnterNewPassword => 'Re-enter new password';
+
+  @override
+  String get passwordChangedSuccessfully => 'Password changed successfully.';
+
+  @override
+  String get passwordsDoNotMatch => 'New passwords do not match';
+
+  @override
+  String get currentPasswordRequired => 'Please enter your current password';
+
+  @override
+  String get noBookmarksYet => 'No Bookmarks Yet';
+
+  @override
+  String get noBookmarksDesc =>
+      'Save educational guides and clinical materials to read anytime.';
+
+  @override
+  String get exploreLearningModules => 'Explore Learning Modules';
+
+  @override
+  String get startReading => 'Start Reading Module';
+
+  @override
+  String get accessClinicalGuide => 'Access Clinical Guide';
+
+  @override
+  String get actionRequiredForConsultations =>
+      'Action required for consultation slots';
+
+  @override
+  String get noPendingRequestsAtThisTime => 'No pending requests at this time';
+
+  @override
+  String get badgeNew => 'New';
+
+  @override
+  String get midwifeWorkflowsAndTools => 'Midwife Workflows & Tools';
+
+  @override
+  String get manageHours => 'Manage Hours';
+
+  @override
+  String get manageHoursSubtitle => 'Set daily availability slots';
+
+  @override
+  String get clientMessages => 'Client Messages';
+
+  @override
+  String get clientMessagesSubtitle => 'Direct non-urgent chat';
+
+  @override
+  String get consultCalendar => 'Consult Calendar';
+
+  @override
+  String get consultCalendarSubtitle => 'View confirmed sessions';
+
+  @override
+  String get clinicalProtocols => 'Clinical Protocols';
+
+  @override
+  String get todaysConfirmedConsultations => 'Today\'s Confirmed Consultations';
+
+  @override
+  String get caghEmergencyHotlineBadge => 'CAGH EMERGENCY • 24/7';
+
+  @override
+  String get priorityBadge => 'PRIORITY';
+
+  @override
+  String get adolescentEmergencyHelpline => 'Adolescent Emergency Helpline';
+
+  @override
+  String get caghHotlineDescAdolescent =>
+      '24/7 confidential helpline for adolescent girls facing acute health emergencies, sudden pain, or needing urgent clinical guidance.';
+
+  @override
+  String get callNowAction => 'Call Now';
+
+  @override
+  String get shareLocationAction => 'Share Location';
+
+  @override
+  String get locatingAction => 'Locating...';
+
+  @override
+  String get yourLocationTitle => 'Your Location';
+
+  @override
+  String get acquiringGps => 'Acquiring coordinates...';
+
+  @override
+  String get nationalEmergencyServices => 'National Emergency Services';
+
+  @override
+  String get categoryAll => 'All';
+
+  @override
+  String get categoryMedical => 'Medical';
+
+  @override
+  String get categorySecurity => 'Security';
+
+  @override
+  String get categorySupport => 'Support';
+
+  @override
+  String get nationalAmbulanceTitle => 'National Ambulance & Health';
+
+  @override
+  String get nationalAmbulanceSubtitle =>
+      'Free emergency & urgent health response (24/7)';
+
+  @override
+  String get policeSecurityTitle => 'Police & Security Services';
+
+  @override
+  String get policeSecuritySubtitle => 'National emergency security response';
+
+  @override
+  String get redCrossTitle => 'Red Cross Ambulance';
+
+  @override
+  String get redCrossSubtitle => 'Emergency first aid and patient transport';
+
+  @override
+  String get womenChildTitle => 'Women & Child Protection';
+
+  @override
+  String get womenChildSubtitle =>
+      'Helpline for adolescent girls & youth support';
+
+  @override
+  String get publicHealthTitle => 'Public Health Advisory (EPHI)';
+
+  @override
+  String get publicHealthSubtitle =>
+      'National disease & health advisory helpline';
+
+  @override
+  String get fireRescueTitle => 'Fire & Rescue Services';
+
+  @override
+  String get fireRescueSubtitle =>
+      'Civil emergency, fire and disaster response';
+
+  @override
+  String get emergencyLinesNotice =>
+      'All national emergency lines listed are toll-free and accessible 24/7 without credit across Ethio Telecom and Safaricom networks. For CAGH Hotline (0996 71 77 44), standard mobile rates or toll-free assistance applies.';
 }

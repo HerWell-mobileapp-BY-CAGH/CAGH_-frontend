@@ -1,3 +1,4 @@
+import 'package:cagh_frontend/core/services/remote_translation_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -11,8 +12,6 @@ import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/services.dart';
-import 'package:cagh_frontend/core/services/global_call_service.dart';
-import 'package:cagh_frontend/features/consultations/data/services/callkit_service.dart';
 import 'package:cagh_frontend/core/services/fcm_service.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
 import 'package:cagh_frontend/core/utils/app_logger.dart';
@@ -20,33 +19,7 @@ import 'package:cagh_frontend/features/notifications/presentation/providers/noti
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   WidgetsFlutterBinding.ensureInitialized();
-  final action = (message.data['action'] ?? message.data['type'] ?? message.data['event'] ?? '').toString().toLowerCase();
-  if (action.contains('incoming') || action.contains('offer') || action.contains('initiated')) {
-    final callId = (message.data['call_id'] ?? message.data['consultation_id'] ?? '').toString();
-    final callerId = (message.data['caller_id'] ?? message.data['caller'] ?? message.data['sender_id'] ?? message.data['sender']?['id'] ?? message.data['user_id'] ?? '').toString().trim();
-    
-    AppLogger.d('[CALL][FCM] Incoming call received');
-    AppLogger.d('[CALL][FCM] call_id=$callId');
-    AppLogger.d('[CALL][FCM] App state=background/terminated');
-
-    try {
-      // Note: Executed in an isolated background Dart isolate.
-      final currentUserId = (await GlobalCallService.getAuthenticatedUserId() ?? '').trim();
-
-      if (callerId.isNotEmpty && currentUserId.isNotEmpty && callerId == currentUserId) {
-        AppLogger.d('[CALL][DEDUP] Duplicate/Self call ignored');
-        return;
-      }
-    } catch (e) {
-      AppLogger.d('[CALL][FCM] Error inspecting incoming call notification: $e');
-    }
-
-    final consultationId = message.data['consultation_id']?.toString() ?? callId;
-    GlobalCallService.showIncomingCallModal(
-      Map<String, dynamic>.from(message.data),
-      defaultConsultationId: consultationId,
-    );
-  }
+  AppLogger.d('[FCM] Background message received: ${message.messageId}');
 }
 
 final GlobalKey<NavigatorState> globalNavigatorKey = GlobalKey<NavigatorState>();
@@ -95,46 +68,16 @@ class _MyAppState extends ConsumerState<MyApp> {
   void initState() {
     super.initState();
     if (!kIsWeb) {
-      CallKitService().init();
       _setupFcmForegroundListener();
     }
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      CallNavigationCoordinator.checkAndNavigatePendingCall();
-    });
   }
 
   void _setupFcmForegroundListener() {
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
-      final action = (message.data['action'] ?? message.data['type'] ?? message.data['event'] ?? '').toString().toLowerCase();
-      if (action.contains('incoming') || action.contains('offer') || action.contains('initiated')) {
-        if (GlobalCallService.isCallActive || GlobalCallService.isRingingShown) {
-          AppLogger.d('FCM Foreground: Ignoring incoming_call push — call is already active/ringing');
-          return;
-        }
-
-        final callerId = (message.data['caller_id'] ?? message.data['caller'] ?? message.data['sender_id'] ?? message.data['sender']?['id'] ?? message.data['user_id'] ?? '').toString().trim();
-        try {
-          final currentUserId = (await GlobalCallService.getAuthenticatedUserId() ?? '').trim();
-          if (callerId.isNotEmpty && currentUserId.isNotEmpty && callerId == currentUserId) {
-            AppLogger.d('FCM Foreground: IGNORED self incoming call notification');
-            return;
-          }
-        } catch (e) {
-          AppLogger.d('FCM Foreground: Error inspecting incoming call notification: $e');
-        }
-
-        final consultationId = message.data['consultation_id']?.toString() ?? 'call_${DateTime.now().millisecondsSinceEpoch}';
-
-        GlobalCallService.showIncomingCallModal(
-          Map<String, dynamic>.from(message.data),
-          defaultConsultationId: consultationId,
-        );
-      } else {
-        // Refresh notifications for other actions (like messages, consultation updates, etc)
-        AppLogger.d('FCM Foreground: Refreshing notifications and showing popup');
-        FcmService.showForegroundNotification(message);
-        ref.read(notificationProvider.notifier).refreshNotifications();
-      }
+      // Refresh notifications and show popup for incoming notifications (messages, appointment updates, etc.)
+      AppLogger.d('FCM Foreground: Refreshing notifications and showing popup');
+      FcmService.showForegroundNotification(message);
+      ref.read(notificationProvider.notifier).refreshNotifications();
     });
   }
 
@@ -143,6 +86,9 @@ class _MyAppState extends ConsumerState<MyApp> {
     return ValueListenableBuilder<String>(
       valueListenable: LanguageService.currentLanguage,
       builder: (_, langCode, _) {
+        return ValueListenableBuilder<int>(
+          valueListenable: RemoteTranslationService.updatesNotifier,
+          builder: (_, _, _) {
         return ValueListenableBuilder<ThemeMode>(
           valueListenable: AppearanceService.currentThemeMode,
           builder: (_, themeMode, _) {
@@ -379,6 +325,8 @@ class _MyAppState extends ConsumerState<MyApp> {
                 );
               },
             );
+          },
+        );
           },
         );
       },

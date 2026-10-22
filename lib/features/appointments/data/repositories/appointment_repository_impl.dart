@@ -54,7 +54,8 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
         status: AppointmentStatus.confirmed,
       );
     } catch (e) {
-      throw Exception('Failed to accept appointment: $e');
+      final clean = e.toString().replaceAll('Exception: ', '').trim();
+      throw Exception(clean.isNotEmpty ? clean : 'Failed to accept appointment.');
     }
   }
 
@@ -79,7 +80,8 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
         status: AppointmentStatus.declined,
       );
     } catch (e) {
-      throw Exception('Failed to decline appointment: $e');
+      final clean = e.toString().replaceAll('Exception: ', '').trim();
+      throw Exception(clean.isNotEmpty ? clean : 'Failed to decline appointment.');
     }
   }
 
@@ -104,7 +106,8 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
         status: AppointmentStatus.cancelled,
       );
     } catch (e) {
-      throw Exception('Failed to cancel appointment: $e');
+      final clean = e.toString().replaceAll('Exception: ', '').trim();
+      throw Exception(clean.isNotEmpty ? clean : 'Failed to cancel appointment.');
     }
   }
 

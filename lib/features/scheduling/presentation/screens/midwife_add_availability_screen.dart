@@ -142,43 +142,17 @@ class _MidwifeAddAvailabilityScreenState extends State<MidwifeAddAvailabilityScr
       final startStr = '${_startTime!.hour.toString().padLeft(2, '0')}:${_startTime!.minute.toString().padLeft(2, '0')}:00';
       final endStr = '${_endTime!.hour.toString().padLeft(2, '0')}:${_endTime!.minute.toString().padLeft(2, '0')}:00';
       
-      String consultType = 'VIRTUAL_VOICE';
-      if (_inPerson && _voiceCall) {
-        consultType = 'BOTH';
-      } else if (_inPerson) {
-        consultType = 'IN_PERSON';
-      } else if (_voiceCall) {
-        consultType = 'VIRTUAL_VOICE';
-      }
-
       final List<String> methodsList = [];
       if (_voiceCall) methodsList.add('VIRTUAL_VOICE');
       if (_inPerson) methodsList.add('IN_PERSON');
 
-      final List<String> typesList = [];
-      if (_inPerson) typesList.add('In-Person');
-      if (_voiceCall) typesList.add('Voice Call');
-
       final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate!);
-      final dayOfWeek = _selectedDate!.weekday - 1; // 0 = Monday, 6 = Sunday
-      const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-      final dayName = days[dayOfWeek];
 
       final Map<String, dynamic> payload = {
         'date': dateStr,
-        'day_of_week': dayOfWeek,
-        'day': dayOfWeek,
-        'day_name': dayName,
         'start_time': startStr,
         'end_time': endStr,
-        'is_in_person': _inPerson,
-        'is_voice_call': _voiceCall,
-        'in_person': _inPerson,
-        'voice_call': _voiceCall,
-        'consultation_type': consultType,
         'consultation_methods': methodsList,
-        'appointment_type': consultType,
-        'offered_consultation_types': typesList,
         'is_active': true,
       };
 
@@ -197,9 +171,11 @@ class _MidwifeAddAvailabilityScreenState extends State<MidwifeAddAvailabilityScr
       }
     } catch (e) {
       if (mounted) {
-        String msg = '$e'.replaceAll('Exception: ', '');
+        String msg = '$e'.replaceAll('Exception: ', '').trim();
         if (msg.contains('TimeoutException')) {
           msg = 'Server took too long to respond. Please check your connection and try again.';
+        } else if (msg.toLowerCase().contains('<html') || msg.contains('500')) {
+          msg = 'Server is currently restarting or busy. Please try again shortly.';
         }
         CustomSnackBar.show(context, message: '${AppLocalizations.of(context)!.failedToAddAvailability}: $msg', type: SnackBarType.error);
       }

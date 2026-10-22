@@ -8,7 +8,9 @@ import 'package:cagh_frontend/features/profile/presentation/personal_information
 import 'package:cagh_frontend/features/profile/presentation/appearance_accessibility_screen.dart';
 import 'package:cagh_frontend/features/profile/presentation/favorite_midwives_screen.dart';
 import 'package:cagh_frontend/features/consultations/presentation/user/user_inbox_screen.dart';
-import 'package:cagh_frontend/features/consultations/presentation/user/consult_hub_screen.dart';
+import 'package:cagh_frontend/features/appointments/presentation/screens/my_appointments_screen.dart';
+import 'package:cagh_frontend/features/learning/presentation/screens/my_bookmarks_screen.dart';
+import 'package:cagh_frontend/features/profile/presentation/change_password_screen.dart';
 import 'package:cagh_frontend/features/notifications/presentation/providers/notification_provider.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
 import 'package:cagh_frontend/shared/widgets/app_profile_avatar.dart';
@@ -292,9 +294,11 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const ConsultHubScreen(isActive: true),
+                              builder: (context) => const MyAppointmentsScreen(),
                             ),
-                          );
+                          ).then((_) {
+                            ref.read(notificationProvider.notifier).refreshNotifications();
+                          });
                         }
                       },
                     ),
@@ -307,6 +311,19 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                           context,
                           MaterialPageRoute(
                             builder: (context) => const FavoriteMidwivesScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    _buildDivider(),
+                    _buildListTile(
+                      icon: Icons.bookmarks_outlined,
+                      title: AppLocalizations.of(context)!.myBookmarks,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const MyBookmarksScreen(isMidwife: false),
                           ),
                         );
                       },
@@ -388,6 +405,19 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                           } catch (_) {}
                         },
                       ),
+                    ),
+                    _buildDivider(),
+                    _buildListTile(
+                      icon: Icons.lock_outline_rounded,
+                      title: AppLocalizations.of(context)!.changePassword,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ChangePasswordScreen(),
+                          ),
+                        );
+                      },
                     ),
                     _buildDivider(),
                     _buildListTile(

@@ -73,15 +73,19 @@ class MidwifeDetailScreen extends StatelessWidget {
                     color: textPrimary,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  l10n.maternalHealthSpecialist,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: primaryColor,
+                if (facility.type.trim().isNotEmpty &&
+                    facility.type.trim().toLowerCase() != 'maternal health specialist' &&
+                    facility.type.trim().toLowerCase() != 'maternal health') ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    facility.type.trim(),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: primaryColor,
+                    ),
                   ),
-                ),
+                ],
                 const SizedBox(height: 32),
                 
                 Text(

@@ -16,19 +16,27 @@ class ApiConfig {
 
   /// Base REST API URL for backend calls (reads from .env if present).
   static String get baseUrl {
-    final envUrl = dotenv.env['API_BASE_URL'] ?? dotenv.env['BASE_URL'];
-    if (envUrl != null && envUrl.trim().isNotEmpty) {
-      return envUrl.trim();
-    }
+    try {
+      if (dotenv.isInitialized) {
+        final envUrl = dotenv.env['API_BASE_URL'] ?? dotenv.env['BASE_URL'];
+        if (envUrl != null && envUrl.trim().isNotEmpty) {
+          return envUrl.trim();
+        }
+      }
+    } catch (_) {}
     return ApiConstants.baseUrl;
   }
 
   /// Base WebSockets URL for real-time channels (reads from .env if present).
   static String get wsUrl {
-    final envUrl = dotenv.env['WS_BASE_URL'] ?? dotenv.env['WS_URL'];
-    if (envUrl != null && envUrl.trim().isNotEmpty) {
-      return envUrl.trim();
-    }
+    try {
+      if (dotenv.isInitialized) {
+        final envUrl = dotenv.env['WS_BASE_URL'] ?? dotenv.env['WS_URL'];
+        if (envUrl != null && envUrl.trim().isNotEmpty) {
+          return envUrl.trim();
+        }
+      }
+    } catch (_) {}
     return ApiConstants.wsUrl;
   }
 
@@ -41,6 +49,7 @@ class ApiConfig {
   static const String passwordReset = '/auth/password/reset/';
   static const String passwordResetOtp = '/auth/password/reset/otp/';
   static const String passwordResetConfirmOtp = '/auth/password/reset/otp/confirm/';
+  static const String passwordChange = '/auth/password/change/';
   static const String tokenRefresh = '/auth/token/refresh/';
 
   // User & Midwife Profiles Endpoints
@@ -64,4 +73,15 @@ class ApiConfig {
   // Emergency SOS Endpoints
   static const String sosHotlines = '/users/sos/hotlines/';
   static const String sosAlert = '/users/sos/';
+
+  // Localization & Dynamic Translation Endpoints
+  static const String languages = '/common/languages/';
+  static const String languageSelect = '/common/languages/select/';
+  static const String translations = '/common/translations/';
+
+  // Learning Center Endpoints
+  static const String learningCategories = '/learning/categories/';
+  static const String learningTopics = '/learning/topics/';
+  static const String learningArticles = '/learning/articles/';
+  static const String learningBookmarks = '/learning/bookmarks/';
 }

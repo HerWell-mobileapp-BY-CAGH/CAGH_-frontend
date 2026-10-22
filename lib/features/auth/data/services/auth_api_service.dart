@@ -3,8 +3,6 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cagh_frontend/core/network/api_config.dart';
-import 'package:cagh_frontend/core/services/global_call_service.dart';
-import 'package:cagh_frontend/core/services/global_call_websocket_manager.dart';
 import 'package:cagh_frontend/core/services/fcm_service.dart';
 import 'package:cagh_frontend/core/utils/app_logger.dart';
 
@@ -21,6 +19,7 @@ class AuthService {
   static const String _refreshTokenKey = 'refresh_token';
   static const String _userDataKey = 'user_data';
   static const String _lastActiveKey = 'last_active_timestamp';
+  static const String _rememberMeKey = 'remember_me';
   static String _lastRole = 'PATIENT';
 
   /// Set the active role for prototyping ('PATIENT' or 'MIDWIFE')
@@ -53,6 +52,7 @@ class AuthService {
     required String identifier,
     required String password,
     String? role,
+    bool rememberMe = true,
   }) async {
     final trimmed = identifier.trim();
     final isMidwife =
@@ -178,12 +178,12 @@ class AuthService {
 
         await prefs.setString(_userDataKey, jsonEncode(finalUserObj));
         await prefs.setString(_lastActiveKey, DateTime.now().toIso8601String());
+        await prefs.setBool(_rememberMeKey, rememberMe);
 
         try {
-          await GlobalCallService.initUserCallListener(force: true);
           await FcmService.registerDeviceToken(force: true);
         } catch (e) {
-          AppLogger.d('Failed to initialize GlobalCallService or FCM token on login: $e');
+          AppLogger.d('Failed to initialize FCM token on login: $e');
         }
 
         return ApiResponse(
@@ -218,6 +218,7 @@ class AuthService {
     String? passwordConfirm,
     String? phone,
     int? yearsOfExperience,
+    String? hospitalName,
   }) async {
     _lastRole = role.toUpperCase();
 
@@ -228,6 +229,9 @@ class AuthService {
       'email': email,
       'phone_number': phone ?? '',
       'role': _lastRole,
+      'hospital_name': hospitalName ?? '',
+      'hospital_affiliation': hospitalName ?? '',
+      'hospital': hospitalName ?? '',
     };
 
     final prefs = await SharedPreferences.getInstance();
@@ -249,6 +253,13 @@ class AuthService {
         if (phone != null && phone.isNotEmpty) 'phone_number': phone,
         // ignore: use_null_aware_elements
         if (yearsOfExperience != null) 'years_of_experience': yearsOfExperience,
+        if (hospitalName != null && hospitalName.isNotEmpty) ...{
+          'hospital_name': hospitalName,
+          'hospital_affiliation': hospitalName,
+          'hospital': hospitalName,
+          'health_center': hospitalName,
+          'workplace': hospitalName,
+        },
       };
 
       final response = await http
@@ -334,10 +345,9 @@ class AuthService {
           }
           await prefs.setString(_lastActiveKey, DateTime.now().toIso8601String());
           try {
-            await GlobalCallService.initUserCallListener(force: true);
             await FcmService.registerDeviceToken(force: true);
           } catch (e) {
-            AppLogger.d('Failed to initialize GlobalCallService or FCM token on verifyOtp: $e');
+            AppLogger.d('Failed to initialize FCM token on verifyOtp: $e');
           }
         }
         return ApiResponse(
@@ -505,10 +515,9 @@ class AuthService {
         }
         await prefs.setString(_lastActiveKey, DateTime.now().toIso8601String());
         try {
-          await GlobalCallService.initUserCallListener(force: true);
           await FcmService.registerDeviceToken(force: true);
         } catch (e) {
-          AppLogger.d('Failed to initialize GlobalCallService or FCM token on loginOtp: $e');
+          AppLogger.d('Failed to initialize FCM token on loginOtp: $e');
         }
         return ApiResponse(
           success: true,
@@ -780,6 +789,72 @@ class AuthService {
   }
 
   // ---------------------------------------------------------------------------
+  // CHANGE PASSWORD (AUTHENTICATED)
+  // ---------------------------------------------------------------------------
+  static Future<ApiResponse<Map<String, dynamic>>> changePassword({
+    required String oldPassword,
+    required String newPassword,
+    required String newPasswordConfirm,
+  }) async {
+    final token = await getAccessToken();
+    if (token == null || token.isEmpty) {
+      return ApiResponse(
+        success: false,
+        message: 'You must be logged in to change your password.',
+      );
+    }
+
+    final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.passwordChange}');
+    try {
+      final payload = {
+        'old_password': oldPassword,
+        'new_password': newPassword,
+        'new_password_confirm': newPasswordConfirm,
+      };
+
+      final response = await http
+          .post(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode(payload),
+          )
+          .timeout(const Duration(seconds: 30));
+
+      final body = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201 || response.statusCode == 204) {
+        final prefs = await SharedPreferences.getInstance();
+        if (body is Map<String, dynamic>) {
+          if (body['access'] != null && body['access'].toString().isNotEmpty) {
+            await prefs.setString(_accessTokenKey, body['access'].toString());
+          }
+          if (body['refresh'] != null && body['refresh'].toString().isNotEmpty) {
+            await prefs.setString(_refreshTokenKey, body['refresh'].toString());
+          }
+        }
+        return ApiResponse(
+          success: true,
+          message: (body is Map ? body['message'] : null) ?? 'Password changed successfully.',
+          data: body is Map<String, dynamic> ? body : {},
+        );
+      } else {
+        return ApiResponse(
+          success: false,
+          message: _extractErrorMessage(body),
+        );
+      }
+    } catch (e) {
+      return ApiResponse(
+        success: false,
+        message: 'Failed to change password: ${_cleanException(e)}',
+      );
+    }
+  }
+
+  // ---------------------------------------------------------------------------
   // GET MIDWIVES DIRECTORY
   // ---------------------------------------------------------------------------
   static Future<ApiResponse<List<Map<String, dynamic>>>> getMidwivesDirectory() async {
@@ -822,11 +897,29 @@ class AuthService {
     return prefs.getString(_accessTokenKey);
   }
 
+  static Future<bool> isRememberMe() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_rememberMeKey) ?? true;
+  }
+
   static Future<bool> isSessionValid() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString(_accessTokenKey) ?? prefs.getString('access_token') ?? prefs.getString('access');
     
     if (token == null || token.trim().isEmpty) return false;
+
+    final rememberMe = prefs.getBool(_rememberMeKey);
+    // If rememberMe was explicitly unchecked during login, do not persist across app cold starts
+    if (rememberMe == false) {
+      AppLogger.d('[AUTH] Remember me was false. Session ended on app restart.');
+      return false;
+    }
+
+    // If rememberMe is true, user remains logged in permanently until uninstall or explicit logout
+    if (rememberMe == true) {
+      await prefs.setString(_lastActiveKey, DateTime.now().toIso8601String());
+      return true;
+    }
 
     final lastActiveStr = prefs.getString(_lastActiveKey);
     if (lastActiveStr != null && lastActiveStr.isNotEmpty) {
@@ -948,15 +1041,16 @@ class AuthService {
       }
 
       AppLogger.d('[AUTH REFRESH] refresh failed (Status ${response.statusCode})');
-      await logout();
-      AppLogger.d('[AUTH REFRESH] session cleared');
+      if (response.statusCode == 401 || response.statusCode == 400 || response.statusCode == 403) {
+        await logout();
+        AppLogger.d('[AUTH REFRESH] session cleared due to invalid refresh token');
+      }
       _refreshCompleter!.complete(false);
       _refreshCompleter = null;
       return false;
     } catch (e) {
-      AppLogger.d('[AUTH REFRESH] refresh failed (Error: $e)');
-      await logout();
-      AppLogger.d('[AUTH REFRESH] session cleared');
+      AppLogger.d('[AUTH REFRESH] refresh failed (Network/Offline Error: $e)');
+      // Do not clear the session on network timeout or offline exception
       if (_refreshCompleter != null && !_refreshCompleter!.isCompleted) {
         _refreshCompleter!.complete(false);
       }
@@ -996,10 +1090,6 @@ class AuthService {
   }
 
   static Future<void> logout() async {
-    try {
-      GlobalCallWebSocketManager.instance.disconnectForLogout();
-    } catch (_) {}
-    GlobalCallService.dispose();
     final prefs = await SharedPreferences.getInstance();
     final userData = await AuthService.getUserData();
     final userId = (userData['id'] ?? userData['user_id'] ?? '').toString();
@@ -1010,6 +1100,7 @@ class AuthService {
     await prefs.remove(_refreshTokenKey);
     await prefs.remove(_userDataKey);
     await prefs.remove(_lastActiveKey);
+    await prefs.remove(_rememberMeKey);
   }
 
   // ---------------------------------------------------------------------------
