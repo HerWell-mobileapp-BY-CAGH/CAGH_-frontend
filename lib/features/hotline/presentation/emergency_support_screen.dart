@@ -55,8 +55,8 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
       callUrl: 'tel:907',
       category: 'Medical',
       icon: Icons.medical_services_rounded,
-      color: AppColors.errorRedDark,
-      bgColor: Color(0xFFFEE2E2),
+      color: Color(0xFF8B4B48),
+      bgColor: Color(0xFFF9F3F2),
     ),
     HotlineItem(
       title: 'Police & Security Services',
@@ -65,8 +65,8 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
       callUrl: 'tel:911',
       category: 'Security',
       icon: Icons.local_police_rounded,
-      color: Color(0xFF1D4ED8),
-      bgColor: Color(0xFFDBEAFE),
+      color: Color(0xFF455A64),
+      bgColor: Color(0xFFF0F4F5),
     ),
     HotlineItem(
       title: 'Red Cross Ambulance',
@@ -75,8 +75,8 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
       callUrl: 'tel:939',
       category: 'Medical',
       icon: Icons.emergency_rounded,
-      color: Color(0xFFDC2626),
-      bgColor: Color(0xFFFEF2F2),
+      color: Color(0xFF8B4B48),
+      bgColor: Color(0xFFF9F3F2),
     ),
     HotlineItem(
       title: 'Women & Child Protection',
@@ -85,8 +85,8 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
       callUrl: 'tel:8044',
       category: 'Support',
       icon: Icons.shield_rounded,
-      color: Color(0xFF7C3AED),
-      bgColor: Color(0xFFF3E8FF),
+      color: Color(0xFF6B5366),
+      bgColor: Color(0xFFF5F0F4),
     ),
     HotlineItem(
       title: 'Public Health Advisory (EPHI)',
@@ -95,8 +95,8 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
       callUrl: 'tel:8335',
       category: 'Medical',
       icon: Icons.health_and_safety_rounded,
-      color: Color(0xFF047857),
-      bgColor: Color(0xFFD1FAE5),
+      color: Color(0xFF385A2E),
+      bgColor: Color(0xFFEFF5ED),
     ),
     HotlineItem(
       title: 'Fire & Rescue Services',
@@ -105,8 +105,8 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
       callUrl: 'tel:991',
       category: 'Security',
       icon: Icons.fire_extinguisher_rounded,
-      color: Color(0xFFEA580C),
-      bgColor: Color(0xFFFFEDD5),
+      color: Color(0xFF8C5835),
+      bgColor: Color(0xFFF7F2EE),
     ),
   ];
 
@@ -621,15 +621,18 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF1E2A20) : const Color(0xFFF1F5F9),
+                      color: isDark ? const Color(0xFF1E2A20) : const Color(0xFFEFF5ED),
                       borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: isDark ? const Color(0xFF283A2A) : const Color(0xFFDEE8DB),
+                      ),
                     ),
                     child: Text(
                       '${filteredHotlines.length} ${isAm ? 'መስመሮች' : 'lines'}',
                       style: TextStyle(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w600,
-                        color: isDark ? const Color(0xFFA5D6A7) : const Color(0xFF64748B),
+                        color: isDark ? const Color(0xFFA5D6A7) : const Color(0xFF385A2E),
                       ),
                     ),
                   ),
@@ -1019,21 +1022,21 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
               label: Text(label),
               selected: isSelected,
               onSelected: (_) => setState(() => _selectedCategoryKey = key),
-              selectedColor: isDark ? AppColors.primaryGreen : const Color(0xFF0F172A),
-              backgroundColor: isDark ? const Color(0xFF1E2820) : const Color(0xFFF1F5F9),
+              selectedColor: isDark ? AppColors.darkPrimary : const Color(0xFF385A2E),
+              backgroundColor: isDark ? const Color(0xFF1E2820) : const Color(0xFFF3F6F2),
               labelStyle: TextStyle(
                 fontSize: 12.5,
                 fontWeight: FontWeight.bold,
                 color: isSelected
                     ? Colors.white
-                    : (isDark ? Colors.grey.shade400 : const Color(0xFF475569)),
+                    : (isDark ? Colors.grey.shade400 : const Color(0xFF4A5568)),
               ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
                 side: BorderSide(
                   color: isSelected
                       ? Colors.transparent
-                      : (isDark ? const Color(0xFF2C3E30) : const Color(0xFFE2E8F0)),
+                      : (isDark ? const Color(0xFF2C3E30) : const Color(0xFFE2E9E0)),
                 ),
               ),
             ),
@@ -1054,7 +1057,7 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
         color: isDark ? const Color(0xFF1A221C) : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDark ? const Color(0xFF27362B) : const Color(0xFFE2E8F0),
+          color: isDark ? const Color(0xFF27362B) : const Color(0xFFE5ECE3),
         ),
         boxShadow: [
           BoxShadow(
@@ -1066,15 +1069,23 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
       ),
       child: Row(
         children: [
-          // Icon badge
+          // Icon badge in refined nude/earth container
           Container(
             width: 44,
             height: 44,
             decoration: BoxDecoration(
               color: isDark ? item.color.withOpacity(0.18) : item.bgColor,
               borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isDark ? item.color.withOpacity(0.26) : item.color.withOpacity(0.14),
+                width: 0.8,
+              ),
             ),
-            child: Icon(item.icon, color: item.color, size: 22),
+            child: Icon(
+              item.icon,
+              color: isDark ? (item.color == const Color(0xFF385A2E) ? const Color(0xFFA5D6A7) : item.color) : item.color,
+              size: 22,
+            ),
           ),
           const SizedBox(width: 12),
 
@@ -1099,17 +1110,21 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
                     ),
                     const SizedBox(width: 6),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
                       decoration: BoxDecoration(
-                        color: isDark ? item.color.withOpacity(0.2) : item.bgColor,
+                        color: isDark ? item.color.withOpacity(0.18) : item.bgColor,
                         borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: isDark ? item.color.withOpacity(0.3) : item.color.withOpacity(0.2),
+                          width: 0.8,
+                        ),
                       ),
                       child: Text(
                         item.number,
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w800,
-                          color: item.color,
+                          color: isDark ? (item.color == const Color(0xFF385A2E) ? const Color(0xFFA5D6A7) : item.color) : item.color,
                         ),
                       ),
                     ),
@@ -1131,15 +1146,15 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
 
           const SizedBox(width: 10),
 
-          // Direct Call Action Button
+          // Direct Call Action Button - Unified with App Brand Green
           Material(
-            color: item.color,
+            color: isDark ? AppColors.darkPrimary : const Color(0xFF385A2E),
             borderRadius: BorderRadius.circular(12),
             child: InkWell(
               borderRadius: BorderRadius.circular(12),
               onTap: () => _callHotline(item.callUrl, item.number),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9.5),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -1168,8 +1183,11 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF172019) : const Color(0xFFF1F5F9),
+        color: isDark ? const Color(0xFF172019) : const Color(0xFFF4F6F3),
         borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isDark ? const Color(0xFF253327) : const Color(0xFFE2E9E0),
+        ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1177,7 +1195,7 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
           Icon(
             Icons.info_outline_rounded,
             size: 16,
-            color: isDark ? Colors.grey.shade400 : const Color(0xFF64748B),
+            color: isDark ? const Color(0xFFA5D6A7) : const Color(0xFF385A2E),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -1186,7 +1204,7 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
                   'All national emergency lines listed are toll-free and accessible 24/7 without credit across Ethio Telecom and Safaricom networks. For CAGH Hotline (0996 71 77 44), standard mobile rates or toll-free assistance applies.',
               style: TextStyle(
                 fontSize: 11.5,
-                color: isDark ? Colors.grey.shade400 : const Color(0xFF64748B),
+                color: isDark ? Colors.grey.shade400 : const Color(0xFF4A5568),
                 height: 1.4,
               ),
             ),

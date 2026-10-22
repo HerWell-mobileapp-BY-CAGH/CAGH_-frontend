@@ -18,10 +18,14 @@ PreferredSizeWidget buildInnerPageAppBar(
   final bgColor = isDark ? AppColors.darkSurface : AppColors.primaryGreen;
   final fgColor = isDark ? AppColors.darkTextPrimary : Colors.white;
 
+  final hasMultipleActions =
+      (showLanguage ? 1 : 0) + (showNotification ? 1 : 0) + (extraActions?.length ?? 0) > 1;
+
   return AppBar(
     backgroundColor: bgColor,
     elevation: 0,
-    centerTitle: true,
+    centerTitle: !hasMultipleActions,
+    titleSpacing: hasMultipleActions ? 0 : NavigationToolbar.kMiddleSpacing,
     leading: IconButton(
       icon: Icon(Icons.arrow_back_ios_new_rounded, color: fgColor, size: 20),
       onPressed: onBack ?? () => Navigator.pop(context),

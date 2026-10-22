@@ -357,16 +357,19 @@ class _NearbyHealthcareScreenState extends ConsumerState<NearbyHealthcareScreen>
           ? AppBar(
               backgroundColor: AppColors.primaryGreen,
               elevation: 0,
-              centerTitle: true,
+              centerTitle: false,
+              titleSpacing: 0,
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back, color: Colors.white),
                 onPressed: () => Navigator.pop(context),
               ),
               title: Text(
                 AppLocalizations.of(context)!.healthcareNearYou,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 18,
+                  fontSize: 17,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -381,13 +384,13 @@ class _NearbyHealthcareScreenState extends ConsumerState<NearbyHealthcareScreen>
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
-                        fontSize: 13,
+                        fontSize: 12.5,
                       ),
                     ),
                     style: TextButton.styleFrom(
                       backgroundColor: AppColors.buttonGreen,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
                     ),
                   ),
                 ),

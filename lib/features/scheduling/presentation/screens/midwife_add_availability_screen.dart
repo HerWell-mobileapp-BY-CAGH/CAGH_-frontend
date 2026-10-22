@@ -150,6 +150,8 @@ class _MidwifeAddAvailabilityScreenState extends State<MidwifeAddAvailabilityScr
 
       final Map<String, dynamic> payload = {
         'date': dateStr,
+        'date_or_day': dateStr,
+        'day_of_week': (_selectedDate!.weekday - 1),
         'start_time': startStr,
         'end_time': endStr,
         'consultation_methods': methodsList,
@@ -160,13 +162,13 @@ class _MidwifeAddAvailabilityScreenState extends State<MidwifeAddAvailabilityScr
         await _api.updateAvailability(widget.existingSlot!.availabilityId, payload);
         if (mounted) {
           CustomSnackBar.show(context, message: AppLocalizations.of(context)!.availabilityUpdatedSuccess, type: SnackBarType.success);
-          Navigator.pop(context, true);
+          Navigator.pop(context, _selectedDate);
         }
       } else {
         await _api.setAvailability(payload);
         if (mounted) {
           CustomSnackBar.show(context, message: AppLocalizations.of(context)!.availabilityAddedSuccess, type: SnackBarType.success);
-          Navigator.pop(context, true);
+          Navigator.pop(context, _selectedDate);
         }
       }
     } catch (e) {

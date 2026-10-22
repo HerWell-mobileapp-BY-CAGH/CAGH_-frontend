@@ -26,15 +26,35 @@ class AvailabilitySlot {
     this.isInPerson = true,
     this.isVoiceCall = false,
   });
-
   factory AvailabilitySlot.fromJson(Map<String, dynamic> json) {
-    final dayOfWeekVal = json['day_of_week']?.toString();
-    var dateVal = json['date']?.toString();
-    if (dateVal != null && dateVal.length > 10) {
-      dateVal = dateVal.substring(0, 10);
+    String? foundDate;
+    for (final candidate in [
+      json['date'],
+      json['scheduled_date'],
+      json['slot_date'],
+      json['date_or_day'],
+      json['start_date'],
+    ]) {
+      if (candidate != null) {
+        final s = candidate.toString().trim();
+        if (s.length >= 10 && s.contains('-')) {
+          foundDate = s.substring(0, 10);
+          break;
+        }
+      }
     }
-    // Prioritize specific date over day of week
-    final dateOrDayVal = json['date_or_day']?.toString() ?? dateVal ?? dayOfWeekVal ?? json['day']?.toString() ?? '';
+
+    final dayOfWeekVal = json['day_of_week']?.toString() ?? json['day']?.toString();
+    final rawDateOrDay = json['date_or_day']?.toString();
+
+    String dateOrDayVal = '';
+    if (foundDate != null && foundDate.isNotEmpty) {
+      dateOrDayVal = foundDate;
+    } else if (rawDateOrDay != null && rawDateOrDay.trim().isNotEmpty) {
+      dateOrDayVal = rawDateOrDay.trim();
+    } else if (dayOfWeekVal != null && dayOfWeekVal.trim().isNotEmpty) {
+      dateOrDayVal = dayOfWeekVal.trim();
+    }
 
     final isActiveBool = json['is_active'] ?? true;
     final statusStr = json['status'] ?? (isActiveBool ? 'AVAILABLE' : 'UNAVAILABLE');
@@ -148,15 +168,66 @@ class AvailabilitySlot {
   }
 
 
-  String get dayDisplayName {
+  DateTime? get parsedDate {
+    final d = dateOrDay.trim();
+    if (d.length >= 10 && d.contains('-')) {
+      final sub = d.substring(0, 10);
+      final p = DateTime.tryParse(sub);
+      if (p != null) return DateTime(p.year, p.month, p.day);
+    }
+    final p = DateTime.tryParse(d);
+    if (p != null) return DateTime(p.year, p.month, p.day);
+    return null;
+  }
+
+  bool get isPast {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final p = parsedDate;
+    if (p != null) {
+      return p.isBefore(today);
+    }
+    return false;
+  }
+
+  bool matchesDate(DateTime day) {
+    final cleanDay = DateTime(day.year, day.month, day.day);
+    final dateString = '${cleanDay.year.toString().padLeft(4, '0')}-${cleanDay.month.toString().padLeft(2, '0')}-${cleanDay.day.toString().padLeft(2, '0')}';
+
+    final p = parsedDate;
+    if (p != null) {
+      return p.year == cleanDay.year && p.month == cleanDay.month && p.day == cleanDay.day;
+    }
+
+    final dayIndex0 = (cleanDay.weekday - 1).toString();
+    final dayIndex1 = cleanDay.weekday.toString();
+    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    final currentDayName = days[cleanDay.weekday - 1];
+
+    final d = dateOrDay.trim().toLowerCase();
+    if (d.startsWith(dateString) || d == dateString) return true;
+    if (d == dayIndex0 || d == dayIndex1 || d == currentDayName) return true;
+    if (dayName != null && dayName!.trim().toLowerCase() == currentDayName) return true;
+
+    return false;
+  }
+
+  String formattedDayDisplay({String locale = 'en', bool includeWeekday = true}) {
     if (dayName != null && dayName!.isNotEmpty) return dayName!;
     final dayInt = int.tryParse(dateOrDay);
     if (dayInt != null && dayInt >= 0 && dayInt < 7) {
-      const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+      final isAm = locale.toLowerCase().startsWith('am');
+      final days = isAm ? EthiopianDate.weekdayNamesAm : EthiopianDate.weekdayNamesEn;
       return days[dayInt];
+    }
+    final p = parsedDate;
+    if (p != null) {
+      return EthiopianDateHelper.formatEthiopianDate(p, locale: locale, includeWeekday: includeWeekday);
     }
     return dateOrDay.isNotEmpty ? dateOrDay : 'Scheduled Day';
   }
+
+  String get dayDisplayName => formattedDayDisplay();
 
   Map<String, dynamic> toJson() {
     return {

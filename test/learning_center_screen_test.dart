@@ -3,7 +3,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:cagh_frontend/features/learning/presentation/screens/learning_center_screen.dart';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
 
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cagh_frontend/features/learning/data/repositories/learning_repository.dart';
+
 void main() {
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+    LearningRepository.setCachedModulesForTesting(LearningRepository.getModules());
+  });
+
   group('LearningCenterScreen Redesign Tests', () {
     testWidgets('Renders User side LearningCenterScreen with hero banner and module cards', (WidgetTester tester) async {
       await tester.pumpWidget(
@@ -27,8 +35,8 @@ void main() {
       expect(find.text('Nutrition & Growth'), findsOneWidget);
       expect(find.text('Prevention & Safety'), findsOneWidget);
 
-      // Verify Search TextField
-      expect(find.byType(TextField), findsOneWidget);
+      // Verify ChoiceChip is present
+      expect(find.byType(ChoiceChip), findsAtLeastNWidgets(1));
     });
 
     testWidgets('Renders Midwife side LearningCenterScreen with professional clinical header', (WidgetTester tester) async {
@@ -50,7 +58,7 @@ void main() {
       expect(find.text('Clinical Reference'), findsAtLeastNWidgets(1));
     });
 
-    testWidgets('Filtering by search query displays matching module or empty state', (WidgetTester tester) async {
+    testWidgets('Filtering by category chip displays matching modules', (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -63,18 +71,17 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      // Type non-matching search string
-      await tester.enterText(find.byType(TextField), 'NonExistentTopicQuery123');
+      // Tap 'Nutrition & Growth' chip
+      await tester.tap(find.text('Nutrition & Growth'));
       await tester.pumpAndSettle();
 
-      expect(find.text('No learning modules found'), findsOneWidget);
-      expect(find.text('Reset Filters'), findsOneWidget);
+      expect(find.text('Nutrition & Growth'), findsAtLeastNWidgets(1));
 
-      // Tap Reset Filters
-      await tester.tap(find.text('Reset Filters'));
+      // Tap 'All' chip
+      await tester.tap(find.text('All'));
       await tester.pumpAndSettle();
 
-      expect(find.text('No learning modules found'), findsNothing);
+      expect(find.text('All'), findsOneWidget);
     });
   });
 }

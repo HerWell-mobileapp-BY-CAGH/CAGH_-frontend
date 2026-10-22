@@ -25,6 +25,11 @@ class _CategoryVisualMeta {
 class LearningRepository {
   static List<LearningModuleItem>? _cachedModules;
 
+  @visibleForTesting
+  static void setCachedModulesForTesting(List<LearningModuleItem>? modules) {
+    _cachedModules = modules;
+  }
+
   /// Fetch dynamic categories, topics, and published articles from backend admin API
   static Future<List<LearningModuleItem>> fetchModules({bool forceRefresh = false}) async {
     if (!forceRefresh && _cachedModules != null && _cachedModules!.isNotEmpty) {

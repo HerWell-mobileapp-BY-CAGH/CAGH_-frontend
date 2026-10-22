@@ -166,10 +166,11 @@ class MidwifeDetailScreen extends StatelessWidget {
                 // Offered Consultations
                 Text(l10n.offeredConsultations, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: labelColor)),
                 const SizedBox(height: 12),
-                Row(
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 8,
                   children: [
                     _buildConsultationChip(context, Icons.home_outlined, l10n.inPerson),
-                    const SizedBox(width: 12),
                     _buildConsultationChip(context, Icons.videocam_outlined, l10n.voiceCall),
                   ],
                 ),
@@ -181,7 +182,7 @@ class MidwifeDetailScreen extends StatelessWidget {
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+              padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
               decoration: BoxDecoration(
                 color: isDark ? AppColors.darkSurface : const Color(0xFFF9FAEB),
                 boxShadow: [
@@ -198,16 +199,22 @@ class MidwifeDetailScreen extends StatelessWidget {
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: () {},
-                      icon: Icon(Icons.chat_bubble_outline, color: primaryColor, size: 20),
-                      label: Text(l10n.message, style: TextStyle(color: primaryColor, fontSize: 16, fontWeight: FontWeight.bold)),
+                      icon: Icon(Icons.chat_bubble_outline, color: primaryColor, size: 18),
+                      label: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          l10n.message,
+                          style: TextStyle(color: primaryColor, fontSize: 15, fontWeight: FontWeight.bold),
+                        ),
+                      ),
                       style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
                         side: BorderSide(color: primaryColor),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: () {
@@ -218,11 +225,17 @@ class MidwifeDetailScreen extends StatelessWidget {
                           ),
                         );
                       },
-                      icon: const Icon(Icons.calendar_month_outlined, color: Colors.white, size: 20),
-                      label: Text(l10n.book, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                      icon: const Icon(Icons.calendar_month_outlined, color: Colors.white, size: 18),
+                      label: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          l10n.book,
+                          style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
+                        ),
+                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: buttonGreen,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
                         elevation: 0,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),

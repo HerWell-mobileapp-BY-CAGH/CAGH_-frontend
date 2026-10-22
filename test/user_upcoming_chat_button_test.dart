@@ -6,12 +6,13 @@ import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 void main() {
   group('User Consultation Hub - Upcoming Chat Icon Tests', () {
+    final futureDate = DateTime.now().add(const Duration(days: 7)).toIso8601String().substring(0, 10);
     final upcomingAppointment = Appointment(
       appointmentId: 'apt-101',
       userId: 'user-001',
       midwifeId: 'midwife-999',
       midwifeName: 'Sarah Jenkins',
-      date: '2026-10-15',
+      date: futureDate,
       startTime: '10:00',
       endTime: '11:00',
       appointmentType: 'VIRTUAL_VOICE',
@@ -23,7 +24,7 @@ void main() {
       userId: 'user-001',
       midwifeId: 'midwife-999',
       midwifeName: 'Sarah Jenkins',
-      date: '2026-10-16',
+      date: futureDate,
       startTime: '14:00',
       endTime: '15:00',
       appointmentType: 'VIRTUAL_VOICE',

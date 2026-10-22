@@ -9,7 +9,7 @@ import 'package:cagh_frontend/core/utils/app_logger.dart';
 class AppointmentApiService {
   Future<Map<String, String>> _getHeaders() async {
     final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('auth_token') ?? '';
+    final token = await AuthService.getAccessToken() ?? prefs.getString('auth_token') ?? prefs.getString('access_token') ?? '';
     return {
       'Content-Type': 'application/json',
       if (token.isNotEmpty) 'Authorization': 'Bearer $token',
@@ -336,27 +336,49 @@ class AppointmentApiService {
     final primaryUrl = Uri.parse('${ApiConfig.baseUrl}/appointments/availability/');
     final fallbackUrl = Uri.parse('${ApiConfig.baseUrl}/appointments/availabilities/');
     
-    http.Response response;
+    http.Response? response;
     try {
       response = await _getWithAuth(primaryUrl);
-      if (response.statusCode == 404) {
+      if (response.statusCode == 404 || response.statusCode == 405) {
         response = await _getWithAuth(fallbackUrl);
       }
-    } catch (_) {
-      response = await _getWithAuth(fallbackUrl);
+    } catch (e) {
+      AppLogger.d('Primary availability endpoint error: $e, trying fallback');
+      try {
+        response = await _getWithAuth(fallbackUrl);
+      } catch (err) {
+        AppLogger.d('Fallback availability endpoint error: $err');
+      }
     }
 
-    if (response.statusCode == 200) {
-      final decoded = jsonDecode(response.body);
-      List<dynamic> listData = [];
-      if (decoded is Map && decoded.containsKey('results')) {
-        listData = decoded['results'] as List<dynamic>? ?? [];
-      } else if (decoded is List) {
-        listData = decoded;
+    if (response != null && response.statusCode == 200) {
+      try {
+        final decoded = jsonDecode(response.body);
+        List<dynamic> listData = [];
+        if (decoded is Map) {
+          if (decoded.containsKey('results') && decoded['results'] is List) {
+            listData = decoded['results'] as List<dynamic>;
+          } else if (decoded.containsKey('data') && decoded['data'] is List) {
+            listData = decoded['data'] as List<dynamic>;
+          } else if (decoded.containsKey('availabilities') && decoded['availabilities'] is List) {
+            listData = decoded['availabilities'] as List<dynamic>;
+          } else if (decoded.containsKey('slots') && decoded['slots'] is List) {
+            listData = decoded['slots'] as List<dynamic>;
+          }
+        } else if (decoded is List) {
+          listData = decoded;
+        }
+        return listData
+            .whereType<Map>()
+            .map((item) => Map<String, dynamic>.from(item))
+            .toList();
+      } catch (e) {
+        AppLogger.d('Error decoding availability response: $e');
+        return [];
       }
-      return listData.map((item) => Map<String, dynamic>.from(item as Map)).toList();
     } else {
-      throw Exception('Failed to fetch availabilities. Status: ${response.statusCode}');
+      AppLogger.d('getAvailabilities status: ${response?.statusCode}, body: ${response?.body}');
+      return [];
     }
   }
 
@@ -364,9 +386,24 @@ class AppointmentApiService {
     final primaryUrl = Uri.parse('${ApiConfig.baseUrl}/appointments/availability/');
     final aliasUrl = Uri.parse('${ApiConfig.baseUrl}/appointments/availabilities/');
 
-    // Ensure only clean, backend-expected fields are sent
+    // Ensure date is present (if missing or only day_of_week is provided, compute next matching date)
+    String? dateVal = data['date']?.toString();
+    if ((dateVal == null || dateVal.isEmpty) && data.containsKey('day_of_week')) {
+      final targetDayInt = int.tryParse(data['day_of_week'].toString()) ?? 0;
+      final now = DateTime.now();
+      final currentWeekday = now.weekday - 1; // 0..6
+      int daysAhead = targetDayInt - currentWeekday;
+      if (daysAhead < 0) daysAhead += 7;
+      final targetDate = now.add(Duration(days: daysAhead));
+      dateVal = '${targetDate.year.toString().padLeft(4, '0')}-${targetDate.month.toString().padLeft(2, '0')}-${targetDate.day.toString().padLeft(2, '0')}';
+    } else if (dateVal == null || dateVal.isEmpty) {
+      final now = DateTime.now();
+      dateVal = '${now.year.toString().padLeft(4, '0')}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    }
+
     final cleanPayload = <String, dynamic>{
-      'date': data['date'],
+      'date': dateVal,
+      if (data.containsKey('day_of_week')) 'day_of_week': data['day_of_week'],
       'start_time': data['start_time'],
       'end_time': data['end_time'],
       'consultation_methods': data['consultation_methods'] ?? ['IN_PERSON', 'VIRTUAL_VOICE'],

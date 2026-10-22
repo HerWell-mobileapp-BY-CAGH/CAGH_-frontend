@@ -68,10 +68,19 @@ class _MidwifeManageScheduleScreenState extends State<MidwifeManageScheduleScree
       final startStr = '${_startTime.hour.toString().padLeft(2, '0')}:${_startTime.minute.toString().padLeft(2, '0')}:00';
       final endStr = '${_endTime.hour.toString().padLeft(2, '0')}:${_endTime.minute.toString().padLeft(2, '0')}:00';
 
+      final now = DateTime.now();
+      final currentWeekday = now.weekday - 1; // 0..6
+      int daysAhead = _selectedDayOfWeek - currentWeekday;
+      if (daysAhead < 0) daysAhead += 7;
+      final targetDate = now.add(Duration(days: daysAhead));
+      final dateStr = '${targetDate.year.toString().padLeft(4, '0')}-${targetDate.month.toString().padLeft(2, '0')}-${targetDate.day.toString().padLeft(2, '0')}';
+
       await _appointmentRepository.setAvailability({
+        'date': dateStr,
         'day_of_week': _selectedDayOfWeek,
         'start_time': startStr,
         'end_time': endStr,
+        'consultation_methods': ['IN_PERSON', 'VIRTUAL_VOICE'],
         'is_active': true,
       });
 
@@ -93,6 +102,41 @@ class _MidwifeManageScheduleScreenState extends State<MidwifeManageScheduleScree
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  Future<void> _deleteWorkingHours(WorkingHours avail) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(AppLocalizations.of(context)!.deleteSlot),
+        content: Text(AppLocalizations.of(context)!.deleteSlotConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: Text(AppLocalizations.of(context)!.delete, style: const TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await _appointmentRepository.deleteAvailability(avail.id);
+        if (mounted) {
+          CustomSnackBar.show(context, message: 'Working hours removed successfully', isSuccess: true);
+        }
+        _fetchData();
+      } catch (e) {
+        if (mounted) {
+          CustomSnackBar.show(context, message: 'Failed to remove: $e', isError: true);
+        }
+      }
     }
   }
 
@@ -344,9 +388,7 @@ class _MidwifeManageScheduleScreenState extends State<MidwifeManageScheduleScree
                     )
                   else
                     ..._availabilities.map((avail) {
-                      final dayIndex = avail.dayOfWeek ?? 0;
-                      final dayName = avail.date ??
-                          (dayIndex >= 0 && dayIndex < 7 ? _daysOfWeek[dayIndex] : 'Working Day');
+                      final dayName = avail.localizedDayName(currentLocale);
 
                       return Container(
                         margin: const EdgeInsets.only(bottom: 12),
@@ -398,6 +440,12 @@ class _MidwifeManageScheduleScreenState extends State<MidwifeManageScheduleScree
                                 ),
                               ),
                             ),
+                            const SizedBox(width: 4),
+                            IconButton(
+                              icon: const Icon(Icons.delete_outline, size: 20, color: Colors.redAccent),
+                              tooltip: 'Delete',
+                              onPressed: () => _deleteWorkingHours(avail),
+                            ),
                           ],
                         ),
                       );
@@ -439,10 +487,15 @@ class _MidwifeManageScheduleScreenState extends State<MidwifeManageScheduleScree
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  ethTime.format(locale),
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: textPrimary),
+                Expanded(
+                  child: Text(
+                    ethTime.format(locale),
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: textPrimary),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
+                const SizedBox(width: 4),
                 Icon(Icons.access_time_rounded, size: 18, color: primaryColor),
               ],
             ),
