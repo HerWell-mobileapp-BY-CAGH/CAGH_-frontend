@@ -437,6 +437,9 @@ class AppLocalizationsAm extends AppLocalizations {
   String get returnToDashboard => 'ወደ ዋና ገጽ ይመለሱ';
 
   @override
+  String get viewMyAppointments => 'ቀጠሮዎቼን ይመልከቱ';
+
+  @override
   String get serviceType => 'የአገልግሎት አይነት';
 
   @override
@@ -1664,14 +1667,14 @@ class AppLocalizationsAm extends AppLocalizations {
   String get startTimeCannotBeInPast => 'የመጀመሪያ ሰዓት ለዛሬ ካለፈው ሰዓት መሆን የለበትም';
 
   @override
-  String get verifiedMaternalCare => 'የተረጋገጠ የእናቶች ክብካቤ';
+  String get verifiedMaternalCare => 'ምስጢራዊ እና የተረጋገጠ ክብካቤ';
 
   @override
   String get certifiedMidwivesNetwork => 'የተረጋገጡ የጤና ባለሙያዎች አውታረ መረብ';
 
   @override
   String get heroConsultGuidance =>
-      'የቀጥታ 1-ለ-1 ምክክሮች፣ የቅድመ ወሊድ መመሪያ እና አስተማማኝ ክብካቤ።';
+      'ሙያዊ እና ሩህሩህ ምክክር እንዲሁም ግላዊ መመሪያ በአስተማማኝ እና ሚስጥራዊ ቦታ።';
 
   @override
   String get searchMidwivesHint => 'በስም፣ በሆስፒታል ወይም በልዩ ሙያ ይፈልጉ...';
@@ -1967,4 +1970,36 @@ class AppLocalizationsAm extends AppLocalizations {
 
   @override
   String get professionalDashboard => 'የባለሙያ ዳሽቦርድ';
+
+  @override
+  String get learningHeroBadgeUser => 'ለአፍላ የጉርምስና ዕድሜ ሴቶች እና ወጣቶች';
+
+  @override
+  String get learningHeroBadgeProfessional => 'የክሊኒካል መማሪያ ማዕከል';
+
+  @override
+  String get learningHeroTitleUser => 'ጤናዎን እና ደህንነትዎን ያሳድጉ';
+
+  @override
+  String get learningHeroTitleProfessional => 'የሙያዊ እውቀት እና ክሊኒካል ማዕከል';
+
+  @override
+  String get learningHeroDescUser =>
+      'ስለ ጉርምስና፣ የተመጣጠነ ምግብ፣ የወር አበባ ጤና፣ የስነ-ተዋልዶ እንክብካቤ እና ደህንነት የተረጋገጡ መመሪያዎችን ያስሱ።';
+
+  @override
+  String get learningHeroDescProfessional =>
+      'በማስረጃ ላይ የተመሰረቱ ክሊኒካዊ መመሪያዎች፣ የታካሚዎች የምክር መሳሪያዎች እና የማጣቀሻ ፕሮቶኮሎች።';
+
+  @override
+  String get certifiedGuidesCount => '30+ የተረጋገጡ መመሪያዎች';
+
+  @override
+  String get expertReviewed => 'በባለሙያ የተገመገመ';
+
+  @override
+  String get consultTabFindCare => 'ባለሙያዎችን ፈልግ';
+
+  @override
+  String get consultTabInbox => 'የመልእክት ሳጥን';
 }

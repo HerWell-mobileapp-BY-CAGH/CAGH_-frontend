@@ -126,28 +126,45 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
               bottom: false,
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Text(
-                      _getAppBarTitle(selectedIndex),
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.2,
-                      ),
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: const [
-                        GlobeLanguagePicker(iconColor: Colors.white, iconSize: 22),
-                        SizedBox(width: 8),
-                        NotificationBell(iconColor: Colors.white),
-                      ],
-                    ),
-                  ],
+                child: SizedBox(
+                  height: 38,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final totalWidth = constraints.maxWidth;
+                      const rightActionsWidth = 98.0;
+                      final leftSpacerWidth = (totalWidth >= 370)
+                          ? rightActionsWidth
+                          : (totalWidth - rightActionsWidth - 150).clamp(14.0, rightActionsWidth);
+
+                      return Row(
+                        children: [
+                          SizedBox(width: leftSpacerWidth),
+                          Expanded(
+                            child: Text(
+                              _getAppBarTitle(selectedIndex),
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 17.5,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: -0.2,
+                              ),
+                            ),
+                          ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: const [
+                              GlobeLanguagePicker(iconColor: Colors.white),
+                              SizedBox(width: 4),
+                              NotificationBell(iconColor: Colors.white),
+                            ],
+                          ),
+                        ],
+                      );
+                    },
+                  ),
                 ),
               ),
             ),

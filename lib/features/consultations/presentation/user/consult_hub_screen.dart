@@ -423,7 +423,7 @@ class _ConsultHubScreenState extends ConsumerState<ConsultHubScreen> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: isDark
@@ -432,7 +432,7 @@ class _ConsultHubScreenState extends ConsumerState<ConsultHubScreen> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
           border: Border.all(
             color: isDark ? const Color(0xFF2C452F) : const Color(0xFFD4E7D0),
             width: 1,
@@ -440,87 +440,92 @@ class _ConsultHubScreenState extends ConsumerState<ConsultHubScreen> {
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6.5, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: primaryGreen.withValues(alpha: isDark ? 0.4 : 0.12),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.verified_rounded, size: 11, color: primaryGreen),
-                            const SizedBox(width: 4),
-                            Text(
-                              l10n.verifiedMaternalCare,
-                              style: TextStyle(
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.4,
-                                color: isDark ? const Color(0xFF8FD883) : primaryGreen,
-                              ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: primaryGreen.withValues(alpha: isDark ? 0.35 : 0.12),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.verified_rounded, size: 12, color: primaryGreen),
+                        const SizedBox(width: 5),
+                        Flexible(
+                          child: Text(
+                            l10n.verifiedMaternalCare,
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.5,
+                              color: isDark ? const Color(0xFF8FD883) : primaryGreen,
                             ),
-                          ],
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 7),
                   Text(
                     l10n.certifiedMidwivesNetwork,
                     style: TextStyle(
-                      fontSize: 16.5,
+                      fontSize: 17,
                       fontWeight: FontWeight.w800,
                       color: isDark ? AppColors.darkTextPrimary : textDark,
                       letterSpacing: -0.3,
-                      height: 1.15,
+                      height: 1.18,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 4),
                   Text(
                     l10n.heroConsultGuidance,
                     style: TextStyle(
-                      fontSize: 11.5,
+                      fontSize: 12,
                       fontWeight: FontWeight.w400,
                       color: isDark ? AppColors.darkTextSecondary : textSecondary,
-                      height: 1.25,
+                      height: 1.35,
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 14),
             Container(
-              width: 44,
-              height: 44,
+              width: 48,
+              height: 48,
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF253B27) : Colors.white,
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
                     color: primaryGreen.withValues(alpha: 0.15),
-                    blurRadius: 6,
+                    blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
                 ],
+                border: Border.all(
+                  color: primaryGreen.withValues(alpha: 0.15),
+                  width: 1,
+                ),
               ),
               child: const Icon(
-                Icons.volunteer_activism_rounded,
+                Icons.health_and_safety_rounded,
                 color: primaryGreen,
-                size: 22,
+                size: 24,
               ),
             ),
           ],
@@ -535,7 +540,7 @@ class _ConsultHubScreenState extends ConsumerState<ConsultHubScreen> {
     final unreadCount = ref.watch(notificationProvider).unreadMessagesCount;
 
     return Container(
-      height: 46,
+      height: 48,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1C2B1E) : const Color(0xFFE8EFE6),
@@ -547,7 +552,7 @@ class _ConsultHubScreenState extends ConsumerState<ConsultHubScreen> {
       ),
       child: Row(
         children: [
-          // Find a Midwife
+          // Tab 0: Find Care
           Expanded(
             child: GestureDetector(
               onTap: () => setState(() => _selectedSegment = 0),
@@ -570,28 +575,38 @@ class _ConsultHubScreenState extends ConsumerState<ConsultHubScreen> {
                         ]
                       : null,
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.person_search_rounded,
-                      size: 17,
-                      color: _selectedSegment == 0
-                          ? Colors.white
-                          : (isDark ? AppColors.darkTextSecondary : const Color(0xFF475C4A)),
-                    ),
-                    const SizedBox(width: 7),
-                    Text(
-                      l10n.findAMidwife,
-                      style: TextStyle(
-                        fontSize: 13.5,
-                        fontWeight: _selectedSegment == 0 ? FontWeight.w700 : FontWeight.w600,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.medical_services_outlined,
+                        size: 16,
                         color: _selectedSegment == 0
                             ? Colors.white
                             : (isDark ? AppColors.darkTextSecondary : const Color(0xFF475C4A)),
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            l10n.consultTabFindCare,
+                            style: TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: _selectedSegment == 0 ? FontWeight.w700 : FontWeight.w600,
+                              color: _selectedSegment == 0
+                                  ? Colors.white
+                                  : (isDark ? AppColors.darkTextSecondary : const Color(0xFF475C4A)),
+                            ),
+                            maxLines: 1,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -599,7 +614,7 @@ class _ConsultHubScreenState extends ConsumerState<ConsultHubScreen> {
 
           const SizedBox(width: 4),
 
-          // Messages
+          // Tab 1: Inbox
           Expanded(
             child: GestureDetector(
               onTap: () {
@@ -625,46 +640,56 @@ class _ConsultHubScreenState extends ConsumerState<ConsultHubScreen> {
                         ]
                       : null,
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.chat_bubble_outline_rounded,
-                      size: 16,
-                      color: _selectedSegment == 1
-                          ? Colors.white
-                          : (isDark ? AppColors.darkTextSecondary : const Color(0xFF475C4A)),
-                    ),
-                    const SizedBox(width: 7),
-                    Text(
-                      l10n.messages,
-                      style: TextStyle(
-                        fontSize: 13.5,
-                        fontWeight: _selectedSegment == 1 ? FontWeight.w700 : FontWeight.w600,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.inbox_rounded,
+                        size: 16,
                         color: _selectedSegment == 1
                             ? Colors.white
                             : (isDark ? AppColors.darkTextSecondary : const Color(0xFF475C4A)),
                       ),
-                    ),
-                    if (unreadCount > 0) ...[
                       const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
-                        decoration: BoxDecoration(
-                          color: _selectedSegment == 1 ? Colors.white : primaryGreen,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          unreadCount.toString(),
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w800,
-                            color: _selectedSegment == 1 ? primaryGreen : Colors.white,
+                      Flexible(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            l10n.consultTabInbox,
+                            style: TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: _selectedSegment == 1 ? FontWeight.w700 : FontWeight.w600,
+                              color: _selectedSegment == 1
+                                  ? Colors.white
+                                  : (isDark ? AppColors.darkTextSecondary : const Color(0xFF475C4A)),
+                            ),
+                            maxLines: 1,
                           ),
                         ),
                       ),
+                      if (unreadCount > 0) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                          decoration: BoxDecoration(
+                            color: _selectedSegment == 1 ? Colors.white : primaryGreen,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            unreadCount.toString(),
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              color: _selectedSegment == 1 ? primaryGreen : Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
             ),

@@ -41,10 +41,13 @@ PreferredSizeWidget buildInnerPageAppBar(
       ),
     ),
     actions: [
-      if (showLanguage) GlobeLanguagePicker(iconColor: fgColor, iconSize: 22),
+      if (showLanguage)
+        Center(
+          child: GlobeLanguagePicker(iconColor: fgColor),
+        ),
       if (showNotification) NotificationBell(iconColor: fgColor),
       ...?extraActions,
-      const SizedBox(width: 4),
+      const SizedBox(width: 8),
     ],
   );
 }

@@ -417,10 +417,10 @@ class _LearningCenterScreenState extends State<LearningCenterScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 1. Role-tailored Hero Header Card
+              // 1. Role-tailored Hero Header Card (Focused on Adolescent Girls & Young Women)
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: isDark
@@ -445,40 +445,50 @@ class _LearningCenterScreenState extends State<LearningCenterScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Top Bar: Audience Badge + Bookmarks Pill
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: AppColors.primaryGreen.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                widget.isMidwife ? Icons.verified_user_outlined : Icons.verified_outlined,
-                                size: 14,
-                                color: isDark ? const Color(0xFF81C784) : AppColors.primaryGreenDarker,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                widget.isMidwife ? 'CLINICAL LEARNING HUB' : 'CERTIFIED HEALTH GUIDES',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
+                        Flexible(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4.5),
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? AppColors.primaryGreen.withValues(alpha: 0.25)
+                                  : AppColors.primaryGreen.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  widget.isMidwife ? Icons.verified_user_outlined : Icons.auto_awesome,
+                                  size: 13,
                                   color: isDark ? const Color(0xFF81C784) : AppColors.primaryGreenDarker,
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 5),
+                                Flexible(
+                                  child: Text(
+                                    widget.isMidwife
+                                        ? l10n.learningHeroBadgeProfessional
+                                        : l10n.learningHeroBadgeUser,
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 0.4,
+                                      color: isDark ? const Color(0xFF81C784) : AppColors.primaryGreenDarker,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                        // Quick Link to Bookmarks
-                        IconButton(
-                          icon: const Icon(Icons.bookmarks_rounded, size: 22, color: AppColors.primaryGreen),
-                          tooltip: l10n.myBookmarks,
-                          onPressed: () {
+                        const SizedBox(width: 8),
+                        // Quick Link to Bookmarks Pill
+                        InkWell(
+                          onTap: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -486,29 +496,146 @@ class _LearningCenterScreenState extends State<LearningCenterScreen> {
                               ),
                             );
                           },
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4.5),
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? Colors.black.withValues(alpha: 0.25)
+                                  : Colors.white.withValues(alpha: 0.85),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: isDark
+                                    ? Colors.white.withValues(alpha: 0.1)
+                                    : AppColors.primaryGreen.withValues(alpha: 0.15),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.bookmark_outline_rounded,
+                                  size: 14,
+                                  color: AppColors.primaryGreen,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  l10n.myBookmarks,
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.primaryGreen,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    Text(
-                      widget.isMidwife ? 'Professional Knowledge & Clinical Hub' : 'Empower Your Maternal Health',
-                      style: TextStyle(
-                        fontSize: 21,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : AppColors.primaryGreenDarker,
-                        height: 1.2,
-                      ),
+
+                    const SizedBox(height: 14),
+
+                    // Balanced 2-Column Row: Text + Visual Illustration
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        // Left: Title & Subtitle tailored for adolescent girls and young women
+                        Expanded(
+                          flex: 11,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                widget.isMidwife
+                                    ? l10n.learningHeroTitleProfessional
+                                    : l10n.learningHeroTitleUser,
+                                style: TextStyle(
+                                  fontSize: 18.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: isDark ? Colors.white : AppColors.primaryGreenDarker,
+                                  height: 1.22,
+                                  letterSpacing: -0.3,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                widget.isMidwife
+                                    ? l10n.learningHeroDescProfessional
+                                    : l10n.learningHeroDescUser,
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  color: isDark ? Colors.grey.shade300 : AppColors.sageGrey,
+                                  height: 1.38,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(width: 12),
+
+                        // Right: Proportional Illustration Container matching HerWell aesthetic
+                        Expanded(
+                          flex: 6,
+                          child: Container(
+                            height: 96,
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? Colors.black.withValues(alpha: 0.22)
+                                  : Colors.white.withValues(alpha: 0.8),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: isDark
+                                    ? Colors.white.withValues(alpha: 0.08)
+                                    : AppColors.primaryGreen.withValues(alpha: 0.12),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.03),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Center(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.asset(
+                                  'assets/images/home_illustration.png',
+                                  height: 84,
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (_, _, _) => const Icon(
+                                    Icons.auto_stories_rounded,
+                                    size: 40,
+                                    color: AppColors.primaryGreen,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      widget.isMidwife
-                          ? 'Evidence-based clinical guidelines, patient counseling toolkits, & reference protocols.'
-                          : 'Explore medically reviewed guides on adolescent health, nutrition, reproductive care, & safety.',
-                      style: TextStyle(
-                        fontSize: 13.5,
-                        color: isDark ? Colors.grey.shade300 : AppColors.sageGrey,
-                        height: 1.4,
-                      ),
+
+                    const SizedBox(height: 14),
+
+                    // Bottom Micro-Tags Row
+                    Row(
+                      children: [
+                        _buildHeroTag(
+                          icon: Icons.menu_book_rounded,
+                          label: l10n.certifiedGuidesCount,
+                          isDark: isDark,
+                        ),
+                        const SizedBox(width: 8),
+                        _buildHeroTag(
+                          icon: Icons.verified_rounded,
+                          label: l10n.expertReviewed,
+                          isDark: isDark,
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -786,10 +913,50 @@ class _LearningCenterScreenState extends State<LearningCenterScreen> {
                     );
                   },
                 ),
-              const SizedBox(height: 90),
+              const SizedBox(height: 130), // Bottom padding for nav bar & floating buttons
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildHeroTag({
+    required IconData icon,
+    required String label,
+    required bool isDark,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: isDark
+            ? Colors.black.withValues(alpha: 0.25)
+            : Colors.white.withValues(alpha: 0.85),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.08)
+              : AppColors.primaryGreen.withValues(alpha: 0.12),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 13,
+            color: isDark ? const Color(0xFF81C784) : AppColors.primaryGreen,
+          ),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: isDark ? Colors.grey.shade300 : AppColors.primaryGreenDarker,
+            ),
+          ),
+        ],
       ),
     );
   }

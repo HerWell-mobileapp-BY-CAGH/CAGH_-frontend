@@ -291,16 +291,20 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
                           onPressed: () => Navigator.pop(context),
                         ),
                         const SizedBox(width: 4),
-                        Text(
-                          AppLocalizations.of(context)?.consult ?? 'Consultations',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.3,
+                        Expanded(
+                          child: Text(
+                            AppLocalizations.of(context)?.consult ?? 'Consultations',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 21,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.3,
+                            ),
                           ),
                         ),
-                        const Spacer(),
+                        const SizedBox(width: 8),
                         const GlobeLanguagePicker(iconColor: Colors.white, iconSize: 22),
                         const SizedBox(width: 10),
                         const NotificationBell(iconColor: Colors.white),

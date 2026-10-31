@@ -159,7 +159,7 @@ class LearningRepository {
         userBadge: 'Mental Wellness',
         midwifeBadge: 'Crisis Response',
         defaultTakeaways: [
-          'Recognizing signs of anxiety, depression, and trauma in maternal care.',
+          'Recognizing signs of anxiety, depression, and emotional wellness.',
           'Gender-Based Violence (GBV) survivor support, referral pathways, and safety planning.',
           'Accessing confidential emergency hotlines, counseling, and social support services.',
         ],
@@ -170,7 +170,7 @@ class LearningRepository {
         themeColor: Color(0xFF00796B),
         bgLight: Color(0xFFE0F2F1),
         bgDark: Color(0xFF003630),
-        userBadge: 'Maternal Care',
+        userBadge: 'Reproductive Care',
         midwifeBadge: 'Obstetric Standard',
         defaultTakeaways: [
           'Family planning options, birth control methods, and fertility awareness.',
@@ -436,7 +436,7 @@ class LearningRepository {
         getTitle: (l10n) => l10n.psychosocialSupportAndProtection,
         getDesc: (l10n) => l10n.psychosocialSupportAndProtectionDesc,
         keyTakeaways: [
-          'Recognizing signs of anxiety, depression, and trauma in maternal care.',
+          'Recognizing signs of anxiety, depression, and emotional wellness.',
           'Gender-Based Violence (GBV) survivor support, referral pathways, and safety planning.',
           'Accessing confidential emergency hotlines, counseling, and social support services.',
         ],
@@ -547,7 +547,7 @@ class LearningRepository {
         bgDark: const Color(0xFF003630),
         readTime: '10 min read',
         articlesCount: '16 Guides',
-        userBadge: 'Maternal Care',
+        userBadge: 'Reproductive Care',
         midwifeBadge: 'Obstetric Standard',
         getTitle: (l10n) => l10n.reproductiveHealthAndCare,
         getDesc: (l10n) => l10n.reproductiveHealthAndCareDesc,

@@ -61,9 +61,12 @@ class StandardAppBar extends StatelessWidget implements PreferredSizeWidget {
         ),
       ),
       actions: [
-        if (showLanguagePicker) const GlobeLanguagePicker(),
+        if (showLanguagePicker)
+          const Center(
+            child: GlobeLanguagePicker(),
+          ),
         if (actions != null) ...?actions,
-        const SizedBox(width: 8),
+        const SizedBox(width: 12),
       ],
     );
   }

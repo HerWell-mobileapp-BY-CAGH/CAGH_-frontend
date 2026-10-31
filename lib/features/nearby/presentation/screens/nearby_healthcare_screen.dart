@@ -278,75 +278,7 @@ class _NearbyHealthcareScreenState extends ConsumerState<NearbyHealthcareScreen>
     );
   }
 
-  Widget _buildMoreNearbyRow(HealthcareFacility facility, bool isDark) {
-    final ratingVal = facility.rating ?? 4.0;
-    IconData iconData;
-    switch (facility.type) {
-      case 'Hospital':
-        iconData = Icons.add_box_rounded;
-        break;
-      case 'Pharmacy':
-        iconData = Icons.local_pharmacy_rounded;
-        break;
-      case 'Clinic':
-        iconData = Icons.medical_services_rounded;
-        break;
-      case 'Midwife':
-        iconData = Icons.pregnant_woman_rounded;
-        break;
-      default:
-        iconData = Icons.local_hospital_rounded;
-    }
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => _openFacilityDetails(facility),
-        borderRadius: BorderRadius.circular(10),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-          child: Row(
-            children: [
-              Icon(
-                iconData,
-                color: isDark ? Colors.grey.shade300 : const Color(0xFF475569),
-                size: 20,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  '${facility.name} (${facility.distance.toStringAsFixed(1)}km)',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.white : const Color(0xFF1E293B),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: List.generate(5, (starIdx) {
-                  final filled = starIdx < ratingVal.round();
-                  return Icon(
-                    Icons.star_rounded,
-                    size: 15,
-                    color: filled
-                        ? const Color(0xFFF5A623)
-                        : (isDark ? Colors.grey.shade700 : Colors.grey.shade300),
-                  );
-                }),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  @override
+@override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final nearbyState = ref.watch(nearbyStateProvider);
@@ -430,7 +362,7 @@ class _NearbyHealthcareScreenState extends ConsumerState<NearbyHealthcareScreen>
 
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.only(bottom: 90),
+              padding: const EdgeInsets.only(bottom: 130), // Bottom padding for nav bar & floating buttons
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -617,12 +549,6 @@ class _NearbyHealthcareScreenState extends ConsumerState<NearbyHealthcareScreen>
       );
     }
 
-    // Split into Cards (top up to 6) and More Results
-    final cardFacilities = facilities.take(6).toList();
-    final listFacilities = facilities.length > 6
-        ? facilities.skip(6).toList()
-        : (facilities.length > 3 ? facilities.sublist(2) : facilities);
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -639,7 +565,7 @@ class _NearbyHealthcareScreenState extends ConsumerState<NearbyHealthcareScreen>
               return Wrap(
                 spacing: 12,
                 runSpacing: 12,
-                children: cardFacilities.map((facility) {
+                children: facilities.map((facility) {
                   return SizedBox(
                     width: cardWidth,
                     child: _buildFacilityGridCard(facility, isDark),
@@ -647,30 +573,6 @@ class _NearbyHealthcareScreenState extends ConsumerState<NearbyHealthcareScreen>
                 }).toList(),
               );
             },
-          ),
-        ),
-
-        const SizedBox(height: 28),
-
-        // "More Nearby Results" Section
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            'More Nearby Results',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : AppColors.textDark,
-            ),
-          ),
-        ),
-        const SizedBox(height: 10),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            children: listFacilities.map((facility) {
-              return _buildMoreNearbyRow(facility, isDark);
-            }).toList(),
           ),
         ),
       ],

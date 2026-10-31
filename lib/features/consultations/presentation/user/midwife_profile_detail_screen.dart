@@ -1,3 +1,4 @@
+import 'package:table_calendar/table_calendar.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:cagh_frontend/features/appointments/presentation/screens/book_appointment_screen.dart';
@@ -29,6 +30,8 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
   final _repository = MidwifeRepositoryImpl(MidwifeApiService());
   final _appointmentRepo = AppointmentRepositoryImpl(AppointmentApiService());
   
+  late DateTime _selectedDate;
+  late DateTime _focusedDay;
   int _selectedDayIndex = 0;
   
   bool _isLoadingSlots = false;
@@ -39,27 +42,29 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
   void initState() {
     super.initState();
     _isFavorite = widget.midwife.isFavorite;
-    _generateNextDays();
-    _fetchSlotsForSelectedDay();
-  }
-  
-  void _generateNextDays() {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    // Find the Monday of the current week
-    final monday = today.subtract(Duration(days: today.weekday - 1));
-    _nextDays = List.generate(7, (index) => monday.add(Duration(days: index)));
-    
-    // Auto-select today if it's in the week
-    _selectedDayIndex = _nextDays.indexWhere((d) => d.isAtSameMomentAs(today));
-    if (_selectedDayIndex == -1) _selectedDayIndex = 0;
+    _selectedDate = today;
+    _focusedDay = today;
+    _generateNextDays(today);
+    _fetchSlotsForDate(today);
   }
   
-  Future<void> _fetchSlotsForSelectedDay() async {
+  void _generateNextDays(DateTime centerDate) {
+    final monday = centerDate.subtract(Duration(days: centerDate.weekday - 1));
+    _nextDays = List.generate(14, (index) => monday.add(Duration(days: index)));
+    _selectedDayIndex = _nextDays.indexWhere((d) => isSameDay(d, _selectedDate));
+    if (_selectedDayIndex == -1) {
+      _nextDays.insert(0, _selectedDate);
+      _selectedDayIndex = 0;
+    }
+  }
+  
+  Future<void> _fetchSlotsForDate(DateTime date) async {
     setState(() {
       _isLoadingSlots = true;
     });
-    final dateStr = DateFormat('yyyy-MM-dd').format(_nextDays[_selectedDayIndex]);
+    final dateStr = DateFormat('yyyy-MM-dd').format(date);
     try {
       final slots = await _appointmentRepo.getTimeSlots(widget.midwife.id, dateStr);
       if (mounted) {
@@ -70,7 +75,6 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
       }
     } catch (e) {
       if (mounted) {
-        // Treat 500 or any error as empty slots instead of crashing or showing a raw exception
         setState(() {
           _timeSlots = TimeSlotsResponse(
             midwifeId: widget.midwife.id,
@@ -470,82 +474,42 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
               AppLocalizations.of(context)!.availability,
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: primaryColor),
             ),
-            Text(
-              AppLocalizations.of(context)!.viewAll,
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: primaryColor),
+            InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => BookAppointmentScreen(
+                      midwife: widget.midwife,
+                      initialSelectedDay: _selectedDate,
+                    ),
+                  ),
+                );
+              },
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      AppLocalizations.of(context)!.viewAll,
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: primaryColor),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.calendar_month_outlined,
+                      size: 16,
+                      color: primaryColor,
+                    ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
         const SizedBox(height: 16),
-        // Day Selector Cards
-        SizedBox(
-          height: 85,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: _nextDays.length,
-            itemBuilder: (context, index) {
-              final date = _nextDays[index];
-              final now = DateTime.now();
-              final today = DateTime(now.year, now.month, now.day);
-              final isPast = date.isBefore(today);
-              final dayStr = DateFormat('EEE').format(date).toUpperCase();
-              final dateStr = DateFormat('d').format(date);
-              final isSelected = index == _selectedDayIndex;
-
-              return GestureDetector(
-                onTap: isPast
-                    ? null
-                    : () {
-                        setState(() => _selectedDayIndex = index);
-                        _fetchSlotsForSelectedDay();
-                      },
-                child: Container(
-                  width: 55,
-                  margin: const EdgeInsets.only(right: 12),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? selectedColor
-                        : isPast
-                            ? pastBg
-                            : unselectedBg,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: isDark ? AppColors.darkBorder : (isPast ? Colors.grey.shade300 : Colors.transparent)),
-                  ),
-                  child: Column(
-                    children: [
-                      Text(
-                        dayStr,
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: isSelected
-                              ? Colors.white70
-                              : isPast
-                                  ? textSecondary.withValues(alpha: 0.5)
-                                  : textSecondary,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        dateStr,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: isSelected
-                              ? Colors.white
-                              : isPast
-                                  ? textSecondary.withValues(alpha: 0.5)
-                                  : textPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
+        _buildWeekDayCards(primaryColor, selectedColor, unselectedBg, pastBg, textPrimary, textSecondary, isDark),
         const SizedBox(height: 24),
         
         if (_isLoadingSlots)
@@ -567,6 +531,103 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
             ],
           ),
       ],
+    );
+  }
+
+  Widget _buildWeekDayCards(
+    Color primaryColor,
+    Color selectedColor,
+    Color unselectedBg,
+    Color pastBg,
+    Color textPrimary,
+    Color textSecondary,
+    bool isDark,
+  ) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    return SizedBox(
+      height: 85,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: _nextDays.length,
+        itemBuilder: (context, index) {
+          final date = _nextDays[index];
+          final isPast = date.isBefore(today);
+          final dayStr = DateFormat('EEE').format(date).toUpperCase();
+          final dateStr = DateFormat('d').format(date);
+          final isSelected = isSameDay(date, _selectedDate);
+
+          return GestureDetector(
+            onTap: isPast
+                ? null
+                : () {
+                    setState(() {
+                      _selectedDayIndex = index;
+                      _selectedDate = date;
+                      _focusedDay = date;
+                    });
+                    _fetchSlotsForDate(date);
+                  },
+            child: Container(
+              width: 55,
+              margin: const EdgeInsets.only(right: 12),
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? selectedColor
+                    : isPast
+                        ? pastBg
+                        : unselectedBg,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isDark
+                      ? AppColors.darkBorder
+                      : (isPast ? Colors.grey.shade300 : Colors.transparent),
+                ),
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: selectedColor.withValues(alpha: 0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Column(
+                children: [
+                  Text(
+                    dayStr,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: isSelected
+                          ? Colors.white70
+                          : isPast
+                              ? textSecondary.withValues(alpha: 0.5)
+                              : textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    dateStr,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: isSelected
+                          ? Colors.white
+                          : isPast
+                              ? textSecondary.withValues(alpha: 0.5)
+                              : textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -640,6 +701,7 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
                   MaterialPageRoute(
                     builder: (context) => BookAppointmentScreen(
                       midwife: widget.midwife,
+                      initialSelectedDay: _selectedDate,
                     ),
                   ),
                 );
@@ -755,6 +817,7 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
                       MaterialPageRoute(
                         builder: (context) => BookAppointmentScreen(
                           midwife: widget.midwife,
+                          initialSelectedDay: _selectedDate,
                         ),
                       ),
                     );

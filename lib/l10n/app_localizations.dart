@@ -938,6 +938,12 @@ abstract class AppLocalizations {
   /// **'Return to Dashboard'**
   String get returnToDashboard;
 
+  /// No description provided for @viewMyAppointments.
+  ///
+  /// In en, this message translates to:
+  /// **'View My Appointments'**
+  String get viewMyAppointments;
+
   /// No description provided for @serviceType.
   ///
   /// In en, this message translates to:
@@ -3275,7 +3281,7 @@ abstract class AppLocalizations {
   /// No description provided for @verifiedMaternalCare.
   ///
   /// In en, this message translates to:
-  /// **'VERIFIED MATERNAL CARE'**
+  /// **'CONFIDENTIAL & VERIFIED CARE'**
   String get verifiedMaternalCare;
 
   /// No description provided for @certifiedMidwivesNetwork.
@@ -3287,7 +3293,7 @@ abstract class AppLocalizations {
   /// No description provided for @heroConsultGuidance.
   ///
   /// In en, this message translates to:
-  /// **'Direct 1-on-1 consultations, prenatal guidance & trusted care.'**
+  /// **'Compassionate consultations and professional healthcare guidance in a safe, confidential space.'**
   String get heroConsultGuidance;
 
   /// No description provided for @searchMidwivesHint.
@@ -3859,6 +3865,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Professional Dashboard'**
   String get professionalDashboard;
+
+  /// No description provided for @learningHeroBadgeUser.
+  ///
+  /// In en, this message translates to:
+  /// **'FOR ADOLESCENT GIRLS & YOUNG WOMEN'**
+  String get learningHeroBadgeUser;
+
+  /// No description provided for @learningHeroBadgeProfessional.
+  ///
+  /// In en, this message translates to:
+  /// **'CLINICAL LEARNING HUB'**
+  String get learningHeroBadgeProfessional;
+
+  /// No description provided for @learningHeroTitleUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Empower Your Health & Well-being'**
+  String get learningHeroTitleUser;
+
+  /// No description provided for @learningHeroTitleProfessional.
+  ///
+  /// In en, this message translates to:
+  /// **'Professional Knowledge & Clinical Hub'**
+  String get learningHeroTitleProfessional;
+
+  /// No description provided for @learningHeroDescUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore verified guides on puberty, nutrition, menstrual wellness, reproductive care, & safety.'**
+  String get learningHeroDescUser;
+
+  /// No description provided for @learningHeroDescProfessional.
+  ///
+  /// In en, this message translates to:
+  /// **'Evidence-based clinical guidelines, patient counseling toolkits, & reference protocols.'**
+  String get learningHeroDescProfessional;
+
+  /// No description provided for @certifiedGuidesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'30+ Certified Guides'**
+  String get certifiedGuidesCount;
+
+  /// No description provided for @expertReviewed.
+  ///
+  /// In en, this message translates to:
+  /// **'Medically Reviewed'**
+  String get expertReviewed;
+
+  /// No description provided for @consultTabFindCare.
+  ///
+  /// In en, this message translates to:
+  /// **'Find Care'**
+  String get consultTabFindCare;
+
+  /// No description provided for @consultTabInbox.
+  ///
+  /// In en, this message translates to:
+  /// **'Inbox'**
+  String get consultTabInbox;
 }
 
 class _AppLocalizationsDelegate

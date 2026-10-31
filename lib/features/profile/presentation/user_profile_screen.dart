@@ -483,7 +483,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 100),
+                  const SizedBox(height: 130), // Bottom padding for nav bar & floating buttons
                 ],
               ),
             ),

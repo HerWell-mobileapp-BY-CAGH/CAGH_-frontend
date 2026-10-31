@@ -39,15 +39,24 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
 
 // Review modal has been moved to user_chat_room_screen.dart
   Widget _buildFloatingButtons() {
+    final mediaQuery = MediaQuery.of(context);
+    final screenWidth = mediaQuery.size.width;
+    // Responsive size: 44dp on very small screens, 46-48dp on standard phones, up to 50dp on tablets
+    final buttonSize = (screenWidth * 0.118).clamp(44.0, 48.0);
+    final gap = (buttonSize * 0.2).clamp(8.0, 10.0);
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: 20.0), // Padding to avoid bottom nav bar
+      // Keep compact and snug above the floating glass nav bar without floating high into page content
+      padding: const EdgeInsets.only(bottom: 2.0, right: 2.0),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          const HotlineFab(),
-          const SizedBox(height: 16),
+          HotlineFab(size: buttonSize),
+          SizedBox(height: gap),
           AiAssistantFab(
+            size: buttonSize,
             onTap: () {
               Navigator.push(
                 context,
@@ -78,29 +87,48 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             child: SafeArea(
               bottom: false,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                child: Row(
-                  children: [
-                    // Left spacer — same width as the right icons to keep title centered
-                    const SizedBox(width: 88),
-                    // Centered title
-                    Expanded(
-                      child: Text(
-                        _getTabTitle(context),
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    // Right icons — globe + notification bell
-                    const GlobeLanguagePicker(iconColor: Colors.white, iconSize: 24),
-                    const NotificationBell(iconColor: Colors.white),
-                  ],
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                child: SizedBox(
+                  height: 38,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final totalWidth = constraints.maxWidth;
+                      const rightActionsWidth = 98.0;
+                      // On standard screens (>= 370px), left spacer exactly matches right actions to keep title dead-centered.
+                      // On smaller screens, clamp left spacer so title has maximum breathing room and never truncates prematurely.
+                      final leftSpacerWidth = (totalWidth >= 370)
+                          ? rightActionsWidth
+                          : (totalWidth - rightActionsWidth - 150).clamp(14.0, rightActionsWidth);
+
+                      return Row(
+                        children: [
+                          SizedBox(width: leftSpacerWidth),
+                          Expanded(
+                            child: Text(
+                              _getTabTitle(context),
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 17.5,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: -0.2,
+                              ),
+                            ),
+                          ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: const [
+                              GlobeLanguagePicker(iconColor: Colors.white),
+                              SizedBox(width: 4),
+                              NotificationBell(iconColor: Colors.white),
+                            ],
+                          ),
+                        ],
+                      );
+                    },
+                  ),
                 ),
               ),
             ),
@@ -559,7 +587,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             ),
           ),
 
-          const SizedBox(height: 100), // Bottom padding for nav bar
+          const SizedBox(height: 130), // Bottom padding for nav bar & floating buttons
         ],
       ),
     ),

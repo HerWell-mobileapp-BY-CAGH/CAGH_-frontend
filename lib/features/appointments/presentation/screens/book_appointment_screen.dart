@@ -1,3 +1,4 @@
+import 'package:cagh_frontend/features/appointments/presentation/screens/my_appointments_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:cagh_frontend/features/appointments/data/services/appointment_api_service.dart';
 import 'package:cagh_frontend/features/appointments/data/repositories/appointment_repository_impl.dart';
@@ -12,10 +13,12 @@ import 'package:cagh_frontend/shared/widgets/custom_snackbar.dart';
 
 class BookAppointmentScreen extends StatefulWidget {
   final MidwifeProfile midwife;
+  final DateTime? initialSelectedDay;
 
   const BookAppointmentScreen({
     super.key,
     required this.midwife,
+    this.initialSelectedDay,
   });
 
   @override
@@ -41,6 +44,10 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
   @override
   void initState() {
     super.initState();
+    if (widget.initialSelectedDay != null) {
+      _selectedDay = widget.initialSelectedDay!;
+      _focusedDay = widget.initialSelectedDay!;
+    }
     if (widget.midwife.supportsVoiceCall) {
       _consultationType = 'VOICE';
     } else if (widget.midwife.supportsInPerson) {
@@ -179,7 +186,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (context) {
+      builder: (sheetContext) {
         return Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
@@ -212,15 +219,44 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
               SizedBox(
                 width: double.infinity,
                 height: 50,
-                child: ElevatedButton(
+                child: ElevatedButton.icon(
                   onPressed: () {
-                    Navigator.popUntil(context, (route) => route.isFirst);
+                    Navigator.pop(sheetContext);
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const MyAppointmentsScreen(),
+                      ),
+                    );
                   },
+                  icon: const Icon(Icons.event_note_rounded, color: Colors.white, size: 20),
+                  label: Text(
+                    AppLocalizations.of(context)!.viewMyAppointments,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: buttonGreen,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
+                    elevation: 0,
                   ),
-                  child: Text(AppLocalizations.of(context)!.returnToDashboard, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextButton(
+                onPressed: () {
+                  Navigator.popUntil(context, (route) => route.isFirst);
+                },
+                child: Text(
+                  AppLocalizations.of(context)?.returnToDashboard ?? 'Return to Dashboard',
+                  style: TextStyle(
+                    color: textSecondary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13.5,
+                  ),
                 ),
               ),
             ],
@@ -254,21 +290,10 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Book Appointment',
-          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+        title: Text(
+          AppLocalizations.of(context)?.bookAppointment ?? 'Book Appointment',
+          style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
         ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: CircleAvatar(
-              radius: 14,
-              backgroundColor: isDark ? AppColors.darkSurfaceVariant : const Color(0xFFE8F5E9),
-              backgroundImage: widget.midwife.avatarUrl != null ? NetworkImage(widget.midwife.avatarUrl!) : null,
-              child: widget.midwife.avatarUrl == null ? Icon(Icons.person, color: primaryColor, size: 16) : null,
-            ),
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),

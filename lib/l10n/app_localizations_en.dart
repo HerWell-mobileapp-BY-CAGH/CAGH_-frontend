@@ -448,6 +448,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get returnToDashboard => 'Return to Dashboard';
 
   @override
+  String get viewMyAppointments => 'View My Appointments';
+
+  @override
   String get serviceType => 'Service Type';
 
   @override
@@ -1703,7 +1706,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Start time cannot be in the past for today';
 
   @override
-  String get verifiedMaternalCare => 'VERIFIED MATERNAL CARE';
+  String get verifiedMaternalCare => 'CONFIDENTIAL & VERIFIED CARE';
 
   @override
   String get certifiedMidwivesNetwork =>
@@ -1711,7 +1714,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get heroConsultGuidance =>
-      'Direct 1-on-1 consultations, prenatal guidance & trusted care.';
+      'Compassionate consultations and professional healthcare guidance in a safe, confidential space.';
 
   @override
   String get searchMidwivesHint => 'Search by name, hospital, or specialty...';
@@ -2016,4 +2019,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get professionalDashboard => 'Professional Dashboard';
+
+  @override
+  String get learningHeroBadgeUser => 'FOR ADOLESCENT GIRLS & YOUNG WOMEN';
+
+  @override
+  String get learningHeroBadgeProfessional => 'CLINICAL LEARNING HUB';
+
+  @override
+  String get learningHeroTitleUser => 'Empower Your Health & Well-being';
+
+  @override
+  String get learningHeroTitleProfessional =>
+      'Professional Knowledge & Clinical Hub';
+
+  @override
+  String get learningHeroDescUser =>
+      'Explore verified guides on puberty, nutrition, menstrual wellness, reproductive care, & safety.';
+
+  @override
+  String get learningHeroDescProfessional =>
+      'Evidence-based clinical guidelines, patient counseling toolkits, & reference protocols.';
+
+  @override
+  String get certifiedGuidesCount => '30+ Certified Guides';
+
+  @override
+  String get expertReviewed => 'Medically Reviewed';
+
+  @override
+  String get consultTabFindCare => 'Find Care';
+
+  @override
+  String get consultTabInbox => 'Inbox';
 }
