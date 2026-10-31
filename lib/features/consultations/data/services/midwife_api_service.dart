@@ -121,7 +121,8 @@ class MidwifeApiService {
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
-    } else if (response.statusCode == 404) {
+    } else if (response.statusCode == 404 || response.statusCode == 500 || response.statusCode == 400) {
+      AppLogger.d('MidwifeApiService.getMyProfile: Server returned status ${response.statusCode}, falling back to null');
       return null;
     } else {
       throw Exception('Failed to load my profile. Status: ${response.statusCode}');

@@ -3,6 +3,7 @@ import 'package:cagh_frontend/features/consultations/data/services/midwife_api_s
 import 'package:cagh_frontend/shared/models/midwife_profile.dart';
 import 'package:cagh_frontend/shared/models/midwife_dashboard.dart';
 import 'package:cagh_frontend/shared/models/blocked_date.dart';
+import 'package:cagh_frontend/core/utils/app_logger.dart';
 
 class MidwifeRepositoryImpl implements MidwifeRepository {
   final MidwifeApiService _apiService;
@@ -23,9 +24,14 @@ class MidwifeRepositoryImpl implements MidwifeRepository {
 
   @override
   Future<MidwifeProfile?> getMyProfile() async {
-    final response = await _apiService.getMyProfile();
-    if (response == null) return null;
-    return MidwifeProfile.fromJson(Map<String, dynamic>.from(response as Map));
+    try {
+      final response = await _apiService.getMyProfile();
+      if (response == null) return null;
+      return MidwifeProfile.fromJson(Map<String, dynamic>.from(response as Map));
+    } catch (e) {
+      AppLogger.d('MidwifeRepositoryImpl.getMyProfile: $e');
+      return null;
+    }
   }
 
   @override

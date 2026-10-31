@@ -31,7 +31,7 @@
     </queries>
 
     <application
-        android:label="Digital Midwife"
+        android:label="Her Well"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:enableOnBackInvokedCallback="true">

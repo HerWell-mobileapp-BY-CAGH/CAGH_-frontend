@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:cagh_frontend/shared/models/appointment.dart';
 import 'package:cagh_frontend/shared/models/time_slot.dart';
@@ -293,7 +295,7 @@ void showRescheduleModal(
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'With ${apt.midwifeName ?? 'Midwife'}',
+                    'With ${apt.midwifeName ?? 'Health Professional'}',
                     style: const TextStyle(color: Color(0xFF64748B), fontSize: 14),
                   ),
                   const SizedBox(height: 16),
@@ -470,7 +472,7 @@ void showDetailsModal(
             const Divider(),
             const SizedBox(height: 10),
               detailRow(AppLocalizations.of(context)!.consultationType, consultType),
-              detailRow(AppLocalizations.of(context)!.yourMidwife, apt.midwifeName ?? 'Midwife'),
+              detailRow(AppLocalizations.of(context)!.yourMidwife, apt.midwifeName ?? 'Health Professional'),
               detailRow(AppLocalizations.of(context)!.selectDate, formatAppointmentDateTime(apt.date, apt.startTime)),
               detailRow('Status', apt.status.name.toUpperCase()),
               if (apt.reason != null && apt.reason!.isNotEmpty)
@@ -685,237 +687,1102 @@ Widget buildAppointmentCard(
   required VoidCallback onCancel,
   required VoidCallback onViewDetails,
   VoidCallback? onChat,
+  bool isProfessional = false,
+  VoidCallback? onAccept,
+  VoidCallback? onDecline,
 }) {
-  final isUpcoming = apt.status == AppointmentStatus.confirmed && !apt.isPast;
-  final isPending = apt.status == AppointmentStatus.pending && !apt.isPast;
-  final isExpiredPending = apt.status == AppointmentStatus.pending && apt.isPast;
-  final formattedDateTime = formatAppointmentDateTime(apt.date, apt.startTime);
+  return AppointmentCardWidget(
+    appointment: apt,
+    onCardTap: onCardTap,
+    onJoinCall: onJoinCall,
+    onReschedule: onReschedule,
+    onCancel: onCancel,
+    onViewDetails: onViewDetails,
+    onChat: onChat,
+    isProfessional: isProfessional,
+    onAccept: onAccept,
+    onDecline: onDecline,
+  );
+}
 
-  final String midwifeDisplayName = (apt.midwifeName != null &&
-          apt.midwifeName!.trim().isNotEmpty &&
-          apt.midwifeName!.trim().toLowerCase() != 'recipient')
-      ? apt.midwifeName!.trim()
-      : 'Midwife';
+enum _ConsultationModality { cellularVoice, chat, inPerson }
+enum _CallWindowState { active, upcoming, completed, missed, cancelled, pending, expiredPending, concluded }
 
-  final isDark = Theme.of(context).brightness == Brightness.dark;
+class AppointmentCardWidget extends StatefulWidget {
+  final Appointment appointment;
+  final VoidCallback onCardTap;
+  final VoidCallback onJoinCall;
+  final VoidCallback onReschedule;
+  final VoidCallback onCancel;
+  final VoidCallback onViewDetails;
+  final VoidCallback? onChat;
+  final bool isProfessional;
+  final VoidCallback? onAccept;
+  final VoidCallback? onDecline;
 
-  return Container(
-    margin: const EdgeInsets.only(bottom: 12),
-    decoration: BoxDecoration(
-      color: isDark ? Colors.grey.shade900 : Colors.white,
-      borderRadius: BorderRadius.circular(16),
-      border: Border.all(color: isDark ? Colors.grey.shade800 : const Color(0xFFE2E8F0), width: 1),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.03),
-          blurRadius: 8,
-          offset: const Offset(0, 2),
+  const AppointmentCardWidget({
+    super.key,
+    required this.appointment,
+    required this.onCardTap,
+    required this.onJoinCall,
+    required this.onReschedule,
+    required this.onCancel,
+    required this.onViewDetails,
+    this.onChat,
+    this.isProfessional = false,
+    this.onAccept,
+    this.onDecline,
+  });
+
+  @override
+  State<AppointmentCardWidget> createState() => _AppointmentCardWidgetState();
+}
+
+class _AppointmentCardWidgetState extends State<AppointmentCardWidget> {
+  Timer? _countdownTimer;
+  DateTime? _startDateTime;
+  DateTime? _endDateTime;
+
+  @override
+  void initState() {
+    super.initState();
+    _parseTimes();
+    _countdownTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant AppointmentCardWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.appointment.date != widget.appointment.date ||
+        oldWidget.appointment.startTime != widget.appointment.startTime ||
+        oldWidget.appointment.endTime != widget.appointment.endTime ||
+        oldWidget.appointment.status != widget.appointment.status) {
+      _parseTimes();
+    }
+  }
+
+  @override
+  void dispose() {
+    _countdownTimer?.cancel();
+    super.dispose();
+  }
+
+  void _parseTimes() {
+    _startDateTime = _parseDateTime(widget.appointment.date, widget.appointment.startTime);
+    _endDateTime = _parseEndDateTime(widget.appointment.date, widget.appointment.startTime, widget.appointment.endTime);
+  }
+
+  DateTime? _parseDateTime(String dateStr, String timeStr) {
+    if (dateStr.isEmpty) return null;
+    try {
+      final dParts = dateStr.split('-');
+      if (dParts.length < 3) return null;
+      final year = int.parse(dParts[0]);
+      final month = int.parse(dParts[1]);
+      final day = int.parse(dParts[2]);
+
+      int hour = 9;
+      int minute = 0;
+      if (timeStr.isNotEmpty) {
+        final clean = timeStr.trim().toUpperCase();
+        final isPm = clean.contains('PM');
+        final isAm = clean.contains('AM');
+        final raw = clean.replaceAll(RegExp(r'[^\d:]'), '');
+        final tParts = raw.split(':');
+        if (tParts.isNotEmpty) {
+          hour = int.tryParse(tParts[0]) ?? 9;
+          if (tParts.length > 1) {
+            minute = int.tryParse(tParts[1]) ?? 0;
+          }
+          if (isPm && hour < 12) hour += 12;
+          if (isAm && hour == 12) hour = 0;
+        }
+      }
+      return DateTime(year, month, day, hour, minute);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  DateTime? _parseEndDateTime(String dateStr, String startStr, String endStr) {
+    if (endStr.isNotEmpty) {
+      final parsed = _parseDateTime(dateStr, endStr);
+      if (parsed != null) return parsed;
+    }
+    final start = _parseDateTime(dateStr, startStr);
+    if (start != null) {
+      return start.add(const Duration(minutes: 30));
+    }
+    return null;
+  }
+
+  _ConsultationModality _getModality() {
+    final type = widget.appointment.appointmentType.toUpperCase().trim();
+    if (type.contains('IN_PERSON') || type.contains('IN-PERSON') || type.contains('PHYSICAL') || type.contains('CLINIC')) {
+      return _ConsultationModality.inPerson;
+    }
+    if (type.contains('CHAT') || type.contains('MESSAGE') || type.contains('MESSAGING')) {
+      return _ConsultationModality.chat;
+    }
+    return _ConsultationModality.cellularVoice;
+  }
+
+  _CallWindowState _getWindowState() {
+    final apt = widget.appointment;
+    final eligibility = apt.callEligibility;
+    if (eligibility != null) {
+      if (eligibility['can_call'] == true || eligibility['is_call_window_active'] == true) {
+        return _CallWindowState.active;
+      }
+      final ws = eligibility['window_state']?.toString().toUpperCase();
+      if (ws == 'ACTIVE') return _CallWindowState.active;
+      if (ws == 'UPCOMING') return _CallWindowState.upcoming;
+      if (ws == 'MISSED' || ws == 'EXPIRED') return _CallWindowState.missed;
+      if (ws == 'CLOSED') return _CallWindowState.completed;
+    }
+
+    if (apt.status == AppointmentStatus.completed) return _CallWindowState.completed;
+    if (apt.status == AppointmentStatus.missed) return _CallWindowState.missed;
+    if (apt.status == AppointmentStatus.cancelled || apt.status == AppointmentStatus.declined) {
+      return _CallWindowState.cancelled;
+    }
+    if (apt.status == AppointmentStatus.pending) {
+      return apt.isPast ? _CallWindowState.expiredPending : _CallWindowState.pending;
+    }
+
+    if (_startDateTime == null) {
+      return apt.isPast ? _CallWindowState.concluded : _CallWindowState.upcoming;
+    }
+
+    final now = DateTime.now();
+    final activeStart = _startDateTime!.subtract(const Duration(minutes: 5));
+    final activeEnd = _endDateTime ?? _startDateTime!.add(const Duration(minutes: 30));
+
+    if (now.isBefore(activeStart)) {
+      return _CallWindowState.upcoming;
+    } else if (now.isAfter(activeEnd)) {
+      return _CallWindowState.concluded;
+    } else {
+      return _CallWindowState.active;
+    }
+  }
+
+  String _formatTime12h(DateTime dt) {
+    final hour = dt.hour;
+    final minute = dt.minute;
+    final period = hour >= 12 ? 'PM' : 'AM';
+    final h12 = hour % 12 == 0 ? 12 : hour % 12;
+    final mStr = minute.toString().padLeft(2, '0');
+    return '$h12:$mStr $period';
+  }
+
+  String _getCarrierName() {
+    final phone = widget.isProfessional ? widget.appointment.patientPhone : widget.appointment.midwifePhone;
+    final backendCarrier = widget.appointment.callEligibility?['carrier']?.toString();
+    if (backendCarrier != null && backendCarrier.isNotEmpty) return backendCarrier;
+    if (phone == null || phone.isEmpty) return 'Cellular Network';
+    final clean = phone.replaceAll(RegExp(r'[^\d]'), '');
+    if (clean.contains('9') && (clean.startsWith('09') || clean.startsWith('2519'))) {
+      return 'Ethio Telecom';
+    }
+    if (clean.contains('7') && (clean.startsWith('07') || clean.startsWith('2517'))) {
+      return 'Safaricom';
+    }
+    return 'Cellular Network';
+  }
+
+  String _getCountdownOrCallMessage(BuildContext context, bool isAm) {
+    if (_startDateTime == null) {
+      final t = widget.appointment.startTime;
+      return isAm ? 'ጥሪው በ $t ክፍት ይሆናል' : 'Call available at $t';
+    }
+
+    final now = DateTime.now();
+    final diff = _startDateTime!.difference(now);
+
+    if (diff.isNegative) {
+      return isAm ? 'የጥሪ መስመር ክፍት ነው' : 'Call Window Open Now';
+    }
+
+    if (diff.inMinutes <= 5) {
+      return isAm ? 'ጥሪው አሁን ይጀምራል (ከ 5 ደቂቃ በታች)' : 'Call starting in less than 5 mins';
+    } else if (diff.inMinutes < 60) {
+      return isAm
+          ? 'ጥሪው በ ${diff.inMinutes} ደቂቃ ውስጥ ይጀምራል'
+          : 'Call available in ${diff.inMinutes} mins';
+    } else if (diff.inHours < 24) {
+      final h = diff.inHours;
+      final m = diff.inMinutes % 60;
+      final timeStr = _formatTime12h(_startDateTime!);
+      return isAm
+          ? 'ጥሪው በ $timeStr ይጀምራል ($h ሰዓት${m > 0 ? " $m ደ" : ""})'
+          : 'Call available at $timeStr (${h}h${m > 0 ? " ${m}m" : ""})';
+    } else {
+      final timeStr = _formatTime12h(_startDateTime!);
+      final weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      final w = weekdays[_startDateTime!.weekday - 1];
+      final m = months[_startDateTime!.month - 1];
+      final d = _startDateTime!.day;
+      return isAm
+          ? 'ጥሪው በ $m $d በ $timeStr ክፍት ይሆናል'
+          : 'Call available on $w, $m $d at $timeStr';
+    }
+  }
+
+  void _showCallLockedNotice(BuildContext context, String timeStr) {
+    HapticFeedback.lightImpact();
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.lock_clock_rounded, color: Colors.white, size: 20),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Direct cellular call opens at $timeStr when your appointment starts.',
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+              ),
+            ),
+          ],
         ),
-      ],
-    ),
-    child: Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 1. Status Indicator & More Menu
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              buildStatusIndicator(context, apt.status, isPast: apt.isPast),
-              if (isUpcoming)
-                PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert, color: Color(0xFF64748B), size: 20),
-                  tooltip: AppLocalizations.of(context)!.moreOptions,
-                  onSelected: (value) {
-                    if (value == 'reschedule') {
-                      onReschedule();
-                    } else if (value == 'cancel') {
-                      onCancel();
-                    }
-                  },
-                  itemBuilder: (context) => <PopupMenuEntry<String>>[
-                    PopupMenuItem<String>(
-                      value: 'reschedule',
-                      child: Row(
-                        children: [
-                          const Icon(Icons.edit_calendar_outlined, size: 18, color: AppColors.primaryGreen),
-                          const SizedBox(width: 10),
-                          Text(AppLocalizations.of(context)!.reschedule, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+        backgroundColor: AppColors.primaryGreen,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isAm = Localizations.localeOf(context).languageCode.startsWith('am');
+    final apt = widget.appointment;
+    final modality = _getModality();
+    final windowState = _getWindowState();
+    final formattedDateTime = formatAppointmentDateTime(apt.date, apt.startTime, isAm ? 'am' : 'en');
+
+    // Resolve target display details
+    final String targetName;
+    final String targetRole;
+    if (widget.isProfessional) {
+      targetName = (apt.userFullName != null &&
+              apt.userFullName!.trim().isNotEmpty &&
+              apt.userFullName!.trim().toLowerCase() != 'recipient')
+          ? apt.userFullName!.trim()
+          : (AppLocalizations.of(context)?.patient ?? 'Patient');
+      targetRole = AppLocalizations.of(context)?.patient ?? 'Patient';
+    } else {
+      targetName = (apt.midwifeName != null &&
+              apt.midwifeName!.trim().isNotEmpty &&
+              apt.midwifeName!.trim().toLowerCase() != 'recipient')
+          ? apt.midwifeName!.trim()
+          : 'Health Professional';
+      targetRole = AppLocalizations.of(context)?.certifiedMidwife ?? 'Certified Health Professional';
+    }
+
+    final initials = targetName.trim().isNotEmpty
+        ? targetName.trim().split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase()
+        : (widget.isProfessional ? 'P' : 'H');
+
+    final bool isCallWindowActive = windowState == _CallWindowState.active;
+    final bool isUpcomingConfirmed = (apt.status == AppointmentStatus.confirmed && !apt.isPast);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF161E17) : Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: isCallWindowActive
+              ? (isDark ? const Color(0xFF22C55E).withValues(alpha: 0.5) : const Color(0xFF16A34A).withValues(alpha: 0.45))
+              : (isDark ? const Color(0xFF233026) : const Color(0xFFE4EDE3)),
+          width: isCallWindowActive ? 1.6 : 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isCallWindowActive
+                ? AppColors.primaryGreen.withValues(alpha: isDark ? 0.28 : 0.09)
+                : Colors.black.withValues(alpha: isDark ? 0.3 : 0.04),
+            blurRadius: isCallWindowActive ? 18 : 12,
+            offset: const Offset(0, 4),
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.015),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(22),
+        child: InkWell(
+          onTap: widget.onCardTap,
+          borderRadius: BorderRadius.circular(22),
+          child: Padding(
+            padding: const EdgeInsets.all(18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 1. TOP HEADER: Modality Badge + Status Dot + More Menu
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    _buildModalityBadge(modality, isDark, isAm),
+                    const Spacer(),
+                    buildStatusIndicator(context, apt.status, isPast: apt.isPast),
+                    if (isUpcomingConfirmed) ...[
+                      const SizedBox(width: 4),
+                      PopupMenuButton<String>(
+                        icon: const Icon(Icons.more_vert_rounded, color: Color(0xFF64748B), size: 20),
+                        tooltip: AppLocalizations.of(context)?.moreOptions ?? 'More options',
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        onSelected: (value) {
+                          if (value == 'reschedule') {
+                            widget.onReschedule();
+                          } else if (value == 'cancel') {
+                            widget.onCancel();
+                          }
+                        },
+                        itemBuilder: (context) => [
+                          PopupMenuItem<String>(
+                            value: 'reschedule',
+                            child: Row(
+                              children: [
+                                const Icon(Icons.edit_calendar_outlined, size: 18, color: AppColors.primaryGreen),
+                                const SizedBox(width: 10),
+                                Text(
+                                  AppLocalizations.of(context)?.reschedule ?? 'Reschedule',
+                                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                                ),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem<String>(
+                            value: 'cancel',
+                            child: Row(
+                              children: [
+                                const Icon(Icons.cancel_outlined, size: 18, color: AppColors.errorRed),
+                                const SizedBox(width: 10),
+                                Text(
+                                  AppLocalizations.of(context)?.cancel ?? 'Cancel',
+                                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.errorRed),
+                                ),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
+                    ],
+                  ],
+                ),
+
+                const SizedBox(height: 14),
+
+                // 2. PERSON INFO ROW: Avatar with verified badge, Name, Role
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Stack(
+                      alignment: Alignment.bottomRight,
+                      children: [
+                        Container(
+                          width: 46,
+                          height: 46,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: LinearGradient(
+                              colors: isDark
+                                  ? [const Color(0xFF263C2A), const Color(0xFF1E3223)]
+                                  : [const Color(0xFFDCEFD9), const Color(0xFFC7E7C5)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            border: Border.all(
+                              color: isDark ? AppColors.darkPrimary.withValues(alpha: 0.4) : AppColors.primaryGreen.withValues(alpha: 0.3),
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              initials,
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                color: isDark ? const Color(0xFF86EFAC) : AppColors.primaryGreen,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF161E17) : Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.verified_rounded,
+                            size: 14,
+                            color: AppColors.primaryGreen,
+                          ),
+                        ),
+                      ],
                     ),
-                    PopupMenuItem<String>(
-                      value: 'cancel',
-                      child: Row(
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(Icons.cancel_outlined, size: 18, color: AppColors.errorRed),
-                          const SizedBox(width: 10),
-                          Text(AppLocalizations.of(context)!.cancel, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.errorRed)),
+                          Text(
+                            targetName,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: isDark ? Colors.white : const Color(0xFF0F172A),
+                              letterSpacing: -0.2,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 3),
+                          Row(
+                            children: [
+                              Icon(
+                                widget.isProfessional ? Icons.person_outline_rounded : Icons.medical_services_outlined,
+                                size: 13,
+                                color: const Color(0xFF64748B),
+                              ),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  targetRole,
+                                  style: const TextStyle(
+                                    fontSize: 12.5,
+                                    color: Color(0xFF64748B),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                     ),
                   ],
                 ),
-            ],
-          ),
-          const SizedBox(height: 14),
 
-          // 2. Person Info (Midwife Name & Role)
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 18,
-                backgroundColor: const Color(0xFFF1F8E9),
-                child: Text(
-                  midwifeDisplayName.isNotEmpty ? midwifeDisplayName[0].toUpperCase() : 'M',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primaryGreen,
+                const SizedBox(height: 14),
+
+                // 3. DATE & TIME RIBBON
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1A261D) : const Color(0xFFF7FAF7),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: isDark ? const Color(0xFF243628) : const Color(0xFFE8EFE8),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.calendar_today_rounded, size: 14, color: AppColors.primaryGreen),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          formattedDateTime,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      midwifeDisplayName,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : const Color(0xFF0F172A),
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      AppLocalizations.of(context)!.certifiedMidwife,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF64748B),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
 
-          // 3. Date & Time Row
-          Row(
+                // 4. CALL STATUS & WINDOW LIFECYCLE BANNER (For Cellular Voice Calls)
+                if (modality == _ConsultationModality.cellularVoice && isUpcomingConfirmed) ...[
+                  const SizedBox(height: 12),
+                  _buildCallWindowBanner(isCallWindowActive, windowState, isDark, isAm),
+                ] else if (windowState == _CallWindowState.completed) ...[
+                  const SizedBox(height: 12),
+                  _buildCompletedBanner(isDark, isAm),
+                ] else if (windowState == _CallWindowState.missed) ...[
+                  const SizedBox(height: 12),
+                  _buildMissedBanner(isDark, isAm),
+                ] else if (windowState == _CallWindowState.expiredPending) ...[
+                  const SizedBox(height: 12),
+                  _buildExpiredPendingBanner(isDark, isAm),
+                ],
+
+                const SizedBox(height: 16),
+
+                // 5. INTUITIVE ACTIONS SECTION
+                _buildActionButtons(context, modality, windowState, isCallWindowActive, isDark, isAm),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // --- SUB-COMPONENTS ---
+
+  Widget _buildModalityBadge(_ConsultationModality modality, bool isDark, bool isAm) {
+    switch (modality) {
+      case _ConsultationModality.cellularVoice:
+        final carrier = _getCarrierName();
+        final label = isAm ? 'ቀጥታ ሴሉላር ጥሪ' : 'Direct Cellular Voice Call';
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1B3822) : const Color(0xFFEBF7ED),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isDark ? const Color(0xFF2A5534) : const Color(0xFFC7E7CC),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.access_time_rounded, size: 14, color: Color(0xFF64748B)),
+              Icon(
+                Icons.phone_in_talk_rounded,
+                size: 13,
+                color: isDark ? const Color(0xFF86EFAC) : const Color(0xFF2C5927),
+              ),
               const SizedBox(width: 6),
               Text(
-                formattedDateTime,
+                carrier != 'Cellular Network' ? '$label • $carrier' : label,
                 style: TextStyle(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w600,
-                  color: isDark ? Colors.grey.shade300 : const Color(0xFF334155),
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? const Color(0xFF86EFAC) : const Color(0xFF2C5927),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+        );
 
-          // 4. Action Buttons (Max 2 visible actions)
-          if (isUpcoming) ...[
-            Row(
-              children: [
-                ElevatedButton.icon(
-                  onPressed: onJoinCall,
-                  icon: const Icon(Icons.phone_in_talk_rounded, color: Colors.white, size: 16),
-                  label: const Text(
-                    'Call Midwife (SIM)',
-                    style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryGreen,
-                    elevation: 1,
-                    shadowColor: AppColors.primaryGreen.withOpacity(0.35),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                  ),
+      case _ConsultationModality.chat:
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF152A42) : const Color(0xFFEFF6FF),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isDark ? const Color(0xFF1E3A8A) : const Color(0xFFDBEAFE),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.chat_bubble_outline_rounded,
+                size: 13,
+                color: isDark ? const Color(0xFF93C5FD) : const Color(0xFF1D4ED8),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                isAm ? 'የመልዕክት ምክክር' : 'Messaging Consultation',
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? const Color(0xFF93C5FD) : const Color(0xFF1D4ED8),
                 ),
-                if (onChat != null) ...[
-                  const SizedBox(width: 8),
-                  IconButton(
-                    onPressed: onChat,
-                    icon: const Icon(Icons.chat_bubble_outline_rounded, color: AppColors.primaryGreen),
+              ),
+            ],
+          ),
+        );
+
+      case _ConsultationModality.inPerson:
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF382613) : const Color(0xFFFFFBEB),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isDark ? const Color(0xFF78350F) : const Color(0xFFFEF3C7),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.location_on_outlined,
+                size: 13,
+                color: isDark ? const Color(0xFFFCD34D) : const Color(0xFFB45309),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                isAm ? 'በአካል ክሊኒክ መገኘት' : 'In-Person Clinic Visit',
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? const Color(0xFFFCD34D) : const Color(0xFFB45309),
+                ),
+              ),
+            ],
+          ),
+        );
+    }
+  }
+
+  Widget _buildCallWindowBanner(bool isActive, _CallWindowState state, bool isDark, bool isAm) {
+    if (isActive) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF0F361E) : const Color(0xFFE8F7ED),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isDark ? const Color(0xFF1E6135) : const Color(0xFFA6E3B3),
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 10,
+              height: 10,
+              decoration: const BoxDecoration(
+                color: Color(0xFF16A34A),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Color(0xFF22C55E),
+                    blurRadius: 6,
+                    spreadRadius: 1,
                   ),
                 ],
-                const Spacer(),
-                TextButton(
-                  onPressed: onViewDetails,
-                  style: TextButton.styleFrom(
-                    foregroundColor: const Color(0xFF475569),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                  ),
-                  child: Text(AppLocalizations.of(context)!.viewDetails, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                ),
-              ],
-            )
-          ] else if (isExpiredPending) ...[
-            Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF261D12) : const Color(0xFFFFF7ED),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: isDark ? const Color(0xFF7C4A15) : const Color(0xFFFFEDD5)),
               ),
-              child: Row(
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.history_toggle_off_rounded, size: 14, color: isDark ? const Color(0xFFFDBA74) : const Color(0xFFC2410C)),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      Localizations.localeOf(context).languageCode.startsWith('am')
-                          ? 'የቀጠሮው ቀንና ሰዓት ያለፈ በመሆኑ ምላሽ አልተሰጠበትም'
-                          : 'Request expired: appointment date passed without confirmation.',
-                      style: TextStyle(fontSize: 11, color: isDark ? const Color(0xFFFDBA74) : const Color(0xFFC2410C)),
+                  Text(
+                    isAm ? 'የጥሪ መስመር አሁን ክፍት ነው' : 'Call Window Open Now',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? const Color(0xFF86EFAC) : const Color(0xFF14532D),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    isAm
+                        ? 'የስልክ ጥሪ ለመጀመር ከታች ይጫኑ • ቀጥታ ሴሉላር ደዋይ ይከፈታል'
+                        : 'Scheduled window active • Direct cellular dialer connects instantly',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isDark ? const Color(0xFF86EFAC).withValues(alpha: 0.85) : const Color(0xFF166534),
                     ),
                   ),
                 ],
               ),
             ),
-            TextButton(
-              onPressed: onViewDetails,
-              style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFF475569),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              ),
-              child: Text(AppLocalizations.of(context)!.viewDetails, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-            )
-          ] else if (isPending) ...[
-            TextButton(
-              onPressed: onViewDetails,
-              style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFF475569),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              ),
-              child: Text(AppLocalizations.of(context)!.viewDetails, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-            )
-          ] else ...[
-            TextButton(
-              onPressed: onViewDetails,
-              style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFF64748B),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              ),
-              child: Text(AppLocalizations.of(context)!.viewDetails, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-            )
           ],
+        ),
+      );
+    }
+
+    // Upcoming before appointment window
+    final message = _getCountdownOrCallMessage(context, isAm);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1C241E) : const Color(0xFFF8FAF8),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isDark ? const Color(0xFF28362B) : const Color(0xFFE2EAE1),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.schedule_rounded,
+            size: 16,
+            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+          ),
+          const SizedBox(width: 9),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
+              ),
+            ),
+          ),
         ],
       ),
-    ),
-  );
+    );
+  }
+
+  Widget _buildCompletedBanner(bool isDark, bool isAm) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1F2937) : const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: isDark ? const Color(0xFF374151) : const Color(0xFFE2E8F0)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.check_circle_rounded, size: 15, color: Color(0xFF10B981)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              isAm ? 'ምክክሩ በተሳካ ሁኔታ ተጠናቋል' : 'Consultation Completed',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: isDark ? const Color(0xFFD1D5DB) : const Color(0xFF475569),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMissedBanner(bool isDark, bool isAm) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF2E1919) : const Color(0xFFFEF2F2),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: isDark ? const Color(0xFF7F1D1D) : const Color(0xFFFEE2E2)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.phone_missed_rounded, size: 15, color: AppColors.errorRed),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              isAm ? 'ያመለጠ የቀጠሮ ሰዓት • ምክክሩ አልተካሄደም' : 'Scheduled Call Window Ended • Missed Consultation',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: isDark ? const Color(0xFFFCA5A5) : const Color(0xFFB91C1C),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExpiredPendingBanner(bool isDark, bool isAm) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF261D12) : const Color(0xFFFFF7ED),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: isDark ? const Color(0xFF7C4A15) : const Color(0xFFFFEDD5)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.history_toggle_off_rounded, size: 15, color: isDark ? const Color(0xFFFDBA74) : const Color(0xFFC2410C)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              isAm ? 'የቀጠሮው ቀንና ሰዓት ያለፈ በመሆኑ ጥያቄው ጊዜው አልፎበታል' : 'Request expired: scheduled time passed without confirmation.',
+              style: TextStyle(fontSize: 11.5, color: isDark ? const Color(0xFFFDBA74) : const Color(0xFFC2410C)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButtons(
+    BuildContext context,
+    _ConsultationModality modality,
+    _CallWindowState windowState,
+    bool isCallWindowActive,
+    bool isDark,
+    bool isAm,
+  ) {
+    // 1. Pending Consultation (Accept / Decline for professional)
+    if (windowState == _CallWindowState.pending) {
+      if (widget.isProfessional && widget.onAccept != null) {
+        return Row(
+          children: [
+            ElevatedButton(
+              onPressed: widget.onAccept,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryGreen,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              ),
+              child: Text(
+                AppLocalizations.of(context)?.accept ?? 'Accept',
+                style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+              ),
+            ),
+            if (widget.onDecline != null) ...[
+              const SizedBox(width: 10),
+              OutlinedButton(
+                onPressed: widget.onDecline,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF64748B),
+                  side: BorderSide(color: isDark ? Colors.grey.shade700 : const Color(0xFFCBD5E1)),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                ),
+                child: Text(
+                  AppLocalizations.of(context)?.decline ?? 'Decline',
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+            const Spacer(),
+            TextButton(
+              onPressed: widget.onViewDetails,
+              style: TextButton.styleFrom(foregroundColor: const Color(0xFF64748B)),
+              child: Text(
+                AppLocalizations.of(context)?.viewDetails ?? 'View Details',
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        );
+      }
+      return Align(
+        alignment: Alignment.centerRight,
+        child: TextButton(
+          onPressed: widget.onViewDetails,
+          style: TextButton.styleFrom(foregroundColor: const Color(0xFF64748B)),
+          child: Text(
+            AppLocalizations.of(context)?.viewDetails ?? 'View Details',
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+          ),
+        ),
+      );
+    }
+
+    // 2. Cellular Voice Call Modality (The core requirement)
+    if (modality == _ConsultationModality.cellularVoice) {
+      if (isCallWindowActive) {
+        // ACTIVE CALL NOW BUTTON
+        return Row(
+          children: [
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  HapticFeedback.mediumImpact();
+                  widget.onJoinCall();
+                },
+                icon: const Icon(Icons.phone_in_talk_rounded, color: Colors.white, size: 18),
+                label: Text(
+                  widget.isProfessional
+                      ? (isAm ? 'ለታካሚው ደውል (ሴሉላር)' : 'Call Patient Now')
+                      : (isAm ? 'አሁን ደውል (ቀጥታ ሴሉላር)' : 'Call Now'),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryGreen,
+                  elevation: 2,
+                  shadowColor: AppColors.primaryGreen.withValues(alpha: 0.4),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                ),
+              ),
+            ),
+            if (widget.onChat != null) ...[
+              const SizedBox(width: 8),
+              Container(
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1E2922) : const Color(0xFFF1F8F1),
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  onPressed: widget.onChat,
+                  icon: const Icon(Icons.chat_bubble_outline_rounded, color: AppColors.primaryGreen, size: 20),
+                  tooltip: 'Chat',
+                ),
+              ),
+            ],
+            const SizedBox(width: 4),
+            TextButton(
+              onPressed: widget.onViewDetails,
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF64748B),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              ),
+              child: Text(
+                AppLocalizations.of(context)?.viewDetails ?? 'Details',
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        );
+      } else if (windowState == _CallWindowState.upcoming) {
+        // LOCKED/COUNTDOWN BEFORE WINDOW
+        final timeStr = _startDateTime != null ? _formatTime12h(_startDateTime!) : widget.appointment.startTime;
+        return Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: () => _showCallLockedNotice(context, timeStr),
+                icon: const Icon(Icons.lock_clock_rounded, size: 16, color: Color(0xFF64748B)),
+                label: Text(
+                  isAm ? 'ጥሪ በ $timeStr ይከፈታል' : 'Call available at $timeStr',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(
+                    color: isDark ? const Color(0xFF2E3D31) : const Color(0xFFD6E2D6),
+                    width: 1,
+                  ),
+                  backgroundColor: isDark ? const Color(0xFF1A241C) : const Color(0xFFF8FAF8),
+                  padding: const EdgeInsets.symmetric(vertical: 11),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+                ),
+              ),
+            ),
+            if (widget.onChat != null) ...[
+              const SizedBox(width: 8),
+              Container(
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1E2922) : const Color(0xFFF1F8F1),
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  onPressed: widget.onChat,
+                  icon: const Icon(Icons.chat_bubble_outline_rounded, color: AppColors.primaryGreen, size: 20),
+                  tooltip: 'Chat',
+                ),
+              ),
+            ],
+            const SizedBox(width: 4),
+            TextButton(
+              onPressed: widget.onViewDetails,
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF64748B),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              ),
+              child: Text(
+                AppLocalizations.of(context)?.viewDetails ?? 'Details',
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        );
+      } else if (windowState == _CallWindowState.missed) {
+        // MISSED WINDOW ACTIONS
+        return Row(
+          children: [
+            OutlinedButton.icon(
+              onPressed: widget.onReschedule,
+              icon: const Icon(Icons.edit_calendar_outlined, size: 16, color: AppColors.primaryGreen),
+              label: Text(
+                AppLocalizations.of(context)?.reschedule ?? 'Reschedule',
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
+              ),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: AppColors.primaryGreen),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              ),
+            ),
+            const Spacer(),
+            TextButton(
+              onPressed: widget.onViewDetails,
+              style: TextButton.styleFrom(foregroundColor: const Color(0xFF64748B)),
+              child: Text(
+                AppLocalizations.of(context)?.viewDetails ?? 'View Details',
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        );
+      }
+    }
+
+    // 3. Chat Modality
+    if (modality == _ConsultationModality.chat) {
+      return Row(
+        children: [
+          ElevatedButton.icon(
+            onPressed: widget.onChat ?? widget.onViewDetails,
+            icon: const Icon(Icons.chat_bubble_outline_rounded, size: 16, color: Colors.white),
+            label: Text(
+              isAm ? 'መልዕክት ይክፈቱ' : 'Open Messages',
+              style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF2563EB),
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            ),
+          ),
+          const Spacer(),
+          TextButton(
+            onPressed: widget.onViewDetails,
+            style: TextButton.styleFrom(foregroundColor: const Color(0xFF64748B)),
+            child: Text(
+              AppLocalizations.of(context)?.viewDetails ?? 'View Details',
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      );
+    }
+
+    // 4. Default / In-Person Modality / Other
+    return Row(
+      children: [
+        OutlinedButton.icon(
+          onPressed: widget.onViewDetails,
+          icon: const Icon(Icons.location_on_outlined, size: 16, color: AppColors.primaryGreen),
+          label: Text(
+            isAm ? 'የክሊኒክ ዝርዝር' : 'View Clinic Info',
+            style: const TextStyle(color: AppColors.primaryGreen, fontSize: 13, fontWeight: FontWeight.bold),
+          ),
+          style: OutlinedButton.styleFrom(
+            side: const BorderSide(color: AppColors.primaryGreen),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          ),
+        ),
+        const Spacer(),
+        TextButton(
+          onPressed: widget.onViewDetails,
+          style: TextButton.styleFrom(foregroundColor: const Color(0xFF64748B)),
+          child: Text(
+            AppLocalizations.of(context)?.viewDetails ?? 'View Details',
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+          ),
+        ),
+      ],
+    );
+  }
 }

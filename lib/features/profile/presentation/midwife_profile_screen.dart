@@ -37,7 +37,7 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
   String fullName = '';
   String email = '';
   String status = 'PENDING';
-  String title = 'Certified Midwife';
+  String title = 'Certified Health Professional';
 
   final _repository = MidwifeRepositoryImpl(MidwifeApiService());
 
@@ -69,7 +69,12 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
               '';
           if (fName.isNotEmpty || lName.isNotEmpty) {
             fullName = '$fName $lName'.trim();
+          } else {
+            final cFullName = (p['full_name'] ?? u['full_name'] ?? localData['full_name'] ??
+                p['name'] ?? u['name'] ?? localData['name'] ?? '').toString().trim();
+            if (cFullName.isNotEmpty) fullName = cFullName;
           }
+
           final emailVal =
               localData['email']?.toString() ?? u['email']?.toString() ?? '';
           if (emailVal.isNotEmpty) {
@@ -84,17 +89,42 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
         });
       }
 
-      final p = await _repository.getMyProfile();
-      if (mounted) {
-        setState(() {
-          if (p != null) {
+      // Also refresh from /users/me/
+      try {
+        final userRes = await AuthService.getProfile();
+        if (userRes.success && userRes.data != null && mounted) {
+          final d = userRes.data!;
+          final u = d['user'] is Map ? d['user'] : d;
+          final p = u['profile'] is Map ? u['profile'] : (d['profile'] is Map ? d['profile'] : {});
+          final fName = p['first_name']?.toString() ?? u['first_name']?.toString() ?? d['first_name']?.toString() ?? '';
+          final lName = p['last_name']?.toString() ?? u['last_name']?.toString() ?? d['last_name']?.toString() ?? '';
+          final cFullName = (p['full_name'] ?? u['full_name'] ?? d['full_name'] ??
+              p['name'] ?? u['name'] ?? d['name'] ?? '').toString().trim();
+          setState(() {
+            if (fName.isNotEmpty || lName.isNotEmpty) {
+              fullName = '$fName $lName'.trim();
+            } else if (cFullName.isNotEmpty) {
+              fullName = cFullName;
+            }
+            final e = d['email']?.toString() ?? u['email']?.toString() ?? '';
+            if (e.isNotEmpty) email = e;
+          });
+        }
+      } catch (_) {}
+
+      try {
+        final p = await _repository.getMyProfile();
+        if (mounted && p != null) {
+          setState(() {
             if (p.fullName.isNotEmpty) fullName = p.fullName;
             if (p.specialty.isNotEmpty) title = p.specialty;
             status = p.verificationStatus.toUpperCase() == 'APPROVED'
                 ? 'VERIFIED'
                 : 'PENDING';
-          }
-        });
+          });
+        }
+      } catch (midwifeErr) {
+        AppLogger.d('MidwifeProfileScreen: Safe midwife profile fallback: $midwifeErr');
       }
     } catch (e) {
       AppLogger.d('MidwifeProfileScreen: Error parsing profile data: $e');

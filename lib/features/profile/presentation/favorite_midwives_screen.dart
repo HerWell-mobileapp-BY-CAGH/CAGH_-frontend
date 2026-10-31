@@ -70,7 +70,7 @@ class _FavoriteMidwivesScreenState extends State<FavoriteMidwivesScreen> {
             ],
           ),
           content: Text(
-            'Are you sure you want to remove ${midwife.fullName} from your saved midwives?',
+            'Are you sure you want to remove ${midwife.fullName} from your saved health professionals?',
             style: const TextStyle(fontSize: 14, height: 1.4),
           ),
           actions: [
@@ -90,7 +90,7 @@ class _FavoriteMidwivesScreenState extends State<FavoriteMidwivesScreen> {
                 try {
                   await _repository.toggleFavorite(midwife.id);
                   if (mounted) {
-                    CustomSnackBar.show(context, message: 'Removed ${midwife.fullName} from saved midwives');
+                    CustomSnackBar.show(context, message: 'Removed ${midwife.fullName} from saved health professionals');
                   }
                 } catch (e) {
                   if (mounted) {
@@ -204,7 +204,7 @@ class _FavoriteMidwivesScreenState extends State<FavoriteMidwivesScreen> {
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
-                                      'Tap the heart icon on any midwife profile to save them here for quick access and booking.',
+                                      'Tap the heart icon on any health professional profile to save them here for quick access and booking.',
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
                                         fontSize: 13.5,

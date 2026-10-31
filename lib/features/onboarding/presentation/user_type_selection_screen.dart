@@ -80,7 +80,7 @@ class _UserTypeSelectionScreenState extends State<UserTypeSelectionScreen> {
 
                     const SizedBox(height: 36),
 
-                    // User Card
+                    // User Card - Adolescent Girls and Young Women
                     _RoleSelectionCard(
                       iconWidget: Stack(
                         clipBehavior: Clip.none,
@@ -92,7 +92,7 @@ class _UserTypeSelectionScreenState extends State<UserTypeSelectionScreen> {
                             child: Container(
                               padding: const EdgeInsets.all(2),
                               decoration: const BoxDecoration(
-                                color: Color(0xFFFFDB89), // matches the background
+                                color: Color(0xFFFFDB89),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(Icons.favorite_border, size: 16, color: Color(0xFF2C2C2C)),
@@ -100,9 +100,10 @@ class _UserTypeSelectionScreenState extends State<UserTypeSelectionScreen> {
                           ),
                         ],
                       ),
-                      iconBgColor: const Color(0xFFFFDB89), // Light orange/yellow
-                      title: AppLocalizations.of(context)!.seekingCareTitle,
-                      subtitle: AppLocalizations.of(context)!.seekingCareSubtitle,
+                      iconBgColor: const Color(0xFFFFDB89),
+                      badgeText: 'Adolescent Girls & Young Women',
+                      title: 'User Login / Sign Up',
+                      subtitle: 'For adolescent girls and young women seeking care & support',
                       isSelected: selectedRole == 'user',
                       isDark: isDark,
                       onTap: () {
@@ -112,7 +113,7 @@ class _UserTypeSelectionScreenState extends State<UserTypeSelectionScreen> {
 
                     const SizedBox(height: 16),
 
-                    // Midwife Card
+                    // Health Professional Card - Healthcare Professionals
                     _RoleSelectionCard(
                       iconWidget: Stack(
                         clipBehavior: Clip.none,
@@ -131,9 +132,10 @@ class _UserTypeSelectionScreenState extends State<UserTypeSelectionScreen> {
                           ),
                         ],
                       ),
-                      iconBgColor: const Color(0xFFD6E5D0), // Light green
-                      title: AppLocalizations.of(context)!.midwifeRoleTitle,
-                      subtitle: AppLocalizations.of(context)!.midwifeRoleSubtitle,
+                      iconBgColor: const Color(0xFFD6E5D0),
+                      badgeText: 'Healthcare Professionals',
+                      title: 'Professional Login / Sign Up',
+                      subtitle: 'For healthcare professionals providing care & guidance',
                       isSelected: selectedRole == 'midwife',
                       isDark: isDark,
                       onTap: () {
@@ -190,7 +192,11 @@ class _UserTypeSelectionScreenState extends State<UserTypeSelectionScreen> {
                     children: [
                       Flexible(
                         child: Text(
-                          AppLocalizations.of(context)!.continueBtn,
+                          selectedRole == 'user'
+                              ? 'Continue to User Login'
+                              : (selectedRole == 'midwife'
+                                  ? 'Continue to Professional Login'
+                                  : AppLocalizations.of(context)!.continueBtn),
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
@@ -218,6 +224,7 @@ class _RoleSelectionCard extends StatelessWidget {
   final Color iconBgColor;
   final String title;
   final String subtitle;
+  final String? badgeText;
   final bool isSelected;
   final bool isDark;
   final VoidCallback onTap;
@@ -227,6 +234,7 @@ class _RoleSelectionCard extends StatelessWidget {
     required this.iconBgColor,
     required this.title,
     required this.subtitle,
+    this.badgeText,
     required this.isSelected,
     required this.isDark,
     required this.onTap,
@@ -247,7 +255,7 @@ class _RoleSelectionCard extends StatelessWidget {
             color: isSelected
                 ? const Color(0xFF385A2E)
                 : Colors.grey.shade300,
-            width: 1.5,
+            width: isSelected ? 2 : 1.5,
           ),
           boxShadow: [
             if (!isDark)
@@ -276,6 +284,28 @@ class _RoleSelectionCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  if (badgeText != null) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      margin: const EdgeInsets.only(bottom: 6),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? const Color(0xFF385A2E).withValues(alpha: 0.12)
+                            : (isDark ? Colors.white10 : const Color(0xFFEFF3EE)),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        badgeText!,
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                          color: isSelected
+                              ? const Color(0xFF385A2E)
+                              : (isDark ? Colors.white70 : const Color(0xFF4C6B43)),
+                        ),
+                      ),
+                    ),
+                  ],
                   Text(
                     title,
                     maxLines: 1,

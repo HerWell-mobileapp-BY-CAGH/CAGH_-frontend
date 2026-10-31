@@ -818,7 +818,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                         ),
                       );
                     },
-                    tooltip: 'Ask Midwife',
+                    tooltip: 'Ask Health Professional',
                     style: IconButton.styleFrom(
                       backgroundColor: isDark ? AppColors.darkSurfaceVariant : const Color(0xFFF1F5F9),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),

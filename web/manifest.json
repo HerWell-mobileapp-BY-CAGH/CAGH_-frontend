@@ -1,11 +1,11 @@
 {
-    "name": "untitled3",
-    "short_name": "untitled3",
+    "name": "Her Well",
+    "short_name": "Her Well",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#FFFFFF",
     "theme_color": "#FFFFFF",
-    "description": "A new Flutter project.",
+    "description": "Her Well - Maternal Health Platform",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

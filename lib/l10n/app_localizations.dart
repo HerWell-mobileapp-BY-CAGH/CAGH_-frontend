@@ -101,7 +101,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'Digital Midwife'**
+  /// **'Her Well'**
   String get appTitle;
 
   /// No description provided for @chooseLanguage.
@@ -151,6 +151,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Register'**
   String get register;
+
+  /// No description provided for @signUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign Up'**
+  String get signUp;
 
   /// No description provided for @welcomeBack.
   ///
@@ -245,7 +251,7 @@ abstract class AppLocalizations {
   /// No description provided for @subUserType.
   ///
   /// In en, this message translates to:
-  /// **'Select how you\'ll be using Digital Midwife to personalize your experience.'**
+  /// **'Select how you\'ll be using Her Well to personalize your experience.'**
   String get subUserType;
 
   /// No description provided for @userTitle.
@@ -257,19 +263,19 @@ abstract class AppLocalizations {
   /// No description provided for @userSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'I am seeking care and support'**
+  /// **'For adolescent girls and young women'**
   String get userSubtitle;
 
   /// No description provided for @midwifeTitle.
   ///
   /// In en, this message translates to:
-  /// **'Midwife'**
+  /// **'Health Professional'**
   String get midwifeTitle;
 
   /// No description provided for @midwifeSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'I am a healthcare provider'**
+  /// **'For healthcare professionals'**
   String get midwifeSubtitle;
 
   /// No description provided for @enterContactDetails.
@@ -317,7 +323,7 @@ abstract class AppLocalizations {
   /// No description provided for @createAccountSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Your trusted companion for women\'s health\\nand midwife support'**
+  /// **'Your trusted companion for women\'s health and professional healthcare support'**
   String get createAccountSubtitle;
 
   /// No description provided for @agreeTerms.
@@ -365,7 +371,7 @@ abstract class AppLocalizations {
   /// No description provided for @midwifeLogin.
   ///
   /// In en, this message translates to:
-  /// **'Midwife Login'**
+  /// **'Professional Login'**
   String get midwifeLogin;
 
   /// No description provided for @todaysAppointments.
@@ -539,7 +545,7 @@ abstract class AppLocalizations {
   /// No description provided for @ourMidwivesAvailable.
   ///
   /// In en, this message translates to:
-  /// **'Our midwives are available for talk or visit any time.'**
+  /// **'Our health professionals are available for talk or visit any time.'**
   String get ourMidwivesAvailable;
 
   /// No description provided for @bookAppointment.
@@ -551,7 +557,7 @@ abstract class AppLocalizations {
   /// No description provided for @findAMidwife.
   ///
   /// In en, this message translates to:
-  /// **'Find a Midwife'**
+  /// **'Find a Health Professional'**
   String get findAMidwife;
 
   /// No description provided for @personalInformation.
@@ -575,7 +581,7 @@ abstract class AppLocalizations {
   /// No description provided for @savedMidwives.
   ///
   /// In en, this message translates to:
-  /// **'Saved Midwives'**
+  /// **'Saved Health Professionals'**
   String get savedMidwives;
 
   /// No description provided for @settings.
@@ -623,7 +629,7 @@ abstract class AppLocalizations {
   /// No description provided for @onlineVerifiedMidwife.
   ///
   /// In en, this message translates to:
-  /// **'Online • Verified Midwife'**
+  /// **'Online • Verified Health Professional'**
   String get onlineVerifiedMidwife;
 
   /// No description provided for @valEmailPhoneReq.
@@ -851,7 +857,7 @@ abstract class AppLocalizations {
   /// No description provided for @freeCancellationNotice.
   ///
   /// In en, this message translates to:
-  /// **'Free cancellation up to 24 hours before\\nyour appointment.'**
+  /// **'Free cancellation up to 24 hours before your appointment.'**
   String get freeCancellationNotice;
 
   /// No description provided for @waitingForConfirmation.
@@ -863,7 +869,7 @@ abstract class AppLocalizations {
   /// No description provided for @yourMidwife.
   ///
   /// In en, this message translates to:
-  /// **'Your Midwife'**
+  /// **'Your Health Professional'**
   String get yourMidwife;
 
   /// No description provided for @reasonForVisit.
@@ -989,13 +995,13 @@ abstract class AppLocalizations {
   /// No description provided for @signInNewPassword.
   ///
   /// In en, this message translates to:
-  /// **'You can now sign in using your\\nnew password.'**
+  /// **'You can now sign in using your new password.'**
   String get signInNewPassword;
 
   /// No description provided for @midwifeRegistration.
   ///
   /// In en, this message translates to:
-  /// **'Midwife Registration'**
+  /// **'Professional Sign Up'**
   String get midwifeRegistration;
 
   /// No description provided for @yearsOfExperience.
@@ -1163,7 +1169,7 @@ abstract class AppLocalizations {
   /// No description provided for @certifiedMidwife.
   ///
   /// In en, this message translates to:
-  /// **'Certified Midwife'**
+  /// **'Certified Health Professional'**
   String get certifiedMidwife;
 
   /// No description provided for @keepAppointment.
@@ -1175,7 +1181,7 @@ abstract class AppLocalizations {
   /// No description provided for @noMidwivesAvailable.
   ///
   /// In en, this message translates to:
-  /// **'No midwives available at the moment.'**
+  /// **'No health professionals available at the moment.'**
   String get noMidwivesAvailable;
 
   /// No description provided for @availableToday.
@@ -1199,7 +1205,7 @@ abstract class AppLocalizations {
   /// No description provided for @verifiedMidwife.
   ///
   /// In en, this message translates to:
-  /// **'Verified Midwife'**
+  /// **'Verified Health Professional'**
   String get verifiedMidwife;
 
   /// No description provided for @hospital.
@@ -1853,7 +1859,7 @@ abstract class AppLocalizations {
   /// No description provided for @connectWithCertifiedMidwife.
   ///
   /// In en, this message translates to:
-  /// **'Connect with a certified midwife for a consultation'**
+  /// **'Connect with a certified health professional for a consultation'**
   String get connectWithCertifiedMidwife;
 
   /// No description provided for @messages.
@@ -2087,7 +2093,7 @@ abstract class AppLocalizations {
   /// No description provided for @digitalMidwife.
   ///
   /// In en, this message translates to:
-  /// **'Digital Midwife'**
+  /// **'Her Well'**
   String get digitalMidwife;
 
   /// No description provided for @systemDefault.
@@ -2387,7 +2393,7 @@ abstract class AppLocalizations {
   /// No description provided for @waitForMidwifeAccept.
   ///
   /// In en, this message translates to:
-  /// **'Waiting for midwife to accept request before sending more messages.'**
+  /// **'Waiting for health professional to accept request before sending more messages.'**
   String get waitForMidwifeAccept;
 
   /// No description provided for @waitForChatConnected.
@@ -2477,13 +2483,13 @@ abstract class AppLocalizations {
   /// No description provided for @connectAndMessageDirectly.
   ///
   /// In en, this message translates to:
-  /// **'Connect and message directly with our verified healthcare midwives.'**
+  /// **'Connect and message directly with our verified health professionals.'**
   String get connectAndMessageDirectly;
 
   /// No description provided for @startChatWithMidwife.
   ///
   /// In en, this message translates to:
-  /// **'Start Chat with a Midwife'**
+  /// **'Start Chat with a Health Professional'**
   String get startChatWithMidwife;
 
   /// No description provided for @upcomingConsultation.
@@ -2927,43 +2933,43 @@ abstract class AppLocalizations {
   /// No description provided for @dedicatedMidwifeDesc.
   ///
   /// In en, this message translates to:
-  /// **'A dedicated midwife committed to providing the best care.'**
+  /// **'A dedicated health professional committed to providing the best care.'**
   String get dedicatedMidwifeDesc;
 
   /// No description provided for @noMidwivesMatchFilters.
   ///
   /// In en, this message translates to:
-  /// **'No midwives match your filters. Try resetting.'**
+  /// **'No health professionals match your filters. Try resetting.'**
   String get noMidwivesMatchFilters;
 
   /// No description provided for @userRegistration.
   ///
   /// In en, this message translates to:
-  /// **'User Registration'**
+  /// **'User Sign Up'**
   String get userRegistration;
 
   /// No description provided for @seekingCareTitle.
   ///
   /// In en, this message translates to:
-  /// **'I\'m seeking care'**
+  /// **'User Login / Sign Up'**
   String get seekingCareTitle;
 
   /// No description provided for @seekingCareSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'I want health information,\nsupport, and services.'**
+  /// **'For adolescent girls and young women.'**
   String get seekingCareSubtitle;
 
   /// No description provided for @midwifeRoleTitle.
   ///
   /// In en, this message translates to:
-  /// **'I\'m a Midwife'**
+  /// **'Professional Login / Sign Up'**
   String get midwifeRoleTitle;
 
   /// No description provided for @midwifeRoleSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'I\'m a healthcare provider\nsupporting clients.'**
+  /// **'For healthcare professionals.'**
   String get midwifeRoleSubtitle;
 
   /// No description provided for @selectDateOfBirth.
@@ -3251,13 +3257,13 @@ abstract class AppLocalizations {
   /// No description provided for @roleMismatchMidwifeError.
   ///
   /// In en, this message translates to:
-  /// **'This email is registered as an adolescent/patient account. Please use the User login.'**
+  /// **'This account is registered as a user. Please use User Login.'**
   String get roleMismatchMidwifeError;
 
   /// No description provided for @roleMismatchPatientError.
   ///
   /// In en, this message translates to:
-  /// **'This email is registered as a healthcare provider/midwife account. Please use the Midwife login.'**
+  /// **'This account is registered as a healthcare professional. Please use Professional Login.'**
   String get roleMismatchPatientError;
 
   /// No description provided for @startTimeCannotBeInPast.
@@ -3275,7 +3281,7 @@ abstract class AppLocalizations {
   /// No description provided for @certifiedMidwivesNetwork.
   ///
   /// In en, this message translates to:
-  /// **'Certified Midwives Network'**
+  /// **'Certified Health Professionals Network'**
   String get certifiedMidwivesNetwork;
 
   /// No description provided for @heroConsultGuidance.
@@ -3293,7 +3299,7 @@ abstract class AppLocalizations {
   /// No description provided for @noMidwivesFound.
   ///
   /// In en, this message translates to:
-  /// **'No midwives found'**
+  /// **'No health professionals found'**
   String get noMidwivesFound;
 
   /// No description provided for @tryAdjustingSearch.
@@ -3311,7 +3317,7 @@ abstract class AppLocalizations {
   /// No description provided for @certifiedHealthcareMidwife.
   ///
   /// In en, this message translates to:
-  /// **'Certified Healthcare Midwife'**
+  /// **'Certified Health Professional'**
   String get certifiedHealthcareMidwife;
 
   /// No description provided for @bookConsultation.
@@ -3329,13 +3335,13 @@ abstract class AppLocalizations {
   /// No description provided for @startConsultationHint.
   ///
   /// In en, this message translates to:
-  /// **'Send a message to a certified midwife to start a consultation.'**
+  /// **'Send a message to a certified health professional to start a consultation.'**
   String get startConsultationHint;
 
   /// No description provided for @emptyPendingAppointmentsSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'When you book an appointment, it will appear here awaiting midwife confirmation.'**
+  /// **'When you book an appointment, it will appear here awaiting confirmation.'**
   String get emptyPendingAppointmentsSubtitle;
 
   /// No description provided for @emptyUpcomingAppointmentsSubtitle.
@@ -3509,7 +3515,7 @@ abstract class AppLocalizations {
   /// No description provided for @midwifeWorkflowsAndTools.
   ///
   /// In en, this message translates to:
-  /// **'Midwife Workflows & Tools'**
+  /// **'Professional Workflows & Tools'**
   String get midwifeWorkflowsAndTools;
 
   /// No description provided for @manageHours.
@@ -3721,6 +3727,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'All national emergency lines listed are toll-free and accessible 24/7 without credit across Ethio Telecom and Safaricom networks. For CAGH Hotline (0996 71 77 44), standard mobile rates or toll-free assistance applies.'**
   String get emergencyLinesNotice;
+
+  /// No description provided for @userLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'User Login'**
+  String get userLogin;
+
+  /// No description provided for @userSignUp.
+  ///
+  /// In en, this message translates to:
+  /// **'User Sign Up'**
+  String get userSignUp;
+
+  /// No description provided for @professionalLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Professional Login'**
+  String get professionalLogin;
+
+  /// No description provided for @professionalSignUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Professional Sign Up'**
+  String get professionalSignUp;
+
+  /// No description provided for @userRoleSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'For adolescent girls and young women'**
+  String get userRoleSubtitle;
+
+  /// No description provided for @professionalRoleSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'For healthcare professionals'**
+  String get professionalRoleSubtitle;
+
+  /// No description provided for @switchToProfessionalLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Healthcare professional? Professional Login'**
+  String get switchToProfessionalLogin;
+
+  /// No description provided for @switchToUserLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Seeking care? User Login'**
+  String get switchToUserLogin;
+
+  /// No description provided for @switchToProfessionalSignUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Healthcare professional? Professional Sign Up'**
+  String get switchToProfessionalSignUp;
+
+  /// No description provided for @switchToUserSignUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Seeking care? User Sign Up'**
+  String get switchToUserSignUp;
+
+  /// No description provided for @profession.
+  ///
+  /// In en, this message translates to:
+  /// **'Profession'**
+  String get profession;
+
+  /// No description provided for @selectProfession.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Profession'**
+  String get selectProfession;
+
+  /// No description provided for @professionMidwife.
+  ///
+  /// In en, this message translates to:
+  /// **'Midwife'**
+  String get professionMidwife;
+
+  /// No description provided for @professionNurse.
+  ///
+  /// In en, this message translates to:
+  /// **'Nurse'**
+  String get professionNurse;
+
+  /// No description provided for @professionDoctor.
+  ///
+  /// In en, this message translates to:
+  /// **'Doctor / General Practitioner'**
+  String get professionDoctor;
+
+  /// No description provided for @professionGyn.
+  ///
+  /// In en, this message translates to:
+  /// **'Obstetrician / Gynecologist'**
+  String get professionGyn;
+
+  /// No description provided for @professionPsychologist.
+  ///
+  /// In en, this message translates to:
+  /// **'Psychologist'**
+  String get professionPsychologist;
+
+  /// No description provided for @professionPsychiatrist.
+  ///
+  /// In en, this message translates to:
+  /// **'Psychiatrist'**
+  String get professionPsychiatrist;
+
+  /// No description provided for @professionHealthOfficer.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Officer'**
+  String get professionHealthOfficer;
+
+  /// No description provided for @professionOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other Health Professional'**
+  String get professionOther;
+
+  /// No description provided for @healthProfessional.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Professional'**
+  String get healthProfessional;
+
+  /// No description provided for @professionalDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Professional Dashboard'**
+  String get professionalDashboard;
 }
 
 class _AppLocalizationsDelegate

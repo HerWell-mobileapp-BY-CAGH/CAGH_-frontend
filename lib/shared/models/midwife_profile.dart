@@ -142,6 +142,38 @@ class MidwifeProfile {
       extractedSpecialty = '';
     }
 
+    // 6. Check if specialty was encoded in hospital name or affiliation (e.g. "St. Paul (Psychologist)")
+    if (extractedSpecialty.isEmpty) {
+      final hName = (hospital['name'] ??
+              json['hospital_name'] ??
+              json['hospital_affiliation'] ??
+              userProfile['hospital_affiliation'] ??
+              userProfile['hospital_name'] ??
+              (json['hospital'] is String ? json['hospital'] : '') ??
+              '')
+          .toString();
+      final match = RegExp(r'\(([^)]+)\)$').firstMatch(hName);
+      if (match != null) {
+        extractedSpecialty = match.group(1)!.trim();
+      } else {
+        const known = [
+          'Psychologist',
+          'Psychiatrist',
+          'Midwife',
+          'Nurse',
+          'General Practitioner (GP)',
+          'Obstetrician / Gynecologist',
+          'Health Officer',
+        ];
+        for (final k in known) {
+          if (hName.toLowerCase().contains(k.toLowerCase())) {
+            extractedSpecialty = k;
+            break;
+          }
+        }
+      }
+    }
+
     return MidwifeProfile(
       id: json['id']?.toString() ?? '',
       userId: user['id']?.toString() ?? json['user_id']?.toString() ?? '',

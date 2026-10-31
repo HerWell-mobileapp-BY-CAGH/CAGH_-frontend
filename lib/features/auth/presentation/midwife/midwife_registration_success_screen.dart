@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
-import 'package:cagh_frontend/features/auth/presentation/user/user_login_screen.dart';
+import 'package:cagh_frontend/features/auth/presentation/midwife/midwife_login_screen.dart';
 
 class MidwifeRegistrationSuccessScreen extends StatelessWidget {
   const MidwifeRegistrationSuccessScreen({super.key});
@@ -8,14 +8,14 @@ class MidwifeRegistrationSuccessScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7F5), // Light mint-like background from the image
+      backgroundColor: const Color(0xFFF4F7F5),
       appBar: AppBar(
         backgroundColor: AppColors.primaryGreen,
         elevation: 0,
         centerTitle: true,
-        automaticallyImplyLeading: false, // No back button
+        automaticallyImplyLeading: false,
         title: const Text(
-          'Midwife Registration',
+          'Professional Sign Up',
           style: TextStyle(
             color: Colors.white,
             fontSize: 18,
@@ -31,7 +31,7 @@ class MidwifeRegistrationSuccessScreen extends StatelessWidget {
             children: [
               const SizedBox(height: 20),
               
-              // Custom Illustration (Checkmark with clipboard)
+              // Illustration (Checkmark with clipboard)
               Stack(
                 alignment: Alignment.center,
                 children: [
@@ -115,7 +115,7 @@ class MidwifeRegistrationSuccessScreen extends StatelessWidget {
               const SizedBox(height: 16),
               
               const Text(
-                "After registration, your details will be reviewed by an administrator. You'll be able to access the midwife portal once approved.",
+                "After registration, your details will be reviewed by an administrator. You'll be able to access the professional portal once approved.",
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
@@ -166,7 +166,7 @@ class MidwifeRegistrationSuccessScreen extends StatelessWidget {
                   onPressed: () {
                     Navigator.pushAndRemoveUntil(
                       context,
-                      MaterialPageRoute(builder: (context) => const UserLoginScreen()),
+                      MaterialPageRoute(builder: (context) => const MidwifeLoginScreen()),
                       (route) => false,
                     );
                   },
@@ -179,7 +179,7 @@ class MidwifeRegistrationSuccessScreen extends StatelessWidget {
                     elevation: 0,
                   ),
                   child: const Text(
-                    'Done',
+                    'Back to Professional Login',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -194,12 +194,12 @@ class MidwifeRegistrationSuccessScreen extends StatelessWidget {
                 onPressed: () {
                   Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (context) => const UserLoginScreen()),
+                    MaterialPageRoute(builder: (context) => const MidwifeLoginScreen()),
                     (route) => false,
                   );
                 },
                 child: const Text(
-                  'Back to Login',
+                  'Back to Professional Login',
                   style: TextStyle(
                     color: AppColors.primaryGreen,
                     fontSize: 15,

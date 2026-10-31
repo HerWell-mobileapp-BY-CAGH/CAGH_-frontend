@@ -219,6 +219,7 @@ class AuthService {
     String? phone,
     int? yearsOfExperience,
     String? hospitalName,
+    String? specialty,
   }) async {
     _lastRole = role.toUpperCase();
 
@@ -232,6 +233,12 @@ class AuthService {
       'hospital_name': hospitalName ?? '',
       'hospital_affiliation': hospitalName ?? '',
       'hospital': hospitalName ?? '',
+      if (specialty != null && specialty.isNotEmpty) ...{
+        'specialty': specialty,
+        'title': specialty,
+        'professional_title': specialty,
+        'qualification': specialty,
+      },
     };
 
     final prefs = await SharedPreferences.getInstance();
@@ -253,6 +260,12 @@ class AuthService {
         if (phone != null && phone.isNotEmpty) 'phone_number': phone,
         // ignore: use_null_aware_elements
         if (yearsOfExperience != null) 'years_of_experience': yearsOfExperience,
+        if (specialty != null && specialty.isNotEmpty) ...{
+          'specialty': specialty,
+          'title': specialty,
+          'professional_title': specialty,
+          'qualification': specialty,
+        },
         if (hospitalName != null && hospitalName.isNotEmpty) ...{
           'hospital_name': hospitalName,
           'hospital_affiliation': hospitalName,
@@ -274,6 +287,16 @@ class AuthService {
 
       if (response.statusCode == 201 || response.statusCode == 200) {
         final userObj = (body['user'] is Map) ? body['user'] : registeredUser;
+        if (specialty != null && specialty.isNotEmpty) {
+          userObj['specialty'] = specialty;
+          userObj['title'] = specialty;
+          userObj['professional_title'] = specialty;
+          if (userObj['profile'] is Map) {
+            userObj['profile']['specialty'] = specialty;
+            userObj['profile']['title'] = specialty;
+            userObj['profile']['professional_title'] = specialty;
+          }
+        }
         await prefs.setString(_userDataKey, jsonEncode(userObj));
         await prefs.setString(_lastActiveKey, DateTime.now().toIso8601String());
         return ApiResponse(
@@ -637,11 +660,16 @@ class AuthService {
           .timeout(const Duration(seconds: 12));
 
       final body = jsonDecode(response.body);
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (body is Map<String, dynamic>) {
+          await _mergeLocalUserData(patchData, body);
+        } else {
+          await _mergeLocalUserData(patchData);
+        }
         return ApiResponse(
           success: true,
           message: 'Midwife profile updated',
-          data: body,
+          data: body is Map<String, dynamic> ? body : {},
         );
       } else {
         return ApiResponse(
@@ -677,11 +705,16 @@ class AuthService {
           .timeout(const Duration(seconds: 12));
 
       final body = jsonDecode(response.body);
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (body is Map<String, dynamic>) {
+          await _mergeLocalUserData(patchData, body);
+        } else {
+          await _mergeLocalUserData(patchData);
+        }
         return ApiResponse(
           success: true,
           message: 'Profile updated successfully',
-          data: body,
+          data: body is Map<String, dynamic> ? body : {},
         );
       } else {
         return ApiResponse(
@@ -1087,6 +1120,91 @@ class AuthService {
       }
     }
     return {};
+  }
+
+  static Future<void> updateLocalUserData(Map<String, dynamic> patchData) async {
+    await _mergeLocalUserData(patchData);
+  }
+
+  static Future<void> _mergeLocalUserData(
+    Map<String, dynamic> patchData, [
+    Map<String, dynamic>? serverData,
+  ]) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final current = await getUserData();
+      final merged = Map<String, dynamic>.from(current);
+
+      void updateMap(Map<String, dynamic> target, Map<String, dynamic> source) {
+        for (final entry in source.entries) {
+          if (entry.value is Map<String, dynamic> && target[entry.key] is Map<String, dynamic>) {
+            updateMap(
+              target[entry.key] as Map<String, dynamic>,
+              entry.value as Map<String, dynamic>,
+            );
+          } else {
+            target[entry.key] = entry.value;
+          }
+        }
+      }
+
+      // 1. Merge patchData
+      updateMap(merged, patchData);
+
+      // 2. Also merge patchData into nested 'user' and 'profile' if present
+      if (merged['user'] is Map) {
+        final u = Map<String, dynamic>.from(merged['user'] as Map);
+        updateMap(u, patchData);
+        merged['user'] = u;
+      }
+      if (merged['profile'] is Map) {
+        final p = Map<String, dynamic>.from(merged['profile'] as Map);
+        updateMap(p, patchData);
+        merged['profile'] = p;
+      }
+
+      // 3. Merge server response if present
+      if (serverData != null) {
+        updateMap(merged, serverData);
+        if (serverData['user'] is Map && merged['user'] is Map) {
+          final u = Map<String, dynamic>.from(merged['user'] as Map);
+          updateMap(u, Map<String, dynamic>.from(serverData['user'] as Map));
+          merged['user'] = u;
+        }
+        if (serverData['profile'] is Map && merged['profile'] is Map) {
+          final p = Map<String, dynamic>.from(merged['profile'] as Map);
+          updateMap(p, Map<String, dynamic>.from(serverData['profile'] as Map));
+          merged['profile'] = p;
+        }
+      }
+
+      // 4. Keep first_name, last_name, full_name in sync
+      final fn = patchData['first_name'] ??
+          (patchData['profile'] is Map ? patchData['profile']['first_name'] : null) ??
+          serverData?['first_name'] ??
+          merged['first_name'];
+      final ln = patchData['last_name'] ??
+          (patchData['profile'] is Map ? patchData['profile']['last_name'] : null) ??
+          serverData?['last_name'] ??
+          merged['last_name'];
+      if (fn != null || ln != null) {
+        final combined = '${fn ?? ''} ${ln ?? ''}'.trim();
+        if (combined.isNotEmpty) {
+          merged['full_name'] = combined;
+          merged['name'] = combined;
+          if (merged['user'] is Map) {
+            (merged['user'] as Map)['full_name'] = combined;
+            (merged['user'] as Map)['name'] = combined;
+            if (fn != null) (merged['user'] as Map)['first_name'] = fn;
+            if (ln != null) (merged['user'] as Map)['last_name'] = ln;
+          }
+        }
+      }
+
+      await prefs.setString(_userDataKey, jsonEncode(merged));
+    } catch (e) {
+      AppLogger.d('AuthApiService: Error merging local user data: $e');
+    }
   }
 
   static Future<void> logout() async {

@@ -63,7 +63,7 @@ class _UserInboxScreenState extends ConsumerState<UserInboxScreen> with SingleTi
 
       final namesMap = <String, String>{};
       for (var mw in mwData) {
-        namesMap[mw.id.toString()] = mw.fullName.isNotEmpty ? mw.fullName : 'Midwife';
+        namesMap[mw.id.toString()] = mw.fullName.isNotEmpty ? mw.fullName : 'Health Professional';
       }
 
       if (mounted) {
@@ -160,7 +160,7 @@ class _UserInboxScreenState extends ConsumerState<UserInboxScreen> with SingleTi
       return _midwifeNames[midwifeId]!;
     }
 
-    return 'Midwife';
+    return 'Health Professional';
   }
 
   String _extractMidwifeId(Map<String, dynamic> room) {

@@ -444,7 +444,7 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
         ),
         const SizedBox(height: 12),
         Text(
-          widget.midwife.bio.isNotEmpty ? widget.midwife.bio : 'A dedicated midwife committed to providing the best care.',
+          widget.midwife.bio.isNotEmpty ? widget.midwife.bio : 'A dedicated health professional committed to providing the best care.',
           style: TextStyle(fontSize: 14, color: bioColor, height: 1.6),
         ),
       ],

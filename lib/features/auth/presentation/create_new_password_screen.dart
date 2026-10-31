@@ -162,7 +162,7 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
             ),
             const SizedBox(height: 10),
             Text(
-              'Create a strong new password for your Digital Midwife account.',
+              'Create a strong new password for your Her Well account.',
               style: TextStyle(fontSize: 15, height: 1.4, color: Colors.grey.shade700),
             ),
             SizedBox(height: 36),

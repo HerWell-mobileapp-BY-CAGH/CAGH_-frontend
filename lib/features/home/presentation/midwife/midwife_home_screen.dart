@@ -98,7 +98,7 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
   }
 
   String _getFirstName(String fullName) {
-    final defaultTitle = AppLocalizations.of(context)?.midwifeTitle ?? 'Midwife';
+    final defaultTitle = AppLocalizations.of(context)?.midwifeTitle ?? 'Health Professional';
     if (fullName.isEmpty) return defaultTitle;
     // If it happens to be an email, take the part before @
     if (fullName.contains('@')) {

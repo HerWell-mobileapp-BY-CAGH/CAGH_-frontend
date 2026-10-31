@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -412,7 +412,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    widget.midwifeName ?? widget.midwife?.fullName ?? 'Midwife',
+                    widget.midwifeName ?? widget.midwife?.fullName ?? 'Health Professional',
                     style: TextStyle(color: Theme.of(context).appBarTheme.foregroundColor, fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   Text(

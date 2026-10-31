@@ -295,7 +295,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'This midwife is not currently offering consultation options.',
+                        'This health professional is not currently offering consultation options.',
                         style: TextStyle(color: isDark ? AppColors.darkTextPrimary : Colors.orange.shade900, fontSize: 13, fontWeight: FontWeight.bold),
                       ),
                     ),

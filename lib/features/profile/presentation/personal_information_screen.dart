@@ -489,15 +489,13 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
 
                     const SizedBox(height: 14),
 
-                    // Email Address Field
+                    // Email Address Field (Editable)
                     TextField(
                       controller: emailController,
                       keyboardType: TextInputType.emailAddress,
-                      readOnly: true,
                       decoration: InputDecoration(
                         labelText: AppLocalizations.of(context)!.emailAddress,
                         prefixIcon: const Icon(Icons.email_outlined, color: AppColors.primaryGreen),
-                        suffixIcon: const Icon(Icons.lock_outline, size: 18, color: Colors.grey),
                         filled: true,
                         fillColor: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade800 : Colors.grey.shade100,
                         border: OutlineInputBorder(
@@ -506,7 +504,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
-                          borderSide: const BorderSide(color: AppColors.mintLight),
+                          borderSide: const BorderSide(color: AppColors.primaryGreen, width: 1.5),
                         ),
                       ),
                     ),
@@ -521,20 +519,30 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                         onPressed: () async {
                           final updatedName = nameController.text.trim();
                           final updatedPhone = phoneController.text.trim();
+                          final updatedEmail = emailController.text.trim();
 
                           if (updatedName.isNotEmpty) {
                             final nameParts = updatedName.trim().split(' ');
                             final firstName = nameParts.first;
                             final lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
 
-                            final res = await AuthService.updateUserProfile({
+                            final payload = <String, dynamic>{
+                              'first_name': firstName,
+                              'last_name': lastName,
                               'phone_number': updatedPhone,
+                              if (updatedEmail.isNotEmpty) 'email': updatedEmail,
+                              'date_of_birth': selectedDob,
                               'profile': {
                                 'first_name': firstName,
                                 'last_name': lastName,
                                 'date_of_birth': selectedDob,
+                                'phone_number': updatedPhone,
+                                if (updatedEmail.isNotEmpty) 'email': updatedEmail,
                               }
-                            });
+                            };
+
+                            final res = await AuthService.updateUserProfile(payload);
+                            await AuthService.updateLocalUserData(payload);
 
                             if (mounted) {
                               Navigator.pop(context);
@@ -542,6 +550,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                                 setState(() {
                                   _fullName = updatedName;
                                   _phoneNumber = updatedPhone;
+                                  if (updatedEmail.isNotEmpty) _emailAddress = updatedEmail;
                                   _dateOfBirth = selectedDob;
                                 });
                                 ScaffoldMessenger.of(context).showSnackBar(
@@ -558,6 +567,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                                     backgroundColor: Colors.red,
                                   ),
                                 );
+                                _loadUserData();
                               }
                             }
                           }

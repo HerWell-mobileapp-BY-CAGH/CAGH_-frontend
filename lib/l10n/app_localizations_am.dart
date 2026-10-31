@@ -9,7 +9,7 @@ class AppLocalizationsAm extends AppLocalizations {
   AppLocalizationsAm([String locale = 'am']) : super(locale);
 
   @override
-  String get appTitle => 'ዲጂታል ሚድዋይፍ';
+  String get appTitle => 'Her Well';
 
   @override
   String get chooseLanguage => 'ቋንቋዎን ይምረጡ';
@@ -34,6 +34,9 @@ class AppLocalizationsAm extends AppLocalizations {
 
   @override
   String get register => 'ይመዝገቡ';
+
+  @override
+  String get signUp => 'ይመዝገቡ';
 
   @override
   String get welcomeBack => 'እንኳን ደህና መጡ';
@@ -81,19 +84,19 @@ class AppLocalizationsAm extends AppLocalizations {
   String get chooseJourney => 'ጉዞዎን ይምረጡ';
 
   @override
-  String get subUserType => 'ተሞክሮዎን ለማስተካከል ዲጂታል ሚድዋይፍን እንዴት እንደሚጠቀሙ ይምረጡ።';
+  String get subUserType => 'ተሞክሮዎን ለማስተካከል Her Wellን እንዴት እንደሚጠቀሙ ይምረጡ።';
 
   @override
   String get userTitle => 'ተጠቃሚ';
 
   @override
-  String get userSubtitle => 'እርዳታ እና እንክብካቤ እፈልጋለሁ';
+  String get userSubtitle => 'ለሴቶች እና ወጣቶች';
 
   @override
-  String get midwifeTitle => 'ሚድዋይፍ';
+  String get midwifeTitle => 'የጤና ባለሙያ';
 
   @override
-  String get midwifeSubtitle => 'እኔ የጤና ባለሙያ ነኝ';
+  String get midwifeSubtitle => 'ለጤና ባለሙያዎች';
 
   @override
   String get enterContactDetails => 'ኢሜይል ወይም ስልክ ቁጥር ያስገቡ';
@@ -117,7 +120,7 @@ class AppLocalizationsAm extends AppLocalizations {
   String get joinOurTeam => 'ቡድናችንን የተቀላቀሉ';
 
   @override
-  String get createAccountSubtitle => 'ለሴቶች ጤና እና አዋላጅ ድጋፍ ታማኝ አጋርዎ';
+  String get createAccountSubtitle => 'ለሴቶች ጤና እና የጤና ባለሙያ ድጋፍ ታማኝ አጋርዎ';
 
   @override
   String get agreeTerms => 'በአገልግሎት ውሎች እና በግላዊነት ፖሊሲ እስማማለሁ።';
@@ -143,7 +146,7 @@ class AppLocalizationsAm extends AppLocalizations {
   String get sendCode => 'ኮድ ላክ';
 
   @override
-  String get midwifeLogin => 'ሚድዋይፍ መግቢያ';
+  String get midwifeLogin => 'የባለሙያ መግቢያ';
 
   @override
   String get todaysAppointments => 'የዛሬ ቀጠሮዎች';
@@ -230,13 +233,13 @@ class AppLocalizationsAm extends AppLocalizations {
   String get needToSeeSomeone => 'የጤና ባለሙያ ማናገር ይፈልጋሉ?';
 
   @override
-  String get ourMidwivesAvailable => 'ሚድዋይፎቻችን በማንኛውም ጊዜ ለእርስዎ ዝግጁ ናቸው።';
+  String get ourMidwivesAvailable => 'የጤና ባለሙያዎቻችን በማንኛውም ጊዜ ለእርስዎ ዝግጁ ናቸው።';
 
   @override
   String get bookAppointment => 'ቀጠሮ ይያዙ';
 
   @override
-  String get findAMidwife => 'ሚድዋይፍ ፈልግ';
+  String get findAMidwife => 'የጤና ባለሙያ ያግኙ';
 
   @override
   String get personalInformation => 'የግል መረጃ';
@@ -248,7 +251,7 @@ class AppLocalizationsAm extends AppLocalizations {
   String get changeProfilePhoto => 'የመገለጫ ፎቶ ይቀይሩ';
 
   @override
-  String get savedMidwives => 'የተቀመጡ አዋላጆች';
+  String get savedMidwives => 'የተቀመጡ የጤና ባለሙያዎች';
 
   @override
   String get settings => 'ቅንብሮች';
@@ -272,7 +275,7 @@ class AppLocalizationsAm extends AppLocalizations {
   String get searchConversations => 'ውይይቶችን ፈልግ...';
 
   @override
-  String get onlineVerifiedMidwife => 'ኦንላይን • የተረጋገጠ አዋላጅ';
+  String get onlineVerifiedMidwife => 'ኦንላይን • የተረጋገጠ የጤና ባለሙያ';
 
   @override
   String get valEmailPhoneReq => 'ኢሜይል ወይም ስልክ ቁጥር ያስፈልጋል።';
@@ -391,13 +394,13 @@ class AppLocalizationsAm extends AppLocalizations {
 
   @override
   String get freeCancellationNotice =>
-      'ከቀጠሮዎ በፊት እስከ 24 ሰዓታት ድረስ\\nበነጻ መሰረዝ ይችላሉ።';
+      'ከቀጠሮዎ በፊት እስከ 24 ሰዓታት ድረስ\nበነጻ መሰረዝ ይችላሉ።';
 
   @override
   String get waitingForConfirmation => 'ማረጋገጫ በመጠባበቅ ላይ።';
 
   @override
-  String get yourMidwife => 'አዋላጅዎ';
+  String get yourMidwife => 'የእርስዎ የጤና ባለሙያ';
 
   @override
   String get reasonForVisit => 'የጉብኝት ምክንያት';
@@ -462,10 +465,10 @@ class AppLocalizationsAm extends AppLocalizations {
   String get passwordUpdated => 'የይለፍ ቃሉ ተዘምኗል!';
 
   @override
-  String get signInNewPassword => 'አሁን በአዲሱ የይለፍ ቃልዎ\\nመግባት ይችላሉ።';
+  String get signInNewPassword => 'አሁን በአዲሱ የይለፍ ቃልዎ\nመግባት ይችላሉ።';
 
   @override
-  String get midwifeRegistration => 'ሚድዋይፍ ምዝገባ';
+  String get midwifeRegistration => 'የባለሙያ ምዝገባ';
 
   @override
   String get yearsOfExperience => 'የስራ ልምድ ዓመታት';
@@ -549,13 +552,13 @@ class AppLocalizationsAm extends AppLocalizations {
   String get cancelRequest => 'ጥያቄን ይሰርዙ';
 
   @override
-  String get certifiedMidwife => 'የተረጋገጠ ሚድዋይፍ';
+  String get certifiedMidwife => 'የተረጋገጠ የጤና ባለሙያ';
 
   @override
   String get keepAppointment => 'ቀጠሮውን አቆይ';
 
   @override
-  String get noMidwivesAvailable => 'በአሁኑ ጊዜ ምንም ሚድዋይፎች አይገኙም።';
+  String get noMidwivesAvailable => 'በአሁኑ ጊዜ ምንም የጤና ባለሙያዎች አይገኙም።';
 
   @override
   String get availableToday => 'ዛሬ ይገኛል';
@@ -567,7 +570,7 @@ class AppLocalizationsAm extends AppLocalizations {
   String get message => 'መልእክት';
 
   @override
-  String get verifiedMidwife => 'የተረጋገጠ ሚድዋይፍ';
+  String get verifiedMidwife => 'የተረጋገጠ የጤና ባለሙያ';
 
   @override
   String get hospital => 'ሆስፒታል';
@@ -912,7 +915,7 @@ class AppLocalizationsAm extends AppLocalizations {
   String get noPastConsultations => 'ምንም ያለፉ ውይይቶች የሉም';
 
   @override
-  String get connectWithCertifiedMidwife => 'ለምክር ከተረጋገጠ አዋላጅ ጋር ይገናኙ';
+  String get connectWithCertifiedMidwife => 'ከተረጋገጠ የጤና ባለሙያ ጋር ይማከሩ';
 
   @override
   String get messages => 'መልእክቶች';
@@ -1031,7 +1034,7 @@ class AppLocalizationsAm extends AppLocalizations {
   String get earpiece => 'ኢርፒስ';
 
   @override
-  String get digitalMidwife => 'ዲጂታል አዋላጅ';
+  String get digitalMidwife => 'Her Well';
 
   @override
   String get systemDefault => 'የስርዓቱ ነባሪ';
@@ -1176,7 +1179,7 @@ class AppLocalizationsAm extends AppLocalizations {
   String get failedToLoadNotifications => 'ማሳወቂያዎችን መጫን አልተሳካም';
 
   @override
-  String get failedToLoadMidwives => 'አዋላጆችን መጫን አልተሳካም';
+  String get failedToLoadMidwives => 'የጤና ባለሙያዎችን መጫን አልተሳካም';
 
   @override
   String get unableToConnectConsultation =>
@@ -1190,7 +1193,7 @@ class AppLocalizationsAm extends AppLocalizations {
 
   @override
   String get waitForMidwifeAccept =>
-      'ተጨማሪ መልእክት ከመላክዎ በፊት አዋላጇ ጥያቄውን እስክታረጋግጥ ይጠብቁ።';
+      'ተጨማሪ መልእክት ከመላክዎ በፊት የጤና ባለሙያው ጥያቄውን እስኪያረጋግጥ ይጠብቁ።';
 
   @override
   String get waitForChatConnected => 'ውይይቱ እስኪገናኝ ይጠብቁ።';
@@ -1242,10 +1245,10 @@ class AppLocalizationsAm extends AppLocalizations {
 
   @override
   String get connectAndMessageDirectly =>
-      'ከተረጋገጡ የጤና አጠባበቅ አዋላጆቻችን ጋር በቀጥታ ይገናኙ እና ይወያዩ።';
+      'ከተረጋገጡ የጤና ባለሙያዎቻችን ጋር በቀጥታ ይገናኙ እና ይወያዩ።';
 
   @override
-  String get startChatWithMidwife => 'ከአዋላጅ ጋር ውይይት ጀምር';
+  String get startChatWithMidwife => 'ከጤና ባለሙያ ጋር ውይይት ጀምር';
 
   @override
   String get upcomingConsultation => 'የሚመጣ ምክክር';
@@ -1482,26 +1485,26 @@ class AppLocalizationsAm extends AppLocalizations {
   }
 
   @override
-  String get dedicatedMidwifeDesc => 'ምርጥ እንክብካቤ ለመስጠት ቁርጠኛ የሆነች አዋላጅ።';
+  String get dedicatedMidwifeDesc => 'ጥሩ እንክብካቤ ለመስጠት የወሰነ የጤና ባለሙያ።';
 
   @override
   String get noMidwivesMatchFilters =>
-      'ምንም አዋላጅ ከማጣሪያዎችዎ ጋር አይዛመድም። ዳግም ለማስጀመር ይሞክሩ።';
+      'ምንም የጤና ባለሙያ ከማጣሪያዎችዎ ጋር አይዛመድም። ዳግም ለማስጀመር ይሞክሩ።';
 
   @override
   String get userRegistration => 'የተጠቃሚ ምዝገባ';
 
   @override
-  String get seekingCareTitle => 'እርዳታ ፈላጊ ነኝ';
+  String get seekingCareTitle => 'የተጠቃሚ መግቢያ / ምዝገባ';
 
   @override
-  String get seekingCareSubtitle => 'የጤና መረጃ፣ ድጋፍ እና\nአገልግሎቶችን እፈልጋለሁ።';
+  String get seekingCareSubtitle => 'ለሴቶች እና ወጣቶች።';
 
   @override
-  String get midwifeRoleTitle => 'እኔ አዋላጅ ነኝ';
+  String get midwifeRoleTitle => 'የባለሙያ መግቢያ / ምዝገባ';
 
   @override
-  String get midwifeRoleSubtitle => 'ደንበኞችን የምደግፍ\nየጤና ባለሙያ ነኝ።';
+  String get midwifeRoleSubtitle => 'ለጤና ባለሙያዎች።';
 
   @override
   String get selectDateOfBirth => 'የትውልድ ቀንዎን ይምረጡ';
@@ -1651,11 +1654,11 @@ class AppLocalizationsAm extends AppLocalizations {
 
   @override
   String get roleMismatchMidwifeError =>
-      'ይህ ኢሜይል የተመዘገበው እንደ ታዳጊ/ተጠቃሚ መለያ ነው። እባክዎ በተጠቃሚ መግቢያ ይጠቀሙ።';
+      'ይህ መለያ እንደ ተጠቃሚ የተመዘገበ ነው። እባክዎ የተጠቃሚ መግቢያን ይጠቀሙ።';
 
   @override
   String get roleMismatchPatientError =>
-      'ይህ ኢሜይል የተመዘገበው እንደ አዋላጅ/ባለሙያ መለያ ነው። እባክዎ በአዋላጅ መግቢያ ይጠቀሙ።';
+      'ይህ መለያ እንደ ጤና ባለሙያ የተመዘገበ ነው። እባክዎ የባለሙያ መግቢያን ይጠቀሙ።';
 
   @override
   String get startTimeCannotBeInPast => 'የመጀመሪያ ሰዓት ለዛሬ ካለፈው ሰዓት መሆን የለበትም';
@@ -1664,7 +1667,7 @@ class AppLocalizationsAm extends AppLocalizations {
   String get verifiedMaternalCare => 'የተረጋገጠ የእናቶች ክብካቤ';
 
   @override
-  String get certifiedMidwivesNetwork => 'የተረጋገጡ አዋላጆች አውታረ መረብ';
+  String get certifiedMidwivesNetwork => 'የተረጋገጡ የጤና ባለሙያዎች አውታረ መረብ';
 
   @override
   String get heroConsultGuidance =>
@@ -1674,7 +1677,7 @@ class AppLocalizationsAm extends AppLocalizations {
   String get searchMidwivesHint => 'በስም፣ በሆስፒታል ወይም በልዩ ሙያ ይፈልጉ...';
 
   @override
-  String get noMidwivesFound => 'ምንም አዋላጆች አልተገኙም';
+  String get noMidwivesFound => 'ምንም የጤና ባለሙያዎች አልተገኙም';
 
   @override
   String get tryAdjustingSearch => 'እባክዎ የፍለጋ ቃልዎን ይቀይሩ።';
@@ -1683,7 +1686,7 @@ class AppLocalizationsAm extends AppLocalizations {
   String get clearSearch => 'ፍለጋን አጽዳ';
 
   @override
-  String get certifiedHealthcareMidwife => 'የተረጋገጠች የጤና አዋላጅ';
+  String get certifiedHealthcareMidwife => 'የተረጋገጠ የጤና ባለሙያ';
 
   @override
   String get bookConsultation => 'የምክክር ቀጠሮ ያዝ';
@@ -1692,11 +1695,11 @@ class AppLocalizationsAm extends AppLocalizations {
   String get noConversationsYet => 'እስካሁን ምንም ውይይቶች የሉም';
 
   @override
-  String get startConsultationHint => 'ምክክር ለመጀመር ለተረጋገጠች አዋላጅ መልእክት ይላኩ።';
+  String get startConsultationHint => 'ምክክር ለመጀመር ለተረጋገጠ የጤና ባለሙያ መልእክት ይላኩ።';
 
   @override
   String get emptyPendingAppointmentsSubtitle =>
-      'ቀጠሮ ሲይዙ የአዋላጇን ማረጋገጫ በመጠባበቅ እዚህ ይታያል።';
+      'ቀጠሮ ሲይዙ የባለሙያውን ማረጋገጫ በመጠባበቅ እዚህ ይታያል።';
 
   @override
   String get emptyUpcomingAppointmentsSubtitle =>
@@ -1790,7 +1793,7 @@ class AppLocalizationsAm extends AppLocalizations {
   String get badgeNew => 'አዲስ';
 
   @override
-  String get midwifeWorkflowsAndTools => 'የስራ ሂደቶች እና መሳሪያዎች';
+  String get midwifeWorkflowsAndTools => 'የባለሙያ የሥራ መሣሪያዎች';
 
   @override
   String get manageHours => 'የስራ ሰዓቶች';
@@ -1811,7 +1814,7 @@ class AppLocalizationsAm extends AppLocalizations {
   String get consultCalendarSubtitle => 'የተረጋገጡ ክፍለ-ጊዜዎችን ይመልከቱ';
 
   @override
-  String get clinicalProtocols => 'Clinical Protocols';
+  String get clinicalProtocols => 'የክሊኒካል መመሪያዎች';
 
   @override
   String get todaysConfirmedConsultations => 'የዛሬ የተረጋገጡ ምክክሮች';
@@ -1898,4 +1901,70 @@ class AppLocalizationsAm extends AppLocalizations {
   @override
   String get emergencyLinesNotice =>
       'እዚህ የተዘረዘሩት ብሔራዊ የአደጋ ጊዜ መስመሮች በኢትዮ ቴሌኮም እና በሳፋሪኮም ኔትወርኮች ያለ ሂሳብ 24/7 በነጻ የሚሰሩ ናቸው። ለሲኤጂኤች መስመር (0996 71 77 44) መደበኛ የጥሪ ክፍያ ወይም ነጻ እርዳታ ተፈጻሚ ይሆናል።';
+
+  @override
+  String get userLogin => 'የተጠቃሚ መግቢያ';
+
+  @override
+  String get userSignUp => 'የተጠቃሚ ምዝገባ';
+
+  @override
+  String get professionalLogin => 'የባለሙያ መግቢያ';
+
+  @override
+  String get professionalSignUp => 'የባለሙያ ምዝገባ';
+
+  @override
+  String get userRoleSubtitle => 'ለሴቶች እና ወጣቶች';
+
+  @override
+  String get professionalRoleSubtitle => 'ለጤና ባለሙያዎች';
+
+  @override
+  String get switchToProfessionalLogin => 'የጤና ባለሙያ ነዎት? የባለሙያ መግቢያ';
+
+  @override
+  String get switchToUserLogin => 'እርዳታ ፈላጊ ነዎት? የተጠቃሚ መግቢያ';
+
+  @override
+  String get switchToProfessionalSignUp => 'የጤና ባለሙያ ነዎት? የባለሙያ ምዝገባ';
+
+  @override
+  String get switchToUserSignUp => 'እርዳታ ፈላጊ ነዎት? የተጠቃሚ ምዝገባ';
+
+  @override
+  String get profession => 'ሙያ';
+
+  @override
+  String get selectProfession => 'ሙያ ይምረጡ';
+
+  @override
+  String get professionMidwife => 'ሚድዋይፍ (አዋላጅ)';
+
+  @override
+  String get professionNurse => 'ነርስ';
+
+  @override
+  String get professionDoctor => 'ሐኪም';
+
+  @override
+  String get professionGyn => 'የማህፀንና ፅንስ ስፔሻሊስት';
+
+  @override
+  String get professionPsychologist => 'ሳይኮሎጂስት';
+
+  @override
+  String get professionPsychiatrist => 'ሳይካትሪስት';
+
+  @override
+  String get professionHealthOfficer => 'የጤና መኮንን';
+
+  @override
+  String get professionOther => 'ሌላ የጤና ባለሙያ';
+
+  @override
+  String get healthProfessional => 'የጤና ባለሙያ';
+
+  @override
+  String get professionalDashboard => 'የባለሙያ ዳሽቦርድ';
 }

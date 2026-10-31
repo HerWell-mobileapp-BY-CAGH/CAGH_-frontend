@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'Digital Midwife';
+  String get appTitle => 'Her Well';
 
   @override
   String get chooseLanguage => 'Choose your language';
@@ -35,6 +35,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get register => 'Register';
+
+  @override
+  String get signUp => 'Sign Up';
 
   @override
   String get welcomeBack => 'Welcome Back';
@@ -83,19 +86,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get subUserType =>
-      'Select how you\'ll be using Digital Midwife to personalize your experience.';
+      'Select how you\'ll be using Her Well to personalize your experience.';
 
   @override
   String get userTitle => 'User';
 
   @override
-  String get userSubtitle => 'I am seeking care and support';
+  String get userSubtitle => 'For adolescent girls and young women';
 
   @override
-  String get midwifeTitle => 'Midwife';
+  String get midwifeTitle => 'Health Professional';
 
   @override
-  String get midwifeSubtitle => 'I am a healthcare provider';
+  String get midwifeSubtitle => 'For healthcare professionals';
 
   @override
   String get enterContactDetails => 'Enter your email or phone number';
@@ -120,7 +123,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get createAccountSubtitle =>
-      'Your trusted companion for women\'s health\\nand midwife support';
+      'Your trusted companion for women\'s health and professional healthcare support';
 
   @override
   String get agreeTerms =>
@@ -147,7 +150,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sendCode => 'Send Code';
 
   @override
-  String get midwifeLogin => 'Midwife Login';
+  String get midwifeLogin => 'Professional Login';
 
   @override
   String get todaysAppointments => 'Today\'s Appointments';
@@ -237,13 +240,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ourMidwivesAvailable =>
-      'Our midwives are available for talk or visit any time.';
+      'Our health professionals are available for talk or visit any time.';
 
   @override
   String get bookAppointment => 'Book Appointment';
 
   @override
-  String get findAMidwife => 'Find a Midwife';
+  String get findAMidwife => 'Find a Health Professional';
 
   @override
   String get personalInformation => 'Personal Information';
@@ -255,7 +258,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get changeProfilePhoto => 'Change Profile Photo';
 
   @override
-  String get savedMidwives => 'Saved Midwives';
+  String get savedMidwives => 'Saved Health Professionals';
 
   @override
   String get settings => 'Settings';
@@ -279,7 +282,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchConversations => 'Search conversations...';
 
   @override
-  String get onlineVerifiedMidwife => 'Online • Verified Midwife';
+  String get onlineVerifiedMidwife => 'Online • Verified Health Professional';
 
   @override
   String get valEmailPhoneReq => 'Email or phone number is required.';
@@ -401,13 +404,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get freeCancellationNotice =>
-      'Free cancellation up to 24 hours before\\nyour appointment.';
+      'Free cancellation up to 24 hours before your appointment.';
 
   @override
   String get waitingForConfirmation => 'Waiting for confirmation.';
 
   @override
-  String get yourMidwife => 'Your Midwife';
+  String get yourMidwife => 'Your Health Professional';
 
   @override
   String get reasonForVisit => 'REASON FOR VISIT';
@@ -475,10 +478,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get signInNewPassword =>
-      'You can now sign in using your\\nnew password.';
+      'You can now sign in using your new password.';
 
   @override
-  String get midwifeRegistration => 'Midwife Registration';
+  String get midwifeRegistration => 'Professional Sign Up';
 
   @override
   String get yearsOfExperience => 'Years of Experience';
@@ -567,13 +570,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cancelRequest => 'Cancel Request';
 
   @override
-  String get certifiedMidwife => 'Certified Midwife';
+  String get certifiedMidwife => 'Certified Health Professional';
 
   @override
   String get keepAppointment => 'Keep Appointment';
 
   @override
-  String get noMidwivesAvailable => 'No midwives available at the moment.';
+  String get noMidwivesAvailable =>
+      'No health professionals available at the moment.';
 
   @override
   String get availableToday => 'Available today';
@@ -585,7 +589,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get message => 'Message';
 
   @override
-  String get verifiedMidwife => 'Verified Midwife';
+  String get verifiedMidwife => 'Verified Health Professional';
 
   @override
   String get hospital => 'HOSPITAL';
@@ -936,7 +940,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get connectWithCertifiedMidwife =>
-      'Connect with a certified midwife for a consultation';
+      'Connect with a certified health professional for a consultation';
 
   @override
   String get messages => 'Messages';
@@ -1056,7 +1060,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get earpiece => 'Earpiece';
 
   @override
-  String get digitalMidwife => 'Digital Midwife';
+  String get digitalMidwife => 'Her Well';
 
   @override
   String get systemDefault => 'System Default';
@@ -1220,7 +1224,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get waitForMidwifeAccept =>
-      'Waiting for midwife to accept request before sending more messages.';
+      'Waiting for health professional to accept request before sending more messages.';
 
   @override
   String get waitForChatConnected => 'Wait for the chat to be connected.';
@@ -1272,10 +1276,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get connectAndMessageDirectly =>
-      'Connect and message directly with our verified healthcare midwives.';
+      'Connect and message directly with our verified health professionals.';
 
   @override
-  String get startChatWithMidwife => 'Start Chat with a Midwife';
+  String get startChatWithMidwife => 'Start Chat with a Health Professional';
 
   @override
   String get upcomingConsultation => 'Upcoming Consultation';
@@ -1514,28 +1518,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dedicatedMidwifeDesc =>
-      'A dedicated midwife committed to providing the best care.';
+      'A dedicated health professional committed to providing the best care.';
 
   @override
   String get noMidwivesMatchFilters =>
-      'No midwives match your filters. Try resetting.';
+      'No health professionals match your filters. Try resetting.';
 
   @override
-  String get userRegistration => 'User Registration';
+  String get userRegistration => 'User Sign Up';
 
   @override
-  String get seekingCareTitle => 'I\'m seeking care';
+  String get seekingCareTitle => 'User Login / Sign Up';
 
   @override
-  String get seekingCareSubtitle =>
-      'I want health information,\nsupport, and services.';
+  String get seekingCareSubtitle => 'For adolescent girls and young women.';
 
   @override
-  String get midwifeRoleTitle => 'I\'m a Midwife';
+  String get midwifeRoleTitle => 'Professional Login / Sign Up';
 
   @override
-  String get midwifeRoleSubtitle =>
-      'I\'m a healthcare provider\nsupporting clients.';
+  String get midwifeRoleSubtitle => 'For healthcare professionals.';
 
   @override
   String get selectDateOfBirth => 'Select your date of birth';
@@ -1690,11 +1692,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get roleMismatchMidwifeError =>
-      'This email is registered as an adolescent/patient account. Please use the User login.';
+      'This account is registered as a user. Please use User Login.';
 
   @override
   String get roleMismatchPatientError =>
-      'This email is registered as a healthcare provider/midwife account. Please use the Midwife login.';
+      'This account is registered as a healthcare professional. Please use Professional Login.';
 
   @override
   String get startTimeCannotBeInPast =>
@@ -1704,7 +1706,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get verifiedMaternalCare => 'VERIFIED MATERNAL CARE';
 
   @override
-  String get certifiedMidwivesNetwork => 'Certified Midwives Network';
+  String get certifiedMidwivesNetwork =>
+      'Certified Health Professionals Network';
 
   @override
   String get heroConsultGuidance =>
@@ -1714,7 +1717,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchMidwivesHint => 'Search by name, hospital, or specialty...';
 
   @override
-  String get noMidwivesFound => 'No midwives found';
+  String get noMidwivesFound => 'No health professionals found';
 
   @override
   String get tryAdjustingSearch => 'Try adjusting your search query.';
@@ -1723,7 +1726,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clearSearch => 'Clear search';
 
   @override
-  String get certifiedHealthcareMidwife => 'Certified Healthcare Midwife';
+  String get certifiedHealthcareMidwife => 'Certified Health Professional';
 
   @override
   String get bookConsultation => 'Book Consultation';
@@ -1733,11 +1736,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get startConsultationHint =>
-      'Send a message to a certified midwife to start a consultation.';
+      'Send a message to a certified health professional to start a consultation.';
 
   @override
   String get emptyPendingAppointmentsSubtitle =>
-      'When you book an appointment, it will appear here awaiting midwife confirmation.';
+      'When you book an appointment, it will appear here awaiting confirmation.';
 
   @override
   String get emptyUpcomingAppointmentsSubtitle =>
@@ -1833,7 +1836,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get badgeNew => 'New';
 
   @override
-  String get midwifeWorkflowsAndTools => 'Midwife Workflows & Tools';
+  String get midwifeWorkflowsAndTools => 'Professional Workflows & Tools';
 
   @override
   String get manageHours => 'Manage Hours';
@@ -1945,4 +1948,72 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get emergencyLinesNotice =>
       'All national emergency lines listed are toll-free and accessible 24/7 without credit across Ethio Telecom and Safaricom networks. For CAGH Hotline (0996 71 77 44), standard mobile rates or toll-free assistance applies.';
+
+  @override
+  String get userLogin => 'User Login';
+
+  @override
+  String get userSignUp => 'User Sign Up';
+
+  @override
+  String get professionalLogin => 'Professional Login';
+
+  @override
+  String get professionalSignUp => 'Professional Sign Up';
+
+  @override
+  String get userRoleSubtitle => 'For adolescent girls and young women';
+
+  @override
+  String get professionalRoleSubtitle => 'For healthcare professionals';
+
+  @override
+  String get switchToProfessionalLogin =>
+      'Healthcare professional? Professional Login';
+
+  @override
+  String get switchToUserLogin => 'Seeking care? User Login';
+
+  @override
+  String get switchToProfessionalSignUp =>
+      'Healthcare professional? Professional Sign Up';
+
+  @override
+  String get switchToUserSignUp => 'Seeking care? User Sign Up';
+
+  @override
+  String get profession => 'Profession';
+
+  @override
+  String get selectProfession => 'Select Profession';
+
+  @override
+  String get professionMidwife => 'Midwife';
+
+  @override
+  String get professionNurse => 'Nurse';
+
+  @override
+  String get professionDoctor => 'Doctor / General Practitioner';
+
+  @override
+  String get professionGyn => 'Obstetrician / Gynecologist';
+
+  @override
+  String get professionPsychologist => 'Psychologist';
+
+  @override
+  String get professionPsychiatrist => 'Psychiatrist';
+
+  @override
+  String get professionHealthOfficer => 'Health Officer';
+
+  @override
+  String get professionOther => 'Other Health Professional';
+
+  @override
+  String get healthProfessional => 'Health Professional';
+
+  @override
+  String get professionalDashboard => 'Professional Dashboard';
 }

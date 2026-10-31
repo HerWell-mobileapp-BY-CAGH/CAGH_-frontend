@@ -108,7 +108,7 @@ class _MyAppState extends ConsumerState<MyApp> {
                     const FallbackCupertinoLocalizationsDelegate(),
                   ],
                   // We have to use a static string or an initial translated string for the title since it requires context
-                  title: 'Digital Midwife',
+                  title: 'Her Well',
                   debugShowCheckedModeBanner: false,
                   themeMode: themeMode,
                   theme: ThemeData(

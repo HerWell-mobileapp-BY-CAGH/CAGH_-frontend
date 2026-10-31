@@ -187,8 +187,8 @@ class _SimCallBottomSheetState extends State<SimCallBottomSheet> {
               apt.midwifeName!.trim().isNotEmpty &&
               apt.midwifeName!.trim().toLowerCase() != 'recipient')
           ? apt.midwifeName!.trim()
-          : 'Midwife';
-      targetRole = l10n?.certifiedMidwife ?? 'Certified Midwife';
+          : 'Health Professional';
+      targetRole = l10n?.certifiedMidwife ?? 'Certified Health Professional';
     }
 
     // Resolve eligibility values

@@ -491,7 +491,7 @@ class _LearningCenterScreenState extends State<LearningCenterScreen> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      widget.isMidwife ? 'Midwife Knowledge & Clinical Hub' : 'Empower Your Maternal Health',
+                      widget.isMidwife ? 'Professional Knowledge & Clinical Hub' : 'Empower Your Maternal Health',
                       style: TextStyle(
                         fontSize: 21,
                         fontWeight: FontWeight.bold,

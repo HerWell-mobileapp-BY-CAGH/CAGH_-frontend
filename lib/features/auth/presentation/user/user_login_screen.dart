@@ -1,13 +1,14 @@
 import 'package:cagh_frontend/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:cagh_frontend/features/auth/presentation/user/user_registration_screen.dart';
+import 'package:cagh_frontend/features/onboarding/presentation/user_type_selection_screen.dart';
 import 'package:cagh_frontend/features/auth/presentation/forgot_password_screen.dart';
 import 'package:cagh_frontend/features/home/presentation/user/user_home_screen.dart';
 import 'package:cagh_frontend/features/auth/data/services/auth_api_service.dart';
 import 'package:cagh_frontend/shared/widgets/custom_snackbar.dart';
 import 'package:cagh_frontend/shared/widgets/app_text_field.dart';
 import 'package:cagh_frontend/shared/widgets/standard_app_bar.dart';
-import 'package:cagh_frontend/features/onboarding/presentation/language_selection_screen.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UserLoginScreen extends StatefulWidget {
@@ -143,26 +144,28 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
     final primaryDarkGreen = const Color(0xFF385A2E);
     final linkColor = isDark ? const Color(0xFF66BB6A) : const Color(0xFF1B5E20);
 
-    void navigateToLanguageSelection() {
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const LanguageSelectionScreen()),
-        (route) => false,
-      );
+    void navigateToRoleSelection() {
+      if (Navigator.canPop(context)) {
+        Navigator.pop(context);
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const UserTypeSelectionScreen()),
+        );
+      }
     }
-
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
-        navigateToLanguageSelection();
+        navigateToRoleSelection();
       },
       child: Scaffold(
         backgroundColor: bgColor,
         appBar: StandardAppBar(
-          title: AppLocalizations.of(context)!.login,
+          title: AppLocalizations.of(context)?.userLogin ?? 'User Login',
           showLanguagePicker: true,
-          onBack: navigateToLanguageSelection,
+          onBack: navigateToRoleSelection,
         ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -227,7 +230,17 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
                         color: textColor,
                       ),
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 6),
+                    Text(
+                      AppLocalizations.of(context)?.userRoleSubtitle ?? 'For adolescent girls and young women',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        color: isDark ? Colors.white70 : const Color(0xFF6B7280),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
 
                     AppTextField(
                       controller: _emailController,
@@ -399,7 +412,7 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
                       );
                     },
                     child: Text(
-                      AppLocalizations.of(context)!.register,
+                      AppLocalizations.of(context)?.signUp ?? 'Sign Up',
                       style: TextStyle(
                         fontSize: 15,
                         color: linkColor,
@@ -409,7 +422,7 @@ class _UserLoginScreenState extends State<UserLoginScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 24),
             ],
           ),
         ),

@@ -33,7 +33,7 @@ class _MidwifeSetupProfileScreenState extends State<MidwifeSetupProfileScreen> {
         'specialty': _specialtyController.text.trim(),
         'hospital_affiliation': _hospitalController.text.trim(),
         'experience_years': int.tryParse(_experienceController.text.trim()) ?? 0,
-        'bio': 'I am a passionate midwife dedicated to providing the best care.', // Default bio
+        'bio': 'I am a passionate health professional dedicated to providing the best care.', // Default bio
       });
 
       if (!mounted) return;
