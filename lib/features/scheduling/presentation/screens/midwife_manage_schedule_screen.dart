@@ -3,6 +3,8 @@ import 'package:cagh_frontend/features/appointments/data/services/appointment_ap
 import 'package:cagh_frontend/features/appointments/data/repositories/appointment_repository_impl.dart';
 import 'package:cagh_frontend/shared/models/working_hours.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
+import 'package:cagh_frontend/shared/widgets/globe_language_picker.dart';
+import 'package:cagh_frontend/features/notifications/presentation/widgets/notification_bell.dart';
 import 'package:cagh_frontend/shared/widgets/custom_snackbar.dart';
 import 'package:cagh_frontend/core/utils/app_logger.dart';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
@@ -154,16 +156,31 @@ class _MidwifeManageScheduleScreenState extends State<MidwifeManageScheduleScree
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text(
-          AppLocalizations.of(context)!.manageAvailability,
-          style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: isDark ? AppColors.darkBackground : const Color(0xFF385A2E),
-        elevation: 0,
+        centerTitle: false,
+        titleSpacing: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
+        title: Text(
+          AppLocalizations.of(context)!.manageAvailability,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.2,
+          ),
+        ),
+        backgroundColor: isDark ? AppColors.darkBackground : const Color(0xFF385A2E),
+        elevation: 0,
+        actions: const [
+          Center(child: GlobeLanguagePicker(iconColor: Colors.white)),
+          SizedBox(width: 6),
+          NotificationBell(iconColor: Colors.white),
+          SizedBox(width: 14),
+        ],
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator(color: primaryColor))

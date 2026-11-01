@@ -45,20 +45,23 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFF315E26), // App green color
+        backgroundColor: const Color(0xFF315E26),
         elevation: 0,
-        centerTitle: true,
+        centerTitle: false,
+        titleSpacing: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           AppLocalizations.of(context)!.digitalAiAssistant,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: const TextStyle(
             color: Colors.white,
-            fontWeight: 
-            FontWeight.bold,
-            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            fontSize: 20,
+            letterSpacing: -0.2,
           ),
         ),
         actions: [

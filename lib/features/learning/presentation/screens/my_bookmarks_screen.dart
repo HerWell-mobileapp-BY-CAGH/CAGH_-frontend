@@ -1,3 +1,4 @@
+import 'package:cagh_frontend/shared/widgets/inner_page_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
 import 'package:cagh_frontend/features/learning/data/repositories/learning_repository.dart';
@@ -45,23 +46,10 @@ class _MyBookmarksScreenState extends State<MyBookmarksScreen> {
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: theme.appBarTheme.backgroundColor ??
-            (isDark ? theme.scaffoldBackgroundColor : Colors.white),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: isDark ? Colors.white : Colors.black87),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          l10n.myBookmarks,
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: isDark ? Colors.white : const Color(0xFF1E293B),
-          ),
-        ),
-        centerTitle: true,
+      appBar: buildInnerPageAppBar(
+        context,
+        title: l10n.myBookmarks,
+        showLanguage: true,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: AppColors.primaryGreen))

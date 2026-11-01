@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:cagh_frontend/features/appointments/data/services/appointment_api_service.dart';
 import 'package:cagh_frontend/shared/models/availability_slot.dart';
 import 'package:cagh_frontend/shared/widgets/custom_snackbar.dart';
-import 'package:cagh_frontend/shared/widgets/globe_language_picker.dart';
+import 'package:cagh_frontend/features/notifications/presentation/widgets/notification_bell.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
 import 'package:cagh_frontend/shared/utils/ethiopian_date_time.dart';
@@ -210,28 +210,33 @@ class _MidwifeAddAvailabilityScreenState extends State<MidwifeAddAvailabilityScr
               bottom: false,
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-                child: Stack(
-                  alignment: Alignment.center,
+                child: Row(
                   children: [
-                    Text(
-                      AppLocalizations.of(context)!.schedule,
-                      style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
                     ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.schedule,
+                        textAlign: TextAlign.start,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.2,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        IconButton(
-                          onPressed: () => Navigator.pop(context),
-                          icon: const Icon(Icons.arrow_back, color: Colors.white),
-                        ),
-                        Row(
-                          children: const [
-                            GlobeLanguagePicker(iconColor: Colors.white, iconSize: 22),
-                            SizedBox(width: 2),
-                            Icon(Icons.notifications_none, color: Colors.white, size: 22),
-                            SizedBox(width: 12),
-                          ],
-                        ),
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        NotificationBell(iconColor: Colors.white),
+                        SizedBox(width: 4),
                       ],
                     ),
                   ],

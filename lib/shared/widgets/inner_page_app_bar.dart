@@ -18,14 +18,11 @@ PreferredSizeWidget buildInnerPageAppBar(
   final bgColor = isDark ? AppColors.darkSurface : AppColors.primaryGreen;
   final fgColor = isDark ? AppColors.darkTextPrimary : Colors.white;
 
-  final hasMultipleActions =
-      (showLanguage ? 1 : 0) + (showNotification ? 1 : 0) + (extraActions?.length ?? 0) > 1;
-
   return AppBar(
     backgroundColor: bgColor,
     elevation: 0,
-    centerTitle: !hasMultipleActions,
-    titleSpacing: hasMultipleActions ? 0 : NavigationToolbar.kMiddleSpacing,
+    centerTitle: false,
+    titleSpacing: 0,
     leading: IconButton(
       icon: Icon(Icons.arrow_back_ios_new_rounded, color: fgColor, size: 20),
       onPressed: onBack ?? () => Navigator.pop(context),
@@ -36,18 +33,24 @@ PreferredSizeWidget buildInnerPageAppBar(
       overflow: TextOverflow.ellipsis,
       style: TextStyle(
         color: fgColor,
-        fontSize: 18,
-        fontWeight: FontWeight.w600,
+        fontSize: 20,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.2,
       ),
     ),
     actions: [
-      if (showLanguage)
+      ...?extraActions,
+      if (showLanguage) ...[
+        if (extraActions != null && extraActions.isNotEmpty) const SizedBox(width: 8),
         Center(
           child: GlobeLanguagePicker(iconColor: fgColor),
         ),
-      if (showNotification) NotificationBell(iconColor: fgColor),
-      ...?extraActions,
-      const SizedBox(width: 8),
+      ],
+      if (showNotification) ...[
+        const SizedBox(width: 6),
+        NotificationBell(iconColor: fgColor),
+      ],
+      const SizedBox(width: 14),
     ],
   );
 }

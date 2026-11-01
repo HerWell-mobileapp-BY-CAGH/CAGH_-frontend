@@ -31,7 +31,6 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
   final _appointmentRepo = AppointmentRepositoryImpl(AppointmentApiService());
   
   late DateTime _selectedDate;
-  late DateTime _focusedDay;
   int _selectedDayIndex = 0;
   
   bool _isLoadingSlots = false;
@@ -45,7 +44,6 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     _selectedDate = today;
-    _focusedDay = today;
     _generateNextDays(today);
     _fetchSlotsForDate(today);
   }
@@ -565,7 +563,6 @@ class _MidwifeProfileDetailScreenState extends State<MidwifeProfileDetailScreen>
                     setState(() {
                       _selectedDayIndex = index;
                       _selectedDate = date;
-                      _focusedDay = date;
                     });
                     _fetchSlotsForDate(date);
                   },

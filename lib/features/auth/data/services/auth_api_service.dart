@@ -587,6 +587,16 @@ class AuthService {
       final body = jsonDecode(response.body);
       if (response.statusCode == 200 && body is Map<String, dynamic>) {
         final merged = Map<String, dynamic>.from(userData)..addAll(body);
+        if (userData['first_name'] != null && userData['first_name'].toString().isNotEmpty) {
+          merged['first_name'] = userData['first_name'];
+        }
+        if (userData['last_name'] != null && userData['last_name'].toString().isNotEmpty) {
+          merged['last_name'] = userData['last_name'];
+        }
+        if (userData['full_name'] != null && userData['full_name'].toString().isNotEmpty) {
+          merged['full_name'] = userData['full_name'];
+          merged['name'] = userData['full_name'];
+        }
         return ApiResponse(success: true, message: 'Profile loaded', data: merged);
       } else {
         return ApiResponse(
@@ -1109,17 +1119,117 @@ class AuthService {
   static Future<Map<String, dynamic>> getUserData() async {
     final prefs = await SharedPreferences.getInstance();
     final jsonStr = prefs.getString(_userDataKey);
+    Map<String, dynamic> data = {};
     if (jsonStr != null && jsonStr.isNotEmpty) {
       try {
         final decoded = jsonDecode(jsonStr);
         if (decoded is Map<String, dynamic>) {
-          return decoded;
+          data = Map<String, dynamic>.from(decoded);
         }
       } catch (e) {
         AppLogger.d('AuthApiService: Error decoding cached user data: $e');
       }
     }
-    return {};
+
+    // Overlay dedicated custom saved profile override if present (STRICTLY ROLE-SEPARATED)
+    try {
+      final isMidwife = data['role']?.toString().toUpperCase() == 'MIDWIFE' || _lastRole == 'MIDWIFE';
+      if (isMidwife) {
+        final midwifeSaved = prefs.getString('midwife_profile_custom_saved');
+        if (midwifeSaved != null && midwifeSaved.isNotEmpty) {
+          final custom = jsonDecode(midwifeSaved) as Map<String, dynamic>;
+          final fn = custom['first_name']?.toString() ?? '';
+          final ln = custom['last_name']?.toString() ?? '';
+          final full = custom['full_name']?.toString() ?? (fn.isNotEmpty || ln.isNotEmpty ? '$fn $ln'.trim() : '');
+          if (fn.isNotEmpty) data['first_name'] = fn;
+          if (ln.isNotEmpty) data['last_name'] = ln;
+          if (full.isNotEmpty) {
+            data['full_name'] = full;
+            data['name'] = full;
+          }
+          if (custom['phone_number'] != null && custom['phone_number'].toString().isNotEmpty) {
+            data['phone_number'] = custom['phone_number'].toString();
+          }
+          if (custom['bio'] != null && custom['bio'].toString().isNotEmpty) {
+            data['bio'] = custom['bio'].toString();
+          }
+          if (custom['title'] != null && custom['title'].toString().isNotEmpty) {
+            data['title'] = custom['title'].toString();
+            data['specialty'] = custom['title'].toString();
+          }
+          if (data['user'] is Map) {
+            final u = Map<String, dynamic>.from(data['user'] as Map);
+            if (fn.isNotEmpty) u['first_name'] = fn;
+            if (ln.isNotEmpty) u['last_name'] = ln;
+            if (full.isNotEmpty) {
+              u['full_name'] = full;
+              u['name'] = full;
+            }
+            data['user'] = u;
+          }
+          if (data['profile'] is Map) {
+            final p = Map<String, dynamic>.from(data['profile'] as Map);
+            if (fn.isNotEmpty) p['first_name'] = fn;
+            if (ln.isNotEmpty) p['last_name'] = ln;
+            if (full.isNotEmpty) {
+              p['full_name'] = full;
+              p['name'] = full;
+            }
+            data['profile'] = p;
+          }
+        }
+      } else {
+        // CLIENT / PATIENT - never read midwifeSaved
+        final userSaved = prefs.getString('user_profile_custom_saved');
+        if (userSaved != null && userSaved.isNotEmpty) {
+          final custom = jsonDecode(userSaved) as Map<String, dynamic>;
+          // Auto-clean any legacy cross-contamination from prior midwife saves
+          if (custom.containsKey('specialty') || custom.containsKey('experience_years') || custom.containsKey('title')) {
+            await prefs.remove('user_profile_custom_saved');
+          } else {
+            final fn = custom['first_name']?.toString() ?? '';
+            final ln = custom['last_name']?.toString() ?? '';
+            final full = custom['full_name']?.toString() ?? (fn.isNotEmpty || ln.isNotEmpty ? '$fn $ln'.trim() : '');
+            if (fn.isNotEmpty) data['first_name'] = fn;
+            if (ln.isNotEmpty) data['last_name'] = ln;
+            if (full.isNotEmpty) {
+              data['full_name'] = full;
+              data['name'] = full;
+            }
+            if (custom['phone_number'] != null && custom['phone_number'].toString().isNotEmpty) {
+              data['phone_number'] = custom['phone_number'].toString();
+            }
+            if (custom['avatar_index'] != null) {
+              data['avatar_index'] = custom['avatar_index'];
+            }
+            if (custom['date_of_birth'] != null && custom['date_of_birth'].toString().isNotEmpty) {
+              data['date_of_birth'] = custom['date_of_birth'].toString();
+            }
+            if (data['user'] is Map) {
+              final u = Map<String, dynamic>.from(data['user'] as Map);
+              if (fn.isNotEmpty) u['first_name'] = fn;
+              if (ln.isNotEmpty) u['last_name'] = ln;
+              if (full.isNotEmpty) {
+                u['full_name'] = full;
+                u['name'] = full;
+              }
+              data['user'] = u;
+            }
+            if (data['profile'] is Map) {
+              final p = Map<String, dynamic>.from(data['profile'] as Map);
+              if (fn.isNotEmpty) p['first_name'] = fn;
+              if (ln.isNotEmpty) p['last_name'] = ln;
+              if (full.isNotEmpty) {
+                p['full_name'] = full;
+                p['name'] = full;
+              }
+              data['profile'] = p;
+            }
+          }
+        }
+      }
+    } catch (_) {}
+    return data;
   }
 
   static Future<void> updateLocalUserData(Map<String, dynamic> patchData) async {
@@ -1165,15 +1275,41 @@ class AuthService {
 
       // 3. Merge server response if present
       if (serverData != null) {
-        updateMap(merged, serverData);
-        if (serverData['user'] is Map && merged['user'] is Map) {
+        final sCopy = Map<String, dynamic>.from(serverData);
+        final hasPatchName = patchData['first_name'] != null ||
+            patchData['last_name'] != null ||
+            patchData['full_name'] != null;
+        if (hasPatchName) {
+          sCopy.remove('first_name');
+          sCopy.remove('last_name');
+          sCopy.remove('full_name');
+          sCopy.remove('name');
+          if (sCopy['user'] is Map) {
+            final su = Map<String, dynamic>.from(sCopy['user'] as Map);
+            su.remove('first_name');
+            su.remove('last_name');
+            su.remove('full_name');
+            su.remove('name');
+            sCopy['user'] = su;
+          }
+          if (sCopy['profile'] is Map) {
+            final sp = Map<String, dynamic>.from(sCopy['profile'] as Map);
+            sp.remove('first_name');
+            sp.remove('last_name');
+            sp.remove('full_name');
+            sp.remove('name');
+            sCopy['profile'] = sp;
+          }
+        }
+        updateMap(merged, sCopy);
+        if (sCopy['user'] is Map && merged['user'] is Map) {
           final u = Map<String, dynamic>.from(merged['user'] as Map);
-          updateMap(u, Map<String, dynamic>.from(serverData['user'] as Map));
+          updateMap(u, Map<String, dynamic>.from(sCopy['user'] as Map));
           merged['user'] = u;
         }
-        if (serverData['profile'] is Map && merged['profile'] is Map) {
+        if (sCopy['profile'] is Map && merged['profile'] is Map) {
           final p = Map<String, dynamic>.from(merged['profile'] as Map);
-          updateMap(p, Map<String, dynamic>.from(serverData['profile'] as Map));
+          updateMap(p, Map<String, dynamic>.from(sCopy['profile'] as Map));
           merged['profile'] = p;
         }
       }

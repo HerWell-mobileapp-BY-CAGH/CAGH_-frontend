@@ -205,7 +205,7 @@ class MidwifeProfile {
       languages: json['languages'] is List
           ? (json['languages'] as List).map((e) => e.toString()).toList()
           : ((json['languages'] as String?)?.split(',').map((e) => e.trim()).toList() ?? ['Amharic', 'English']),
-      bio: json['bio']?.toString() ?? '',
+      bio: (json['bio'] ?? userProfile['bio'] ?? user['bio'])?.toString().trim() ?? '',
       offeredConsultationTypes: consultTypes,
       ratingAverage: double.tryParse(json['rating_average']?.toString() ?? '5.0') ?? 5.0,
       ratingCount: int.tryParse(json['rating_count']?.toString() ?? '0') ?? 0,
@@ -213,6 +213,54 @@ class MidwifeProfile {
       isAcceptingBookings: json['is_accepting_bookings'] != false,
       consultationFee: json['consultation_fee']?.toString() ?? '0.00',
       verificationStatus: status,
+    );
+  }
+
+  MidwifeProfile copyWith({
+    String? id,
+    String? userId,
+    String? username,
+    String? firstName,
+    String? lastName,
+    String? email,
+    String? avatarUrl,
+    String? hospitalId,
+    String? hospitalName,
+    String? hospitalAddress,
+    String? specialty,
+    int? experienceYears,
+    List<String>? languages,
+    String? bio,
+    List<String>? offeredConsultationTypes,
+    double? ratingAverage,
+    int? ratingCount,
+    bool? isFavorite,
+    bool? isAcceptingBookings,
+    String? consultationFee,
+    String? verificationStatus,
+  }) {
+    return MidwifeProfile(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      username: username ?? this.username,
+      firstName: firstName ?? this.firstName,
+      lastName: lastName ?? this.lastName,
+      email: email ?? this.email,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      hospitalId: hospitalId ?? this.hospitalId,
+      hospitalName: hospitalName ?? this.hospitalName,
+      hospitalAddress: hospitalAddress ?? this.hospitalAddress,
+      specialty: specialty ?? this.specialty,
+      experienceYears: experienceYears ?? this.experienceYears,
+      languages: languages ?? this.languages,
+      bio: bio ?? this.bio,
+      offeredConsultationTypes: offeredConsultationTypes ?? this.offeredConsultationTypes,
+      ratingAverage: ratingAverage ?? this.ratingAverage,
+      ratingCount: ratingCount ?? this.ratingCount,
+      isFavorite: isFavorite ?? this.isFavorite,
+      isAcceptingBookings: isAcceptingBookings ?? this.isAcceptingBookings,
+      consultationFee: consultationFee ?? this.consultationFee,
+      verificationStatus: verificationStatus ?? this.verificationStatus,
     );
   }
 

@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,6 +19,8 @@ import 'package:cagh_frontend/features/consultations/data/services/midwife_api_s
 import 'package:cagh_frontend/features/notifications/presentation/providers/notification_provider.dart';
 import 'package:cagh_frontend/shared/widgets/app_profile_avatar.dart';
 import 'package:cagh_frontend/core/utils/app_logger.dart';
+import 'package:cagh_frontend/shared/widgets/globe_language_picker.dart';
+import 'package:cagh_frontend/features/notifications/presentation/widgets/notification_bell.dart';
 
 class MidwifeProfileScreen extends ConsumerStatefulWidget {
   final VoidCallback? onBackTap;
@@ -49,6 +53,29 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
 
   Future<void> _fetchProfile() async {
     try {
+      // 0. Dedicated saved profile override (instant local persistence)
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final rawCustom = prefs.getString('midwife_profile_custom_saved');
+        if (rawCustom != null && rawCustom.isNotEmpty) {
+          final custom = jsonDecode(rawCustom) as Map<String, dynamic>;
+          final cFull = custom['full_name']?.toString() ?? '';
+          final cF = custom['first_name']?.toString() ?? '';
+          final cL = custom['last_name']?.toString() ?? '';
+          final cTitle = custom['title']?.toString() ?? custom['specialty']?.toString() ?? '';
+
+          if (cFull.isNotEmpty) {
+            fullName = cFull;
+          } else if (cF.isNotEmpty || cL.isNotEmpty) {
+            fullName = '$cF $cL'.trim();
+          }
+          if (cTitle.isNotEmpty) {
+            title = cTitle;
+          }
+          if (mounted) setState(() {});
+        }
+      } catch (_) {}
+
       final localData = await AuthService.getUserData();
       if (mounted) {
         setState(() {
@@ -67,12 +94,14 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
               u['last_name']?.toString() ??
               localData['last_name']?.toString() ??
               '';
-          if (fName.isNotEmpty || lName.isNotEmpty) {
-            fullName = '$fName $lName'.trim();
-          } else {
-            final cFullName = (p['full_name'] ?? u['full_name'] ?? localData['full_name'] ??
-                p['name'] ?? u['name'] ?? localData['name'] ?? '').toString().trim();
-            if (cFullName.isNotEmpty) fullName = cFullName;
+          if (fullName.isEmpty) {
+            if (fName.isNotEmpty || lName.isNotEmpty) {
+              fullName = '$fName $lName'.trim();
+            } else {
+              final cFullName = (p['full_name'] ?? u['full_name'] ?? localData['full_name'] ??
+                  p['name'] ?? u['name'] ?? localData['name'] ?? '').toString().trim();
+              if (cFullName.isNotEmpty) fullName = cFullName;
+            }
           }
 
           final emailVal =
@@ -101,10 +130,12 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
           final cFullName = (p['full_name'] ?? u['full_name'] ?? d['full_name'] ??
               p['name'] ?? u['name'] ?? d['name'] ?? '').toString().trim();
           setState(() {
-            if (fName.isNotEmpty || lName.isNotEmpty) {
-              fullName = '$fName $lName'.trim();
-            } else if (cFullName.isNotEmpty) {
-              fullName = cFullName;
+            if (fullName.isEmpty) {
+              if (fName.isNotEmpty || lName.isNotEmpty) {
+                fullName = '$fName $lName'.trim();
+              } else if (cFullName.isNotEmpty) {
+                fullName = cFullName;
+              }
             }
             final e = d['email']?.toString() ?? u['email']?.toString() ?? '';
             if (e.isNotEmpty) email = e;
@@ -160,14 +191,33 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
                       onPressed: widget.onBackTap,
                     )
                   : null,
+              centerTitle: false,
+              titleSpacing: widget.onBackTap != null ? 0 : 20,
               title: Text(
                 AppLocalizations.of(context)!.profile,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: 19,
+                  fontSize: 20,
                   fontWeight: FontWeight.w700,
+                  letterSpacing: -0.2,
                   color: Theme.of(context).appBarTheme.foregroundColor,
                 ),
               ),
+              actions: [
+                Center(
+                  child: GlobeLanguagePicker(
+                    iconColor: Theme.of(context).appBarTheme.foregroundColor ??
+                        (isDark ? Colors.white : AppColors.primaryGreen),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                NotificationBell(
+                  iconColor: Theme.of(context).appBarTheme.foregroundColor ??
+                      (isDark ? Colors.white : AppColors.primaryGreen),
+                ),
+                const SizedBox(width: 14),
+              ],
             )
           : null,
       body: isLoading
@@ -452,14 +502,6 @@ class _MidwifeProfileScreenState extends ConsumerState<MidwifeProfileScreen> {
                               DropdownMenuItem(
                                 value: 'am',
                                 child: Text('አማርኛ'),
-                              ),
-                              DropdownMenuItem(
-                                value: 'om',
-                                child: Text('Afaan Oromoo'),
-                              ),
-                              DropdownMenuItem(
-                                value: 'so',
-                                child: Text('Somali'),
                               ),
                             ],
                             onChanged: (lang) async {

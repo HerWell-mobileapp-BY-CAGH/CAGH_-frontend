@@ -2002,4 +2002,55 @@ class AppLocalizationsAm extends AppLocalizations {
 
   @override
   String get consultTabInbox => 'የመልእክት ሳጥን';
+
+  @override
+  String get emergencyQualifyTitle => 'የአደጋ ጊዜ ሁኔታዎች ምንድን ናቸው?';
+
+  @override
+  String get emergencyQualifyDesc =>
+      'ከባድ የደም መፍሰስ፣ ድንገተኛ ጽኑ ህመም፣ የመተንፈስ ችግር፣ አካላዊ ጥቃት ወይም ከፍተኛ ጭንቀት። አደጋ ላይ ከሆኑ ወዲያውኑ ይደውሉ።';
+
+  @override
+  String get herwellHelplineBadge => '24/7 የአደጋ ጊዜ መስመር';
+
+  @override
+  String get herwellHelplineTitle => 'የኸርዌል የአደጋ ጊዜ መስመር';
+
+  @override
+  String get herwellHelplineDesc =>
+      'ለታዳጊ ሴቶች ድንገተኛ የጤና ችግሮች፣ የወር አበባ ስቃይ እና አስቸኳይ ክሊኒካዊ ድጋፍ የሚሰጥ 24/7 ሚስጥራዊ የስልክ መስመር።';
+
+  @override
+  String get nationalAmbulanceDesc =>
+      'ለከባድ አደጋዎች፣ ድንገተኛ የህክምና ችግሮች እና የታካሚዎች ወደ ሆስፒታል ማጓጓዣ።';
+
+  @override
+  String get policeSecurityDesc =>
+      'ለድንገተኛ የጸጥታ ችግሮች፣ ጥቃት፣ ወንጀል እና ፈጣን የፖሊስ ጥበቃ።';
+
+  @override
+  String get redCrossDesc =>
+      'የአደጋ ጊዜ የመጀመሪያ እርዳታ፣ የሰብአዊ ህክምና እርዳታ እና የታካሚ ማጓጓዣ።';
+
+  @override
+  String get womenChildDesc => 'ለጥቃት፣ በደል፣ የታዳጊዎችና ወጣቶች ችግሮች እና የስነ-ልቦና ድጋፍ።';
+
+  @override
+  String get publicHealthDesc => 'ተላላፊ በሽታዎችን ለማሳወቅ፣ የበሽታ ምልክቶች እና የጤና ምክር።';
+
+  @override
+  String get fireRescueDesc => 'ለእሳት አደጋዎች፣ የህንፃ መደርመስ እና የነፍስ አድን ስራዎች።';
+
+  @override
+  String get callButtonLabel => 'ይደውሉ';
+
+  @override
+  String get emergencyTollFreeNotice =>
+      'ሁሉም የአደጋ ጊዜ የስልክ መስመሮች ነጻ (Toll-Free) ሲሆኑ በሁሉም የሞባይል መስመሮች 24/7 ይሰራሉ።';
+
+  @override
+  String get emergencyLocationCopied => 'የመገኛ መረጃው ተቀድቷል';
+
+  @override
+  String get emergencyHotlineNumberCopied => 'የስልክ ቁጥሩ ተቀድቷል';
 }

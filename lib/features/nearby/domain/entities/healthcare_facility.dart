@@ -58,4 +58,44 @@ class HealthcareFacility {
       navigationUrls: json['navigation_urls'] as Map<String, dynamic>?,
     );
   }
+
+  HealthcareFacility copyWith({
+    String? id,
+    String? name,
+    String? type,
+    double? latitude,
+    double? longitude,
+    double? distance,
+    String? address,
+    String? phone,
+    bool? isOpen,
+    bool? emergencyAvailable,
+    bool? verified,
+    List<String>? services,
+    String? operatingHours,
+    double? rating,
+    String? image,
+    String? callUrl,
+    Map<String, dynamic>? navigationUrls,
+  }) {
+    return HealthcareFacility(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      type: type ?? this.type,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      distance: distance ?? this.distance,
+      address: address ?? this.address,
+      phone: phone ?? this.phone,
+      isOpen: isOpen ?? this.isOpen,
+      emergencyAvailable: emergencyAvailable ?? this.emergencyAvailable,
+      verified: verified ?? this.verified,
+      services: services ?? this.services,
+      operatingHours: operatingHours ?? this.operatingHours,
+      rating: rating ?? this.rating,
+      image: image ?? this.image,
+      callUrl: callUrl ?? this.callUrl,
+      navigationUrls: navigationUrls ?? this.navigationUrls,
+    );
+  }
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
+import 'package:cagh_frontend/shared/widgets/globe_language_picker.dart';
+import 'package:cagh_frontend/features/notifications/presentation/widgets/notification_bell.dart';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 class MidwifeNotificationSettingsScreen extends StatefulWidget {
@@ -53,18 +55,29 @@ class _MidwifeNotificationSettingsScreenState extends State<MidwifeNotificationS
       appBar: AppBar(
         backgroundColor: AppColors.primaryGreen,
         elevation: 0,
+        centerTitle: false,
+        titleSpacing: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           l10n.notifications,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: const TextStyle(
             color: Colors.white,
             fontSize: 20,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.2,
           ),
         ),
+        actions: const [
+          Center(child: GlobeLanguagePicker(iconColor: Colors.white)),
+          SizedBox(width: 6),
+          NotificationBell(iconColor: Colors.white),
+          SizedBox(width: 14),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),

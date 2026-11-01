@@ -58,7 +58,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       appBar: buildInnerPageAppBar(
         context,
         title: l10n.notifications,
-        showLanguage: false,
+        showLanguage: true,
         extraActions: [
           if (unreadCount > 0)
             Padding(

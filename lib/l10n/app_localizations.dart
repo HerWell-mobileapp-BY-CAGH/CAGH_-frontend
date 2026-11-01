@@ -1415,7 +1415,7 @@ abstract class AppLocalizations {
   /// No description provided for @professionalTitle.
   ///
   /// In en, this message translates to:
-  /// **'PROFESSIONAL TITLE'**
+  /// **'Professional Title'**
   String get professionalTitle;
 
   /// No description provided for @editProfessionalProfile.
@@ -1427,7 +1427,7 @@ abstract class AppLocalizations {
   /// No description provided for @aboutMe.
   ///
   /// In en, this message translates to:
-  /// **'ABOUT ME'**
+  /// **'About Me'**
   String get aboutMe;
 
   /// No description provided for @editPersonalProfile.
@@ -3925,6 +3925,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Inbox'**
   String get consultTabInbox;
+
+  /// No description provided for @emergencyQualifyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What qualifies as an emergency?'**
+  String get emergencyQualifyTitle;
+
+  /// No description provided for @emergencyQualifyDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Severe bleeding, acute pain, difficulty breathing, injury or violence, and acute crisis. In immediate danger, call below.'**
+  String get emergencyQualifyDesc;
+
+  /// No description provided for @herwellHelplineBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'24/7 HELPLINE'**
+  String get herwellHelplineBadge;
+
+  /// No description provided for @herwellHelplineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'HerWell Emergency Helpline'**
+  String get herwellHelplineTitle;
+
+  /// No description provided for @herwellHelplineDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'24/7 confidential helpline for adolescent girls facing acute health emergencies, sudden pain, or needing urgent clinical guidance.'**
+  String get herwellHelplineDesc;
+
+  /// No description provided for @nationalAmbulanceDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Severe injuries, sudden medical crises, and urgent hospital transport.'**
+  String get nationalAmbulanceDesc;
+
+  /// No description provided for @policeSecurityDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Immediate security threats, violence, crime, and urgent protection.'**
+  String get policeSecurityDesc;
+
+  /// No description provided for @redCrossDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency first aid, humanitarian medical response, and patient transport.'**
+  String get redCrossDesc;
+
+  /// No description provided for @womenChildDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Gender-based violence, abuse, adolescent crisis, and psychological counseling.'**
+  String get womenChildDesc;
+
+  /// No description provided for @publicHealthDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Disease outbreak alerts, epidemic symptoms, and public health guidance.'**
+  String get publicHealthDesc;
+
+  /// No description provided for @fireRescueDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Fires, structural collapse, rescue emergencies, and disaster response.'**
+  String get fireRescueDesc;
+
+  /// No description provided for @callButtonLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Call'**
+  String get callButtonLabel;
+
+  /// No description provided for @emergencyTollFreeNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'All emergency hotlines are free of charge (toll-free) and accessible 24/7 across all networks.'**
+  String get emergencyTollFreeNotice;
+
+  /// No description provided for @emergencyLocationCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Coordinates copied to clipboard'**
+  String get emergencyLocationCopied;
+
+  /// No description provided for @emergencyHotlineNumberCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Hotline number copied'**
+  String get emergencyHotlineNumberCopied;
 }
 
 class _AppLocalizationsDelegate

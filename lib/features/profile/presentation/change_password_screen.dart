@@ -121,15 +121,19 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
           icon: Icon(Icons.arrow_back, color: isDark ? Colors.white : Colors.black87),
           onPressed: () => Navigator.pop(context),
         ),
+        centerTitle: false,
+  titleSpacing: 0,
         title: Text(
           l10n.changePassword,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: TextStyle(
-            fontSize: 18,
+            fontSize: 20,
             fontWeight: FontWeight.w700,
+            letterSpacing: -0.2,
             color: isDark ? Colors.white : const Color(0xFF1E293B),
           ),
         ),
-        centerTitle: true,
       ),
       body: SafeArea(
         child: SingleChildScrollView(

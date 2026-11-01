@@ -8,6 +8,8 @@ import 'package:cagh_frontend/features/consultations/data/repositories/midwife_r
 import 'package:cagh_frontend/shared/models/midwife_profile.dart';
 import 'package:cagh_frontend/features/consultations/presentation/user/chat_screen.dart';
 import 'package:cagh_frontend/shared/widgets/app_profile_avatar.dart';
+import 'package:cagh_frontend/shared/widgets/globe_language_picker.dart';
+import 'package:cagh_frontend/features/notifications/presentation/widgets/notification_bell.dart';
 import 'package:cagh_frontend/features/notifications/presentation/providers/notification_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
@@ -228,15 +230,29 @@ class _UserInboxScreenState extends ConsumerState<UserInboxScreen> with SingleTi
         backgroundColor: const Color(0xFF385A2E),
         foregroundColor: Colors.white,
         elevation: 0,
-        centerTitle: true,
+        centerTitle: false,
+        titleSpacing: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           AppLocalizations.of(context)!.messages,
-          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 18, color: Colors.white),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 20,
+            color: Colors.white,
+            letterSpacing: -0.2,
+          ),
         ),
+        actions: const [
+          Center(child: GlobeLanguagePicker(iconColor: Colors.white)),
+          SizedBox(width: 6),
+          NotificationBell(iconColor: Colors.white),
+          SizedBox(width: 14),
+        ],
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: AppColors.accentYellow,

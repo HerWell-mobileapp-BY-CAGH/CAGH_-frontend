@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cagh_frontend/shared/widgets/globe_language_picker.dart';
+import 'package:cagh_frontend/features/notifications/presentation/widgets/notification_bell.dart';
 import 'package:cagh_frontend/features/scheduling/presentation/screens/midwife_add_availability_screen.dart';
 import 'package:cagh_frontend/features/appointments/data/services/appointment_api_service.dart';
 import 'package:cagh_frontend/shared/models/availability_slot.dart';
@@ -86,42 +86,38 @@ class _MidwifeDayViewScreenState extends State<MidwifeDayViewScreen> {
                   horizontal: 16,
                   vertical: 12,
                 ),
-                child: Stack(
-                  alignment: Alignment.center,
+                child: Row(
                   children: [
-                    Text(
-                      AppLocalizations.of(context)!.schedule,
-                      style: const TextStyle(
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(
+                        Icons.arrow_back,
                         color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
                       ),
                     ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(context)!.schedule,
+                        textAlign: TextAlign.start,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.2,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        IconButton(
-                          onPressed: () => Navigator.pop(context),
-                          icon: const Icon(
-                            Icons.arrow_back,
-                            color: Colors.white,
-                          ),
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        NotificationBell(
+                          iconColor: Colors.white,
                         ),
-                        Row(
-                          children: const [
-                            GlobeLanguagePicker(
-                              iconColor: Colors.white,
-                              iconSize: 22,
-                            ),
-                            SizedBox(width: 2),
-                            Icon(
-                              Icons.notifications_none,
-                              color: Colors.white,
-                              size: 22,
-                            ),
-                            SizedBox(width: 12),
-                          ],
-                        ),
+                        SizedBox(width: 4),
                       ],
                     ),
                   ],

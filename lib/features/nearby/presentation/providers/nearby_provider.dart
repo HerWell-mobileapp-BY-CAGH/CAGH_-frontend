@@ -1,4 +1,4 @@
-﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../domain/entities/healthcare_facility.dart';
 import '../../domain/repositories/nearby_repository.dart';
@@ -72,6 +72,7 @@ class NearbyStateNotifier extends StateNotifier<NearbyState> {
     String? type,
     String? service,
     double? radius,
+    Position? position,
     bool forceRefreshLocation = false,
   }) async {
     // If state is already NearbyLoaded with identical parameters, retain cached data immediately
@@ -79,8 +80,13 @@ class NearbyStateNotifier extends StateNotifier<NearbyState> {
     final targetService = service ?? _currentService;
     final targetRadius = radius ?? _currentRadius;
 
+    if (position != null) {
+      _lastKnownPosition = position;
+    }
+
     if (state is NearbyLoaded &&
         !forceRefreshLocation &&
+        position == null &&
         targetType == _currentType &&
         targetService == _currentService &&
         targetRadius == _currentRadius) {
@@ -95,35 +101,42 @@ class NearbyStateNotifier extends StateNotifier<NearbyState> {
       _currentRadius = targetRadius;
 
       if (_lastKnownPosition == null || forceRefreshLocation) {
-        try {
-          bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-          if (serviceEnabled) {
-            LocationPermission permission = await Geolocator.checkPermission();
-            if (permission == LocationPermission.denied) {
-              permission = await Geolocator.requestPermission();
+        if (position != null) {
+          _lastKnownPosition = position;
+        } else {
+          try {
+            bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+            if (serviceEnabled) {
+              LocationPermission permission = await Geolocator.checkPermission();
+              if (permission == LocationPermission.denied) {
+                permission = await Geolocator.requestPermission();
+              }
+              if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
+                // Try fast cached last known position first
+                _lastKnownPosition = await Geolocator.getLastKnownPosition();
+                _lastKnownPosition ??= await Geolocator.getCurrentPosition(
+                  locationSettings: const LocationSettings(
+                    accuracy: LocationAccuracy.high,
+                    timeLimit: Duration(seconds: 5),
+                  ),
+                );
+              }
             }
-            if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
-              // Fast path: try cached last known position (<5ms!)
-              _lastKnownPosition = await Geolocator.getLastKnownPosition();
-              _lastKnownPosition ??= await Geolocator.getCurrentPosition(
-                locationSettings: const LocationSettings(accuracy: LocationAccuracy.medium),
-              ).timeout(const Duration(seconds: 2));
-            }
-          }
-        } catch (_) {}
+          } catch (_) {}
 
-        _lastKnownPosition ??= Position(
-          latitude: 9.0300,
-          longitude: 38.7400,
-          timestamp: DateTime.now(),
-          accuracy: 10.0,
-          altitude: 2355.0,
-          altitudeAccuracy: 10.0,
-          heading: 0.0,
-          headingAccuracy: 0.0,
-          speed: 0.0,
-          speedAccuracy: 0.0,
-        );
+          _lastKnownPosition ??= Position(
+            latitude: 9.0300,
+            longitude: 38.7400,
+            timestamp: DateTime.now(),
+            accuracy: 10.0,
+            altitude: 2355.0,
+            altitudeAccuracy: 10.0,
+            heading: 0.0,
+            headingAccuracy: 0.0,
+            speed: 0.0,
+            speedAccuracy: 0.0,
+          );
+        }
       }
 
       final facilities = await _repository.getNearbyFacilities(
@@ -133,6 +146,9 @@ class NearbyStateNotifier extends StateNotifier<NearbyState> {
         type: _currentType,
         service: _currentService,
       );
+
+      // Sort by distance ascending so closest facilities always appear first
+      facilities.sort((a, b) => a.distance.compareTo(b.distance));
 
       if (facilities.isEmpty) {
         state = NearbyEmpty(

@@ -680,5 +680,20 @@
   "certifiedGuidesCount": "30+ የተረጋገጡ መመሪያዎች",
   "expertReviewed": "በባለሙያ የተገመገመ",
   "consultTabFindCare": "ባለሙያዎችን ፈልግ",
-  "consultTabInbox": "የመልእክት ሳጥን"
+  "consultTabInbox": "የመልእክት ሳጥን",
+  "emergencyQualifyTitle": "የአደጋ ጊዜ ሁኔታዎች ምንድን ናቸው?",
+  "emergencyQualifyDesc": "ከባድ የደም መፍሰስ፣ ድንገተኛ ጽኑ ህመም፣ የመተንፈስ ችግር፣ አካላዊ ጥቃት ወይም ከፍተኛ ጭንቀት። አደጋ ላይ ከሆኑ ወዲያውኑ ይደውሉ።",
+  "herwellHelplineBadge": "24/7 የአደጋ ጊዜ መስመር",
+  "herwellHelplineTitle": "የኸርዌል የአደጋ ጊዜ መስመር",
+  "herwellHelplineDesc": "ለታዳጊ ሴቶች ድንገተኛ የጤና ችግሮች፣ የወር አበባ ስቃይ እና አስቸኳይ ክሊኒካዊ ድጋፍ የሚሰጥ 24/7 ሚስጥራዊ የስልክ መስመር።",
+  "nationalAmbulanceDesc": "ለከባድ አደጋዎች፣ ድንገተኛ የህክምና ችግሮች እና የታካሚዎች ወደ ሆስፒታል ማጓጓዣ።",
+  "policeSecurityDesc": "ለድንገተኛ የጸጥታ ችግሮች፣ ጥቃት፣ ወንጀል እና ፈጣን የፖሊስ ጥበቃ።",
+  "redCrossDesc": "የአደጋ ጊዜ የመጀመሪያ እርዳታ፣ የሰብአዊ ህክምና እርዳታ እና የታካሚ ማጓጓዣ።",
+  "womenChildDesc": "ለጥቃት፣ በደል፣ የታዳጊዎችና ወጣቶች ችግሮች እና የስነ-ልቦና ድጋፍ።",
+  "publicHealthDesc": "ተላላፊ በሽታዎችን ለማሳወቅ፣ የበሽታ ምልክቶች እና የጤና ምክር።",
+  "fireRescueDesc": "ለእሳት አደጋዎች፣ የህንፃ መደርመስ እና የነፍስ አድን ስራዎች።",
+  "callButtonLabel": "ይደውሉ",
+  "emergencyTollFreeNotice": "ሁሉም የአደጋ ጊዜ የስልክ መስመሮች ነጻ (Toll-Free) ሲሆኑ በሁሉም የሞባይል መስመሮች 24/7 ይሰራሉ።",
+  "emergencyLocationCopied": "የመገኛ መረጃው ተቀድቷል",
+  "emergencyHotlineNumberCopied": "የስልክ ቁጥሩ ተቀድቷል"
 }

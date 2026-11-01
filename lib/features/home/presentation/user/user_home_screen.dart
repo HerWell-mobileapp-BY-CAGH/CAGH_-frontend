@@ -41,20 +41,20 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
   Widget _buildFloatingButtons() {
     final mediaQuery = MediaQuery.of(context);
     final screenWidth = mediaQuery.size.width;
-    // Responsive size: 44dp on very small screens, 46-48dp on standard phones, up to 50dp on tablets
-    final buttonSize = (screenWidth * 0.118).clamp(44.0, 48.0);
-    final gap = (buttonSize * 0.2).clamp(8.0, 10.0);
+    // Responsive compact size: 42dp on standard phones, up to 46dp on tablets
+    final buttonSize = (screenWidth * 0.105).clamp(42.0, 46.0);
+    const gap = 8.0;
 
     return Padding(
-      // Keep compact and snug above the floating glass nav bar without floating high into page content
-      padding: const EdgeInsets.only(bottom: 2.0, right: 2.0),
+      // Keep compact and snug above the floating glass nav bar without obstructing content
+      padding: const EdgeInsets.only(bottom: 4.0, right: 2.0),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.end,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           HotlineFab(size: buttonSize),
-          SizedBox(height: gap),
+          const SizedBox(height: gap),
           AiAssistantFab(
             size: buttonSize,
             onTap: () {
@@ -90,44 +90,34 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                 child: SizedBox(
                   height: 38,
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final totalWidth = constraints.maxWidth;
-                      const rightActionsWidth = 98.0;
-                      // On standard screens (>= 370px), left spacer exactly matches right actions to keep title dead-centered.
-                      // On smaller screens, clamp left spacer so title has maximum breathing room and never truncates prematurely.
-                      final leftSpacerWidth = (totalWidth >= 370)
-                          ? rightActionsWidth
-                          : (totalWidth - rightActionsWidth - 150).clamp(14.0, rightActionsWidth);
-
-                      return Row(
-                        children: [
-                          SizedBox(width: leftSpacerWidth),
-                          Expanded(
-                            child: Text(
-                              _getTabTitle(context),
-                              textAlign: TextAlign.center,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 17.5,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: -0.2,
-                              ),
-                            ),
+                  child: Row(
+                    children: [
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          _getTabTitle(context),
+                          textAlign: TextAlign.start,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.2,
                           ),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: const [
-                              GlobeLanguagePicker(iconColor: Colors.white),
-                              SizedBox(width: 4),
-                              NotificationBell(iconColor: Colors.white),
-                            ],
-                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: const [
+                          GlobeLanguagePicker(iconColor: Colors.white),
+                          SizedBox(width: 6),
+                          NotificationBell(iconColor: Colors.white),
+                          SizedBox(width: 4),
                         ],
-                      );
-                    },
+                      ),
+                    ],
                   ),
                 ),
               ),

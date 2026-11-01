@@ -1,3 +1,4 @@
+import 'package:cagh_frontend/shared/widgets/inner_page_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:cagh_frontend/core/services/appearance_service.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
@@ -15,19 +16,10 @@ class _AppearanceAccessibilityScreenState extends State<AppearanceAccessibilityS
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: AppColors.accentYellow),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          AppLocalizations.of(context)!.appearanceAccessibility,
-          style: TextStyle(
-            fontSize: 19,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
+      appBar: buildInnerPageAppBar(
+        context,
+        title: AppLocalizations.of(context)!.appearanceAccessibility,
+        showLanguage: true,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),

@@ -25,10 +25,11 @@ class GlobeLanguagePicker extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     // Detect if this selector is placed on a dark/green header (e.g. iconColor is white)
+    final appBarBg = theme.appBarTheme.backgroundColor;
     final bool isHeaderDark = iconColor == Colors.white ||
         (iconColor != null && iconColor!.computeLuminance() > 0.5) ||
-        (theme.appBarTheme.backgroundColor != null &&
-            theme.appBarTheme.backgroundColor!.computeLuminance() < 0.4);
+        (appBarBg != null && appBarBg.computeLuminance() < 0.5) ||
+        (appBarBg == null && (theme.colorScheme.primary.computeLuminance() < 0.5 || AppColors.primaryGreen.computeLuminance() < 0.5));
 
     final Color resolvedFg = textColor ??
         (isHeaderDark
@@ -48,6 +49,7 @@ class GlobeLanguagePicker extends StatelessWidget {
       valueListenable: LanguageService.currentLanguage,
       builder: (context, currentLang, _) {
         final isAmharic = currentLang == 'am';
+        // Full language names: "English" and "አማርኛ" (no abbreviations)
         final displayLabel = isAmharic ? 'አማርኛ' : 'English';
 
         return Theme(
@@ -87,11 +89,11 @@ class GlobeLanguagePicker extends StatelessWidget {
               ),
             ],
             child: Container(
-              height: 27,
-              padding: const EdgeInsets.symmetric(horizontal: 7),
+              height: 28,
+              padding: const EdgeInsets.symmetric(horizontal: 10),
               decoration: BoxDecoration(
                 color: resolvedBg,
-                borderRadius: BorderRadius.circular(7),
+                borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: resolvedBorder, width: 1.0),
               ),
               child: Row(
@@ -101,17 +103,17 @@ class GlobeLanguagePicker extends StatelessWidget {
                   Text(
                     displayLabel,
                     style: TextStyle(
-                      fontSize: 11.5,
+                      fontSize: 12,
                       fontWeight: FontWeight.w700,
                       color: resolvedFg,
-                      letterSpacing: -0.2,
+                      letterSpacing: 0.2,
                       height: 1.1,
                     ),
                   ),
-                  const SizedBox(width: 2),
+                  const SizedBox(width: 4),
                   Icon(
-                    Icons.arrow_drop_down_rounded,
-                    size: 16,
+                    Icons.arrow_drop_down,
+                    size: 17,
                     color: resolvedFg,
                   ),
                 ],

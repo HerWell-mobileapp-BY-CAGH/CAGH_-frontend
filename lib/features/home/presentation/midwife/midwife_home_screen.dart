@@ -74,11 +74,13 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
 
       final response = await AuthService.getProfile();
       if (response.success && response.data != null && mounted) {
-        extractName(response.data!);
-        if (resolvedName.isNotEmpty) {
-          setState(() {
-            midwifeName = resolvedName;
-          });
+        if (resolvedName.isEmpty) {
+          extractName(response.data!);
+          if (resolvedName.isNotEmpty) {
+            setState(() {
+              midwifeName = resolvedName;
+            });
+          }
         }
       }
       
@@ -128,42 +130,34 @@ class _MidwifeHomeScreenState extends ConsumerState<MidwifeHomeScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: SizedBox(
                   height: 38,
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final totalWidth = constraints.maxWidth;
-                      const rightActionsWidth = 98.0;
-                      final leftSpacerWidth = (totalWidth >= 370)
-                          ? rightActionsWidth
-                          : (totalWidth - rightActionsWidth - 150).clamp(14.0, rightActionsWidth);
-
-                      return Row(
-                        children: [
-                          SizedBox(width: leftSpacerWidth),
-                          Expanded(
-                            child: Text(
-                              _getAppBarTitle(selectedIndex),
-                              textAlign: TextAlign.center,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 17.5,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: -0.2,
-                              ),
-                            ),
+                  child: Row(
+                    children: [
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          _getAppBarTitle(selectedIndex),
+                          textAlign: TextAlign.start,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.2,
                           ),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: const [
-                              GlobeLanguagePicker(iconColor: Colors.white),
-                              SizedBox(width: 4),
-                              NotificationBell(iconColor: Colors.white),
-                            ],
-                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: const [
+                          GlobeLanguagePicker(iconColor: Colors.white),
+                          SizedBox(width: 6),
+                          NotificationBell(iconColor: Colors.white),
+                          SizedBox(width: 4),
                         ],
-                      );
-                    },
+                      ),
+                    ],
                   ),
                 ),
               ),

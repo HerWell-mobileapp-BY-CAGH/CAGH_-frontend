@@ -162,7 +162,13 @@ class _MyAppState extends ConsumerState<MyApp> {
                       backgroundColor: AppColors.primaryGreen,
                       foregroundColor: Colors.white,
                       elevation: 0,
-                      centerTitle: true,
+                      centerTitle: false,
+                      titleTextStyle: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.2,
+                        color: Colors.white,
+                      ),
                       systemOverlayStyle: SystemUiOverlayStyle(
                         statusBarColor: AppColors.primaryGreen,
                         statusBarIconBrightness: Brightness.light,
@@ -263,7 +269,13 @@ class _MyAppState extends ConsumerState<MyApp> {
                       backgroundColor: AppColors.darkSurface,
                       foregroundColor: AppColors.darkTextPrimary,
                       elevation: 0,
-                      centerTitle: true,
+                      centerTitle: false,
+                      titleTextStyle: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.2,
+                        color: AppColors.darkTextPrimary,
+                      ),
                       systemOverlayStyle: SystemUiOverlayStyle(
                         statusBarColor: Colors.transparent,
                         statusBarIconBrightness: Brightness.light,

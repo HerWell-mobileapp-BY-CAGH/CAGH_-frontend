@@ -18,10 +18,22 @@ class FacilityDetailsScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: AppColors.primaryGreen,
         elevation: 0,
-        title: Text(AppLocalizations.of(context)!.facilityDetails, style: TextStyle(color: Colors.white)),
+        centerTitle: false,
+        titleSpacing: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          AppLocalizations.of(context)!.facilityDetails,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.2,
+          ),
         ),
       ),
       body: SingleChildScrollView(

@@ -106,10 +106,23 @@ class _AppointmentDetailsScreenState extends State<AppointmentDetailsScreen> {
       backgroundColor: AppColors.backgroundPale,
       appBar: AppBar(
         backgroundColor: AppColors.primaryGreen,
-        title: Text(AppLocalizations.of(context)!.appointmentDetails, style: TextStyle(color: Colors.white)),
+        centerTitle: false,
+        titleSpacing: 0,
+        elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context, true), // return true to indicate potential change
+          onPressed: () => Navigator.pop(context, true),
+        ),
+        title: Text(
+          AppLocalizations.of(context)!.appointmentDetails,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.2,
+          ),
         ),
       ),
       body: _isLoading

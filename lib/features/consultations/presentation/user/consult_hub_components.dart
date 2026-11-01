@@ -878,21 +878,6 @@ class _AppointmentCardWidgetState extends State<AppointmentCardWidget> {
     return '$h12:$mStr $period';
   }
 
-  String _getCarrierName() {
-    final phone = widget.isProfessional ? widget.appointment.patientPhone : widget.appointment.midwifePhone;
-    final backendCarrier = widget.appointment.callEligibility?['carrier']?.toString();
-    if (backendCarrier != null && backendCarrier.isNotEmpty) return backendCarrier;
-    if (phone == null || phone.isEmpty) return 'Cellular Network';
-    final clean = phone.replaceAll(RegExp(r'[^\d]'), '');
-    if (clean.contains('9') && (clean.startsWith('09') || clean.startsWith('2519'))) {
-      return 'Ethio Telecom';
-    }
-    if (clean.contains('7') && (clean.startsWith('07') || clean.startsWith('2517'))) {
-      return 'Safaricom';
-    }
-    return 'Cellular Network';
-  }
-
   String _getCountdownOrCallMessage(BuildContext context, bool isAm) {
     if (_startDateTime == null) {
       final t = widget.appointment.startTime;
@@ -1031,54 +1016,62 @@ class _AppointmentCardWidgetState extends State<AppointmentCardWidget> {
               children: [
                 // 1. TOP HEADER: Modality Badge + Status Dot + More Menu
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    _buildModalityBadge(modality, isDark, isAm),
-                    const Spacer(),
-                    buildStatusIndicator(context, apt.status, isPast: apt.isPast),
-                    if (isUpcomingConfirmed) ...[
-                      const SizedBox(width: 4),
-                      PopupMenuButton<String>(
-                        icon: const Icon(Icons.more_vert_rounded, color: Color(0xFF64748B), size: 20),
-                        tooltip: AppLocalizations.of(context)?.moreOptions ?? 'More options',
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        onSelected: (value) {
-                          if (value == 'reschedule') {
-                            widget.onReschedule();
-                          } else if (value == 'cancel') {
-                            widget.onCancel();
-                          }
-                        },
-                        itemBuilder: (context) => [
-                          PopupMenuItem<String>(
-                            value: 'reschedule',
-                            child: Row(
-                              children: [
-                                const Icon(Icons.edit_calendar_outlined, size: 18, color: AppColors.primaryGreen),
-                                const SizedBox(width: 10),
-                                Text(
-                                  AppLocalizations.of(context)?.reschedule ?? 'Reschedule',
-                                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                    Flexible(
+                      child: _buildModalityBadge(modality, isDark, isAm),
+                    ),
+                    const SizedBox(width: 8),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        buildStatusIndicator(context, apt.status, isPast: apt.isPast),
+                        if (isUpcomingConfirmed) ...[
+                          const SizedBox(width: 4),
+                          PopupMenuButton<String>(
+                            icon: const Icon(Icons.more_vert_rounded, color: Color(0xFF64748B), size: 20),
+                            tooltip: AppLocalizations.of(context)?.moreOptions ?? 'More options',
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            onSelected: (value) {
+                              if (value == 'reschedule') {
+                                widget.onReschedule();
+                              } else if (value == 'cancel') {
+                                widget.onCancel();
+                              }
+                            },
+                            itemBuilder: (context) => [
+                              PopupMenuItem<String>(
+                                value: 'reschedule',
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.edit_calendar_outlined, size: 18, color: AppColors.primaryGreen),
+                                    const SizedBox(width: 10),
+                                    Text(
+                                      AppLocalizations.of(context)?.reschedule ?? 'Reschedule',
+                                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                          ),
-                          PopupMenuItem<String>(
-                            value: 'cancel',
-                            child: Row(
-                              children: [
-                                const Icon(Icons.cancel_outlined, size: 18, color: AppColors.errorRed),
-                                const SizedBox(width: 10),
-                                Text(
-                                  AppLocalizations.of(context)?.cancel ?? 'Cancel',
-                                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.errorRed),
+                              ),
+                              PopupMenuItem<String>(
+                                value: 'cancel',
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.cancel_outlined, size: 18, color: AppColors.errorRed),
+                                    const SizedBox(width: 10),
+                                    Text(
+                                      AppLocalizations.of(context)?.cancel ?? 'Cancel',
+                                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.errorRed),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ],
-                      ),
-                    ],
+                      ],
+                    ),
                   ],
                 ),
 
@@ -1242,8 +1235,7 @@ class _AppointmentCardWidgetState extends State<AppointmentCardWidget> {
   Widget _buildModalityBadge(_ConsultationModality modality, bool isDark, bool isAm) {
     switch (modality) {
       case _ConsultationModality.cellularVoice:
-        final carrier = _getCarrierName();
-        final label = isAm ? 'ቀጥታ ሴሉላር ጥሪ' : 'Direct Cellular Voice Call';
+        final label = isAm ? 'የድምጽ ጥሪ' : 'Voice Call';
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
@@ -1262,13 +1254,17 @@ class _AppointmentCardWidgetState extends State<AppointmentCardWidget> {
                 size: 13,
                 color: isDark ? const Color(0xFF86EFAC) : const Color(0xFF2C5927),
               ),
-              const SizedBox(width: 6),
-              Text(
-                carrier != 'Cellular Network' ? '$label • $carrier' : label,
-                style: TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w700,
-                  color: isDark ? const Color(0xFF86EFAC) : const Color(0xFF2C5927),
+              const SizedBox(width: 5),
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? const Color(0xFF86EFAC) : const Color(0xFF2C5927),
+                  ),
                 ),
               ),
             ],
@@ -1276,6 +1272,7 @@ class _AppointmentCardWidgetState extends State<AppointmentCardWidget> {
         );
 
       case _ConsultationModality.chat:
+        final label = isAm ? 'መልዕክት' : 'Chat';
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
@@ -1294,13 +1291,17 @@ class _AppointmentCardWidgetState extends State<AppointmentCardWidget> {
                 size: 13,
                 color: isDark ? const Color(0xFF93C5FD) : const Color(0xFF1D4ED8),
               ),
-              const SizedBox(width: 6),
-              Text(
-                isAm ? 'የመልዕክት ምክክር' : 'Messaging Consultation',
-                style: TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w700,
-                  color: isDark ? const Color(0xFF93C5FD) : const Color(0xFF1D4ED8),
+              const SizedBox(width: 5),
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? const Color(0xFF93C5FD) : const Color(0xFF1D4ED8),
+                  ),
                 ),
               ),
             ],
@@ -1308,6 +1309,7 @@ class _AppointmentCardWidgetState extends State<AppointmentCardWidget> {
         );
 
       case _ConsultationModality.inPerson:
+        final label = isAm ? 'በአካል' : 'In Person';
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
@@ -1326,13 +1328,17 @@ class _AppointmentCardWidgetState extends State<AppointmentCardWidget> {
                 size: 13,
                 color: isDark ? const Color(0xFFFCD34D) : const Color(0xFFB45309),
               ),
-              const SizedBox(width: 6),
-              Text(
-                isAm ? 'በአካል ክሊኒክ መገኘት' : 'In-Person Clinic Visit',
-                style: TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w700,
-                  color: isDark ? const Color(0xFFFCD34D) : const Color(0xFFB45309),
+              const SizedBox(width: 5),
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? const Color(0xFFFCD34D) : const Color(0xFFB45309),
+                  ),
                 ),
               ),
             ],

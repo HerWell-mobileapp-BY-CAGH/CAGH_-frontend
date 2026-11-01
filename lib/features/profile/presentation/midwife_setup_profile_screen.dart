@@ -4,6 +4,8 @@ import 'package:cagh_frontend/features/consultations/data/services/midwife_api_s
 import 'package:cagh_frontend/features/home/presentation/midwife/midwife_home_screen.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
+import 'package:cagh_frontend/shared/widgets/globe_language_picker.dart';
+import 'package:cagh_frontend/features/notifications/presentation/widgets/notification_bell.dart';
 
 class MidwifeSetupProfileScreen extends StatefulWidget {
   const MidwifeSetupProfileScreen({super.key});
@@ -76,9 +78,27 @@ class _MidwifeSetupProfileScreenState extends State<MidwifeSetupProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.completeYourProfile),
+        centerTitle: false,
+        titleSpacing: 20,
+        title: Text(
+          AppLocalizations.of(context)!.completeYourProfile,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.2,
+            color: Colors.white,
+          ),
+        ),
         backgroundColor: AppColors.primaryGreen,
         foregroundColor: Colors.white,
+        actions: const [
+          Center(child: GlobeLanguagePicker(iconColor: Colors.white)),
+          SizedBox(width: 6),
+          NotificationBell(iconColor: Colors.white),
+          SizedBox(width: 14),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),

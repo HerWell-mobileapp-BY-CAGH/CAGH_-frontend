@@ -136,7 +136,7 @@ class _FavoriteMidwivesScreenState extends State<FavoriteMidwivesScreen> {
       appBar: buildInnerPageAppBar(
         context,
         title: AppLocalizations.of(context)!.savedMidwives,
-        showLanguage: false,
+        showLanguage: true,
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator(color: primaryColor))

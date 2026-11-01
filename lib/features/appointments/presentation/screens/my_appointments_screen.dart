@@ -4,6 +4,7 @@ import 'package:cagh_frontend/features/appointments/data/services/appointment_ap
 import 'package:cagh_frontend/features/appointments/data/repositories/appointment_repository_impl.dart';
 import 'package:cagh_frontend/shared/models/appointment.dart';
 import 'package:cagh_frontend/features/consultations/data/services/midwife_api_service.dart';
+import 'package:cagh_frontend/features/consultations/data/repositories/midwife_repository_impl.dart';
 import 'package:cagh_frontend/features/appointments/presentation/widgets/sim_call_bottom_sheet.dart';
 import 'package:cagh_frontend/features/consultations/presentation/user/chat_screen.dart';
 import 'package:cagh_frontend/features/consultations/presentation/user/consult_hub_components.dart';
@@ -50,20 +51,14 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> {
           .toList();
 
       if (missingNameIds.isNotEmpty) {
-        final allMidwives = await MidwifeApiService().getMidwives();
+        final allMidwives = await MidwifeRepositoryImpl(MidwifeApiService()).getMidwives();
         for (var apt in _appointments) {
           if (apt.midwifeName == null) {
-            final match = allMidwives.firstWhere(
-              (m) =>
-                  (m['id']?.toString() ?? '') == apt.midwifeId ||
-                  (m['user']?['id']?.toString() ?? '') == apt.midwifeId,
-              orElse: () => <String, dynamic>{},
+            final matches = allMidwives.where(
+              (m) => m.id == apt.midwifeId || m.userId == apt.midwifeId,
             );
-            if (match.isNotEmpty) {
-              apt.midwifeName = match['full_name'] ??
-                  match['user']?['full_name'] ??
-                  match['name'] ??
-                  match['user']?['name'];
+            if (matches.isNotEmpty) {
+              apt.midwifeName = matches.first.fullName;
             }
           }
         }

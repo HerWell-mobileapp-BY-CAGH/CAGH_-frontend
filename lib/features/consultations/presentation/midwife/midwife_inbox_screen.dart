@@ -8,6 +8,8 @@ import 'package:cagh_frontend/l10n/app_localizations.dart';
 
 import 'package:cagh_frontend/core/utils/app_logger.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
+import 'package:cagh_frontend/shared/widgets/globe_language_picker.dart';
+import 'package:cagh_frontend/features/notifications/presentation/widgets/notification_bell.dart';
 
 class MidwifeInboxScreen extends ConsumerStatefulWidget {
   const MidwifeInboxScreen({super.key});
@@ -173,10 +175,28 @@ class _MidwifeInboxScreenState extends ConsumerState<MidwifeInboxScreen> {
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : const Color(0xFFF8FAFC),
       appBar: AppBar(
-        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
-        foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
-        title: Text(AppLocalizations.of(context)!.myMessages, style: const TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: isDark ? AppColors.darkSurface : AppColors.primaryGreen,
+        foregroundColor: Colors.white,
         elevation: 0,
+        centerTitle: false,
+        titleSpacing: 20,
+        title: Text(
+          AppLocalizations.of(context)!.myMessages,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 20,
+            color: Colors.white,
+            letterSpacing: -0.2,
+          ),
+        ),
+        actions: const [
+          Center(child: GlobeLanguagePicker(iconColor: Colors.white)),
+          SizedBox(width: 6),
+          NotificationBell(iconColor: Colors.white),
+          SizedBox(width: 14),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: _loadRooms,

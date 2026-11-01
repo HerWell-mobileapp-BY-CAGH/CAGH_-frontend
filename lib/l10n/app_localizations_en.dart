@@ -698,13 +698,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appearanceAccessibility => 'Appearance & Accessibility';
 
   @override
-  String get professionalTitle => 'PROFESSIONAL TITLE';
+  String get professionalTitle => 'Professional Title';
 
   @override
   String get editProfessionalProfile => 'Edit Professional Profile';
 
   @override
-  String get aboutMe => 'ABOUT ME';
+  String get aboutMe => 'About Me';
 
   @override
   String get editPersonalProfile => 'Edit Personal Profile';
@@ -2052,4 +2052,58 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get consultTabInbox => 'Inbox';
+
+  @override
+  String get emergencyQualifyTitle => 'What qualifies as an emergency?';
+
+  @override
+  String get emergencyQualifyDesc =>
+      'Severe bleeding, acute pain, difficulty breathing, injury or violence, and acute crisis. In immediate danger, call below.';
+
+  @override
+  String get herwellHelplineBadge => '24/7 HELPLINE';
+
+  @override
+  String get herwellHelplineTitle => 'HerWell Emergency Helpline';
+
+  @override
+  String get herwellHelplineDesc =>
+      '24/7 confidential helpline for adolescent girls facing acute health emergencies, sudden pain, or needing urgent clinical guidance.';
+
+  @override
+  String get nationalAmbulanceDesc =>
+      'Severe injuries, sudden medical crises, and urgent hospital transport.';
+
+  @override
+  String get policeSecurityDesc =>
+      'Immediate security threats, violence, crime, and urgent protection.';
+
+  @override
+  String get redCrossDesc =>
+      'Emergency first aid, humanitarian medical response, and patient transport.';
+
+  @override
+  String get womenChildDesc =>
+      'Gender-based violence, abuse, adolescent crisis, and psychological counseling.';
+
+  @override
+  String get publicHealthDesc =>
+      'Disease outbreak alerts, epidemic symptoms, and public health guidance.';
+
+  @override
+  String get fireRescueDesc =>
+      'Fires, structural collapse, rescue emergencies, and disaster response.';
+
+  @override
+  String get callButtonLabel => 'Call';
+
+  @override
+  String get emergencyTollFreeNotice =>
+      'All emergency hotlines are free of charge (toll-free) and accessible 24/7 across all networks.';
+
+  @override
+  String get emergencyLocationCopied => 'Coordinates copied to clipboard';
+
+  @override
+  String get emergencyHotlineNumberCopied => 'Hotline number copied';
 }

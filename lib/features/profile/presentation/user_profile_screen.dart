@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:cagh_frontend/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,6 +15,8 @@ import 'package:cagh_frontend/features/profile/presentation/change_password_scre
 import 'package:cagh_frontend/features/notifications/presentation/providers/notification_provider.dart';
 import 'package:cagh_frontend/shared/constants/app_colors.dart';
 import 'package:cagh_frontend/shared/widgets/app_profile_avatar.dart';
+import 'package:cagh_frontend/shared/widgets/globe_language_picker.dart';
+import 'package:cagh_frontend/features/notifications/presentation/widgets/notification_bell.dart';
 import 'package:cagh_frontend/core/utils/app_logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -57,25 +60,56 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
 
   Future<void> _fetchProfile() async {
     try {
+      // 0. Dedicated saved profile override (instant local persistence)
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final rawCustom = prefs.getString('user_profile_custom_saved');
+        if (rawCustom != null && rawCustom.isNotEmpty) {
+          final custom = jsonDecode(rawCustom) as Map<String, dynamic>;
+          if (custom.containsKey('specialty') || custom.containsKey('experience_years') || custom.containsKey('title')) {
+            await prefs.remove('user_profile_custom_saved');
+          } else {
+          final cFull = custom['full_name']?.toString() ?? '';
+          final cF = custom['first_name']?.toString() ?? '';
+          final cL = custom['last_name']?.toString() ?? '';
+          final cEmail = custom['email']?.toString() ?? '';
+
+          if (cFull.isNotEmpty) {
+            fullName = cFull;
+          } else if (cF.isNotEmpty || cL.isNotEmpty) {
+            fullName = '$cF $cL'.trim();
+          }
+          if (cEmail.isNotEmpty) {
+            email = cEmail;
+          }
+          if (mounted) setState(() {});
+          }
+        }
+      } catch (_) {}
+
       final localData = await AuthService.getUserData();
       if (mounted) {
         setState(() {
-          final u = localData['user'] is Map ? localData['user'] : localData;
-          final p = u['profile'] is Map ? u['profile'] : (localData['profile'] is Map ? localData['profile'] : {});
+          final u = localData['user'] is Map ? (localData['user'] as Map) : localData;
+          final p = u['profile'] is Map ? (u['profile'] as Map) : (localData['profile'] is Map ? (localData['profile'] as Map) : {});
           
           final fName = p['first_name']?.toString() ?? u['first_name']?.toString() ?? localData['first_name']?.toString() ?? '';
           final lName = p['last_name']?.toString() ?? u['last_name']?.toString() ?? localData['last_name']?.toString() ?? '';
           final cFullName = p['full_name']?.toString() ?? u['full_name']?.toString() ?? localData['full_name']?.toString() ?? '';
           
-          if (cFullName.isNotEmpty) {
-            fullName = cFullName;
-          } else if (fName.isNotEmpty || lName.isNotEmpty) {
-            fullName = '$fName $lName'.trim();
+          if (fullName.isEmpty) {
+            if (cFullName.isNotEmpty) {
+              fullName = cFullName;
+            } else if (fName.isNotEmpty || lName.isNotEmpty) {
+              fullName = '$fName $lName'.trim();
+            }
           }
-          if (localData['email'] != null && localData['email'].toString().isNotEmpty) {
-            email = localData['email'].toString();
-          } else if (localData['phone_number'] != null && localData['phone_number'].toString().isNotEmpty) {
-            email = localData['phone_number'].toString();
+          if (email.isEmpty) {
+            if (localData['email'] != null && localData['email'].toString().isNotEmpty) {
+              email = localData['email'].toString();
+            } else if (localData['phone_number'] != null && localData['phone_number'].toString().isNotEmpty) {
+              email = localData['phone_number'].toString();
+            }
           }
         });
       }
@@ -84,22 +118,26 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
       if (res.success && res.data != null && mounted) {
         final d = res.data!;
         setState(() {
-          final u = d['user'] is Map ? d['user'] : d;
-          final p = u['profile'] is Map ? u['profile'] : (d['profile'] is Map ? d['profile'] : {});
+          final u = d['user'] is Map ? (d['user'] as Map) : d;
+          final p = u['profile'] is Map ? (u['profile'] as Map) : (d['profile'] is Map ? (d['profile'] as Map) : {});
           
           final fName = p['first_name']?.toString() ?? u['first_name']?.toString() ?? d['first_name']?.toString() ?? '';
           final lName = p['last_name']?.toString() ?? u['last_name']?.toString() ?? d['last_name']?.toString() ?? '';
           final cFullName = p['full_name']?.toString() ?? u['full_name']?.toString() ?? d['full_name']?.toString() ?? '';
           
-          if (cFullName.isNotEmpty) {
-            fullName = cFullName;
-          } else if (fName.isNotEmpty || lName.isNotEmpty) {
-            fullName = '$fName $lName'.trim();
+          if (fullName.isEmpty) {
+            if (cFullName.isNotEmpty) {
+              fullName = cFullName;
+            } else if (fName.isNotEmpty || lName.isNotEmpty) {
+              fullName = '$fName $lName'.trim();
+            }
           }
-          if (d['email'] != null && d['email'].toString().isNotEmpty) {
-            email = d['email'].toString();
-          } else if (d['phone_number'] != null) {
-            email = d['phone_number'].toString();
+          if (email.isEmpty) {
+            if (d['email'] != null && d['email'].toString().isNotEmpty) {
+              email = d['email'].toString();
+            } else if (d['phone_number'] != null) {
+              email = d['phone_number'].toString();
+            }
           }
         });
       }
@@ -133,13 +171,32 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
             }
           },
         ),
+        centerTitle: false,
+        titleSpacing: 0,
         title: Text(
           AppLocalizations.of(context)!.profile,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: const TextStyle(
-            fontSize: 19,
+            fontSize: 20,
             fontWeight: FontWeight.w700,
+            letterSpacing: -0.2,
           ),
         ),
+        actions: [
+          Center(
+            child: GlobeLanguagePicker(
+              iconColor: Theme.of(context).appBarTheme.foregroundColor ??
+                  (Theme.of(context).brightness == Brightness.dark ? Colors.white : AppColors.primaryGreen),
+            ),
+          ),
+          const SizedBox(width: 6),
+          NotificationBell(
+            iconColor: Theme.of(context).appBarTheme.foregroundColor ??
+                (Theme.of(context).brightness == Brightness.dark ? Colors.white : AppColors.primaryGreen),
+          ),
+          const SizedBox(width: 14),
+        ],
       ) : null,
       body: isLoading
           ? const Center(

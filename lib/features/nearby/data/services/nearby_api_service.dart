@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/network/api_config.dart';
 import '../../domain/entities/healthcare_facility.dart';
@@ -175,19 +176,38 @@ class NearbyApiService {
           data = decoded['results'] as List;
         }
         if (data.isNotEmpty) {
-          return data.map((json) => HealthcareFacility.fromJson(json as Map<String, dynamic>)).toList();
+          final list = data.map((json) {
+            final f = HealthcareFacility.fromJson(json as Map<String, dynamic>);
+            if (f.latitude != 0.0 && f.longitude != 0.0) {
+              final d = Geolocator.distanceBetween(latitude, longitude, f.latitude, f.longitude) / 1000.0;
+              return f.copyWith(distance: double.parse(d.toStringAsFixed(1)));
+            }
+            return f;
+          }).toList();
+          list.sort((a, b) => a.distance.compareTo(b.distance));
+          return list;
         }
       }
     } catch (e) {
       AppLogger.d('[Nearby] Network/API exception: $e. Returning verified facilities.');
     }
 
-    // Return verified fallback facilities filtered by type
-    return _filterFallbackFacilities(type: type, service: service);
+    // Return verified fallback facilities filtered by type & calculated by GPS distance
+    return _filterFallbackFacilities(
+      type: type,
+      service: service,
+      latitude: latitude,
+      longitude: longitude,
+    );
   }
 
-  List<HealthcareFacility> _filterFallbackFacilities({String? type, String? service}) {
-    return _fallbackFacilities.where((f) {
+  List<HealthcareFacility> _filterFallbackFacilities({
+    String? type,
+    String? service,
+    double? latitude,
+    double? longitude,
+  }) {
+    final filtered = _fallbackFacilities.where((f) {
       if (type != null && type != 'All') {
         if (type.toLowerCase() == 'hospitals' && f.type != 'Hospital') return false;
         if (type.toLowerCase() == 'clinics' && f.type != 'Clinic') return false;
@@ -204,6 +224,15 @@ class NearbyApiService {
         if (!match) return false;
       }
       return true;
+    }).map((f) {
+      if (latitude != null && longitude != null && f.latitude != 0.0 && f.longitude != 0.0) {
+        final d = Geolocator.distanceBetween(latitude, longitude, f.latitude, f.longitude) / 1000.0;
+        return f.copyWith(distance: double.parse(d.toStringAsFixed(1)));
+      }
+      return f;
     }).toList();
+
+    filtered.sort((a, b) => a.distance.compareTo(b.distance));
+    return filtered;
   }
 }

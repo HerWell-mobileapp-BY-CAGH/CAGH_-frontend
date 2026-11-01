@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import '../providers/nearby_provider.dart';
 import 'find_nearby_screen.dart';
 import 'facility_details_screen.dart';
@@ -26,6 +27,284 @@ class _NearbyHealthcareScreenState extends ConsumerState<NearbyHealthcareScreen>
   final List<String> _categories = [
     'Hospital', 'Clinic', 'Pharmacy'
   ];
+  bool _isLocating = false;
+
+  Future<void> _handleFindNearbyLocation() async {
+    if (_isLocating) return;
+
+    setState(() {
+      _isLocating = true;
+    });
+
+    try {
+      // 1. Check if location services (GPS) are turned on
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        if (mounted) {
+          setState(() => _isLocating = false);
+          _showLocationServiceDisabledDialog();
+        }
+        return;
+      }
+
+      // 2. Check and request location permission
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        if (mounted) {
+          setState(() => _isLocating = false);
+          _showPermissionPermanentlyDeniedDialog();
+        }
+        return;
+      }
+
+      if (permission == LocationPermission.denied) {
+        if (mounted) {
+          setState(() => _isLocating = false);
+          _showPermissionDeniedDialog();
+        }
+        return;
+      }
+
+      // 3. Permission granted: Acquire user's exact GPS position
+      Position? position;
+      try {
+        position = await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.high,
+            timeLimit: Duration(seconds: 10),
+          ),
+        );
+      } catch (_) {
+        position = await Geolocator.getLastKnownPosition();
+      }
+
+      if (position != null && mounted) {
+        // 4. Update facilities with exact position and sort by distance
+        await ref.read(nearbyStateProvider.notifier).fetchNearbyFacilities(
+          type: _selectedCategory,
+          position: position,
+          forceRefreshLocation: true,
+        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: const [
+                  Icon(Icons.near_me_rounded, color: Colors.white, size: 18),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Facilities updated & sorted by nearest distance to your location.',
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: AppColors.primaryGreen,
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 3),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not determine location: $e'),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLocating = false;
+        });
+      }
+    }
+  }
+
+  void _showLocationServiceDisabledDialog() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        icon: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.amber.shade50,
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(Icons.location_off_rounded, color: Colors.amber, size: 36),
+        ),
+        title: Text(
+          'Location Services Disabled',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : const Color(0xFF1E293B),
+          ),
+          textAlign: TextAlign.center,
+        ),
+        content: Text(
+          'GPS/Location services are turned off on your device. Please turn on location services to discover nearby healthcare facilities.',
+          style: TextStyle(
+            fontSize: 13.5,
+            color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
+            height: 1.4,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        actionsAlignment: MainAxisAlignment.spaceEvenly,
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await Geolocator.openLocationSettings();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryGreen,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+            ),
+            child: const Text('Enable GPS', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPermissionPermanentlyDeniedDialog() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        icon: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.red.shade50,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(Icons.security_rounded, color: Colors.red.shade700, size: 36),
+        ),
+        title: Text(
+          'Location Permission Required',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : const Color(0xFF1E293B),
+          ),
+          textAlign: TextAlign.center,
+        ),
+        content: Text(
+          'Location permission has been permanently denied. Please enable location access in your phone settings to see nearest hospitals and clinics.',
+          style: TextStyle(
+            fontSize: 13.5,
+            color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
+            height: 1.4,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        actionsAlignment: MainAxisAlignment.spaceEvenly,
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await Geolocator.openAppSettings();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryGreen,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+            ),
+            child: const Text('Open Settings', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPermissionDeniedDialog() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        icon: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.orange.shade50,
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(Icons.near_me_disabled_rounded, color: Colors.orange, size: 36),
+        ),
+        title: Text(
+          'Location Access Denied',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : const Color(0xFF1E293B),
+          ),
+          textAlign: TextAlign.center,
+        ),
+        content: Text(
+          'We need your location permission to calculate distances and sort the closest health facilities for you.',
+          style: TextStyle(
+            fontSize: 13.5,
+            color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
+            height: 1.4,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        actionsAlignment: MainAxisAlignment.spaceEvenly,
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Not Now', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _handleFindNearbyLocation();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryGreen,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+            ),
+            child: const Text('Allow Access', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -301,18 +580,28 @@ class _NearbyHealthcareScreenState extends ConsumerState<NearbyHealthcareScreen>
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.2,
                 ),
               ),
               actions: [
                 Padding(
                   padding: const EdgeInsets.only(right: 8.0),
                   child: TextButton.icon(
-                    onPressed: () => _navigateToFindNearby(),
-                    icon: const Icon(Icons.location_on, color: Colors.white, size: 16),
+                    onPressed: _isLocating ? null : _handleFindNearbyLocation,
+                    icon: _isLocating
+                        ? const SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(Icons.near_me_rounded, color: Colors.white, size: 16),
                     label: Text(
-                      AppLocalizations.of(context)!.findNearby,
+                      _isLocating ? 'Locating...' : AppLocalizations.of(context)!.findNearby,
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -366,21 +655,30 @@ class _NearbyHealthcareScreenState extends ConsumerState<NearbyHealthcareScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Upper Find Nearby Button (matching design reference)
+                  // Upper Find Nearby Button (requests location, fetches GPS, and sorts nearest)
                   if (!widget.showBackButton)
                     Padding(
                       padding: const EdgeInsets.fromLTRB(20, 0, 20, 6),
                       child: Align(
                         alignment: Alignment.centerRight,
                         child: TextButton.icon(
-                          onPressed: () => _navigateToFindNearby(),
-                          icon: Icon(
-                            Icons.location_on,
-                            color: isDark ? AppColors.darkPrimary : AppColors.primaryGreen,
-                            size: 16,
-                          ),
+                          onPressed: _isLocating ? null : _handleFindNearbyLocation,
+                          icon: _isLocating
+                              ? SizedBox(
+                                  width: 14,
+                                  height: 14,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: isDark ? AppColors.darkPrimary : AppColors.primaryGreen,
+                                  ),
+                                )
+                              : Icon(
+                                  Icons.near_me_rounded,
+                                  color: isDark ? AppColors.darkPrimary : AppColors.primaryGreen,
+                                  size: 16,
+                                ),
                           label: Text(
-                            AppLocalizations.of(context)!.findNearby,
+                            _isLocating ? 'Locating...' : AppLocalizations.of(context)!.findNearby,
                             style: TextStyle(
                               color: isDark ? AppColors.darkPrimary : AppColors.primaryGreen,
                               fontWeight: FontWeight.bold,
@@ -392,7 +690,7 @@ class _NearbyHealthcareScreenState extends ConsumerState<NearbyHealthcareScreen>
                                 ? AppColors.darkPrimary.withValues(alpha: 0.15)
                                 : AppColors.primaryGreen.withValues(alpha: 0.1),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
                           ),
                         ),
                       ),

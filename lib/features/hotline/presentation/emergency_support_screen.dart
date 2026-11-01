@@ -95,65 +95,65 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
 
   final List<HotlineItem> _staticHotlines = const [
     HotlineItem(
-      title: 'National Ambulance & Health',
-      subtitle: 'Free emergency & urgent health response (24/7)',
+      title: 'National Ambulance',
+      subtitle: 'Severe injuries, medical crises, and urgent hospital transport',
       number: '907',
       callUrl: 'tel:907',
       category: 'Medical',
       icon: Icons.medical_services_rounded,
-      color: Color(0xFFD32F2F), // Ethiopian National EMS Crimson Red
-      bgColor: Color(0xFFFFEBEE), // Crisp Soft Red/Rose
+      color: Color(0xFFD32F2F),
+      bgColor: Color(0xFFFFEBEE),
     ),
     HotlineItem(
-      title: 'Police & Security Services',
-      subtitle: 'National emergency security response',
+      title: 'Police & Security',
+      subtitle: 'Immediate security threats, violence, crime, and urgent protection',
       number: '911',
       callUrl: 'tel:911',
       category: 'Security',
       icon: Icons.local_police_rounded,
-      color: Color(0xFF1565C0), // Ethiopian Federal Police Cobalt/Navy Blue
-      bgColor: Color(0xFFE3F2FD), // Crisp Soft Ice Blue
+      color: Color(0xFF1565C0),
+      bgColor: Color(0xFFE3F2FD),
     ),
     HotlineItem(
       title: 'Red Cross Ambulance',
-      subtitle: 'Emergency first aid and patient transport',
+      subtitle: 'Emergency first aid, humanitarian medical response, and patient transport',
       number: '939',
       callUrl: 'tel:939',
       category: 'Medical',
       icon: Icons.add_rounded,
       customIcon: RedCrossLogo(),
-      color: Color(0xFFC62828), // Official Red Cross Red
-      bgColor: Color(0xFFFFEBEE), // Crisp Soft Red/Rose
+      color: Color(0xFFC62828),
+      bgColor: Color(0xFFFFEBEE),
     ),
     HotlineItem(
-      title: 'Women & Child Protection',
-      subtitle: 'Helpline for adolescent girls & youth support',
+      title: 'Women & Child Helpline',
+      subtitle: 'Gender-based violence, abuse, adolescent crisis, and psychological counseling',
       number: '8044',
       callUrl: 'tel:8044',
       category: 'Support',
-      icon: Icons.family_restroom_rounded, // Family & Women/Child protection
-      color: Color(0xFF7B1FA2), // MoWSA Official Royal Purple
-      bgColor: Color(0xFFF3E5F5), // Soft Crisp Lavender
+      icon: Icons.family_restroom_rounded,
+      color: Color(0xFF7B1FA2),
+      bgColor: Color(0xFFF3E5F5),
     ),
     HotlineItem(
-      title: 'Public Health Advisory (EPHI)',
-      subtitle: 'National disease & health advisory helpline',
+      title: 'Public Health (EPHI)',
+      subtitle: 'Disease outbreak alerts, epidemic symptoms, and public health guidance',
       number: '8335',
       callUrl: 'tel:8335',
       category: 'Medical',
-      icon: Icons.health_and_safety_rounded, // EPHI Health Shield
-      color: Color(0xFF00796B), // EPHI Official Deep Teal
-      bgColor: Color(0xFFE0F2F1), // Soft Crisp Mint/Teal
+      icon: Icons.health_and_safety_rounded,
+      color: Color(0xFF00796B),
+      bgColor: Color(0xFFE0F2F1),
     ),
     HotlineItem(
-      title: 'Fire & Rescue Services',
-      subtitle: 'Civil emergency, fire and disaster response',
+      title: 'Fire & Rescue',
+      subtitle: 'Fires, structural collapse, rescue emergencies, and disaster response',
       number: '991',
       callUrl: 'tel:991',
       category: 'Security',
-      icon: Icons.local_fire_department_rounded, // Fire & Rescue Flame Emblem
-      color: Color(0xFFE65100), // Fire & Rescue Flame Orange
-      bgColor: Color(0xFFFFF3E0), // Soft Crisp Amber
+      icon: Icons.local_fire_department_rounded,
+      color: Color(0xFFE65100),
+      bgColor: Color(0xFFFFF3E0),
     ),
   ];
 
@@ -801,39 +801,45 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
     }
   }
 
-  String _getHotlineTitle(HotlineItem item, AppLocalizations? l10n) {
+  String _getHotlineTitle(HotlineItem item, AppLocalizations? l10n, bool isAm) {
     switch (item.number) {
       case '907':
-        return l10n?.nationalAmbulanceTitle ?? item.title;
+        return l10n?.nationalAmbulanceTitle ?? (isAm ? 'ብሔራዊ አምቡላንስ' : 'National Ambulance');
       case '911':
-        return l10n?.policeSecurityTitle ?? item.title;
+        return l10n?.policeSecurityTitle ?? (isAm ? 'ፖሊስ እና ደህንነት' : 'Police & Security');
       case '939':
-        return l10n?.redCrossTitle ?? item.title;
+        return l10n?.redCrossTitle ?? (isAm ? 'ቀይ መስቀል አምቡላንስ' : 'Red Cross Ambulance');
       case '8044':
-        return l10n?.womenChildTitle ?? item.title;
+        return l10n?.womenChildTitle ?? (isAm ? 'የሴቶች እና ህጻናት ድጋፍ' : 'Women & Child Helpline');
       case '8335':
-        return l10n?.publicHealthTitle ?? item.title;
+        return l10n?.publicHealthTitle ?? (isAm ? 'የህብረተሰብ ጤና (EPHI)' : 'Public Health (EPHI)');
       case '991':
-        return l10n?.fireRescueTitle ?? item.title;
+        return l10n?.fireRescueTitle ?? (isAm ? 'የእሳት እና አደጋ መከላከል' : 'Fire & Rescue');
       default:
         return item.title;
     }
   }
 
-  String _getHotlineSubtitle(HotlineItem item, AppLocalizations? l10n) {
+  String _getHotlineDesc(HotlineItem item, AppLocalizations? l10n, bool isAm) {
     switch (item.number) {
       case '907':
-        return l10n?.nationalAmbulanceSubtitle ?? item.subtitle;
+        return l10n?.nationalAmbulanceDesc ??
+            (isAm ? 'ለከባድ አደጋዎች፣ ድንገተኛ የህክምና ችግሮች እና የታካሚዎች ወደ ሆስፒታል ማጓጓዣ።' : 'Severe injuries, medical crises, and urgent hospital transport.');
       case '911':
-        return l10n?.policeSecuritySubtitle ?? item.subtitle;
+        return l10n?.policeSecurityDesc ??
+            (isAm ? 'ለድንገተኛ የጸጥታ ችግሮች፣ ጥቃት፣ ወንጀል እና ፈጣን የፖሊስ ጥበቃ።' : 'Immediate security threats, violence, crime, and urgent protection.');
       case '939':
-        return l10n?.redCrossSubtitle ?? item.subtitle;
+        return l10n?.redCrossDesc ??
+            (isAm ? 'የአደጋ ጊዜ የመጀመሪያ እርዳታ፣ የሰብአዊ ህክምና እርዳታ እና የታካሚ ማጓጓዣ።' : 'Emergency first aid, humanitarian medical response, and patient transport.');
       case '8044':
-        return l10n?.womenChildSubtitle ?? item.subtitle;
+        return l10n?.womenChildDesc ??
+            (isAm ? 'ለጥቃት፣ በደል፣ የታዳጊዎችና ወጣቶች ችግሮች እና የስነ-ልቦና ድጋፍ።' : 'Gender-based violence, abuse, adolescent crisis, and psychological counseling.');
       case '8335':
-        return l10n?.publicHealthSubtitle ?? item.subtitle;
+        return l10n?.publicHealthDesc ??
+            (isAm ? 'ተላላፊ በሽታዎችን ለማሳወቅ፣ የበሽታ ምልክቶች እና የጤና ምክር።' : 'Disease outbreak alerts, epidemic symptoms, and public health guidance.');
       case '991':
-        return l10n?.fireRescueSubtitle ?? item.subtitle;
+        return l10n?.fireRescueDesc ??
+            (isAm ? 'ለእሳት አደጋዎች፣ የህንፃ መደርመስ እና የነፍስ አድን ስራዎች።' : 'Fires, structural collapse, rescue emergencies, and disaster response.');
       default:
         return item.subtitle;
     }
@@ -893,12 +899,12 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
               ),
               child: const Icon(Icons.phone_in_talk_rounded, color: AppColors.primaryGreen, size: 14),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 8),
             Flexible(
               child: Text(
                 l10n?.emergencyHotlines ?? (isAm ? 'የአደጋ ጊዜ መስመሮች' : 'Emergency Hotlines'),
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 17,
                   fontWeight: FontWeight.bold,
                   color: isDark ? Colors.white : const Color(0xFF0F172A),
                 ),
@@ -908,32 +914,6 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
             ),
           ],
         ),
-        actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 12),
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1F3824) : const Color(0xFFE8F5E9),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.primaryGreen.withOpacity(0.3)),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.check_circle_rounded, color: AppColors.primaryGreen, size: 12),
-                const SizedBox(width: 4),
-                Text(
-                  l10n?.tollFree ?? (isAm ? 'ነጻ ጥሪ' : 'Toll-Free'),
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.primaryGreen,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -942,52 +922,29 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Visually Premium Primary CAGH Emergency Hotline Card (0996717744) - Overflow-safe
-              _buildCaghEmergencyHotlineCard(isDark, l10n),
+              // Hero Section: HerWell Emergency Helpline
+              _buildCaghEmergencyHotlineCard(isDark, l10n, isAm),
 
               const SizedBox(height: 12),
 
-              // Location Banner with Clean Pure Coordinates (No GPS ready text)
-              _buildLocationBanner(isDark, l10n),
+              // Small card note clarifying what qualifies as an emergency
+              _buildEmergencyQualificationNote(isDark, l10n, isAm),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
 
-              // Section Header & Category Filter Tabs
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      l10n?.nationalEmergencyServices ?? (isAm ? 'ብሔራዊ የአደጋ ጊዜ አገልግሎቶች' : 'National Emergency Services'),
-                      style: TextStyle(
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w700,
-                        color: isDark ? Colors.white : const Color(0xFF1E293B),
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF1E2A20) : const Color(0xFFEFF5ED),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: isDark ? const Color(0xFF283A2A) : const Color(0xFFDEE8DB),
-                      ),
-                    ),
-                    child: Text(
-                      '${filteredHotlines.length} ${isAm ? 'መስመሮች' : 'lines'}',
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w600,
-                        color: isDark ? const Color(0xFFA5D6A7) : const Color(0xFF385A2E),
-                      ),
-                    ),
-                  ),
-                ],
+              // Location Banner
+              _buildLocationBanner(isDark, l10n, isAm),
+
+              const SizedBox(height: 20),
+
+              // Section Header: Emergency Services (No clutter)
+              Text(
+                l10n?.nationalEmergencyServices ?? (isAm ? 'የአደጋ ጊዜ አገልግሎቶች' : 'Emergency Services'),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? Colors.white : const Color(0xFF1E293B),
+                ),
               ),
 
               const SizedBox(height: 10),
@@ -997,21 +954,21 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
 
               const SizedBox(height: 14),
 
-              // Hotline Cards List (Clean, premium & overflow-safe)
+              // Hotline Cards List (Clean, premium, prominent numbers & call buttons)
               ListView.separated(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: filteredHotlines.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 10),
+                separatorBuilder: (_, _) => const SizedBox(height: 12),
                 itemBuilder: (context, index) {
-                  return _buildHotlineCard(isDark, filteredHotlines[index], l10n);
+                  return _buildHotlineCard(isDark, filteredHotlines[index], l10n, isAm);
                 },
               ),
 
               const SizedBox(height: 16),
 
               // Informational Notice Banner
-              _buildEmergencyNotice(isDark, l10n),
+              _buildEmergencyNotice(isDark, l10n, isAm),
 
               const SizedBox(height: 24),
             ],
@@ -1021,8 +978,8 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
     );
   }
 
-  // Visually Premium CAGH Emergency Hotline Card (0996717744) - Mathematically Overflow-Proof
-  Widget _buildCaghEmergencyHotlineCard(bool isDark, AppLocalizations? l10n) {
+  // Premium HerWell Emergency Helpline Card (0996 71 77 44)
+  Widget _buildCaghEmergencyHotlineCard(bool isDark, AppLocalizations? l10n, bool isAm) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
@@ -1034,7 +991,7 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isDark
               ? const Color(0xFF2E633C)
@@ -1043,7 +1000,7 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF1B4D2B).withOpacity(isDark ? 0.35 : 0.28),
+            color: const Color(0xFF1B4D2B).withOpacity(isDark ? 0.35 : 0.25),
             blurRadius: 18,
             offset: const Offset(0, 6),
           ),
@@ -1052,69 +1009,55 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Top Badges Row: Wrapped with Expanded and Flexible to avoid any pixel overflow
+          // Top Row: 24/7 Helpline indicator
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.white.withOpacity(0.2)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 7,
-                        height: 7,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF4ADE80),
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Color(0xFF4ADE80),
-                              blurRadius: 4,
-                              spreadRadius: 1,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Flexible(
-                        child: Text(
-                          l10n?.caghEmergencyHotlineBadge ?? 'CAGH EMERGENCY • 24/7',
-                          style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                            letterSpacing: 0.5,
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.white.withOpacity(0.22)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 7,
+                      height: 7,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF4ADE80),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Color(0xFF4ADE80),
+                            blurRadius: 4,
+                            spreadRadius: 1,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      l10n?.herwellHelplineBadge ?? (isAm ? '24/7 የአደጋ ጊዜ መስመር' : '24/7 HELPLINE'),
+                      style: const TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        letterSpacing: 0.6,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFD22B).withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: const Color(0xFFFFD22B).withOpacity(0.4)),
-                ),
-                child: Text(
-                  l10n?.priorityBadge ?? 'PRIORITY',
-                  style: const TextStyle(
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.w900,
-                    color: Color(0xFFFFD22B),
-                    letterSpacing: 0.5,
-                  ),
+              Text(
+                'HerWell',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white.withOpacity(0.6),
+                  letterSpacing: 1.0,
                 ),
               ),
             ],
@@ -1122,7 +1065,7 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
 
           const SizedBox(height: 14),
 
-          // Hotline Number Presentation
+          // Hotline Presentation
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -1141,10 +1084,11 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      l10n?.adolescentEmergencyHelpline ?? 'Adolescent Emergency Helpline',
+                      l10n?.herwellHelplineTitle ??
+                          (isAm ? 'የኸርዌል የአደጋ ጊዜ መስመር' : 'HerWell Emergency Helpline'),
                       style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
                         color: Color(0xFFA7F3D0),
                       ),
                       maxLines: 1,
@@ -1157,7 +1101,7 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
                           child: Text(
                             _caghHotlineDisplay,
                             style: TextStyle(
-                              fontSize: 21,
+                              fontSize: 22,
                               fontWeight: FontWeight.w900,
                               color: Colors.white,
                               letterSpacing: 1.1,
@@ -1168,7 +1112,10 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
                         ),
                         const SizedBox(width: 8),
                         InkWell(
-                          onTap: () => _copyToClipboard(_caghHotlineNumber, 'Hotline Number'),
+                          onTap: () => _copyToClipboard(
+                            _caghHotlineNumber,
+                            l10n?.emergencyHotlineNumberCopied ?? (isAm ? 'የስልክ ቁጥር' : 'Hotline Number'),
+                          ),
                           borderRadius: BorderRadius.circular(8),
                           child: Container(
                             padding: const EdgeInsets.all(5),
@@ -1189,10 +1136,12 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
 
           const SizedBox(height: 12),
 
-          // Concise, adolescent-focused description
+          // Adolescent-focused description
           Text(
-            l10n?.caghHotlineDescAdolescent ??
-                '24/7 confidential helpline for adolescent girls facing acute health emergencies, sudden pain, or needing urgent clinical guidance.',
+            l10n?.herwellHelplineDesc ??
+                (isAm
+                    ? 'ለታዳጊ ሴቶች ድንገተኛ የጤና ችግሮች፣ የወር አበባ ስቃይ እና አስቸኳይ ክሊኒካዊ ድጋፍ የሚሰጥ 24/7 ሚስጥራዊ የስልክ መስመር።'
+                    : '24/7 confidential helpline for adolescent girls facing acute health emergencies, sudden pain, or needing urgent clinical guidance.'),
             style: TextStyle(
               fontSize: 12.5,
               color: Colors.white.withOpacity(0.92),
@@ -1205,13 +1154,12 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
           // Primary Actions: Call Now and Share Location
           Row(
             children: [
-              // Call Now Button
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: () => _callHotline('tel:$_caghHotlineNumber', _caghHotlineNumber),
                   icon: const Icon(Icons.call_rounded, size: 18, color: Color(0xFF1B4D2B)),
                   label: Text(
-                    l10n?.callNowAction ?? 'Call Now',
+                    l10n?.callNowAction ?? (isAm ? 'አሁን ይደውሉ' : 'Call Now'),
                     style: const TextStyle(
                       fontSize: 13.5,
                       fontWeight: FontWeight.w800,
@@ -1231,10 +1179,7 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
                   ),
                 ),
               ),
-
               const SizedBox(width: 10),
-
-              // Share Location to Hotline Button
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: _isSharingLocation ? null : _shareLocationToHotline,
@@ -1242,16 +1187,13 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
                       ? const SizedBox(
                           width: 16,
                           height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                         )
                       : const Icon(Icons.share_location_rounded, color: Colors.white, size: 18),
                   label: Text(
                     _isSharingLocation
-                        ? (l10n?.locatingAction ?? 'Locating...')
-                        : (l10n?.shareLocationAction ?? 'Share Location'),
+                        ? (l10n?.locatingAction ?? (isAm ? 'በመፈለግ ላይ...' : 'Locating...'))
+                        : (l10n?.shareLocationAction ?? (isAm ? 'መገኛ ያጋሩ' : 'Share Location')),
                     style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
@@ -1279,8 +1221,70 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
     );
   }
 
-  // Location card: pure copyable coordinates WITHOUT any "(GPS Ready)" text
-  Widget _buildLocationBanner(bool isDark, AppLocalizations? l10n) {
+  // Small note card clarifying what qualifies as an emergency
+  Widget _buildEmergencyQualificationNote(bool isDark, AppLocalizations? l10n, bool isAm) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF18241B) : const Color(0xFFF1F8F1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? const Color(0xFF263D2B) : const Color(0xFFD3E8D4),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF26402D) : const Color(0xFFE0F2E1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.health_and_safety_rounded,
+              size: 18,
+              color: isDark ? const Color(0xFF81C784) : const Color(0xFF2E7D32),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n?.emergencyQualifyTitle ??
+                      (isAm ? 'የአደጋ ጊዜ ሁኔታዎች ምንድን ናቸው?' : 'What qualifies as an emergency?'),
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? const Color(0xFFA5D6A7) : const Color(0xFF2E7D32),
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  l10n?.emergencyQualifyDesc ??
+                      (isAm
+                          ? 'ከባድ የደም መፍሰስ፣ ድንገተኛ ጽኑ ህመም፣ የመተንፈስ ችግር፣ አካላዊ ጥቃት ወይም ከፍተኛ ጭንቀት። አደጋ ላይ ከሆኑ ወዲያውኑ ይደውሉ።'
+                          : 'Severe bleeding, acute pain, difficulty breathing, injury or violence, and acute crisis. In immediate danger, call below.'),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDark ? Colors.grey.shade300 : const Color(0xFF334155),
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Location card: pure copyable coordinates
+  Widget _buildLocationBanner(bool isDark, AppLocalizations? l10n, bool isAm) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
@@ -1310,7 +1314,7 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  l10n?.yourLocationTitle ?? 'Your Location',
+                  l10n?.yourLocationTitle ?? (isAm ? 'የእርስዎ መገኛ ቦታ' : 'Your Location'),
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -1319,7 +1323,7 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  _locationCoordinateString, // Pure clean coordinates, e.g. "8.8866, 38.8113"
+                  _locationCoordinateString,
                   style: TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.bold,
@@ -1347,7 +1351,7 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
             icon: const Icon(Icons.copy_rounded, size: 16, color: AppColors.primaryGreen),
             onPressed: () => _copyToClipboard(
               _locationCoordinateString,
-              l10n?.yourLocationTitle ?? 'coordinates',
+              l10n?.yourLocationTitle ?? (isAm ? 'የመገኛ ቦታ' : 'coordinates'),
             ),
           ),
         ],
@@ -1420,134 +1424,132 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
     return color;
   }
 
-  // Clean, visually premium hotline card with direct call action
-  Widget _buildHotlineCard(bool isDark, HotlineItem item, AppLocalizations? l10n) {
-    final title = _getHotlineTitle(item, l10n);
-    final subtitle = _getHotlineSubtitle(item, l10n);
+  // Clean, accessible, premium hotline card with clear numbers & prominent call button
+  Widget _buildHotlineCard(bool isDark, HotlineItem item, AppLocalizations? l10n, bool isAm) {
+    final title = _getHotlineTitle(item, l10n, isAm);
+    final desc = _getHotlineDesc(item, l10n, isAm);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1A221C) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(
           color: isDark ? const Color(0xFF27362B) : const Color(0xFFE5ECE3),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.15 : 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Icon badge in authentic brand container
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: isDark ? item.color.withOpacity(0.18) : item.bgColor,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: isDark ? item.color.withOpacity(0.26) : item.color.withOpacity(0.14),
-                width: 0.8,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Icon Container
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: isDark ? item.color.withOpacity(0.18) : item.bgColor,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: isDark ? item.color.withOpacity(0.28) : item.color.withOpacity(0.16),
+                    width: 1,
+                  ),
+                ),
+                child: Center(
+                  child: item.customIcon ??
+                      Icon(
+                        item.icon,
+                        color: _getAdaptiveColor(item.color, isDark),
+                        size: 22,
+                      ),
+                ),
               ),
-            ),
-            child: Center(
-              child: item.customIcon ??
-                  Icon(
-                    item.icon,
-                    color: _getAdaptiveColor(item.color, isDark),
-                    size: 22,
-                  ),
-            ),
-          ),
-          const SizedBox(width: 12),
+              const SizedBox(width: 12),
 
-          // Titles & Number Badge
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+              // Title and hotline number
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Flexible(
-                      child: Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : const Color(0xFF0F172A),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
-                      decoration: BoxDecoration(
-                        color: isDark ? item.color.withOpacity(0.18) : item.bgColor,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(
-                          color: isDark ? item.color.withOpacity(0.3) : item.color.withOpacity(0.2),
-                          width: 0.8,
-                        ),
-                      ),
-                      child: Text(
-                        item.number,
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                          color: _getAdaptiveColor(item.color, isDark),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    color: isDark ? Colors.grey.shade400 : const Color(0xFF64748B),
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(width: 10),
-
-          // Direct Call Action Button - Unified with App Brand Green
-          Material(
-            color: isDark ? AppColors.darkPrimary : const Color(0xFF385A2E),
-            borderRadius: BorderRadius.circular(12),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: () => _callHotline(item.callUrl, item.number),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9.5),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.call_rounded, color: Colors.white, size: 14),
-                    const SizedBox(width: 5),
                     Text(
-                      l10n?.callNow ?? 'Call',
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                      title,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        letterSpacing: -0.2,
                       ),
+                    ),
+                    const SizedBox(height: 3),
+                    Row(
+                      children: [
+                        Text(
+                          item.number,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w900,
+                            color: _getAdaptiveColor(item.color, isDark),
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          '• ${l10n?.tollFree ?? (isAm ? "ነጻ መስመር" : "Toll-Free")}',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? Colors.grey.shade400 : const Color(0xFF64748B),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
+
+              const SizedBox(width: 10),
+
+              // Prominent Call Action Button
+              ElevatedButton.icon(
+                onPressed: () => _callHotline(item.callUrl, item.number),
+                icon: const Icon(Icons.call_rounded, size: 16, color: Colors.white),
+                label: Text(
+                  l10n?.callButtonLabel ?? (isAm ? 'ይደውሉ' : 'Call'),
+                  style: const TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isDark ? AppColors.darkButtonGreen : const Color(0xFF315E26),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+
+          // Short description explaining purpose and handled emergencies
+          Text(
+            desc,
+            style: TextStyle(
+              fontSize: 12.5,
+              color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
+              height: 1.4,
             ),
           ),
         ],
@@ -1556,7 +1558,7 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
   }
 
   // Friendly carrier and rate notice
-  Widget _buildEmergencyNotice(bool isDark, AppLocalizations? l10n) {
+  Widget _buildEmergencyNotice(bool isDark, AppLocalizations? l10n, bool isAm) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -1570,18 +1572,20 @@ class _EmergencySupportScreenState extends State<EmergencySupportScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(
-            Icons.info_outline_rounded,
-            size: 16,
+            Icons.verified_user_rounded,
             color: isDark ? const Color(0xFFA5D6A7) : const Color(0xFF385A2E),
+            size: 18,
           ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              l10n?.emergencyLinesNotice ??
-                  'All national emergency lines listed are toll-free and accessible 24/7 without credit across Ethio Telecom and Safaricom networks. For CAGH Hotline (0996 71 77 44), standard mobile rates or toll-free assistance applies.',
+              l10n?.emergencyTollFreeNotice ??
+                  (isAm
+                      ? 'ሁሉም የአደጋ ጊዜ የስልክ መስመሮች ነጻ (Toll-Free) ሲሆኑ በሁሉም የሞባይል መስመሮች 24/7 ይሰራሉ።'
+                      : 'All emergency hotlines are free of charge (toll-free) and accessible 24/7 across all networks.'),
               style: TextStyle(
-                fontSize: 11.5,
-                color: isDark ? Colors.grey.shade400 : const Color(0xFF4A5568),
+                fontSize: 12,
+                color: isDark ? Colors.grey.shade400 : const Color(0xFF475569),
                 height: 1.4,
               ),
             ),
