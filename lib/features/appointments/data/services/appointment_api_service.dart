@@ -94,7 +94,7 @@ class AppointmentApiService {
     } catch (_) {}
 
     final bodyLower = response.body.toLowerCase();
-    if (bodyLower.contains('<!doctype') || bodyLower.contains('<html') || bodyLower.contains('server error')) {
+    if (bodyLower.contains('<!doctype') || bodyLower.contains('<html')) {
       if (response.statusCode >= 500) {
         return 'Server is busy or restarting (${response.statusCode}). Please try again in a moment.';
       } else if (response.statusCode == 404) {
@@ -212,16 +212,42 @@ class AppointmentApiService {
     final acceptUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.appointments}$appointmentId/accept/');
     final patchUrl = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.appointments}$appointmentId/');
     
-    http.Response response = await _postWithAuth(primaryUrl);
+    http.Response? response;
 
-    if (response.statusCode == 404) {
-      response = await _postWithAuth(acceptUrl);
-    }
-    if (response.statusCode == 404 || response.statusCode == 405) {
-      response = await _patchWithAuth(patchUrl, body: jsonEncode({'status': 'CONFIRMED'}));
+    // 1. Try primary confirm endpoint
+    try {
+      response = await _postWithAuth(primaryUrl);
+    } catch (e) {
+      AppLogger.d('Primary accept (confirm) network error: $e');
     }
 
-    if (response.statusCode == 200 || response.statusCode == 201 || response.statusCode == 204) {
+    // 2. Fall back to /accept/ if not successful
+    if (response == null || (response.statusCode != 200 && response.statusCode != 201 && response.statusCode != 204)) {
+      try {
+        final acceptRes = await _postWithAuth(acceptUrl);
+        if (acceptRes.statusCode == 200 || acceptRes.statusCode == 201 || acceptRes.statusCode == 204) {
+          response = acceptRes;
+        } else if (response == null || response.statusCode == 404) {
+          response = acceptRes;
+        }
+      } catch (e) {
+        AppLogger.d('Accept endpoint network error: $e');
+      }
+    }
+
+    // 3. Fall back to direct PATCH if both custom actions failed
+    if (response == null || (response.statusCode != 200 && response.statusCode != 201 && response.statusCode != 204)) {
+      try {
+        final patchRes = await _patchWithAuth(patchUrl, body: jsonEncode({'status': 'CONFIRMED'}));
+        if (patchRes.statusCode == 200 || patchRes.statusCode == 201 || patchRes.statusCode == 204) {
+          response = patchRes;
+        }
+      } catch (e) {
+        AppLogger.d('Patch status fallback error: $e');
+      }
+    }
+
+    if (response != null && (response.statusCode == 200 || response.statusCode == 201 || response.statusCode == 204)) {
       if (response.body.isEmpty) return {'status': 'CONFIRMED'};
       try {
         final decoded = jsonDecode(response.body);
@@ -231,7 +257,7 @@ class AppointmentApiService {
         return {'status': 'CONFIRMED'};
       }
     } else {
-      final msg = _parseErrorMessage(response, 'Failed to accept appointment.');
+      final msg = response != null ? _parseErrorMessage(response, 'Failed to accept appointment.') : 'Network connection error. Please try again.';
       throw Exception(msg);
     }
   }
@@ -403,29 +429,38 @@ class AppointmentApiService {
 
     final cleanPayload = <String, dynamic>{
       'date': dateVal,
-      if (data.containsKey('day_of_week')) 'day_of_week': data['day_of_week'],
       'start_time': data['start_time'],
       'end_time': data['end_time'],
       'consultation_methods': data['consultation_methods'] ?? ['IN_PERSON', 'VIRTUAL_VOICE'],
       'is_active': data['is_active'] ?? true,
     };
     
-    http.Response response;
+    http.Response? response;
     try {
       response = await _postWithAuth(primaryUrl, body: jsonEncode(cleanPayload));
-      if (response.statusCode == 404 || response.statusCode == 405) {
-        response = await _postWithAuth(aliasUrl, body: jsonEncode(cleanPayload));
-      }
-    } catch (_) {
-      response = await _postWithAuth(primaryUrl, body: jsonEncode(cleanPayload));
+    } catch (e) {
+      AppLogger.d('Primary setAvailability error: $e');
     }
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
+    if (response == null || (response.statusCode != 200 && response.statusCode != 201)) {
+      try {
+        final aliasRes = await _postWithAuth(aliasUrl, body: jsonEncode(cleanPayload));
+        if (aliasRes.statusCode == 200 || aliasRes.statusCode == 201) {
+          response = aliasRes;
+        } else if (response == null || response.statusCode == 404) {
+          response = aliasRes;
+        }
+      } catch (err) {
+        AppLogger.d('Alias setAvailability error: $err');
+      }
+    }
+
+    if (response != null && (response.statusCode == 201 || response.statusCode == 200)) {
       if (response.body.isEmpty) return {};
       final decoded = jsonDecode(response.body);
       return decoded is Map ? Map<String, dynamic>.from(decoded) : {};
     } else {
-      final msg = _parseErrorMessage(response, 'Failed to set availability.');
+      final msg = response != null ? _parseErrorMessage(response, 'Failed to set availability.') : 'Network connection error. Please try again.';
       throw Exception(msg);
     }
   }

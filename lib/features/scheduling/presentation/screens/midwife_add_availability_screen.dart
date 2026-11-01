@@ -150,8 +150,6 @@ class _MidwifeAddAvailabilityScreenState extends State<MidwifeAddAvailabilityScr
 
       final Map<String, dynamic> payload = {
         'date': dateStr,
-        'date_or_day': dateStr,
-        'day_of_week': (_selectedDate!.weekday - 1),
         'start_time': startStr,
         'end_time': endStr,
         'consultation_methods': methodsList,
@@ -176,8 +174,8 @@ class _MidwifeAddAvailabilityScreenState extends State<MidwifeAddAvailabilityScr
         String msg = '$e'.replaceAll('Exception: ', '').trim();
         if (msg.contains('TimeoutException')) {
           msg = 'Server took too long to respond. Please check your connection and try again.';
-        } else if (msg.toLowerCase().contains('<html') || msg.contains('500')) {
-          msg = 'Server is currently restarting or busy. Please try again shortly.';
+        } else if (msg.toLowerCase().contains('<html') || msg.toLowerCase().contains('<!doctype')) {
+          msg = 'Server is currently busy or updating. Please try again in a moment.';
         }
         CustomSnackBar.show(context, message: '${AppLocalizations.of(context)!.failedToAddAvailability}: $msg', type: SnackBarType.error);
       }

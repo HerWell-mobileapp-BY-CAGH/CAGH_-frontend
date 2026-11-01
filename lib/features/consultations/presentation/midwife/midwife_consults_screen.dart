@@ -1,3 +1,5 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cagh_frontend/features/home/presentation/midwife/providers/midwife_dashboard_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:cagh_frontend/features/appointments/data/services/appointment_api_service.dart';
@@ -15,7 +17,7 @@ import 'package:cagh_frontend/features/notifications/presentation/widgets/notifi
 import 'package:cagh_frontend/l10n/app_localizations.dart';
 import 'package:cagh_frontend/shared/widgets/custom_snackbar.dart';
 
-class MidwifeConsultsScreen extends StatefulWidget {
+class MidwifeConsultsScreen extends ConsumerStatefulWidget {
   final bool showAppBar;
   final int initialTab;
   const MidwifeConsultsScreen({
@@ -25,10 +27,10 @@ class MidwifeConsultsScreen extends StatefulWidget {
   });
 
   @override
-  State<MidwifeConsultsScreen> createState() => _MidwifeConsultsScreenState();
+  ConsumerState<MidwifeConsultsScreen> createState() => _MidwifeConsultsScreenState();
 }
 
-class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
+class _MidwifeConsultsScreenState extends ConsumerState<MidwifeConsultsScreen> {
   // 0 = Pending Requests, 1 = Confirmed, 2 = Today, 3 = Completed
   late int _selectedTab;
 
@@ -57,6 +59,7 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
       final availList = results[1] as List<WorkingHours>;
 
       AppLogger.d('[BOOKING FETCH] Midwife fetched ${list.length} bookings, ${availList.length} availabilities');
+      try { ref.read(midwifeDashboardProvider.notifier).refresh(isSilent: true); } catch (_) {}
       if (mounted) {
         setState(() {
           _appointments = list;
@@ -86,6 +89,7 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
         if (mounted) CustomSnackBar.show(context, message: 'Appointment declined', type: SnackBarType.warning);
       }
       _fetchAppointments(showLoading: false);
+      try { ref.read(midwifeDashboardProvider.notifier).refresh(isSilent: true); } catch (_) {}
     } catch (e) {
       if (mounted) {
         final errorMsg = e.toString().replaceAll('Exception: ', '').trim();
@@ -266,6 +270,11 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<int>(midwifeConsultTabProvider, (prev, next) {
+      if (mounted && _selectedTab != next) {
+        setState(() => _selectedTab = next);
+      }
+    });
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isAm = Localizations.localeOf(context).languageCode.startsWith('am');
     final filteredList = _getFilteredList();
@@ -545,6 +554,7 @@ class _MidwifeConsultsScreenState extends State<MidwifeConsultsScreen> {
         onTap: () {
           if (_selectedTab != tabIndex) {
             setState(() => _selectedTab = tabIndex);
+            try { ref.read(midwifeConsultTabProvider.notifier).state = tabIndex; } catch (_) {}
           }
         },
         borderRadius: BorderRadius.circular(24),
